@@ -27,10 +27,10 @@ const Home = () => {
           Frontend Web Developer
         </Typography>
         <Typography variant="p" className="mb-6 max-w-2xl">
-          Building websites is more than just code — it&#39;s an art. With over
-          five years in front-end development, I love designing engaging
-          experiences with React.js and Vue.js, ensuring every project looks
-          amazing and functions flawlessly.
+          Building websites is more than just code — it's an art. With over five
+          years in front-end development, I love designing engaging experiences
+          with React.js and Vue.js, ensuring every project looks amazing and
+          functions flawlessly.
         </Typography>
 
         <div className="flex space-x-4 mb-8">
