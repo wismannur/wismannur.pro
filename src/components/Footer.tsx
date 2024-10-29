@@ -1,14 +1,15 @@
 "use client";
 
 import { LuMail, LuLinkedin, LuGithub, LuLineChart } from "react-icons/lu";
+import { Typography } from "./ui/Typography";
 
 const Footer = () => {
   return (
     <footer className="border-t border-sky-500 py-8 px-4">
       <div className="container mx-auto flex justify-between items-center">
-        <p className="text-sm text-gray-400">
-          &copy; Wisman Nur {new Date().getFullYear()}
-        </p>
+        <Typography variant="span" className="text-gray-400">
+          © Wisman Nur {new Date().getFullYear()}
+        </Typography>
         <div className="flex space-x-4">
           <a
             href="mailto:hi@wismannur.pro"
