@@ -21,9 +21,6 @@ const Header = () => {
           <Link href="/about" className="hover:text-sky-500">
             <Typography>About</Typography>
           </Link>
-          <Link href="/contact" className="hover:text-sky-500">
-            <Typography>Contact</Typography>
-          </Link>
         </nav>
 
         <button
