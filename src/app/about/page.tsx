@@ -1,9 +1,5 @@
-const About = () => {
-  return (
-    <div>
-      <h3 className="text-3xl">About page.</h3>
-    </div>
-  );
-};
+import WillBeLiveSoon from "@/components/WillBeLiveSoon";
 
-export default About;
+export default function AboutPage() {
+  return <WillBeLiveSoon title="About page" />;
+}

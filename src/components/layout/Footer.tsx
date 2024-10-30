@@ -1,7 +1,7 @@
 "use client";
 
 import { LuMail, LuLinkedin, LuGithub, LuLineChart } from "react-icons/lu";
-import { Typography } from "./ui/Typography";
+import { Typography } from "../ui/Typography";
 
 const Footer = () => {
   return (

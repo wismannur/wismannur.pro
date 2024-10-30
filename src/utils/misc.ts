@@ -2,9 +2,7 @@ import clsx, { ClassValue } from "clsx";
 import { extendTailwindMerge } from "tailwind-merge";
 
 // Create a twMerge utility that respects the tailwind.config.ts color settings.
-const twMerge = extendTailwindMerge({
-  prefix: "tw-",
-});
+const twMerge = extendTailwindMerge({});
 
 /**
  * Utility to construct className strings conditionally
