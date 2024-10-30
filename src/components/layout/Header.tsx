@@ -18,8 +18,9 @@ const Header = () => {
           <Link href="/" className="text-sky-500 font-semibold">
             <WismanNurLogo className="w-[68px] h-[34px] lg:w-[100px] lg:h-[50px]" />
           </Link>
-          {NAV_LIST.map((nav) => (
+          {NAV_LIST.map((nav, idx) => (
             <Link
+              key={`nav-${idx}`}
               href={nav.path}
               className={clsx(
                 "hover:text-sky-500 font-normal",
