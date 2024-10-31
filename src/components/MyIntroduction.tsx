@@ -13,7 +13,7 @@ type TMyIntroductionProps = {
 const MyIntroduction = ({ classes }: TMyIntroductionProps) => {
   return (
     <div className={cn("flex flex-col", classes?.root)}>
-      <div className="w-auto my-auto px-4 sm:px-0">
+      <div className="w-auto my-auto px-4 xl:px-0">
         <Typography variant="h1" className="mb-2 sm:mb-4">
           Hi!
         </Typography>
@@ -26,7 +26,7 @@ const MyIntroduction = ({ classes }: TMyIntroductionProps) => {
         >
           Frontend Web Developer
         </Typography>
-        <Typography variant="p" className="mb-4 max-w-2xl">
+        <Typography variant="p" className="mb-4 xl:mb-6 max-w-2xl">
           Building websites is more than just code — it's an art. With over five
           years in front-end development, I love designing engaging experiences
           with React.js and Vue.js, ensuring every project looks amazing and
