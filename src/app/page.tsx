@@ -25,12 +25,19 @@ export const metadata: Metadata = {
     },
   ],
   manifest: "/favicon/site.webmanifest",
+  openGraph: {
+    images: `/api/og`,
+  },
 };
 
 const Home = () => {
   return (
     <>
-      <MyIntroduction classes={{ root: "my-auto px-4 sm:px-0" }} />
+      <MyIntroduction
+        classes={{
+          root: "min-h-[calc(100vh-59px)] md:min-h-[calc(100vh-172px)]",
+        }}
+      />
     </>
   );
 };
