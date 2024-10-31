@@ -17,7 +17,7 @@ const Header = () => {
   const isMounted = useIsMounted();
 
   return (
-    <header className="w-full p-4 border-b border-sky-500">
+    <header className="w-full pl-2 pr-3 md:pr-4 py-3 md:py-4 border-b border-sky-500">
       <div className="container flex justify-between items-center mx-auto">
         <nav className="flex justify-center items-center space-x-4">
           <Link href="/" className="text-sky-500 font-semibold">
@@ -49,9 +49,9 @@ const Header = () => {
           {isMounted() ? (
             <>
               {theme === "dark" ? (
-                <LuSun className="w-6 h-6" />
+                <LuSun className="!w-4 !h-4 md:!w-6 md:!h-6" />
               ) : (
-                <LuMoon className="w-6 h-6" />
+                <LuMoon className="!w-4 !h-4 md:!w-6 md:!h-6" />
               )}
             </>
           ) : (
