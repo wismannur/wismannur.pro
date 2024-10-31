@@ -9,10 +9,10 @@ let fontData: any;
 
 async function fetchFont() {
   const resMedium = await fetch(
-    new URL("fonts/Inter-Medium.ttf", process.env.NEXT_PUBLIC_BASE_URL)
+    new URL("fonts/Inter-Medium.ttf", process.env.NEXT_DEPLOYMENT_BASE_URL)
   ).then((res) => res.arrayBuffer());
   const resBold = await fetch(
-    new URL("fonts/Inter-Bold.ttf", process.env.NEXT_PUBLIC_BASE_URL)
+    new URL("fonts/Inter-Bold.ttf", process.env.NEXT_DEPLOYMENT_BASE_URL)
   ).then((res) => res.arrayBuffer());
   return {
     medium: resMedium,
