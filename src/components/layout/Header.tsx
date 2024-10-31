@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import { Typography } from "../ui/Typography";
-import { LuSun } from "react-icons/lu";
+import { LuMoon, LuSun } from "react-icons/lu";
 import WismanNurLogo from "../WismanNurLogo";
 import { usePathname } from "next/navigation";
 import { NAV_LIST } from "./constants";
 import clsx from "clsx";
+import { useTheme } from "next-themes";
+import { useIsMounted } from "usehooks-ts";
+import { cn } from "@/utils/misc";
 
 const Header = () => {
   const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const isMounted = useIsMounted();
 
   return (
     <header className="w-full p-4 border-b border-sky-500">
@@ -22,7 +27,7 @@ const Header = () => {
             <Link
               key={`nav-${idx}`}
               href={nav.path}
-              className={clsx(
+              className={cn(
                 "hover:text-sky-500 font-normal",
                 pathname === nav.path && "text-sky-500 !font-semibold"
               )}
@@ -33,10 +38,25 @@ const Header = () => {
         </nav>
 
         <button
-          className="p-2 bg-gray-800 rounded-full transition-colors duration-300 hover:bg-sky-500"
+          className={clsx(
+            "p-2 bg-transparent rounded-full transition-colors duration-300",
+            "border border-solid border-black dark:border-white",
+            "hover:text-sky-500 hover:border-sky-500 hover:dark:border-sky-500 "
+          )}
           aria-label="Toggle theme"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
-          <LuSun className="w-6 h-6" />
+          {isMounted() ? (
+            <>
+              {theme === "dark" ? (
+                <LuSun className="w-6 h-6" />
+              ) : (
+                <LuMoon className="w-6 h-6" />
+              )}
+            </>
+          ) : (
+            <LuSun className="w-6 h-6" />
+          )}
         </button>
       </div>
     </header>
