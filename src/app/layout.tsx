@@ -17,7 +17,7 @@ export default function RootLayout({
       <body
         className={clsx(
           `${inter.className} flex flex-col min-h-screen bg-white dark:bg-black`,
-          "bg-gradient-to-br from-sky-100 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
+          "bg-gradient-to-br from-sky-200/90 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
         )}
       >
         <ThemeProvider
