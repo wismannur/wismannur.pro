@@ -17,7 +17,12 @@ const Header = () => {
   const isMounted = useIsMounted();
 
   return (
-    <header className="w-full pl-2 pr-3 md:pr-4 py-3 md:py-4 border-b border-sky-500">
+    <header
+      className={clsx(
+        "sticky top-0 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4 border-b border-sky-500",
+        "bg-gradient-to-tr from-sky-200 via-sky-100 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
+      )}
+    >
       <div className="container flex justify-between items-center mx-auto">
         <nav className="flex justify-center items-center space-x-4">
           <Link href="/" className="text-sky-500 font-semibold">
@@ -49,9 +54,9 @@ const Header = () => {
           {isMounted() ? (
             <>
               {theme === "dark" ? (
-                <LuSun className="!w-4 !h-4 md:!w-6 md:!h-6" />
+                <LuSun className="w-4 h-4 md:w-6 md:h-6" />
               ) : (
-                <LuMoon className="!w-4 !h-4 md:!w-6 md:!h-6" />
+                <LuMoon className="w-4 h-4 md:w-6 md:h-6" />
               )}
             </>
           ) : (
