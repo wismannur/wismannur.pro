@@ -27,7 +27,7 @@ const metadataDefault = {
 
 const UNDER_DEVELOPMENT_MESSAGE = `This page is still under development`;
 
-const UNDER_DEVELOPMENT_PAGES = ["/blog", "/projects", "/about", "/resume"];
+const UNDER_DEVELOPMENT_PAGES = ["/blog", "/projects", "/resume"];
 
 const generateMetadata = ({
   title,
