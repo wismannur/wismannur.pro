@@ -18,8 +18,8 @@ const variantStyles: Record<TypographyVariant, string> = {
   h4: "text-xl md:text-2xl font-semibold",
   h5: "text-lg md:text-xl font-medium",
   h6: "text-base md:text-lg font-medium",
-  p: "text-sm md:text-base xl:text-lg",
-  span: "text-xs md:text-sm xl:text-base",
+  p: "text-base md:text-lg font-normal",
+  span: "text-xs md:text-sm xl:text-base font-normal",
 };
 
 export const Typography: FC<TypographyProps> = ({
