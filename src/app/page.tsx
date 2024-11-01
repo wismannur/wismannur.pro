@@ -10,7 +10,7 @@ const Home = () => {
     <>
       <MyIntroduction
         classes={{
-          root: "min-h-[calc(100vh-59px)] md:min-h-[calc(100vh-172px)]",
+          root: "min-h-[calc(100vh-59px)] md:min-h-[calc(100vh-(83px+89px))]",
         }}
       />
     </>
