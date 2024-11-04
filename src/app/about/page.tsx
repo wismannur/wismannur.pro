@@ -204,7 +204,7 @@ export default function AboutPage() {
       {/* START === Uses section ============================================================================= */}
       <div className="flex flex-col mb-4">
         <Typography variant="h2" className="mb-4">
-          Education and Certification
+          Certifications
         </Typography>
         <div className="grid grid-cols-2 gap-4 sm:gap-8">
           {MY_EDUCATION_AND_CERTIFICATION.map((educert, idx) => (
@@ -217,7 +217,7 @@ export default function AboutPage() {
               </Typography>
               <Typography
                 variant="span"
-                className="inline-block mb-4 text-gray-500 dark:text-gray-400"
+                className="inline-block -mt-2 mb-4 text-gray-500 dark:text-gray-400"
               >
                 {educert.date}
               </Typography>
@@ -233,7 +233,7 @@ export default function AboutPage() {
                   variant="p"
                   className="text-sky-500 hover:underline w-fit"
                 >
-                  See Credential
+                  View Credentials
                 </Typography>
               </a>
 
