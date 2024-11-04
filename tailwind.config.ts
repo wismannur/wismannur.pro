@@ -1,5 +1,12 @@
 import type { Config } from "tailwindcss";
 
+const customScreens = {
+  sm: "640px",
+  md: "768px",
+  lg: "1024px",
+  xl: "1110px",
+};
+
 const config: Config = {
   darkMode: "class",
   content: [
@@ -28,14 +35,10 @@ const config: Config = {
         "spin-slow": "spin-slow 8s linear infinite",
         "spin-fast": "spin-fast 2s linear infinite",
       },
+      screens: customScreens,
     },
     container: {
-      screens: {
-        sm: "640px",
-        md: "768px",
-        lg: "1024px",
-        xl: "1110px",
-      },
+      screens: customScreens,
     },
   },
   plugins: [],
