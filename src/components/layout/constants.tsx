@@ -1,3 +1,4 @@
+import { env } from "@/constants/env";
 import { LuMail, LuLinkedin, LuGithub, LuLineChart } from "react-icons/lu";
 
 export const NAV_LIST = [
@@ -22,7 +23,7 @@ export const NAV_LIST = [
 export const SOCIAL_LIST = [
   {
     name: "Mail",
-    path: "mailto:hi@wismannur.pro",
+    path: `mailto:${env.personalEmail}`,
     icon: <LuMail className="w-5 h-5" />,
   },
   {

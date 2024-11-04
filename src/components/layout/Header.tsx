@@ -19,7 +19,7 @@ const Header = () => {
   return (
     <header
       className={clsx(
-        "sticky top-0 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4 border-b border-sky-500",
+        "sticky top-0 z-50 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4 border-b border-sky-500",
         "bg-gradient-to-tr from-sky-200 via-sky-100 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
       )}
     >
@@ -60,7 +60,7 @@ const Header = () => {
               )}
             </>
           ) : (
-            <LuSun className="w-6 h-6" />
+            <LuSun className="w-4 h-4 md:w-6 md:h-6" />
           )}
         </button>
       </div>
