@@ -105,7 +105,7 @@ export default function AboutPage() {
             <li key={idx}>
               <div className="flex flex-row gap-4 sm:gap-8">
                 <Typography
-                  variant="p"
+                  variant="span"
                   className="hidden md:block leading-relaxed min-w-48 pt-1"
                 >
                   {experience.date} <br />
@@ -127,13 +127,13 @@ export default function AboutPage() {
                     {experience.company} · {experience.employmentType}
                   </Typography>
                   <Typography
-                    variant="p"
+                    variant="span"
                     className="block md:hidden leading-relaxed min-w-48 text-gray-500 dark:text-gray-400"
                   >
                     {experience.date} · {experience.inYears}
                   </Typography>
                   <Typography
-                    variant="p"
+                    variant="span"
                     className="text-gray-500 dark:text-gray-400 "
                   >
                     {experience.location} · {experience.locationType}
@@ -216,8 +216,8 @@ export default function AboutPage() {
                 {educert.provider}
               </Typography>
               <Typography
-                variant="p"
-                className="mb-4 text-gray-500 dark:text-gray-400"
+                variant="span"
+                className="inline-block mb-4 text-gray-500 dark:text-gray-400"
               >
                 {educert.date}
               </Typography>
