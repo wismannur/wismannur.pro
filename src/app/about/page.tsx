@@ -237,7 +237,7 @@ export default function AboutPage() {
                 </Typography>
               </a>
 
-              <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full z-0 bg-gradient-to-r from-sky-500 to-green-500"></div>
+              <div className="absolute top-0 right-0 w-28 h-28 md:w-32 md:h-32 rounded-bl-full z-0 bg-gradient-to-r from-sky-500 to-green-500"></div>
             </div>
           ))}
         </div>
