@@ -66,8 +66,18 @@ export default function AboutPage() {
       </article>
       {/* END === About section ============================================================================== */}
       {/* START === Open to work section ===================================================================== */}
-      <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-lg overflow-hidden flex flex-col sm:flex-row my-4">
-        <div className="w-full sm:w-1/3 bg-gradient-to-r from-sky-500 to-green-500 px-2 py-4 md:p-8 flex items-center justify-center">
+      <div
+        className={clsx(
+          "max-w-4xl mx-auto bg-white shadow-2xl rounded-lg overflow-hidden flex flex-col sm:flex-row my-4",
+          "animate-[pulseGrow_0.7s_ease-in-out_infinite_alternate]"
+        )}
+      >
+        <div
+          className={clsx(
+            "w-full sm:w-1/3 px-2 py-4 md:p-8 flex items-center justify-center",
+            "bg-gradient-to-r from-sky-500 to-green-500"
+          )}
+        >
           <Typography variant="h3" className="text-white">
             Open to Work
           </Typography>
@@ -208,9 +218,15 @@ export default function AboutPage() {
         </Typography>
         <div className="grid grid-cols-2 gap-4 sm:gap-8">
           {MY_EDUCATION_AND_CERTIFICATION.map((educert, idx) => (
-            <div
+            <a
               key={`educert-${idx}`}
-              className="relative shadow-lg border border-gray-300 dark:border-gray-500 rounded-lg p-4 sm:p-8 col-span-2 md:col-span-1 overflow-hidden"
+              href={educert.credentialLink}
+              target="_blank"
+              className={clsx(
+                "group relative overflow-hidden col-span-2 md:col-span-1 border border-cyan-500/50 dark:border-cyan-600/50",
+                "bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-800 dark:to-gray-900/50 hover:shadow-lg dark:hover:shadow-lg dark:hover:shadow-cyan-500/50 transition-all duration-300",
+                "p-4 md:p-8 rounded-lg hover:scale-105 transition-transform duration-300"
+              )}
             >
               <Typography variant="h4" className="">
                 {educert.provider}
@@ -237,8 +253,13 @@ export default function AboutPage() {
                 </Typography>
               </a>
 
-              <div className="absolute top-0 right-0 w-28 h-28 md:w-32 md:h-32 rounded-bl-full z-0 bg-gradient-to-r from-sky-500 to-green-500"></div>
-            </div>
+              <div
+                className={clsx(
+                  "absolute top-0 right-0 w-32 h-32 blur-2xl rounded-full transform translate-x-16 -translate-y-16 group-hover:translate-x-8 transition-transform duration-500",
+                  "bg-gradient-to-br from-cyan-500/50 to-emerald-500/50 dark:from-cyan-600/70 dark:to-emerald-600/70"
+                )}
+              ></div>
+            </a>
           ))}
         </div>
       </div>

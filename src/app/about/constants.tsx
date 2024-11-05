@@ -24,6 +24,7 @@ export const MY_EXPERIENCES = [
       "React.js",
       "MaterialUI",
       "React Hook Form",
+      "React Router",
       "TanStack Query (React Query)",
       "Vue.js",
       "Nuxt.js",
@@ -108,8 +109,8 @@ export const MY_EXPERIENCES = [
       "JQuery",
       "Kendo Grid",
       "Responsive Design",
-      "Nexigo API (internal framework)",
       "PostgreSQL",
+      "Nexigo API (internal framework)",
     ],
   },
 ];
@@ -134,11 +135,11 @@ export const MY_EDUCATION_AND_CERTIFICATION = [
 export const MY_USES = [
   `Monitor Lenovo G34W-30 34" UltraWide 1440p 170Hz Curved 2024`,
   "Apple Mac Mini M1 Chip with 8-Core CPU 512GB 2020",
-  "Apple Magic Mouse 2 - White",
+  "Apple Magic Mouse 2",
   "Fantech Mint Edition Agile MP904 Mousepad Gaming",
-  "Logitech Pebble Keys2 K380s Keyboard Wireless Bluetooth Multi Device - Tonal Graphite",
+  "Logitech Pebble Keys2 K380s Keyboard Wireless Bluetooth Multi Device",
   "Logitech Webcam C270 HD",
-  "Workdesign - Tota Natu TT160 Electric Workbench with Adjustable Lift Up - Brown Walnut",
-  "Deli Office Chair / Mesh Work Chair with Headrest E492X - Black",
+  "Workdesign Tota Natu TT160 Electric Workbench with Adjustable Lift Up",
+  "Deli Office Chair / Mesh Work Chair with Headrest E492X",
   "JETE 09 Bluetooth Earphone Sport Extra Bass IPX4",
 ];
