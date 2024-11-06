@@ -1,5 +1,6 @@
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
+import { env } from "@/constants/env";
 import clsx from "clsx";
 import { ThemeProvider } from "next-themes";
 import { Inter } from "next/font/google";
@@ -16,12 +17,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <Script
-          src="https://umami.wnak.cloud/script.js"
-          data-website-id="79728430-4694-434c-8b80-853b9c596518"
-          data-domains="wismannur.pro"
-          strategy="beforeInteractive"
-        />
+        {env.isProduction && (
+          <Script
+            src={env.umamiScriptUrl}
+            data-website-id={env.umamiWebsiteId}
+            strategy="beforeInteractive"
+          />
+        )}
       </head>
       <body
         className={clsx(
