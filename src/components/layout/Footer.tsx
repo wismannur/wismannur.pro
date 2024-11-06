@@ -1,5 +1,6 @@
 "use client";
 
+import { trackEventToUmami } from "@/utils/umami-track";
 import { Typography } from "../ui/Typography";
 import { SOCIAL_LIST } from "./constants";
 
@@ -16,6 +17,14 @@ const Footer = () => {
               key={`social-${idx}`}
               href={social.path}
               className="text-gray-500 dark:text-gray-400 hover:text-sky-500 hover:dark:text-sky-500"
+              onClick={(evt) => {
+                evt.preventDefault();
+                trackEventToUmami("Footer Social Link ", {
+                  name: social.name,
+                  type: "link",
+                });
+                window.open(social.path);
+              }}
             >
               {social.icon}
             </a>

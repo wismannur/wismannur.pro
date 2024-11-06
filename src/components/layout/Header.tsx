@@ -10,6 +10,7 @@ import clsx from "clsx";
 import { useTheme } from "next-themes";
 import { useIsMounted } from "usehooks-ts";
 import { cn } from "@/utils/misc";
+import { trackEventToUmami } from "@/utils/umami-track";
 
 const Header = () => {
   const pathname = usePathname();
@@ -25,7 +26,16 @@ const Header = () => {
     >
       <div className="container flex justify-between items-center mx-auto">
         <nav className="flex justify-center items-center space-x-4">
-          <Link href="/" className="text-sky-500 font-semibold">
+          <Link
+            href="/"
+            className="text-sky-500 font-semibold"
+            onClick={(evt) => {
+              evt.stopPropagation();
+              trackEventToUmami("Header Menu Click", {
+                name: "Wisman Nur Logo",
+              });
+            }}
+          >
             <WismanNurLogo className="w-[68px] h-[34px] lg:w-[100px] lg:h-[50px]" />
           </Link>
           {NAV_LIST.map((nav, idx) => (
@@ -36,6 +46,12 @@ const Header = () => {
                 "hover:text-sky-500 font-normal",
                 pathname === nav.path && "text-sky-500 !font-semibold"
               )}
+              onClick={(evt) => {
+                evt.stopPropagation();
+                trackEventToUmami("Header Menu Click", {
+                  name: nav.name,
+                });
+              }}
             >
               <Typography>{nav.name}</Typography>
             </Link>
