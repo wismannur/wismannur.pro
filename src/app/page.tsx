@@ -31,11 +31,11 @@ const Home = () => {
 
         <div className="flex space-x-4">
           <Link
-            href="/blog"
+            href="/posts"
             className="bg-sky-600 px-4 py-2 rounded hover:bg-sky-500"
           >
             <Typography variant="span" className="text-white">
-              Read the blog
+              Read the posts
             </Typography>
           </Link>
           <Link

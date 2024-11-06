@@ -28,7 +28,7 @@ const metadataDefault: Metadata = {
 
 const UNDER_DEVELOPMENT_MESSAGE = `This page is still under development`;
 
-const UNDER_DEVELOPMENT_PAGES = ["/blog", "/projects", "/resume"];
+const UNDER_DEVELOPMENT_PAGES = ["/posts", "/projects", "/resume"];
 
 const generateMetadata = ({
   title,
@@ -62,11 +62,11 @@ export const metadataStatic = {
     ...metadataDefault,
     path: "/",
   }),
-  blog: generateMetadata({
-    title: `Blog`,
-    description: `Check out my blog for insights on web development, personal projects, and tech tips.`,
+  posts: generateMetadata({
+    title: `Posts`,
+    description: `Check out my posts for insights on web development, personal projects, and tech tips.`,
     ...metadataDefault,
-    path: "/blog",
+    path: "/posts",
   }),
   projects: generateMetadata({
     title: `Projects`,
