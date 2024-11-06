@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import clsx from "clsx";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,6 +32,12 @@ export default function RootLayout({
           </main>
           <Footer />
         </ThemeProvider>
+
+        <Script
+          src="https://umami.wnak.cloud/script.js"
+          data-website-id="79728430-4694-434c-8b80-853b9c596518"
+          data-domains="wismannur.pro"
+        />
       </body>
     </html>
   );
