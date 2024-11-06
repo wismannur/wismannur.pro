@@ -1,5 +1,7 @@
 // utils/analytics.ts
 
+import { env } from "@/constants/env";
+
 /**
  * Track an event using Umami Analytics.
  *
@@ -10,6 +12,9 @@ export const trackEventToUmami = (
   eventName: string,
   eventData: Record<string, any> = {}
 ): void => {
+  // Only track in production environment
+  if (!env.isProduction) return;
+
   if (typeof window !== "undefined" && (window as any).umami) {
     (window as any).umami.track(eventName, eventData);
   } else {

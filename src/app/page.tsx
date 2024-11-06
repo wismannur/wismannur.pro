@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
-import { metadataStatic } from "@/constants/metadata";
 import { Typography } from "@/components/ui/Typography";
+import { metadataStatic } from "@/constants/metadata";
 import Link from "next/link";
 
 export const metadata: Metadata = metadataStatic.home;
@@ -31,11 +31,11 @@ const Home = () => {
 
         <div className="flex space-x-4">
           <Link
-            href="/blog"
+            href="/posts"
             className="bg-sky-600 px-4 py-2 rounded hover:bg-sky-500"
           >
             <Typography variant="span" className="text-white">
-              Read the blog
+              Read the posts
             </Typography>
           </Link>
           <Link

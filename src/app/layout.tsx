@@ -1,10 +1,11 @@
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { ThemeProvider } from "next-themes";
-import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
+import { env } from "@/constants/env";
 import clsx from "clsx";
+import { ThemeProvider } from "next-themes";
+import { Inter } from "next/font/google";
 import Script from "next/script";
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,6 +16,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {env.isProduction && (
+          <Script
+            src={env.umami.scriptUrl}
+            data-website-id={env.umami.websiteId}
+            strategy="beforeInteractive"
+          />
+        )}
+      </head>
       <body
         className={clsx(
           `${inter.className} flex flex-col min-h-screen bg-white dark:bg-black`,
@@ -32,12 +42,6 @@ export default function RootLayout({
           </main>
           <Footer />
         </ThemeProvider>
-
-        <Script
-          src="https://umami.wnak.cloud/script.js"
-          data-website-id="79728430-4694-434c-8b80-853b9c596518"
-          data-domains="wismannur.pro"
-        />
       </body>
     </html>
   );
