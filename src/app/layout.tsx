@@ -19,8 +19,8 @@ export default function RootLayout({
       <head>
         {env.isProduction && (
           <Script
-            src={env.umamiScriptUrl}
-            data-website-id={env.umamiWebsiteId}
+            src={env.umami.scriptUrl}
+            data-website-id={env.umami.websiteId}
             strategy="beforeInteractive"
           />
         )}

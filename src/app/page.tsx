@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
-import { metadataStatic } from "@/constants/metadata";
 import { Typography } from "@/components/ui/Typography";
+import { metadataStatic } from "@/constants/metadata";
 import Link from "next/link";
 
 export const metadata: Metadata = metadataStatic.home;

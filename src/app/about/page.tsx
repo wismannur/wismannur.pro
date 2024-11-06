@@ -1,12 +1,12 @@
-import MyProfilePicture from "@/components/MyProfilePicture";
+import Certifications from "@/components/pages/about/Certifications";
+import Experience from "@/components/pages/about/Experience";
+import MyProfilePicture from "@/components/pages/about/MyProfilePicture";
+import MyUses from "@/components/pages/about/MyUses";
+import OpenToWork from "@/components/pages/about/OpenToWork";
 import { Typography } from "@/components/ui/Typography";
 import { metadataStatic } from "@/constants/metadata";
 import clsx from "clsx";
 import { Metadata } from "next";
-import OpenToWork from "@/components/pages/about/OpenToWork";
-import Certifications from "@/components/pages/about/Certifications";
-import Experience from "@/components/pages/about/Experience";
-import MyUses from "@/components/pages/about/MyUses";
 
 export const metadata: Metadata = metadataStatic.about;
 

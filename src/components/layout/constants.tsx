@@ -38,7 +38,7 @@ export const SOCIAL_LIST = [
   },
   {
     name: "Umami",
-    path: "https://umami.wnak.cloud/share/XZPj0E2sb2tf3Zjk/wismannur.pro",
+    path: "https://umami.wnak.cloud/share/PcEYLTtbHu93gOXs/wismannur.pro",
     icon: <LuLineChart className="w-5 h-5" />,
   },
 ];
