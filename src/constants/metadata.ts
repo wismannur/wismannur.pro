@@ -2,7 +2,8 @@ import { generatePathname } from "@/utils/generate-pathname";
 import { env } from "./env";
 import { Metadata } from "next";
 
-const metadataDefault = {
+const metadataDefault: Metadata = {
+  metadataBase: new URL("", env.baseUrl),
   icons: [
     {
       rel: "apple-touch-icon",
@@ -34,8 +35,8 @@ const generateMetadata = ({
   description,
   path,
 }: {
-  title?: string;
-  description?: string;
+  title?: Metadata["title"];
+  description?: Metadata["description"];
   path?: string;
 }): Metadata => ({
   title: `${title} - ${env.baseUrl}${path}`,

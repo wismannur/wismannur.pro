@@ -1,3 +1,4 @@
+import { env } from "@/constants/env";
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 
@@ -9,10 +10,10 @@ let fontData: any;
 
 async function fetchFont() {
   const resMedium = await fetch(
-    new URL("fonts/Inter-Medium.ttf", process.env.NEXT_DEPLOYMENT_BASE_URL)
+    new URL("fonts/Inter-Medium.ttf", env.baseUrl)
   ).then((res) => res.arrayBuffer());
   const resBold = await fetch(
-    new URL("fonts/Inter-Bold.ttf", process.env.NEXT_DEPLOYMENT_BASE_URL)
+    new URL("fonts/Inter-Bold.ttf", env.baseUrl)
   ).then((res) => res.arrayBuffer());
   return {
     medium: resMedium,

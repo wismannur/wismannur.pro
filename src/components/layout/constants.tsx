@@ -7,8 +7,8 @@ export const NAV_LIST = [
     path: "/",
   },
   {
-    name: "Blog",
-    path: "/blog",
+    name: "Posts",
+    path: "/posts",
   },
   {
     name: "Projects",
@@ -38,7 +38,7 @@ export const SOCIAL_LIST = [
   },
   {
     name: "Umami",
-    path: "#",
+    path: "https://umami.wnak.cloud/share/XZPj0E2sb2tf3Zjk/wismannur.pro",
     icon: <LuLineChart className="w-5 h-5" />,
   },
 ];
