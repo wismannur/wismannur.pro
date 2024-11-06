@@ -9,6 +9,7 @@ type TypographyProps = {
   variant?: TypographyVariant;
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 };
 
 const variantStyles: Record<TypographyVariant, string> = {
@@ -26,6 +27,7 @@ export const Typography: FC<TypographyProps> = ({
   variant = "span",
   children,
   className,
+  ...props
 }) => {
   const baseStyles = "text-foreground";
 
@@ -35,7 +37,10 @@ export const Typography: FC<TypographyProps> = ({
       : "span";
 
   return (
-    <Component className={cn(baseStyles, variantStyles[variant], className)}>
+    <Component
+      className={cn(baseStyles, variantStyles[variant], className)}
+      {...props}
+    >
       {children}
     </Component>
   );
