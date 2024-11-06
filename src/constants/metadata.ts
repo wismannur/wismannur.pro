@@ -3,6 +3,7 @@ import { env } from "./env";
 import { Metadata } from "next";
 
 const metadataDefault = {
+  metadataBase: new URL("", env.baseUrl),
   icons: [
     {
       rel: "apple-touch-icon",

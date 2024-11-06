@@ -59,9 +59,9 @@ export default function AboutPage() {
           years of experience in front-end development, I enjoy creating
           engaging experiences using React.js and Vue.js, ensuring each project
           not only looks great but also functions seamlessly. On this website,
-          I'll be showcasing my projects and sharing my thoughts through blog
-          posts. I believe that writing about what I've learned is the best way
-          to retain knowledge, and it allows me to share insights along the way.
+          I'll be showcasing my projects and sharing my thoughts through posts.
+          I believe that writing about what I've learned is the best way to
+          retain knowledge, and it allows me to share insights along the way.
         </Typography>
       </article>
       {/* END === About section ============================================================================== */}

@@ -4,6 +4,6 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = metadataStatic.blog;
 
-export default function BlogPage() {
-  return <WillBeLiveSoon title="Blog page" />;
+export default function PostsPage() {
+  return <WillBeLiveSoon title="Posts page" />;
 }

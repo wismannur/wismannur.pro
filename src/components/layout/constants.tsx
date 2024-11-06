@@ -7,8 +7,8 @@ export const NAV_LIST = [
     path: "/",
   },
   {
-    name: "Blog",
-    path: "/blog",
+    name: "Posts",
+    path: "/posts",
   },
   {
     name: "Projects",
