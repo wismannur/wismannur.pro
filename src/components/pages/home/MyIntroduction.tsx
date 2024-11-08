@@ -1,6 +1,7 @@
 "use client";
 
 import { Typography } from "@/components/ui/Typography";
+import { env } from "@/constants/env";
 import { framerAnimate } from "@/constants/framer-animate";
 import { trackEventToUmami } from "@/utils/umami-track";
 import { motion, useAnimationControls, Variants } from "framer-motion";
@@ -42,22 +43,27 @@ const MyIntroduction = () => {
         </Typography>
 
         <motion.div variants={framerAnimate.item} className="flex space-x-4">
-          <a
+          <Link
             href="https://wnak.cloud/resume"
             className="bg-sky-600 px-4 py-2 rounded hover:bg-sky-500"
             onClick={(evt) => {
               evt.preventDefault();
-              trackEventToUmami("View my CV Click");
+              trackEventToUmami("View my CV");
               window.open("https://wnak.cloud/resume");
             }}
           >
             <Typography variant="span" className="text-white">
               View my CV
             </Typography>
-          </a>
+          </Link>
           <Link
             href="/about"
             className="px-4 py-2 rounded bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+            onClick={(evt) => {
+              evt.preventDefault();
+              trackEventToUmami("Learn more about me");
+              window.open(`${env.baseUrl}/about`);
+            }}
           >
             <Typography variant="span" className="text-white">
               Learn more about me

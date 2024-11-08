@@ -35,9 +35,7 @@ const Header = () => {
             className="text-sky-500 font-semibold"
             onClick={(evt) => {
               evt.stopPropagation();
-              trackEventToUmami("Header Menu Click", {
-                name: "Wisman Nur Logo",
-              });
+              trackEventToUmami("Header Menu: W Logo");
             }}
           >
             <WismanNurLogo className="w-[68px] h-[34px] lg:w-[100px] lg:h-[50px]" />
@@ -52,9 +50,7 @@ const Header = () => {
               )}
               onClick={(evt) => {
                 evt.stopPropagation();
-                trackEventToUmami("Header Menu Click", {
-                  name: nav.name,
-                });
+                trackEventToUmami(`Header Menu: ${nav.name}`);
               }}
             >
               <Typography>{nav.name}</Typography>
