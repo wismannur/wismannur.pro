@@ -25,7 +25,7 @@ const config: Config = {
           "0%": { transform: "rotate(0deg)" },
           "100%": { transform: "rotate(360deg)" },
         },
-        pulseGrow: { to: { transform: "scale(1.02)" } },
+        pulseGrow: { to: { transform: "scale(1.03)" } },
       },
       animation: {
         "spin-slow": "spin-slow 8s linear infinite",

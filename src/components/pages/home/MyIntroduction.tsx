@@ -1,14 +1,17 @@
 "use client";
 
 import { Typography } from "@/components/ui/Typography";
-import { env } from "@/constants/env";
 import { framerAnimate } from "@/constants/framer-animate";
 import { trackEventToUmami } from "@/utils/umami-track";
+import clsx from "clsx";
 import { motion, useAnimationControls, Variants } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const MyIntroduction = () => {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col min-h-[calc(100vh-59px)] md:min-h-[calc(100vh-(83px+89px))]">
       <motion.div
@@ -42,30 +45,39 @@ const MyIntroduction = () => {
           functions flawlessly.
         </Typography>
 
-        <motion.div variants={framerAnimate.item} className="flex space-x-4">
+        <motion.div variants={framerAnimate.item} className="flex space-x-6">
           <Link
             href="https://wnak.cloud/resume"
-            className="bg-sky-600 px-4 py-2 rounded hover:bg-sky-500"
+            className={clsx(
+              "px-4 py-2 md:px-6 md:py-3 rounded-md border border-gray-500 dark:border-gray-700",
+              "shadow-lg shadow-sky-500 dark:shadow-cyan-500",
+              "hover:scale-105 transition-transform duration-300",
+              "animate-[pulseGrow_0.7s_ease-in-out_infinite_alternate]"
+            )}
             onClick={(evt) => {
               evt.preventDefault();
               trackEventToUmami("View my CV");
               window.open("https://wnak.cloud/resume");
             }}
           >
-            <Typography variant="span" className="text-white">
+            <Typography variant="span" className="font-bold">
               View my CV
             </Typography>
           </Link>
           <Link
             href="/about"
-            className="px-4 py-2 rounded bg-gray-800 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600"
+            className={clsx(
+              "px-4 py-2 md:px-6 md:py-3 rounded-md border border-gray-500 dark:border-gray-700",
+              "shadow-lg shadow-green-500 dark:shadow-rose-500",
+              "hover:scale-105 transition-transform duration-300"
+            )}
             onClick={(evt) => {
               evt.preventDefault();
               trackEventToUmami("Learn more about me");
-              window.open(`/about`, "_self");
+              router.push("/about");
             }}
           >
-            <Typography variant="span" className="text-white">
+            <Typography variant="span" className="font-bold">
               Learn more about me
             </Typography>
           </Link>
