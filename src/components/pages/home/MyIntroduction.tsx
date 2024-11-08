@@ -62,7 +62,7 @@ const MyIntroduction = () => {
             onClick={(evt) => {
               evt.preventDefault();
               trackEventToUmami("Learn more about me");
-              window.open(`${env.baseUrl}/about`);
+              window.open(`/about`, "_self");
             }}
           >
             <Typography variant="span" className="text-white">
