@@ -1,10 +1,16 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Image from "next/image";
 
 const MyProfilePicture = () => {
   return (
-    <div className="relative w-full h-full group">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.5 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.7 }}
+      className="relative w-full h-full group"
+    >
       <div className="absolute inset-0 flex items-center justify-center z-10">
         <div className="w-10/12 h-10/12 rounded-full overflow-hidden">
           <Image
@@ -36,7 +42,7 @@ const MyProfilePicture = () => {
           fill="currentColor"
         ></path>
       </svg>
-    </div>
+    </motion.div>
   );
 };
 
