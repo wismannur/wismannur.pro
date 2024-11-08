@@ -56,12 +56,11 @@ const AboutMe = () => {
           variants={framerAnimate.item}
           className="mb-4 xl:mb-6 leading-relaxed"
         >
-          My journey began as a student in a Full-stack Academy Bootcamp and
-          graduated in January 2018, where I learned the fundamentals of
-          programming and how to build websites. and currently, I am focused on
-          advancing my expertise in front-end development while continuously
-          building my skills in back-end technologies to broaden my technical
-          proficiency.
+          My journey began as a student in a Full-stack Academy Bootcamp, where
+          I learned the fundamentals of programming and how to build websites.
+          and currently, I am focused on advancing my expertise in front-end
+          development while continuously building my skills in back-end
+          technologies to broaden my technical proficiency.
         </Typography>
         <Typography
           variant="p"

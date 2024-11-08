@@ -2,6 +2,7 @@
 
 import { Typography } from "@/components/ui/Typography";
 import { framerAnimate } from "@/constants/framer-animate";
+import { trackEventToUmami } from "@/utils/umami-track";
 import { motion, useAnimationControls, Variants } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -43,8 +44,12 @@ const MyIntroduction = () => {
         <motion.div variants={framerAnimate.item} className="flex space-x-4">
           <a
             href="https://wnak.cloud/resume"
-            target="_blank"
             className="bg-sky-600 px-4 py-2 rounded hover:bg-sky-500"
+            onClick={(evt) => {
+              evt.preventDefault();
+              trackEventToUmami("View my CV Click");
+              window.open("https://wnak.cloud/resume");
+            }}
           >
             <Typography variant="span" className="text-white">
               View my CV
@@ -68,12 +73,12 @@ const Greetings = ({ variants }: { variants: Variants }) => {
   const texts = [
     "Hi!",
     "Hello!",
-    "Hola!",
     "Bonjour!",
+    "Hola!",
     "Ciao!",
-    "Hallo!",
+    "Hai!",
     "Guten Tag!",
-    "Hai",
+    "Hallo!",
   ];
   const [index, setIndex] = useState(0);
 
