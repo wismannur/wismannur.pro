@@ -39,7 +39,6 @@ const Certifications = () => {
               className="text-sky-500 hover:underline w-fit"
               onClick={() => {
                 trackEventToUmami("Certification Click", {
-                  type: "link",
                   provider: educert.provider,
                   description: educert.description,
                 });

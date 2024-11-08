@@ -21,7 +21,6 @@ const Footer = () => {
                 evt.preventDefault();
                 trackEventToUmami("Footer Social Link ", {
                   name: social.name,
-                  type: "link",
                 });
                 window.open(social.path);
               }}

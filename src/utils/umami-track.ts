@@ -1,5 +1,3 @@
-// utils/analytics.ts
-
 import { env } from "@/constants/env";
 
 /**
@@ -12,10 +10,11 @@ export const trackEventToUmami = (
   eventName: string,
   eventData: Record<string, any> = {}
 ): void => {
-  // Only track in production environment
-  if (!env.isProduction) return;
-
-  if (typeof window !== "undefined" && (window as any).umami) {
+  if (
+    env.isProduction &&
+    typeof window !== "undefined" &&
+    (window as any).umami
+  ) {
     (window as any).umami.track(eventName, eventData);
   } else {
     console.warn("Umami is not initialized or window is not defined");
