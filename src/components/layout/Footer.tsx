@@ -3,10 +3,16 @@
 import { trackEventToUmami } from "@/utils/umami-track";
 import { Typography } from "../ui/Typography";
 import { SOCIAL_LIST } from "./constants";
+import { motion } from "framer-motion";
 
 const Footer = () => {
   return (
-    <footer className="border-t border-sky-500 py-8 px-4">
+    <motion.footer
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1.5, duration: 0.5 }}
+      className="border-t border-sky-500 py-8 px-4"
+    >
       <div className="container mx-auto flex justify-between items-center">
         <Typography variant="span" className="text-gray-500 dark:text-gray-400">
           © Wisman Nur {new Date().getFullYear()}
@@ -21,7 +27,6 @@ const Footer = () => {
                 evt.preventDefault();
                 trackEventToUmami("Footer Social Link ", {
                   name: social.name,
-                  type: "link",
                 });
                 window.open(social.path);
               }}
@@ -31,7 +36,7 @@ const Footer = () => {
           ))}
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 };
 

@@ -40,9 +40,7 @@ const OpenToWork = () => {
             onClick={(evt) => {
               evt.preventDefault();
               evt.stopPropagation();
-              trackEventToUmami("Open To Work Email Click", {
-                type: "link",
-              });
+              trackEventToUmami("Open To Work Email Click");
               window.open(`mailto:${env.personalEmail}`);
             }}
           >

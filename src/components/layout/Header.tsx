@@ -11,6 +11,7 @@ import { useTheme } from "next-themes";
 import { useIsMounted } from "usehooks-ts";
 import { cn } from "@/utils/misc";
 import { trackEventToUmami } from "@/utils/umami-track";
+import { motion } from "framer-motion";
 
 const Header = () => {
   const pathname = usePathname();
@@ -18,7 +19,10 @@ const Header = () => {
   const isMounted = useIsMounted();
 
   return (
-    <header
+    <motion.header
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
       className={clsx(
         "sticky top-0 z-50 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4 border-b border-sky-500",
         "bg-gradient-to-tr from-sky-200 via-sky-100 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
@@ -80,7 +84,7 @@ const Header = () => {
           )}
         </button>
       </div>
-    </header>
+    </motion.header>
   );
 };
 
