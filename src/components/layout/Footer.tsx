@@ -25,9 +25,7 @@ const Footer = () => {
               className="text-gray-500 dark:text-gray-400 hover:text-sky-500 hover:dark:text-sky-500"
               onClick={(evt) => {
                 evt.preventDefault();
-                trackEventToUmami("Footer Social Link ", {
-                  name: social.name,
-                });
+                trackEventToUmami(`Footer Social: ${social.name}`);
                 window.open(social.path);
               }}
             >
