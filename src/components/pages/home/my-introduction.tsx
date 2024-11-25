@@ -58,7 +58,7 @@ const MyIntroduction = () => {
             className="group relative overflow-hidden bg-primary hover:bg-primary/90"
           >
             <span className="absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] group-hover:translate-x-full transition-transform duration-500" />
-            <FileText className="mr-2 h-5 w-5" />
+            <FileText className="mr-1 md:mr-2 h-5 w-5" />
             View my CV
           </Button>
         </a>
@@ -72,7 +72,7 @@ const MyIntroduction = () => {
         >
           <Button size="lg" variant="outline" className="group">
             More about me
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="ml-1 md:ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
         </a>
       </motion.div>
