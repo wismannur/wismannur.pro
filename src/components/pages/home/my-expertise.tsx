@@ -20,10 +20,10 @@ const MyExpertise = () => {
       { name: "Web Performance Optimization", level: 85 },
     ],
     tools: [
-      "React Hook Form",
-      "React Query",
-      "Material UI",
       "Shadcn UI",
+      "Material UI",
+      "RHF",
+      "React Query",
       "Vuetify",
       "Vuelidate",
       "Figma",
@@ -40,10 +40,10 @@ const MyExpertise = () => {
       className="relative w-full"
     >
       <Card className="relative bg-background/80 backdrop-blur-sm rounded-3xl">
-        <CardContent className="p-6 md:p-10">
+        <CardContent className="p-4 md:p-10">
           <Typography
             variant="h2"
-            className="font-bold mb-8 text-center"
+            className="font-bold mb-6 md:mb-8 text-center"
             variants={framerAnimate.item}
           >
             My Expertise
@@ -111,7 +111,10 @@ const MyExpertise = () => {
                         <CheckCircle2
                           className={`h-5 w-5 text-gradient-to-br ${skill.gradient}`}
                         />
-                        <span>{tool}</span>
+                        <span className="hidden md:block">
+                          {tool.includes("RHF") ? "React Hook Form" : tool}
+                        </span>
+                        <span className="block md:hidden">{tool}</span>
                       </motion.li>
                     ))}
                   </ul>
