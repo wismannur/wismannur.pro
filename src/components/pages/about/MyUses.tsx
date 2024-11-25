@@ -9,7 +9,7 @@ const MyUses = () => {
         Uses
       </Typography>
       <Typography variant="p" className="mb-2">
-        Here are some of the tools and technologies I use on a daily basis.
+        My digital workspace.
       </Typography>
       <ul className="pl-5 list-disc space-y-1">
         {MY_USES.map((myUse, idx) => (

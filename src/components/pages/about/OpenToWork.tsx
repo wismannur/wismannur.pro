@@ -17,7 +17,7 @@ const OpenToWork = () => {
       <div
         className={clsx(
           "w-full sm:w-1/3 px-2 py-4 md:p-8 flex items-center justify-center",
-          "bg-gradient-to-r from-sky-500 to-green-500"
+          "bg-gradient-to-r from-cyan-500 to-blue-500"
         )}
       >
         <Typography variant="h3" className="text-white">

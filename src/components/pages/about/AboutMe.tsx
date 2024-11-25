@@ -16,21 +16,20 @@ const AboutMe = () => {
       variants={framerAnimate.container}
       initial="hidden"
       animate="show"
-      className="w-full py-10 flex flex-col justify-between px-4 xl:px-0 gap-4 sm:gap-8"
+      className="container m-auto py-10 flex flex-col justify-between px-4 xl:px-0 gap-4 sm:gap-8 bg-transparent"
     >
       {/* START === Introduction section ============================================================================ */}
-      <label>
+      <div className="flex flex-col">
         <Typography variant="h3" variants={framerAnimate.item}>
           About
         </Typography>
-        <Typography
-          variant="h1"
-          variants={framerAnimate.item}
-          className="w-fit bg-gradient-to-r from-sky-500 to-green-500 inline-block text-transparent bg-clip-text font-bold"
-        >
-          Wisman Nur
+        <Typography variant="h1" variants={framerAnimate.item}>
+          <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">
+            Wisman
+          </span>{" "}
+          Nur
         </Typography>
-      </label>
+      </div>
       <article className="block clear-both">
         <div
           className={clsx(
@@ -82,20 +81,6 @@ const AboutMe = () => {
         <OpenToWork />
       </motion.div>
       {/* END === Open to work section ======================================================================= */}
-
-      {/* START === Experience section ======================================================================= */}
-      <motion.div variants={framerAnimate.item}>
-        <Experience />
-      </motion.div>
-      {/* END === Experience section ========================================================================= */}
-
-      {/* START === Certifications section ============================================================================= */}
-      <Certifications />
-      {/* END === Certifications section =============================================================================== */}
-
-      {/* START === My Uses section ============================================================================= */}
-      <MyUses />
-      {/* END === My Uses section =============================================================================== */}
     </motion.div>
   );
 };
