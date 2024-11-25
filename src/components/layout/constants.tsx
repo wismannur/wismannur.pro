@@ -36,9 +36,9 @@ export const SOCIAL_LIST = [
     path: "https://www.linkedin.com/in/wismannur/",
     icon: <LuLinkedin className="w-5 h-5" />,
   },
-  {
-    name: "Umami",
-    path: "https://umami.wnak.cloud/share/PcEYLTtbHu93gOXs/wismannur.pro",
-    icon: <LuLineChart className="w-5 h-5" />,
-  },
+  // {
+  //   name: "Umami",
+  //   path: "https://umami.wnak.cloud/share/PcEYLTtbHu93gOXs/wismannur.pro",
+  //   icon: <LuLineChart className="w-5 h-5" />,
+  // },
 ];

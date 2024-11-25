@@ -1,7 +1,6 @@
 "use client";
 
-import { cn } from "@/utils/misc";
-
+import { cn } from "@/lib/utils";
 import "./MyLogo.css";
 
 type TMyLogoProps = {
