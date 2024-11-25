@@ -19,7 +19,7 @@ const Footer = () => {
       {/* footer content */}
       <div className="container mx-auto flex justify-between items-center py-6 md:py-8 px-4">
         <Typography variant="span" className="text-muted-foreground">
-          © {new Date().getFullYear()}, Wisman Nur. All rights reserved.
+          © {new Date().getFullYear()}, Wisman Nur.
         </Typography>
         <div className="flex space-x-4">
           {SOCIAL_LIST.map((social, idx) => (

@@ -27,7 +27,7 @@ const OpenToWork = () => {
       <div className="w-full sm:w-2/3 p-4 sm:p-8">
         <Typography
           variant="p"
-          className="text-gray-700 mb-3 sm:mb-6 text-center sm:text-left"
+          className="text-muted-foreground dark:text-gray-500 mb-3 sm:mb-6 text-center sm:text-left"
         >
           I'm currently exploring new career opportunities and would be
           delighted to discuss how my skills align with your needs.

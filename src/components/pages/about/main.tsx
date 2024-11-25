@@ -20,7 +20,7 @@ export default function AboutMain() {
           animate="show"
           className={clsx(
             "min-h-[calc(100vh-52px)] md:min-h-[calc(100vh-88px)] flex flex-col",
-            "container mx-auto mt-40 mb-20 md:mt-20 md:mb-0"
+            "container mx-auto mt-20 mb-10 md:mb-0"
           )}
         >
           <AboutMe />

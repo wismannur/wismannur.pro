@@ -8,12 +8,16 @@ const MyUses = () => {
       <Typography variant="h2" className="mb-4">
         Uses
       </Typography>
-      <Typography variant="p" className="mb-2">
+      <Typography variant="p" className="mb-2 text-muted-foreground">
         My digital workspace.
       </Typography>
       <ul className="pl-5 list-disc space-y-1">
         {MY_USES.map((myUse, idx) => (
-          <li key={`myUse-${idx}`}>{myUse}</li>
+          <li key={`myUse-${idx}`}>
+            <Typography variant="p" className="text-muted-foreground">
+              {myUse}
+            </Typography>
+          </li>
         ))}
       </ul>
     </div>

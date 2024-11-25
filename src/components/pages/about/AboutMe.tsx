@@ -43,7 +43,7 @@ const AboutMe = () => {
         <Typography
           variant="p"
           variants={framerAnimate.item}
-          className="mb-4 xl:mb-6 leading-relaxed !font-normal"
+          className="mb-4 xl:mb-6 leading-relaxed !font-normal text-muted-foreground"
         >
           Hi! I'm Wisman. As someone who has always been interested in
           understanding how the world works, I’m constantly seeking new things
@@ -53,7 +53,7 @@ const AboutMe = () => {
         <Typography
           variant="p"
           variants={framerAnimate.item}
-          className="mb-4 xl:mb-6 leading-relaxed"
+          className="mb-4 xl:mb-6 leading-relaxed text-muted-foreground"
         >
           My journey began as a student in a Full-stack Academy Bootcamp, where
           I learned the fundamentals of programming and how to build websites.
@@ -64,7 +64,7 @@ const AboutMe = () => {
         <Typography
           variant="p"
           variants={framerAnimate.item}
-          className="leading-relaxed"
+          className="leading-relaxed text-muted-foreground"
         >
           Building websites is more than just code — it's an art. With over five
           years of experience in front-end development, I enjoy creating
