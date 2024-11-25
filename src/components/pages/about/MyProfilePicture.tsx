@@ -28,7 +28,7 @@ const MyProfilePicture = () => {
       >
         <path
           d="M29.465,0.038373A28,28,0,0,1,52.948,40.712L51.166,39.804A26,26,0,0,0,29.361,2.0356Z"
-          className="text-green-400"
+          className="text-cyan-500"
           fill="currentColor"
         ></path>
         <path
@@ -38,7 +38,7 @@ const MyProfilePicture = () => {
         ></path>
         <path
           d="M3.0518,40.712A28,28,0,0,1,26.535,0.038373L26.639,2.0356A26,26,0,0,0,4.8338,39.804Z"
-          className="text-rose-500"
+          className="text-green-400"
           fill="currentColor"
         ></path>
       </svg>

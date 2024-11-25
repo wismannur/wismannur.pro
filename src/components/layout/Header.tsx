@@ -9,14 +9,32 @@ import { NAV_LIST } from "./constants";
 import clsx from "clsx";
 import { useTheme } from "next-themes";
 import { useIsMounted } from "usehooks-ts";
-import { cn } from "@/utils/misc";
 import { trackEventToUmami } from "@/utils/umami-track";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 const Header = () => {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const isMounted = useIsMounted();
+
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <motion.header
@@ -24,8 +42,11 @@ const Header = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className={clsx(
-        "sticky top-0 z-50 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4 border-b border-sky-500",
-        "bg-gradient-to-tr from-sky-200 via-sky-100 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
+        "sticky top-0 z-50 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4",
+        "transition-all duration-500",
+        isScrolled
+          ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-md"
+          : "bg-transparent"
       )}
     >
       <div className="container flex justify-between items-center mx-auto">
@@ -44,16 +65,19 @@ const Header = () => {
             <Link
               key={`nav-${idx}`}
               href={nav.path}
-              className={cn(
-                "hover:text-sky-500 font-normal",
-                pathname === nav.path && "text-sky-500 !font-semibold"
-              )}
+              className="hover:text-sky-500 font-normal"
               onClick={(evt) => {
                 evt.stopPropagation();
                 trackEventToUmami(`Header Menu: ${nav.name}`);
               }}
             >
-              <Typography>{nav.name}</Typography>
+              <Typography
+                className={
+                  pathname === nav.path ? "text-sky-500 !font-semibold" : ""
+                }
+              >
+                {nav.name}
+              </Typography>
             </Link>
           ))}
         </nav>

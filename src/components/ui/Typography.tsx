@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/utils/misc";
+import { cn } from "@/lib/utils";
 import { motion, MotionProps, Variants } from "framer-motion";
 import React, { ElementType, ComponentPropsWithoutRef } from "react";
 

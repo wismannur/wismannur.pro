@@ -27,8 +27,8 @@ export default function RootLayout({
       </head>
       <body
         className={clsx(
-          `${inter.className} flex flex-col min-h-screen bg-white dark:bg-black`,
-          "bg-gradient-to-br from-sky-200/80 md:from-sky-200/90 to-white dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
+          `${inter.className} flex flex-col min-h-screen`,
+          "bg-background transition-colors duration-300"
         )}
       >
         <ThemeProvider
@@ -37,9 +37,7 @@ export default function RootLayout({
           enableSystem={false}
         >
           <Header />
-          <main className="container mx-auto flex flex-col grow">
-            {children}
-          </main>
+          <main className={clsx("flex flex-col grow")}>{children}</main>
           <Footer />
         </ThemeProvider>
       </body>

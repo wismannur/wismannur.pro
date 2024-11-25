@@ -58,7 +58,10 @@ const Experience = () => {
                     >
                       Summary
                     </Typography>
-                    <Typography variant="p" className="leading-relaxed">
+                    <Typography
+                      variant="p"
+                      className="leading-relaxed text-muted-foreground"
+                    >
                       {experience.summary}
                     </Typography>
                   </div>
@@ -74,7 +77,10 @@ const Experience = () => {
                       {experience.responsibilities.map(
                         (responsibility, idx) => (
                           <li key={`responsibility-${idx}`}>
-                            <Typography variant="p" className="">
+                            <Typography
+                              variant="p"
+                              className="text-muted-foreground"
+                            >
                               {responsibility}
                             </Typography>
                           </li>
