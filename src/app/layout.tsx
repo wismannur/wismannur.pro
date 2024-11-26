@@ -27,8 +27,8 @@ export default function RootLayout({
       </head>
       <body
         className={clsx(
-          `${inter.className} flex flex-col min-h-screen`,
-          "bg-background transition-colors duration-300"
+          `${inter.className} font-sans flex flex-col min-h-screen`,
+          "bg-background bg-white dark:bg-black transition-colors duration-300"
         )}
       >
         <ThemeProvider
