@@ -85,7 +85,7 @@ const AboutMe = () => {
           variants={framerAnimate.container}
           className="mx-auto max-w-md lg:mx-0"
         >
-          <div className="sticky top-10 space-y-8">
+          <div className="sticky top-10 space-y-8 flex flex-col items-center">
             <MyProfilePicture />
 
             <motion.div variants={framerAnimate.item}>
