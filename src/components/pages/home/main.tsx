@@ -15,7 +15,7 @@ const HomeMain = () => {
         initial="hidden"
         animate="show"
         className={clsx(
-          "min-h-[calc(100vh-52px)] md:min-h-[calc(100vh-88px)] flex flex-col justify-center items-center",
+          "min-h-[calc(100vh-52px)] md:min-h-[calc(100vh-82px)] flex flex-col justify-center items-center",
           "container mx-auto px-4 xl:px-0 mt-40 mb-20 md:mt-20 md:mb-0"
         )}
       >

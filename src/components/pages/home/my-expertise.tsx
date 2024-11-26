@@ -43,7 +43,7 @@ const MyExpertise = () => {
         <CardContent className="p-4 md:p-10">
           <Typography
             variant="h2"
-            className="font-bold mb-6 md:mb-8 text-center"
+            className="font-bold mt-2 mb-4 md:mt-0 md:mb-8 text-center"
             variants={framerAnimate.item}
           >
             My Expertise

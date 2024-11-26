@@ -23,7 +23,7 @@ const variantStyles: Record<TypographyVariant, string> = {
   h5: "text-lg md:text-xl font-medium",
   h6: "text-base md:text-lg font-medium",
   p: "text-base md:text-lg font-normal",
-  span: "text-xs md:text-sm xl:text-base font-normal",
+  span: "text-sm md:text-base font-normal",
 };
 
 const defaultAnimations: Variants = {

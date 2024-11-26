@@ -4,6 +4,7 @@ import { trackEventToUmami } from "@/utils/umami-track";
 import { Typography } from "../ui/Typography";
 import { SOCIAL_LIST } from "./constants";
 import { motion } from "framer-motion";
+import Divider from "../ui/divider";
 
 const Footer = () => {
   return (
@@ -14,7 +15,7 @@ const Footer = () => {
       className="bg-white dark:bg-black"
     >
       {/* custom border */}
-      <div className="shrink-0 bg-neutral-800 h-[1px] w-full bg-gradient-to-r from-[#171717] via-[#525252] to-[#171717]" />
+      <Divider />
 
       {/* footer content */}
       <div className="container mx-auto flex justify-between items-center py-6 md:py-8 px-4">
