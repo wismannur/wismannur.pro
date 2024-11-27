@@ -1,6 +1,6 @@
 "use client";
 
-import { Typography } from "@/components/ui/typography";
+import { Typography } from "@/components/typography";
 import { framerAnimate } from "@/constants/framer-animate";
 import { trackEventToUmami } from "@/utils/umami-track";
 import { motion, useAnimationControls, Variants } from "framer-motion";

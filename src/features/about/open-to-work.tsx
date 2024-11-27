@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Typography } from "@/components/ui/typography";
+import { Typography } from "@/components/typography";
 import { env } from "@/constants/env";
 import { framerAnimate } from "@/constants/framer-animate";
 import { trackEventToUmami } from "@/utils/umami-track";

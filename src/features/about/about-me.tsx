@@ -1,6 +1,6 @@
 "use client";
 
-import { Typography } from "@/components/ui/typography";
+import { Typography } from "@/components/typography";
 import { framerAnimate } from "@/constants/framer-animate";
 import { motion } from "framer-motion";
 import MyProfilePicture from "./my-profile-picture";

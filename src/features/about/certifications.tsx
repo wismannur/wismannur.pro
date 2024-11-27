@@ -11,7 +11,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Typography } from "@/components/ui/typography";
+import { Typography } from "@/components/typography";
 
 interface Certification {
   institution: string;
