@@ -17,15 +17,15 @@ const HomeContact = () => {
         variants={framerAnimate.item}
         className="text-center space-y-6 my-10 md:my-20 px-4"
       >
-        <h3 className="text-2xl font-bold">Get in Touch</h3>
+        <h3 className="text-2xl font-bold">Open to Work</h3>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          I'm always open to new opportunities and collaborations. Feel free to
-          reach out if you have any questions or just want to say hi!
+          I&apos;m currently exploring new career opportunities and would be
+          delighted to discuss how my skills align with your needs.
         </p>
         <Button size="lg" asChild>
           <a href={`mailto:${env.personalEmail}`}>
             <Mail className="mr-2 h-5 w-5" />
-            Contact Me
+            {env.personalEmail}
           </a>
         </Button>
       </motion.section>

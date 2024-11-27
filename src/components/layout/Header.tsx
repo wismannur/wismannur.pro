@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Typography } from "../ui/Typography";
 import { LuMoon, LuSun } from "react-icons/lu";
-import WismanNurLogo from "../WismanNurLogo";
+// import WismanNurLogo from "../WismanNurLogo";
 import { usePathname } from "next/navigation";
 import { NAV_LIST } from "./constants";
 import clsx from "clsx";
@@ -50,8 +50,8 @@ const Header = () => {
       )}
     >
       <div className="container flex justify-between items-center mx-auto">
-        <nav className="flex justify-center items-center space-x-4">
-          <Link
+        <nav className="flex justify-center items-center space-x-4 md:space-x-6">
+          {/* <Link
             href="/"
             className="text-sky-500 font-semibold"
             onClick={(evt) => {
@@ -60,24 +60,35 @@ const Header = () => {
             }}
           >
             <WismanNurLogo className="w-[68px] h-[34px] lg:w-[100px] lg:h-[50px]" />
-          </Link>
+          </Link> */}
           {NAV_LIST.map((nav, idx) => (
             <Link
               key={`nav-${idx}`}
               href={nav.path}
-              className="hover:text-sky-500 font-normal"
+              className={clsx(
+                "hover:text-sky-500 font-normal flex items-start",
+                nav?.isComingSoon && "cursor-not-allowed"
+              )}
               onClick={(evt) => {
+                if (nav?.isComingSoon) return;
+
                 evt.stopPropagation();
                 trackEventToUmami(`Header Menu: ${nav.name}`);
               }}
             >
               <Typography
-                className={
-                  pathname === nav.path ? "text-sky-500 !font-semibold" : ""
-                }
+                className={clsx(
+                  pathname === nav.path ? "text-sky-500 !font-semibold" : "",
+                  nav?.isComingSoon && "text-muted-foreground"
+                )}
               >
                 {nav.name}
               </Typography>
+              {nav?.isComingSoon && (
+                <Typography className="border border-black dark:border-white rounded-full px-2 py-1 inline !text-[10px] !leading-none ml-1 h-fit">
+                  SOON
+                </Typography>
+              )}
             </Link>
           ))}
         </nav>
