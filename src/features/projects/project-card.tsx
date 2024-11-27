@@ -27,7 +27,7 @@ export function ProjectCard({ project }: { project: Project }) {
             </Badge>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-4 md:p-6 pt-0">
+        <CardContent className="px-4 pb-4 md:px-6 md:pb-6 pt-0">
           <p>{project.description}</p>
         </CardContent>
       </Card>
