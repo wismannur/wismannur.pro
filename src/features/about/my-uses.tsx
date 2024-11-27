@@ -1,6 +1,6 @@
 "use client";
 
-import { Typography } from "@/components/ui/Typography";
+import { Typography } from "@/components/typography";
 
 const MyUses = () => {
   return (
@@ -14,7 +14,7 @@ const MyUses = () => {
       <ul className="pl-5 list-disc space-y-1">
         {MY_USES.map((myUse, idx) => (
           <li key={`myUse-${idx}`}>
-            <Typography variant="p" className="text-muted-foreground">
+            <Typography variant="span" className="text-muted-foreground">
               {myUse}
             </Typography>
           </li>

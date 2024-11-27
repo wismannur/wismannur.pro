@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Typography } from "../ui/Typography";
+import { Typography } from "../../components/typography";
 import { LuMoon, LuSun } from "react-icons/lu";
-import WismanNurLogo from "../WismanNurLogo";
+// import WismanNurLogo from "../WismanNurLogo";
 import { usePathname } from "next/navigation";
 import { NAV_LIST } from "./constants";
 import clsx from "clsx";
@@ -13,7 +13,7 @@ import { trackEventToUmami } from "@/utils/umami-track";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const Header = () => {
+export const Header = () => {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const isMounted = useIsMounted();
@@ -42,7 +42,7 @@ const Header = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className={clsx(
-        "sticky top-0 z-50 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4",
+        "sticky top-0 z-50 w-full px-4 py-3 md:py-4",
         "transition-all duration-500",
         isScrolled
           ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-md"
@@ -50,8 +50,8 @@ const Header = () => {
       )}
     >
       <div className="container flex justify-between items-center mx-auto">
-        <nav className="flex justify-center items-center space-x-4">
-          <Link
+        <nav className="flex justify-center items-center space-x-4 md:space-x-6">
+          {/* <Link
             href="/"
             className="text-sky-500 font-semibold"
             onClick={(evt) => {
@@ -60,24 +60,35 @@ const Header = () => {
             }}
           >
             <WismanNurLogo className="w-[68px] h-[34px] lg:w-[100px] lg:h-[50px]" />
-          </Link>
+          </Link> */}
           {NAV_LIST.map((nav, idx) => (
             <Link
               key={`nav-${idx}`}
               href={nav.path}
-              className="hover:text-sky-500 font-normal"
+              className={clsx(
+                "hover:text-sky-500 font-normal flex items-start",
+                nav?.isComingSoon && "cursor-not-allowed"
+              )}
               onClick={(evt) => {
+                if (nav?.isComingSoon) return;
+
                 evt.stopPropagation();
                 trackEventToUmami(`Header Menu: ${nav.name}`);
               }}
             >
               <Typography
-                className={
-                  pathname === nav.path ? "text-sky-500 !font-semibold" : ""
-                }
+                className={clsx(
+                  pathname === nav.path ? "text-sky-500 !font-semibold" : "",
+                  nav?.isComingSoon && "text-muted-foreground"
+                )}
               >
                 {nav.name}
               </Typography>
+              {nav?.isComingSoon && (
+                <Typography className="border border-black dark:border-white rounded-full px-2 py-1 inline !text-[10px] !leading-none ml-1 h-fit">
+                  SOON
+                </Typography>
+              )}
             </Link>
           ))}
         </nav>

@@ -1,14 +1,14 @@
 "use client";
 
-import { Typography } from "@/components/ui/Typography";
+import { Typography } from "@/components/typography";
 import { framerAnimate } from "@/constants/framer-animate";
 import { trackEventToUmami } from "@/utils/umami-track";
 import { motion, useAnimationControls, Variants } from "framer-motion";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText } from "lucide-react";
+import { SOCIAL_LIST } from "@/features/layout/constants";
 
 const MyIntroduction = () => {
   const router = useRouter();
@@ -75,6 +75,27 @@ const MyIntroduction = () => {
             <ArrowRight className="ml-1 md:ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
         </a>
+      </motion.div>
+
+      <motion.div
+        variants={framerAnimate.item}
+        className="flex justify-center space-x-4"
+      >
+        {SOCIAL_LIST.map((social, idx) => (
+          <a
+            key={`social-${idx}`}
+            href={social.path}
+            className="text-gray-500 dark:text-gray-400 hover:text-sky-500 hover:dark:text-sky-500"
+            rel="noopener noreferrer"
+            onClick={(evt) => {
+              evt.preventDefault();
+              trackEventToUmami(`Footer Social: ${social.name}`);
+              window.open(social.path);
+            }}
+          >
+            {social.icon}
+          </a>
+        ))}
       </motion.div>
     </motion.section>
   );

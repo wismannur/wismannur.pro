@@ -9,7 +9,7 @@ const MyProfilePicture = () => {
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.7 }}
-      className="relative w-full h-full group"
+      className="relative w-full h-full group max-w-[calc(100vw-150px)] md:max-w-[95%]"
     >
       <div className="absolute inset-0 flex items-center justify-center z-10">
         <div className="w-10/12 h-10/12 rounded-full overflow-hidden">

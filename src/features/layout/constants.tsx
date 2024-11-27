@@ -1,5 +1,5 @@
 import { env } from "@/constants/env";
-import { LuMail, LuLinkedin, LuGithub, LuLineChart } from "react-icons/lu";
+import { LuMail, LuLinkedin, LuGithub } from "react-icons/lu";
 
 export const NAV_LIST = [
   {
@@ -8,7 +8,8 @@ export const NAV_LIST = [
   },
   {
     name: "Blog",
-    path: "/blog",
+    path: "#",
+    isComingSoon: true,
   },
   {
     name: "Projects",

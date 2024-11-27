@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { fontFamily } from "tailwindcss/defaultTheme";
 
 const customScreens = {
   sm: "640px",
@@ -10,12 +11,16 @@ const customScreens = {
 const config: Config = {
   darkMode: "class",
   content: [
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/features/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
+      fontFamily: {
+        primary: ["Inter", ...fontFamily.sans],
+      },
       keyframes: {
         "spin-slow": {
           "0%": { transform: "rotate(0deg)" },

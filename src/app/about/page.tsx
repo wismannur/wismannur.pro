@@ -1,4 +1,4 @@
-import AboutMain from "@/components/pages/about/main";
+import AboutMain from "@/features/about/main";
 import { metadataStatic } from "@/constants/metadata";
 import { Metadata } from "next";
 

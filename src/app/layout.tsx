@@ -1,5 +1,5 @@
-import Footer from "@/components/layout/Footer";
-import Header from "@/components/layout/Header";
+import { Footer } from "@/features/layout/footer";
+import { Header } from "@/features/layout/header";
 import { env } from "@/constants/env";
 import clsx from "clsx";
 import { ThemeProvider } from "next-themes";
@@ -27,8 +27,8 @@ export default function RootLayout({
       </head>
       <body
         className={clsx(
-          `${inter.className} flex flex-col min-h-screen`,
-          "bg-background transition-colors duration-300"
+          `${inter.className} font-sans flex flex-col min-h-screen`,
+          "bg-background bg-white dark:bg-black transition-colors duration-300"
         )}
       >
         <ThemeProvider
