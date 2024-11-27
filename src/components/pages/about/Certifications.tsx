@@ -1,81 +1,150 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { ExternalLink, Award, Code, Layout } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Typography } from "@/components/ui/Typography";
-import { trackEventToUmami } from "@/utils/umami-track";
-import clsx from "clsx";
 
-const Certifications = () => {
-  return (
-    <div className="flex flex-col mb-4">
-      <Typography variant="h2" className="mb-4">
-        Certifications
-      </Typography>
-      <div className="grid grid-cols-2 gap-4 sm:gap-8">
-        {MY_EDUCATION_AND_CERTIFICATION.map((educert, idx) => (
-          <a
-            key={`educert-${idx}`}
-            href={educert.credentialLink}
-            target="_blank"
-            className={clsx(
-              "group relative overflow-hidden col-span-2 md:col-span-1 border border-cyan-500/50 dark:border-cyan-600/50",
-              "bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-800 dark:to-gray-900/50 hover:shadow-lg dark:hover:shadow-lg dark:hover:shadow-cyan-500/50 transition-all duration-300",
-              "p-4 md:p-8 rounded-lg hover:scale-105 transition-transform duration-300"
-            )}
-          >
-            <Typography variant="h4" className="">
-              {educert.provider}
-            </Typography>
-            <Typography
-              variant="span"
-              className="inline-block -mt-2 mb-4 text-gray-500 dark:text-gray-400"
-            >
-              {educert.date}
-            </Typography>
-            <Typography variant="p" className="mb-4">
-              {educert.description}
-            </Typography>
-            <Typography
-              variant="p"
-              className="text-sky-500 hover:underline w-fit"
-              onClick={() => {
-                trackEventToUmami("Certification Click", {
-                  provider: educert.provider,
-                  description: educert.description,
-                });
-                window.open(educert.credentialLink);
-              }}
-            >
-              View Credentials
-            </Typography>
+interface Certification {
+  institution: string;
+  date: string;
+  course: string;
+  credentialUrl: string;
+  icon: keyof typeof icons;
+  skills: string[];
+}
 
-            <div
-              className={clsx(
-                "absolute top-0 right-0 w-32 h-32 blur-2xl rounded-full transform translate-x-16 -translate-y-16 group-hover:translate-x-8 transition-transform duration-500",
-                "bg-gradient-to-br from-cyan-500/50 to-emerald-500/50 dark:from-cyan-600/70 dark:to-emerald-600/70"
-              )}
-            ></div>
-          </a>
-        ))}
-      </div>
-    </div>
-  );
+const icons = {
+  award: Award,
+  code: Code,
+  layout: Layout,
 };
 
-const MY_EDUCATION_AND_CERTIFICATION = [
-  {
-    provider: "Makers Institute",
-    description: "Full-stack Academy Bootcamp",
-    date: "Nov 2017 - Jan 2018",
-    credentialLink:
-      "https://drive.google.com/file/d/1S__gyEZBc0dnQqsEPciL3w_jehMuvdwk/view",
-  },
-  {
-    provider: "Freecodecamp.org",
-    description: "Responsive Web Design",
-    date: "Jul 2021",
-    credentialLink:
-      "https://www.freecodecamp.org/certification/wismannur/responsive-web-design",
-  },
-];
+export default function Certifications() {
+  const certifications: Certification[] = [
+    {
+      institution: "Makers Institute",
+      date: "Nov 2017 - Jan 2018",
+      course: "Full-stack Academy Bootcamp",
+      credentialUrl:
+        "https://drive.google.com/file/d/1S__gyEZBc0dnQqsEPciL3w_jehMuvdwk/view",
+      icon: "code",
+      skills: ["HTML5", "CSS3", "JavaScript", "jQuery", "Node.js", "Express"],
+    },
+    {
+      institution: "Freecodecamp.org",
+      date: "Jul 2021",
+      course: "Responsive Web Design",
+      credentialUrl:
+        "https://www.freecodecamp.org/certification/wismannur/responsive-web-design",
+      icon: "layout",
+      skills: ["HTML5", "CSS3", "Flexbox", "CSS Grid", "Responsive Design"],
+    },
+  ];
 
-export default Certifications;
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  };
+
+  return (
+    <section className="py-12 md:py-24 w-full flex">
+      <div className="container m-auto px-4 md:px-0">
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="space-y-8"
+        >
+          <motion.div
+            variants={item}
+            className="space-y-4 flex flex-col items-start md:items-center"
+          >
+            <Typography variant="h2" className="font-bold tracking-tighter">
+              Certifications
+            </Typography>
+            <Typography variant="p" className="ext-muted-foreground">
+              Professional certifications and educational achievements that have
+              shaped my expertise.
+            </Typography>
+          </motion.div>
+          <motion.div variants={item} className="grid gap-6 md:grid-cols-2">
+            {certifications.map((cert, index) => {
+              const Icon = icons[cert.icon];
+              return (
+                <motion.div
+                  key={cert.institution}
+                  variants={item}
+                  whileHover={{ scale: 1.02 }}
+                  className="group relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl transition-all" />
+                  <Card className="relative bg-card/50 border-muted">
+                    <CardHeader className="space-y-1">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-2 bg-primary/10 rounded-xl">
+                          <Icon className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <CardTitle className="text-xl">
+                            {cert.institution}
+                          </CardTitle>
+                          <CardDescription>{cert.date}</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col space-y-4">
+                        <h4 className="font-medium mb-2">{cert.course}</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {cert.skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button variant="ghost" className="group/btn" asChild>
+                        <a
+                          href={cert.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Credentials
+                          <ExternalLink className="w-4 h-4 ml-2 transition-transform group-hover/btn:translate-x-1" />
+                        </a>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}

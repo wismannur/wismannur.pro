@@ -31,14 +31,16 @@ export default function AboutMain() {
 
       <Divider />
 
+      {/* START === Certifications section ============================================================================= */}
+      <Certifications />
+      {/* END === Certifications section =============================================================================== */}
+
+      <Divider />
+
       <div className="container mx-auto py-10 flex flex-col px-4 xl:px-0 gap-4 sm:gap-8">
         {/* START === Experience section ======================================================================= */}
         <Experience />
         {/* END === Experience section ========================================================================= */}
-
-        {/* START === Certifications section ============================================================================= */}
-        <Certifications />
-        {/* END === Certifications section =============================================================================== */}
 
         {/* START === My Uses section ============================================================================= */}
         <MyUses />
