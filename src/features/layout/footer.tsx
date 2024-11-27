@@ -1,7 +1,7 @@
 "use client";
 
 import { trackEventToUmami } from "@/utils/umami-track";
-import { Typography } from "../../components/ui/Typography";
+import { Typography } from "@/components/ui/typography";
 import { SOCIAL_LIST } from "./constants";
 import { motion } from "framer-motion";
 import Divider from "../../components/ui/divider";

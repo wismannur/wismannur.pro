@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Typography } from "@/components/ui/Typography";
+import { Typography } from "@/components/ui/typography";
 import { framerAnimate } from "@/constants/framer-animate";
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, Sparkles } from "lucide-react";

@@ -1,7 +1,7 @@
 "use client";
 
 import Chip from "@/components/ui/Chip";
-import { Typography } from "@/components/ui/Typography";
+import { Typography } from "@/components/ui/typography";
 
 const Experience = () => {
   return (
