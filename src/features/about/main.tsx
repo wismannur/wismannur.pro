@@ -1,13 +1,13 @@
 "use client";
 
 import CardBgDots from "@/components/card-bg-dots";
-import AboutMe from "@/components/pages/about/AboutMe";
+import AboutMe from "@/features/about/about-me";
 import { framerAnimate } from "@/constants/framer-animate";
 import clsx from "clsx";
 import { motion } from "framer-motion";
-import Experience from "./Experience";
-import Certifications from "./Certifications";
-import MyUses from "./MyUses";
+import Experience from "./experience";
+import Certifications from "./certifications";
+import MyUses from "./my-uses";
 import Divider from "@/components/ui/divider";
 
 export default function AboutMain() {

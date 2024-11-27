@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 import { metadataStatic } from "@/constants/metadata";
-import HomeMain from "@/components/pages/home/main";
-import HomeContact from "@/components/pages/home/contact";
+import HomeMain from "@/features/home/main";
+import HomeContact from "@/features/home/contact";
 import Divider from "@/components/ui/divider";
 
 export const metadata: Metadata = metadataStatic.home;

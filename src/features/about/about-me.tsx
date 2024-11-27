@@ -3,8 +3,8 @@
 import { Typography } from "@/components/ui/Typography";
 import { framerAnimate } from "@/constants/framer-animate";
 import { motion } from "framer-motion";
-import MyProfilePicture from "./MyProfilePicture";
-import OpenToWork from "./OpenToWork";
+import MyProfilePicture from "./my-profile-picture";
+import OpenToWork from "./open-to-work";
 
 const AboutMe = () => {
   return (
