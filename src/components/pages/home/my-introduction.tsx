@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, FileText } from "lucide-react";
-import { SOCIAL_LIST } from "@/components/layout/constants";
+import { SOCIAL_LIST } from "@/features/layout/constants";
 
 const MyIntroduction = () => {
   const router = useRouter();

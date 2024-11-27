@@ -1,5 +1,5 @@
-import Footer from "@/components/layout/Footer";
-import Header from "@/components/layout/Header";
+import { Footer } from "@/features/layout/footer";
+import { Header } from "@/features/layout/header";
 import { env } from "@/constants/env";
 import clsx from "clsx";
 import { ThemeProvider } from "next-themes";

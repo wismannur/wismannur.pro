@@ -1,12 +1,12 @@
 "use client";
 
 import { trackEventToUmami } from "@/utils/umami-track";
-import { Typography } from "../ui/Typography";
+import { Typography } from "../../components/ui/Typography";
 import { SOCIAL_LIST } from "./constants";
 import { motion } from "framer-motion";
-import Divider from "../ui/divider";
+import Divider from "../../components/ui/divider";
 
-const Footer = () => {
+export const Footer = () => {
   return (
     <motion.footer
       initial={{ opacity: 0 }}
@@ -43,5 +43,3 @@ const Footer = () => {
     </motion.footer>
   );
 };
-
-export default Footer;

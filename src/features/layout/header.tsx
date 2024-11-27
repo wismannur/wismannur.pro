@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Typography } from "../ui/Typography";
+import { Typography } from "../../components/ui/Typography";
 import { LuMoon, LuSun } from "react-icons/lu";
 // import WismanNurLogo from "../WismanNurLogo";
 import { usePathname } from "next/navigation";
@@ -13,7 +13,7 @@ import { trackEventToUmami } from "@/utils/umami-track";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const Header = () => {
+export const Header = () => {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const isMounted = useIsMounted();
