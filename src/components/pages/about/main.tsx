@@ -14,14 +14,14 @@ export default function AboutMain() {
   return (
     <>
       {/* START === Highlight About Me ======================================================================= */}
-      <CardBgDots className="-mt-[52px] md:-mt-[82px] min-w-full flex flex-col">
+      <CardBgDots className="-mt-[52px] md:-mt-[74px] min-w-full flex flex-col">
         <motion.div
           variants={framerAnimate.container}
           initial="hidden"
           animate="show"
           className={clsx(
-            "min-h-[calc(100vh-52px)] md:min-h-[calc(100vh-82px)] flex flex-col",
-            "container px-4 md:px-0 mx-auto mt-20 mb-10 md:mb-0"
+            "min-h-screen flex flex-col",
+            "container px-4 md:px-0 mx-auto mt-20 mb-5 md:my-0"
           )}
         >
           <AboutMe />

@@ -42,7 +42,7 @@ const Header = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className={clsx(
-        "sticky top-0 z-50 w-full pl-2 pr-3 md:pr-4 py-3 md:py-4",
+        "sticky top-0 z-50 w-full px-4 py-3 md:py-4",
         "transition-all duration-500",
         isScrolled
           ? "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-md"
