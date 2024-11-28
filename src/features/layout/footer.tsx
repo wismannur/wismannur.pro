@@ -5,6 +5,7 @@ import { Typography } from "@/components/typography";
 import { SOCIAL_LIST } from "./constants";
 import { motion } from "framer-motion";
 import Divider from "../../components/ui/divider";
+import OpenToWork from "./open-to-work";
 
 export const Footer = () => {
   return (
@@ -12,10 +13,13 @@ export const Footer = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: 1.5, duration: 0.5 }}
-      className="bg-white dark:bg-black"
+      className="bg-white dark:bg-black flex flex-col items-center"
     >
-      {/* custom border */}
       <Divider />
+
+      <OpenToWork />
+
+      <Divider className="container" />
 
       {/* footer content */}
       <div className="container mx-auto flex justify-between items-center py-6 md:py-8 px-4">
