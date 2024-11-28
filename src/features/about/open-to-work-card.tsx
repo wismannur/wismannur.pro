@@ -8,7 +8,7 @@ import { framerAnimate } from "@/constants/framer-animate";
 import { trackEventToUmami } from "@/utils/umami-track";
 import { Mail } from "lucide-react";
 
-const OpenToWork = () => {
+const OpenToWorkCard = () => {
   return (
     <Card>
       <CardContent className="p-6">
@@ -44,4 +44,4 @@ const OpenToWork = () => {
   );
 };
 
-export default OpenToWork;
+export default OpenToWorkCard;
