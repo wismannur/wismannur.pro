@@ -7,15 +7,14 @@ import { framerAnimate } from "@/constants/framer-animate";
 import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 
-const HomeContact = () => {
+const OpenToWork = () => {
   return (
-    <CardBgDots className="">
+    <CardBgDots className="py-10 md:py-20 px-4">
       <motion.section
-        id="contact"
         initial="hidden"
         animate="show"
         variants={framerAnimate.item}
-        className="text-center space-y-6 my-10 md:my-20 px-4"
+        className="text-center space-y-6"
       >
         <h3 className="text-2xl font-bold">Open to Work</h3>
         <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -33,4 +32,4 @@ const HomeContact = () => {
   );
 };
 
-export default HomeContact;
+export default OpenToWork;

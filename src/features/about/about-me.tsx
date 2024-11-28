@@ -4,7 +4,7 @@ import { Typography } from "@/components/typography";
 import { framerAnimate } from "@/constants/framer-animate";
 import { motion } from "framer-motion";
 import MyProfilePicture from "./my-profile-picture";
-import OpenToWork from "./open-to-work";
+import OpenToWorkCard from "./open-to-work-card";
 
 const AboutMe = () => {
   return (
@@ -89,7 +89,7 @@ const AboutMe = () => {
             <MyProfilePicture />
 
             <motion.div variants={framerAnimate.item}>
-              <OpenToWork />
+              <OpenToWorkCard />
             </motion.div>
           </div>
         </motion.div>
