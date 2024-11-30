@@ -121,7 +121,7 @@ const Experience = () => {
 
 const MY_EXPERIENCES = [
   {
-    title: "Frontend Developer",
+    title: "Lead Frontend Engineer",
     company: "PT. Samala Serasi Unggul - Rumah Siap Kerja",
     employmentType: "Full-time",
     date: "May 2021 - Sep 2024",
@@ -129,13 +129,16 @@ const MY_EXPERIENCES = [
     location: "Jakarta, Indonesia",
     locationType: "Remote",
     summary:
-      "Led frontend development for Rumah Siap Kerja's back-office system, focusing on user experience enhancement and performance optimization.",
+      "Promoted to lead a back-office CMS project after successfully completing a major revamp, demonstrating strong problem-solving skills and leadership in migrating the application from Vue to React, resulting in improved scalability and team efficiency.",
     responsibilities: [
-      "Developed and maintained the back-office system, ensuring seamless user experience and optimal performance.",
-      "Collaborated with cross-functional teams to identify and resolve software bugs and implement enhancements.",
-      "Optimized front-end code for faster load times and improved overall performance.",
-      "Built a design system and led the migration from Vue.js to React.js from scratch.",
-      "Ensured the back-office system remained bug-free and maintained high performance.",
+      "Tasked with revamping a 50-page back-office CMS application that managed content, users, and orders, despite inadequate project documentation from previous developers.",
+      "Delivered a new design using a similar tech stack within six months while analyzing and optimizing existing code.",
+      "Prioritized tasks effectively, identified key services and pages to address first, and ensured alignment with project goals.",
+      "Successfully launched the revamped application, earning recognition and promotion to project lead.",
+      "Led the migration of the back-office CMS from Vue to React, aligning it with the company’s main website architecture.",
+      "Designed a new component system and backend services while managing a cross-functional development team.",
+      "Distributed tasks strategically, conducted code reviews, and planned sprints with prioritized deliverables to ensure deadlines were met.",
+      "Delivered a scalable React-based application, improving development processes and enhancing team productivity.",
     ],
     techStack: [
       "HTML",
@@ -143,7 +146,7 @@ const MY_EXPERIENCES = [
       "TypeScript",
       "JavaScript",
       "React.js",
-      "MaterialUI",
+      "Material UI",
       "React Hook Form",
       "React Router",
       "TanStack Query (React Query)",
@@ -152,9 +155,6 @@ const MY_EXPERIENCES = [
       "Vuetify.js",
       "Vuelidate",
       "Responsive Design",
-      "Nest.js",
-      "TypeORM",
-      "MySQL",
     ],
   },
   {

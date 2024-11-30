@@ -42,7 +42,7 @@ const AboutMe = () => {
             >
               Hi! I&apos;m Wisman. As someone who has always been interested in
               understanding how the world works, I&apos;m constantly seeking new
-              things to learn and I chose to become a Software Developer because
+              things to learn and I chose to become a Software Engineer because
               I love building new things with technology.
             </Typography>
             <Typography
