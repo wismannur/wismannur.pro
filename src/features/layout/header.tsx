@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Typography } from "../../components/typography";
+import { Typography } from "../../components/ui/typography";
 import { LuMoon, LuSun } from "react-icons/lu";
 // import WismanNurLogo from "../WismanNurLogo";
 import { usePathname } from "next/navigation";

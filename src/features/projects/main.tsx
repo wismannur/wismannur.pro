@@ -5,7 +5,7 @@ import { ProjectCard } from "./project-card";
 import { motion } from "framer-motion";
 import { framerAnimate } from "@/constants/framer-animate";
 import CardBgDots from "@/components/card-bg-dots";
-import { Typography } from "@/components/typography";
+import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { env } from "@/constants/env";

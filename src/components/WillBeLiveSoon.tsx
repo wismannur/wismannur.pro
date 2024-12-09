@@ -1,4 +1,4 @@
-import { Typography } from "./typography";
+import { Typography } from "./ui/typography";
 
 type TWillBeLiveSoonProps = {
   title?: string;
