@@ -31,7 +31,7 @@ export const Footer = () => {
             <a
               key={`social-${idx}`}
               href={social.path}
-              className="text-gray-500 dark:text-gray-400 hover:text-sky-500 hover:dark:text-sky-500"
+              className="text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:dark:text-blue-500"
               rel="noopener noreferrer"
               onClick={(evt) => {
                 evt.preventDefault();

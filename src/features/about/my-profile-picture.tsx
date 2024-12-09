@@ -33,7 +33,7 @@ const MyProfilePicture = () => {
         ></path>
         <path
           d="M51.483,43.250A28,28,0,0,1,4.5172,43.250L6.1946,42.161A26,26,0,0,0,49.805,42.161Z"
-          className="text-sky-500"
+          className="text-blue-500"
           fill="currentColor"
         ></path>
         <path

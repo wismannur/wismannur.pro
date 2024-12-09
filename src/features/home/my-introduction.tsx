@@ -34,11 +34,7 @@ const MyIntroduction = () => {
           variants={framerAnimate.item}
           className="mb-2 sm:mb-4"
         >
-          I'm{" "}
-          <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">
-            Wisman
-          </span>{" "}
-          Nur
+          I'm <span className="text-clip-blue">Wisman</span> Nur
         </Typography>
         <Typography
           variant="p"
@@ -96,7 +92,7 @@ const MyIntroduction = () => {
             <a
               key={`social-${idx}`}
               href={social.path}
-              className="text-gray-500 dark:text-gray-400 hover:text-sky-500 hover:dark:text-sky-500"
+              className="text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:dark:text-blue-500"
               rel="noopener noreferrer"
               onClick={(evt) => {
                 evt.preventDefault();
@@ -184,10 +180,10 @@ const Headlines = () => {
     <Typography
       variant="h4"
       animate={controls}
-      className="mb-4 text-sky-500 font-bold"
+      className="mb-4 text-blue-500 font-bold"
     >
       Frontend {currentWord}
-      <span className="ml-1 -mb-0.5 md:-mb-1 w-1 min-h-5 md:min-h-6 bg-sky-500 inline-block animate-blink" />
+      <span className="ml-1 -mb-0.5 md:-mb-1 w-1 min-h-5 md:min-h-6 bg-blue-500 inline-block animate-blink" />
     </Typography>
   );
 };

@@ -19,11 +19,7 @@ const AboutMe = () => {
         <motion.div variants={framerAnimate.container} className="space-y-8">
           <div className="space-y-2">
             <Typography variant="h1" variants={framerAnimate.item}>
-              About{" "}
-              <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-transparent bg-clip-text">
-                Wisman
-              </span>{" "}
-              Nur
+              About <span className="text-clip-blue">Wisman</span> Nur
             </Typography>
             <Typography
               variant="p"
