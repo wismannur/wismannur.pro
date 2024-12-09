@@ -16,8 +16,8 @@ const CardBgDots = ({ children, className }: CardBgDotsProps) => {
             radial-gradient(circle, var(--dot-color) 1px, transparent 1px),
             radial-gradient(circle, var(--dot-color) 1px, transparent 1px)
           `,
-          backgroundSize: "40px 40px",
-          backgroundPosition: "0 0, 20px 20px",
+          backgroundSize: "80px 80px",
+          backgroundPosition: "0 0, 40px 40px",
         }}
       />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-10% to-95% from-white dark:from-black to-transparent " />
