@@ -36,9 +36,11 @@ const MyIntroduction = () => {
         variants={framerAnimate.item}
         className="mb-4 xl:mb-6 max-w-3xl text-center text-muted-foreground"
       >
-        a <b>front-end</b> software engineer with full-stack experience,
-        dedicated to creating clean, efficient, and secure solutions on both the
-        client and server sides.
+        a <b>front-end</b> software engineer with over five years of experience
+        specializing in building responsive web applications using frameworks
+        like React and Vue. My experience includes collaborating closely with
+        designers, product managers, and backend developers to bring complex
+        designs to life.
       </Typography>
 
       <motion.div

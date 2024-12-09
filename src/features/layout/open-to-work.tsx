@@ -18,8 +18,9 @@ const OpenToWork = () => {
       >
         <h3 className="text-2xl font-bold">Open to Work</h3>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          I&apos;m currently exploring new career opportunities and would be
-          delighted to discuss how my skills align with your needs.
+          I&apos;m open to full-time or part-time work and I can join
+          immediately. So don&apos;t hesitate to hire me. and please contact me
+          via email.
         </p>
         <Button size="lg" asChild>
           <a href={`mailto:${env.personalEmail}`}>

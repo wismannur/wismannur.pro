@@ -30,7 +30,7 @@ const AboutMe = () => {
               variants={framerAnimate.item}
               className="text-gray-500 dark:text-gray-400 md:text-lg"
             >
-              Software Developer & Tech Enthusiast
+              Software Engineer & Tech Enthusiast
             </Typography>
           </div>
 
@@ -40,31 +40,32 @@ const AboutMe = () => {
               variants={framerAnimate.item}
               className="leading-relaxed"
             >
-              Hi! I&apos;m Wisman. As someone who has always been interested in
-              understanding how the world works, I&apos;m constantly seeking new
-              things to learn and I chose to become a Software Engineer because
-              I love building new things with technology.
+              Hi! I&apos;m Wisman, a front-end software engineer with over five
+              years of experience specializing in building responsive web
+              applications using frameworks like React and Vue. My experience
+              includes collaborating closely with designers, product managers,
+              and backend developers to bring complex designs to life.
             </Typography>
             <Typography
               variant="p"
               variants={framerAnimate.item}
               className="leading-relaxed"
             >
-              My journey began as a student in a Full-stack Academy Bootcamp,
-              where I learned the fundamentals of programming and how to build
-              websites. Currently, I am focused on advancing my expertise in
-              front-end development while continuously building my skills in
-              back-end technologies to broaden my technical proficiency.
+              I also have full-stack experience, including integrating APIs with
+              back-end systems and understanding back-end codebases. And
+              I&apos;m dedicated to creating clean, efficient, and secure
+              solutions for both client and server sides. Crafting user-friendly
+              with functional seamlessly and scalable web applications has
+              always been a passion of mine.
             </Typography>
             <Typography
               variant="p"
               variants={framerAnimate.item}
               className="leading-relaxed"
             >
-              Building websites is more than just code — it&apos;s an art. With
-              over five years of experience in front-end development, I enjoy
-              creating engaging experiences using React.js and Vue.js, ensuring
-              each project not only looks great but also functions seamlessly.
+              As someone who has always been interested in understanding how the
+              world works, I&apos;m constantly seeking opportunities to learn
+              and enjoy building innovative solutions with technology.
             </Typography>
             <Typography
               variant="p"

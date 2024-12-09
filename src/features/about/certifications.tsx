@@ -31,15 +31,6 @@ const icons = {
 export default function Certifications() {
   const certifications: Certification[] = [
     {
-      institution: "Makers Institute",
-      date: "Nov 2017 - Jan 2018",
-      course: "Full-stack Academy Bootcamp",
-      credentialUrl:
-        "https://drive.google.com/file/d/1S__gyEZBc0dnQqsEPciL3w_jehMuvdwk/view",
-      icon: "code",
-      skills: ["HTML5", "CSS3", "JavaScript", "jQuery", "Node.js", "Express"],
-    },
-    {
       institution: "Freecodecamp.org",
       date: "Jul 2021",
       course: "Responsive Web Design",
@@ -47,6 +38,15 @@ export default function Certifications() {
         "https://www.freecodecamp.org/certification/wismannur/responsive-web-design",
       icon: "layout",
       skills: ["HTML5", "CSS3", "Flexbox", "CSS Grid", "Responsive Design"],
+    },
+    {
+      institution: "Makers Institute",
+      date: "Nov 2017 - Jan 2018",
+      course: "Full-stack Academy Bootcamp",
+      credentialUrl:
+        "https://drive.google.com/file/d/1S__gyEZBc0dnQqsEPciL3w_jehMuvdwk/view",
+      icon: "code",
+      skills: ["HTML5", "CSS3", "JavaScript", "jQuery", "Node.js", "Express"],
     },
   ];
 
@@ -79,11 +79,11 @@ export default function Certifications() {
             className="space-y-4 flex flex-col items-start md:items-center"
           >
             <Typography variant="h2" className="font-bold tracking-tighter">
-              Certifications
+              Education & Certifications
             </Typography>
             <Typography variant="p" className="ext-muted-foreground">
-              Professional certifications and educational achievements that have
-              shaped my expertise.
+              Educational and professional certifications that have shaped my
+              expertise.
             </Typography>
           </motion.div>
           <motion.div variants={item} className="grid gap-6 md:grid-cols-2">

@@ -10,18 +10,19 @@ import { Mail } from "lucide-react";
 
 const OpenToWorkCard = () => {
   return (
-    <Card>
+    <Card className="bg-transparent">
       <CardContent className="p-6">
         <div className="flex flex-col space-y-4">
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-2 items-center">
             <h2 className="text-2xl font-bold">Open to Work</h2>
             <Typography
               variant="span"
               variants={framerAnimate.item}
-              className="text-gray-500 dark:text-gray-400"
+              className="text-gray-500 dark:text-gray-400 text-center"
             >
-              I&apos;m currently exploring new career opportunities and would be
-              delighted to discuss how my skills align with your needs.
+              I&apos;m open to full-time or part-time work and I can join
+              immediately. So don&apos;t hesitate to hire me. and please contact
+              me via email.
             </Typography>
           </div>
           <a
