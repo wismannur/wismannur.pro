@@ -25,7 +25,12 @@ const FeaturedProject = () => {
         <div className="flex flex-col md:flex-row gap-6 p-0 md:px-20">
           <StorageFlowLogo className="w-32 mx-auto md:m-0" />
           <div className="w-full flex flex-col md:gap-2">
-            <Typography variant="h4">Storage Flow</Typography>
+            <Typography variant="h4">
+              Storage Flow{" "}
+              <Typography className="border border-muted-foreground rounded-xl px-3 py-2 ml-3">
+                In Progress
+              </Typography>
+            </Typography>
             <Typography
               variant="span"
               className="text-muted-foreground inline-block"
@@ -39,7 +44,7 @@ const FeaturedProject = () => {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-center gap-6">
+      {/* <CardFooter className="flex justify-center gap-6">
         <Button
           variant="outline"
           className="cursor-[url('/open-new-tab.png'),_pointer]"
@@ -51,7 +56,7 @@ const FeaturedProject = () => {
           Open Live Site
           <ExternalLink className="ml-2 h-4 w-4" />
         </Button>
-      </CardFooter>
+      </CardFooter> */}
     </Card>
   );
 };
