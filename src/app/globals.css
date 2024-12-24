@@ -66,3 +66,7 @@
     @apply bg-background text-foreground;
   }
 }
+
+.text-clip-blue {
+  @apply transition-colors bg-gradient-to-br from-blue-500/30 via-blue-500/90 to-blue-500/30 bg-clip-text text-transparent;
+}

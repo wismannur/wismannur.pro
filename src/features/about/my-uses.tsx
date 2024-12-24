@@ -1,6 +1,6 @@
 "use client";
 
-import { Typography } from "@/components/typography";
+import { Typography } from "@/components/ui/typography";
 
 const MyUses = () => {
   return (

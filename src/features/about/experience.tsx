@@ -1,7 +1,7 @@
 "use client";
 
 import { Chip } from "@/components/chip";
-import { Typography } from "@/components/typography";
+import { Typography } from "@/components/ui/typography";
 
 const Experience = () => {
   return (
@@ -30,7 +30,7 @@ const Experience = () => {
               </div>
 
               <div className="flex flex-col">
-                <Typography variant="h4" className="text-sky-500">
+                <Typography variant="h4" className="text-blue-500">
                   {experience.title}
                 </Typography>
                 <Typography variant="p" className="">
@@ -54,7 +54,7 @@ const Experience = () => {
                   <div className="flex flex-col gap-1">
                     <Typography
                       variant="h6"
-                      className="leading-relaxed text-sky-500 font-bold"
+                      className="leading-relaxed text-blue-500 font-bold"
                     >
                       Summary
                     </Typography>
@@ -69,7 +69,7 @@ const Experience = () => {
                   <div className="flex flex-col gap-1">
                     <Typography
                       variant="h6"
-                      className="leading-relaxed text-sky-500 font-bold"
+                      className="leading-relaxed text-blue-500 font-bold"
                     >
                       Key Responsibilities
                     </Typography>
@@ -92,7 +92,7 @@ const Experience = () => {
                   <div className="flex flex-col gap-1">
                     <Typography
                       variant="h6"
-                      className="leading-relaxed text-sky-500 font-bold mb-1"
+                      className="leading-relaxed text-blue-500 font-bold mb-1"
                     >
                       Tech Stack
                     </Typography>

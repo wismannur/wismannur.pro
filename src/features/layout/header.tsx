@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Typography } from "../../components/typography";
+import { Typography } from "../../components/ui/typography";
 import { LuMoon, LuSun } from "react-icons/lu";
 // import WismanNurLogo from "../WismanNurLogo";
 import { usePathname } from "next/navigation";
@@ -53,7 +53,7 @@ export const Header = () => {
         <nav className="flex justify-center items-center space-x-4 md:space-x-6">
           {/* <Link
             href="/"
-            className="text-sky-500 font-semibold"
+            className="text-blue-500 font-semibold"
             onClick={(evt) => {
               evt.stopPropagation();
               trackEventToUmami("Header Menu: W Logo");
@@ -66,7 +66,7 @@ export const Header = () => {
               key={`nav-${idx}`}
               href={nav.path}
               className={clsx(
-                "hover:text-sky-500 font-normal flex items-start",
+                "hover:text-blue-500 font-normal flex items-start",
                 nav?.isComingSoon && "cursor-not-allowed"
               )}
               onClick={(evt) => {
@@ -78,7 +78,7 @@ export const Header = () => {
             >
               <Typography
                 className={clsx(
-                  pathname === nav.path ? "text-sky-500 !font-semibold" : "",
+                  pathname === nav.path ? "text-blue-500 !font-semibold" : "",
                   nav?.isComingSoon && "text-muted-foreground"
                 )}
               >
@@ -97,7 +97,7 @@ export const Header = () => {
           className={clsx(
             "p-2 bg-transparent rounded-full transition-colors duration-300",
             "border border-solid border-black dark:border-white",
-            "hover:text-sky-500 hover:border-sky-500 hover:dark:border-sky-500 "
+            "hover:text-blue-500 hover:border-blue-500 hover:dark:border-blue-500 "
           )}
           aria-label="Toggle theme"
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
