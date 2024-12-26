@@ -111,7 +111,7 @@ export interface Project {
 export const projects: Project[] = [
   {
     id: "1",
-    title: "Storage Flow",
+    title: "SundFlow",
     description:
       "A CMS application that not only focuses on content management but also includes file management, with seamless integration of files into content and APIs.",
     status: "In Progress",
@@ -120,7 +120,7 @@ export const projects: Project[] = [
     id: "2",
     title: "API Integration Layer",
     description:
-      "An extension of the 'Storage Flow' application, designed as an npm package that can be easily integrated into various projects.",
+      "An extension of the 'SundFlow' application, designed as an npm package that can be easily integrated into various projects.",
     status: "Planning",
   },
   {
