@@ -14,7 +14,7 @@ const MyProfilePicture = () => {
       <div className="absolute inset-0 flex items-center justify-center z-10">
         <div className="w-10/12 h-10/12 rounded-full overflow-hidden">
           <Image
-            src="/my-picture.jpg"
+            src="/images/profile-image.png"
             alt="Wisman Nur Picture"
             width={400}
             height={400}
@@ -28,7 +28,7 @@ const MyProfilePicture = () => {
       >
         <path
           d="M29.465,0.038373A28,28,0,0,1,52.948,40.712L51.166,39.804A26,26,0,0,0,29.361,2.0356Z"
-          className="text-cyan-500"
+          className="text-teal-500"
           fill="currentColor"
         ></path>
         <path
