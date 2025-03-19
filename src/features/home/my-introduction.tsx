@@ -32,7 +32,7 @@ const MyIntroduction = () => {
         <Typography
           variant="h1"
           variants={framerAnimate.item}
-          className="mb-2 sm:mb-4"
+          className="mb-2 sm:mb-4 !mt-0"
         >
           I'm <span className="text-clip-blue">Wisman</span> Nur
         </Typography>

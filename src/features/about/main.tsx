@@ -7,7 +7,6 @@ import clsx from "clsx";
 import { motion } from "framer-motion";
 import Experience from "./experience";
 import Certifications from "./certifications";
-import MyUses from "./my-uses";
 import Divider from "@/components/ui/divider";
 
 export default function AboutMain() {
@@ -43,7 +42,7 @@ export default function AboutMain() {
         {/* END === Experience section ========================================================================= */}
 
         {/* START === My Uses section ============================================================================= */}
-        <MyUses />
+        {/* <MyUses /> */}
         {/* END === My Uses section =============================================================================== */}
       </div>
     </>
