@@ -26,7 +26,7 @@ const AboutMe = () => {
               variants={framerAnimate.item}
               className="text-gray-500 dark:text-gray-400 md:text-lg"
             >
-              Software Engineer & Tech Enthusiast
+              Frontend Software Engineer & Tech Enthusiast
             </Typography>
           </div>
 

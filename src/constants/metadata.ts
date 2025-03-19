@@ -38,26 +38,30 @@ const generateMetadata = ({
   title?: Metadata["title"];
   description?: Metadata["description"];
   path?: string;
-}): Metadata => ({
-  title: `${title} - ${env.baseUrl}${path}`,
-  description,
-  ...metadataDefault,
-  openGraph: {
-    images: generatePathname({
-      path: `/api/og`,
-      query: {
-        title: `${title} - ${env.baseUrl}${path}`,
-        description: UNDER_DEVELOPMENT_PAGES.includes(path!)
-          ? UNDER_DEVELOPMENT_MESSAGE
-          : description,
-      },
-    }),
-  },
-});
+}): Metadata => {
+  const titlePage = `${title} - Wisman Nur`;
+
+  return {
+    title: titlePage,
+    description,
+    ...metadataDefault,
+    openGraph: {
+      images: generatePathname({
+        path: `/api/og`,
+        query: {
+          title: titlePage,
+          description: UNDER_DEVELOPMENT_PAGES.includes(path!)
+            ? UNDER_DEVELOPMENT_MESSAGE
+            : description,
+        },
+      }),
+    },
+  };
+};
 
 export const metadataStatic = {
   home: generateMetadata({
-    title: `Wisman Nur`,
+    title: `Home`,
     description: `Hi, I'm Wisman — a Frontend Web Developer focused on modern design, clean code, and seamless user experiences.`,
     ...metadataDefault,
     path: "/",

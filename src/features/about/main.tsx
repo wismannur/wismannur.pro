@@ -7,7 +7,6 @@ import clsx from "clsx";
 import { motion } from "framer-motion";
 import Experience from "./experience";
 import Certifications from "./certifications";
-import MyUses from "./my-uses";
 import Divider from "@/components/ui/divider";
 
 export default function AboutMain() {
@@ -21,7 +20,7 @@ export default function AboutMain() {
           animate="show"
           className={clsx(
             "min-h-screen flex flex-col",
-            "container px-4 md:px-0 mx-auto mt-20 mb-5 md:my-0"
+            "container px-4 md:px-0 mx-auto mt-20 mb-5 2xl:my-0"
           )}
         >
           <AboutMe />
@@ -43,7 +42,7 @@ export default function AboutMain() {
         {/* END === Experience section ========================================================================= */}
 
         {/* START === My Uses section ============================================================================= */}
-        <MyUses />
+        {/* <MyUses /> */}
         {/* END === My Uses section =============================================================================== */}
       </div>
     </>
