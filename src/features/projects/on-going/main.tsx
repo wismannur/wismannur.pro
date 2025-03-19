@@ -9,6 +9,7 @@ import { Typography } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { env } from "@/constants/env";
+import { mailtoMessage } from "@/constants/mailto-message";
 
 export default function OngoingProjects() {
   const containerVariants = {
@@ -90,7 +91,7 @@ export default function OngoingProjects() {
           </motion.div>
 
           <Button size="lg" asChild>
-            <a href={`mailto:${env.personalEmail}`}>
+            <a href={mailtoMessage.hiring}>
               <Mail className="mr-2 h-5 w-5" />
               {env.personalEmail}
             </a>

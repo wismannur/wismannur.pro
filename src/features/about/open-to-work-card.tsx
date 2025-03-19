@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Typography } from "@/components/ui/typography";
 import { env } from "@/constants/env";
 import { framerAnimate } from "@/constants/framer-animate";
+import { mailtoMessage } from "@/constants/mailto-message";
 import { trackEventToUmami } from "@/utils/umami-track";
 import { Mail } from "lucide-react";
 
@@ -26,12 +27,12 @@ const OpenToWorkCard = () => {
             </Typography>
           </div>
           <a
-            href={`mailto:${env.personalEmail}`}
+            href={mailtoMessage.hiring}
             onClick={(evt) => {
               evt.preventDefault();
               evt.stopPropagation();
               trackEventToUmami("Open To Work Email");
-              window.open(`mailto:${env.personalEmail}`);
+              window.open(mailtoMessage.hiring);
             }}
           >
             <Button className="w-full" size="lg">

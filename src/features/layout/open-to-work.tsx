@@ -4,6 +4,7 @@ import CardBgDots from "@/components/card-bg-dots";
 import { Button } from "@/components/ui/button";
 import { env } from "@/constants/env";
 import { framerAnimate } from "@/constants/framer-animate";
+import { mailtoMessage } from "@/constants/mailto-message";
 import { motion } from "framer-motion";
 import { Mail } from "lucide-react";
 
@@ -23,7 +24,7 @@ const OpenToWork = () => {
           via email.
         </p>
         <Button size="lg" asChild>
-          <a href={`mailto:${env.personalEmail}`}>
+          <a href={mailtoMessage.hiring}>
             <Mail className="mr-2 h-5 w-5" />
             {env.personalEmail}
           </a>

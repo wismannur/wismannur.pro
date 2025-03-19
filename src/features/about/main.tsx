@@ -21,7 +21,7 @@ export default function AboutMain() {
           animate="show"
           className={clsx(
             "min-h-screen flex flex-col",
-            "container px-4 md:px-0 mx-auto mt-20 mb-5 md:my-0"
+            "container px-4 md:px-0 mx-auto mt-20 mb-5 2xl:my-0"
           )}
         >
           <AboutMe />
