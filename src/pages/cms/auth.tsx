@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MY_USER_ID } from "@/constants/app";
 import { useAuth } from "@/contexts/auth-context";
 import { useLoadingState } from "@/hooks/use-loading-state";
-import type { TAny } from "@/types/global";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { AlertCircle, ArrowRight, Loader2, Lock, Mail } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -34,8 +35,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 const Auth = () => {
 	const { withLoading } = useLoadingState();
 	const navigate = useNavigate();
-	const { signIn } = useAuth();
-	const [isLoading, setIsLoading] = useState(false);
+	const { signIn, signOut } = useAuth();
 	const [authError, setAuthError] = useState<string | null>(null);
 
 	const loginForm = useForm<LoginFormValues>({
@@ -46,22 +46,30 @@ const Auth = () => {
 		},
 	});
 
-	const onLoginSubmit = async (data: LoginFormValues) => {
-		setIsLoading(true);
-		setAuthError(null);
-		try {
-			await withLoading(async () => {
-				await signIn(data.email, data.password);
-			});
+	const loginMutation = useMutation({
+		mutationFn: async (data: LoginFormValues) => {
+			const userCredential = await withLoading(async () => await signIn(data.email, data.password));
+			if (!userCredential || userCredential.user.uid !== MY_USER_ID) {
+				await signOut();
+				toast.error("Unauthorized access. Only selected user can login.");
+				throw new Error("Unauthorized access. Only selected user can login.");
+			}
+			return userCredential;
+		},
+		onSuccess: () => {
 			toast.success("Logged in successfully");
 			navigate("/cms/dashboard");
-		} catch (error: TAny) {
+		},
+		onError: (error: Error) => {
 			console.error(error);
-			setAuthError(error?.message || "Failed to log in. Please check your credentials.");
+			setAuthError(error.message || "Failed to log in. Please check your credentials.");
 			toast.error("Failed to log in. Please check your credentials.");
-		} finally {
-			setIsLoading(false);
-		}
+		},
+		retry: false,
+	});
+
+	const onLoginSubmit = async (data: LoginFormValues) => {
+		loginMutation.mutate(data);
 	};
 
 	return (
@@ -158,9 +166,9 @@ const Auth = () => {
 										<Button
 											type="submit"
 											className="w-full rounded-lg h-11 mt-2 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary group transition-all duration-300"
-											disabled={isLoading}
+											disabled={loginMutation.isPending}
 										>
-											{isLoading ? (
+											{loginMutation.isPending ? (
 												<Loader2 className="h-4 w-4 mr-2 animate-spin" />
 											) : (
 												<>

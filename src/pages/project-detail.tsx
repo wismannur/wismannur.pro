@@ -143,7 +143,7 @@ const ProjectDetail = () => {
 
 						{/* Sidebar */}
 						<aside className="hidden lg:block lg:col-span-3">
-							<div className="sticky top-24 space-y-8">
+							<div className="sticky top-20 space-y-8">
 								<TableOfContents
 									containerRef={contentRef}
 									className="bg-background border border-border/40 rounded-xl shadow-sm"

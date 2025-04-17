@@ -38,7 +38,7 @@ export const META_DEFAULTS = {
 } as const;
 
 export const API_CONFIG = {
-	BASE_URL: import.meta.env.VITE_API_URL || "http://localhost:3000",
+	BASE_URL: env.VITE_API_URL || "http://localhost:3000",
 	TIMEOUT: 90000, // 90 seconds
 	RETRY_ATTEMPTS: 3,
 } as const;
