@@ -1,31 +1,44 @@
-# Wisman Nur - Personal Portfolio & Blog
+# 👋 Wisman Nur — Personal Portfolio & Open-Source Blog
 
-A modern, performant personal website showcasing my work as a Frontend Software Engineer. Built with React, TypeScript, and modern web technologies.
+A modern, fast, and fully open-source personal website to showcase my work as a **Frontend Software Engineer** and share my technical writings. Built with React, TypeScript, and Firebase.
+
+![Website Preview](https://cdn.sundflow.cloud/f/68898e42500bc87b9)
+
+🔗 **Live Site**: [wismannur.pro](https://wismannur.pro)  
+⭐️ **Star this repo** if you like it — or better, [contribute](#contributing) and be part of the project!
+
+---
 
 ## 🚀 Features
 
-- **Portfolio Showcase**: Display projects with detailed case studies
-- **Blog Platform**: Technical writing with MDX support
-- **CMS Dashboard**: Content management system for projects and blog posts
-- **Analytics Integration**: Track visitor engagement with Umami Analytics
-- **Performance Optimized**: Built with Vite for lightning-fast loads
-- **Responsive Design**: Mobile-first approach using Tailwind CSS
+- 🎯 **Portfolio**: Highlighting my selected projects with in-depth case studies
+- ✍️ **Blog Platform**: MDX-powered articles with custom components
+- ⚙️ **CMS Dashboard**: Built-in system to manage blog & projects
+- 📈 **Visitor Analytics**: Integrated with [Umami](https://umami.is)
+- ⚡ **Optimized for Speed**: Powered by Vite for ultra-fast performance
+- 📱 **Responsive Design**: Tailwind CSS for mobile-first layouts
+
+---
 
 ## 🛠 Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite
-- **Styling**: Tailwind CSS, shadcn-ui
-- **Content**: MDX for rich content
-- **Backend**: Firebase
-- **Analytics**: Umami
-- **Security**: Google reCAPTCHA v3
+| Category       | Tech                                                  |
+|----------------|-------------------------------------------------------|
+| Frontend       | React 18, TypeScript, Vite                            |
+| Styling        | Tailwind CSS, [shadcn/ui](https://ui.shadcn.dev)      |
+| Content Layer  | MDX                                                   |
+| Backend        | Firebase (Auth, Firestore, Storage)                  |
+| Analytics      | Umami                                                 |
+| Security       | Google reCAPTCHA v3                                   |
 
-## 🏃‍♂️ Getting Started
+---
+
+## 🧑‍💻 Getting Started
 
 1. **Clone the repository**
 ```bash
-git clone <YOUR_GIT_URL>
-cd <YOUR_PROJECT_NAME>
+git clone https://github.com/wismannur/personal-website.git
+cd personal-website
 ```
 
 2. **Install dependencies**
@@ -35,43 +48,55 @@ npm install
 pnpm install
 ```
 
-3. **Set up environment variables**
-Copy `.env.example` to `.env` and fill in your values:
+3. **Setup environment variables**
 ```bash
 cp .env.example .env
+# Then fill in your Firebase and other credentials
 ```
 
 4. **Start development server**
 ```bash
 npm run dev
-# or
-pnpm dev
 ```
 
-## 📦 Project Structure
+---
+
+## 📂 Project Structure
 
 ```
 src/
 ├── components/    # Reusable UI components
-├── pages/        # Page components and routes
-├── services/     # API and external service integrations
-├── lib/          # Utility functions and helpers
-└── constants/    # Application constants
+├── pages/         # Page components and routes
+├── services/      # API and service integrations
+├── lib/           # Utility functions
+└── constants/     # Shared constants
 ```
 
-## 🔧 Development
+---
 
-- **Linting**: `npm run lint`
-- **Type Checking**: `tsc --noEmit`
-- **Building**: `npm run build`
+## 🤝 Contributing
+
+This project is open for contributions!
+
+If you find bugs, have feature ideas, or want to improve the UI/UX, feel free to:
+1. Fork the repo
+2. Create a new branch
+3. Submit a PR
+
+I'll be happy to review and collaborate 💜
+
+---
 
 ## 📝 License
 
-Copyright © 2024 Wisman Nur. All rights reserved.
+MIT License © [Wisman Nur](https://github.com/wismannur)
 
-## 🤝 Contact
+---
 
-- Website: [wismannur.pro](https://wismannur.pro)
-- GitHub: [@wismannur](https://github.com/wismannur)
-- Twitter: [@wismannur](https://x.com/wismannur)
-- LinkedIn: [wismannur](https://linkedin.com/in/wismannur)
+## 📬 Contact
+
+- 🌐 Website: [wismannur.pro](https://wismannur.pro)
+- 🐙 GitHub: [@wismannur](https://github.com/wismannur)
+- 🐦 Twitter/X: [@wismannur](https://x.com/wismannur)
+- 💼 LinkedIn: [wismannur](https://linkedin.com/in/wismannur)
+
