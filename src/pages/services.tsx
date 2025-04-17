@@ -1,6 +1,7 @@
 "use client";
 
 import PowerfulCTACard from "@/components/cards/powerful-cta-card";
+import { SEO } from "@/components/common/seo";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -242,6 +243,11 @@ const Services = () => {
 
 	return (
 		<div className="space-y-24">
+			<SEO
+				title="Services"
+				description="Professional web development services including frontend development, UI/UX implementation, and performance optimization. Expert solutions for your digital needs"
+				type="website"
+			/>
 			{/* Hero Section */}
 			<section className="relative overflow-hidden py-12 md:py-20">
 				<div className="container px-4 max-w-6xl mx-auto">

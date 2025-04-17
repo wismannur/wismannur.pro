@@ -1,3 +1,4 @@
+import { SEO } from "@/components/common/seo";
 import { Button } from "@/components/ui/button";
 import {
 	Form,
@@ -116,6 +117,12 @@ const Contact = () => {
 
 	return (
 		<section className="py-16 bg-gradient-to-b from-background to-muted/30">
+			<SEO
+				title="Contact"
+				description="Get in touch with Wisman Nur, a frontend software engineer specializing in React, Vue, and modern web technologies. Contact me for inquiries, projects, or just to say hello."
+				type="website"
+			/>
+
 			<div className="container px-4 max-w-6xl mx-auto">
 				<SectionHeader
 					title="Get In Touch"

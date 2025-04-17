@@ -1,6 +1,7 @@
 "use client";
 
 import PowerfulCTACard from "@/components/cards/powerful-cta-card";
+import { SEO } from "@/components/common/seo";
 import {
 	Accordion,
 	AccordionContent,
@@ -401,6 +402,12 @@ const HireMePage = () => {
 
 	return (
 		<div className="space-y-24">
+			<SEO
+				title="Hire Me"
+				description="Looking for a skilled frontend developer? Let's collaborate on your next project. Offering expertise in React, modern UI development, and performance optimization"
+				type="website"
+			/>
+
 			{/* Hero Section */}
 			<section className="relative overflow-hidden py-12 md:py-20">
 				<div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div>

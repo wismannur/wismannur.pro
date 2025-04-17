@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { ProjectCard } from "@/components/cards/project-card";
 import Pagination from "@/components/common/pagination";
+import { SEO } from "@/components/common/seo";
 import { Skeleton } from "@/components/ui/skeleton";
 import ProjectFilters from "@/features/project/project-filters";
 import ProjectGrid from "@/features/project/project-grid";
@@ -131,6 +132,11 @@ const Projects = () => {
 	return (
 		<div className="py-12 md:py-20">
 			<div className="container px-4 max-w-6xl mx-auto">
+				<SEO
+					title="Projects"
+					description="Explore my portfolio of web development projects, featuring modern frontend applications, responsive designs, and technical solutions"
+					type="website"
+				/>
 				<ProjectHeader />
 
 				{/* Featured Projects Section */}

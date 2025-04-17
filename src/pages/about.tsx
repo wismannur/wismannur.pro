@@ -1,4 +1,5 @@
 import PowerfulCTACard from "@/components/cards/powerful-cta-card";
+import { SEO } from "@/components/common/seo";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { getCtaDataForPage } from "@/lib/get-cta-data-for-page";
@@ -104,6 +105,11 @@ const About = () => {
 
 	return (
 		<div className="space-y-24">
+			<SEO
+				title="About"
+				description="Learn more about Wisman Nur, a frontend software engineer specializing in React, Vue, and modern web technologies. Discover my journey, skills, and approach to development"
+				type="website"
+			/>
 			{/* Hero Section */}
 			<section className="relative overflow-hidden pt-8 md:pt-16">
 				{/* <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none"></div> */}
