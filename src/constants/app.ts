@@ -1,3 +1,5 @@
+const env = import.meta.env;
+
 export const APP_CONFIG = {
 	ITEMS_PER_PAGE: 10, // Pagination default
 	STALE_TIME: 1000 * 60 * 5, // 5 minutes
@@ -41,4 +43,4 @@ export const API_CONFIG = {
 	RETRY_ATTEMPTS: 3,
 } as const;
 
-export const MY_USER_ID = "pjNM6QGiUfPY4BNMx1ZtIICAVOE3";
+export const MY_USER_ID = env.VITE_FIREBASE_USER_ID;
