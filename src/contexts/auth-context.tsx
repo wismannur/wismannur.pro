@@ -1,12 +1,19 @@
+import { MY_USER_ID } from "@/constants/app";
 import { auth } from "@/lib/firebase";
-import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+	User,
+	UserCredential,
+	onAuthStateChanged,
+	signInWithEmailAndPassword,
+	signOut,
+} from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
 
 interface AuthContextType {
 	user: User | null;
 	loading: boolean;
 	error: Error | null;
-	signIn: (email: string, password: string) => Promise<void>;
+	signIn: (email: string, password: string) => Promise<UserCredential>;
 	signOut: () => Promise<void>;
 	resetError: () => void;
 }
@@ -20,18 +27,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
-			setUser(user);
+			if (user && user.uid !== MY_USER_ID) {
+				// If signed in user is not the admin, sign them out
+				signOut(auth).catch(console.error);
+				setUser(null);
+			} else {
+				setUser(user);
+			}
 			setLoading(false);
 		});
 
 		return () => unsubscribe();
 	}, []);
 
-	const signIn = async (email: string, password: string) => {
+	const signIn = async (email: string, password: string): Promise<UserCredential> => {
 		try {
 			setError(null);
 			setLoading(true);
-			await signInWithEmailAndPassword(auth, email, password);
+			const res = await signInWithEmailAndPassword(auth, email, password);
+			return res;
 		} catch (err) {
 			setError(err instanceof Error ? err : new Error("An error occurred"));
 			throw err;
@@ -64,7 +78,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 		resetError,
 	};
 
-	return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+	return (
+		<AuthContext.Provider
+			value={{
+				...value,
+				signIn: async (email, password) => {
+					return await value.signIn(email, password);
+				},
+			}}
+		>
+			{!loading && children}
+		</AuthContext.Provider>
+	);
 }
 
 export function useAuth() {

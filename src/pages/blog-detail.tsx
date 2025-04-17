@@ -18,6 +18,7 @@ import ReadingProgress from "@/components/detail/reading-progress";
 import SocialShareBar from "@/components/detail/social-share-bar";
 import { useScrollToHash } from "@/hooks/use-scroll-to-hash";
 import { blogService } from "@/services";
+import { formatTimestamp } from "@/services/firebase";
 
 const MDXPreview = lazy(() => import(`@/components/mdx/mdx-preview`));
 
@@ -116,7 +117,7 @@ const BlogDetail = () => {
 								<ContentHeader
 									title={blog.title}
 									tags={blog.tags}
-									publishedDate={blog.publishedDate}
+									publishedDate={formatTimestamp(blog.publishedDate)}
 									views={blog.views}
 									readingTime={readingTime}
 								/>
@@ -167,7 +168,7 @@ const BlogDetail = () => {
 
 						{/* Sidebar */}
 						<aside className="hidden lg:block lg:col-span-3">
-							<div className="sticky top-24 space-y-8">
+							<div className="sticky top-20 space-y-6">
 								<TableOfContents
 									containerRef={contentRef}
 									className="bg-background border border-border/40 rounded-xl shadow-sm"
