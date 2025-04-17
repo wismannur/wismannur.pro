@@ -37,8 +37,8 @@ A modern, fast, and fully open-source personal website to showcase my work as a 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/wismannur/personal-website.git
-cd personal-website
+git clone https://github.com/wismannur/wismannur.pro.git
+cd wismannur.pro
 ```
 
 2. **Install dependencies**
