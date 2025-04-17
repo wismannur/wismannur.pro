@@ -31,7 +31,7 @@ export const SERVICE_RATES = {
 
 export const META_DEFAULTS = {
 	TITLE_TEMPLATE: "%s | Wisman Nur",
-	OG_IMAGE: "/images/og-image.jpg",
+	OG_IMAGE: "https://cdn.sundflow.cloud/f/3db6cf07e173ea509",
 	TWITTER_HANDLE: "@wismannur",
 } as const;
 
