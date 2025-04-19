@@ -39,10 +39,11 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
+import environment from "@/config/environment";
 import { getCtaDataForPage } from "@/lib/get-cta-data-for-page";
-import { validateCaptchaToken } from "@/lib/google-recaptcha-v3";
 import { cn } from "@/lib/utils";
 import { serviceRequestService } from "@/services";
+import { getReCaptchaToken, validateCaptchaToken } from "@/services/recaptcha";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -86,7 +87,7 @@ const serviceTiers = [
 	{
 		id: "professional",
 		name: "Professional",
-		price: "$1,000/week",
+		price: "$799/week",
 		description: "Ideal for medium-sized projects and ongoing development",
 		features: [
 			"Everything in Basic tier",
@@ -332,6 +333,7 @@ const HireMePage = () => {
 	const ctaData = getCtaDataForPage("hire-me");
 	const [selectedService, setSelectedService] = useState<string | null>(null);
 	const [activeTab, setActiveTab] = useState("services");
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const form = useForm<HireFormValues>({
 		resolver: zodResolver(hireFormSchema),
@@ -373,19 +375,31 @@ const HireMePage = () => {
 				variant: "destructive",
 			});
 		},
+		onSettled: () => {
+			setIsSubmitting(false);
+		},
 	});
 
 	const onSubmit = async (data: HireFormValues) => {
-		const validateCaptcha = await validateCaptchaToken();
+		setIsSubmitting(true);
 
-		if (validateCaptcha.success) {
-			mutation.mutate(data);
+		if (environment.app.envProd) {
+			// Validate reCAPTCHA token
+			const token = await getReCaptchaToken();
+			const validateCaptcha = await validateCaptchaToken(token);
+
+			if (validateCaptcha.success) {
+				mutation.mutate(data);
+			} else {
+				toast({
+					title: "Error",
+					description: "Failed to verify reCAPTCHA. Please try again.",
+					variant: "destructive",
+				});
+				setIsSubmitting(false);
+			}
 		} else {
-			toast({
-				title: "Error",
-				description: "Failed to verify reCAPTCHA. Please try again.",
-				variant: "destructive",
-			});
+			mutation.mutate(data);
 		}
 	};
 
@@ -1016,9 +1030,9 @@ const HireMePage = () => {
 											"bg-primary hover:bg-primary/90 text-primary-foreground",
 											"group overflow-hidden relative",
 										)}
-										disabled={mutation.isPending}
+										disabled={mutation.isPending || isSubmitting}
 									>
-										{mutation.isPending ? (
+										{mutation.isPending || isSubmitting ? (
 											<span className="flex items-center">
 												<svg
 													className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"

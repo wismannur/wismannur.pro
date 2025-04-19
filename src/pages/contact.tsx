@@ -1,3 +1,5 @@
+"use client";
+
 import { SEO } from "@/components/common/seo";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +14,10 @@ import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
-import { validateCaptchaToken } from "@/lib/google-recaptcha-v3";
+import environment from "@/config/environment";
 import { cn } from "@/lib/utils";
 import { ContactForm, contactService } from "@/services";
+import { getReCaptchaToken, validateCaptchaToken } from "@/services/recaptcha";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -27,6 +30,7 @@ import {
 	MapPin,
 	Twitter,
 } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -84,7 +88,7 @@ const Contact = () => {
 	});
 
 	const mutation = useMutation({
-		mutationFn: contactService.submit,
+		mutationFn: (data: ContactForm) => contactService.submit({ ...data }),
 		onSuccess: () => {
 			toast({
 				title: "Message sent!",
@@ -99,19 +103,34 @@ const Contact = () => {
 				variant: "destructive",
 			});
 		},
+		onSettled: () => {
+			setIsSubmitting(false);
+		},
+		retry: false,
 	});
 
-	const onSubmit = async (data: z.infer<typeof contactFormSchema>) => {
-		const validateCaptcha = await validateCaptchaToken();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-		if (validateCaptcha.success) {
-			mutation.mutate(data as ContactForm);
+	const onSubmit = async (data: z.infer<typeof contactFormSchema>) => {
+		setIsSubmitting(true);
+
+		if (environment.app.envProd) {
+			// Validate reCAPTCHA token
+			const token = await getReCaptchaToken();
+			const validateCaptcha = await validateCaptchaToken(token);
+
+			if (validateCaptcha.success) {
+				mutation.mutate(data as ContactForm);
+			} else {
+				toast({
+					title: "Error",
+					description: "Failed to verify reCAPTCHA. Please try again.",
+					variant: "destructive",
+				});
+				setIsSubmitting(false);
+			}
 		} else {
-			toast({
-				title: "Error",
-				description: "Failed to verify reCAPTCHA. Please try again.",
-				variant: "destructive",
-			});
+			mutation.mutate(data as ContactForm);
 		}
 	};
 
@@ -245,9 +264,9 @@ const Contact = () => {
 												"bg-primary hover:bg-primary/90 text-primary-foreground",
 												"group overflow-hidden relative",
 											)}
-											disabled={mutation.isPending}
+											disabled={mutation.isPending || isSubmitting}
 										>
-											{mutation.isPending ? (
+											{mutation.isPending || isSubmitting ? (
 												<span className="flex items-center">
 													<svg
 														className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
