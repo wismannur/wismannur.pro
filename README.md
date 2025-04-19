@@ -37,8 +37,8 @@ A modern, fast, and fully open-source personal website to showcase my work as a 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/wismannur/wismannur.pro.git
-cd wismannur.pro
+git clone https://github.com/wismannur/personal-website.git
+cd personal-website
 ```
 
 2. **Install dependencies**
@@ -58,6 +58,29 @@ cp .env.example .env
 ```bash
 npm run dev
 ```
+
+## Environment Setup
+
+1. Copy `.env.example` to create your environment file:
+	```bash
+	cp .env.example .env.development   # For development
+	cp .env.example .env.production    # For production
+	```
+
+2. Fill in the environment variables with your actual values:
+	- Firebase configuration from your Firebase Console
+	- reCAPTCHA keys from Google reCAPTCHA Admin Console
+	- Analytics IDs from your Umami dashboard
+	- Other service-specific configurations
+
+3. Never commit your actual `.env` files to version control
+
+## Security Notes
+
+- Keep your environment files secure and never commit them to version control
+- Regularly rotate your API keys and access tokens
+- Monitor your Firebase and reCAPTCHA usage for any suspicious activity
+- Use environment-specific configurations for development and production
 
 ---
 
@@ -99,4 +122,6 @@ MIT License © [Wisman Nur](https://github.com/wismannur)
 - 🐙 GitHub: [@wismannur](https://github.com/wismannur)
 - 🐦 Twitter/X: [@wismannur](https://x.com/wismannur)
 - 💼 LinkedIn: [wismannur](https://linkedin.com/in/wismannur)
+
+
 

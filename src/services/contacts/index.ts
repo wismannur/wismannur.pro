@@ -1,4 +1,5 @@
 import {
+	addDoc,
 	collection,
 	doc,
 	getDoc,
@@ -6,7 +7,6 @@ import {
 	limit,
 	orderBy,
 	query,
-	setDoc,
 	startAfter,
 	Timestamp,
 	updateDoc,
@@ -107,16 +107,18 @@ export class ContactService extends BaseService {
 		}
 	}
 
-	async submit(formData: ContactForm): Promise<void> {
+	async submit(formData: ContactForm): Promise<string> {
 		try {
-			const contactRef = collection(this.db, this.collectionName);
-			await setDoc(doc(contactRef), {
+			const docRef = await addDoc(collection(this.db, this.collectionName), {
 				...formData,
 				createdAt: Timestamp.now(),
 				status: "new",
 			});
+
+			return docRef.id;
 		} catch (error) {
-			this.handleError(error, "submitting contact form");
+			console.error("Error submitting contact form:", error);
+			throw error; // Re-throw the error instead of handling it silently
 		}
 	}
 }

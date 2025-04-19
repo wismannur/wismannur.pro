@@ -31,10 +31,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
+import environment from "@/config/environment";
 import { getCtaDataForPage } from "@/lib/get-cta-data-for-page";
-import { validateCaptchaToken } from "@/lib/google-recaptcha-v3";
 import { cn } from "@/lib/utils";
 import { serviceRequestService } from "@/services";
+import { getReCaptchaToken, validateCaptchaToken } from "@/services/recaptcha";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -179,6 +180,7 @@ type ServiceFormValues = z.infer<typeof serviceFormSchema>;
 const Services = () => {
 	const ctaData = getCtaDataForPage("services");
 	const [selectedService, setSelectedService] = useState<string | null>(null);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const form = useForm<ServiceFormValues>({
 		resolver: zodResolver(serviceFormSchema),
@@ -220,19 +222,31 @@ const Services = () => {
 				variant: "destructive",
 			});
 		},
+		onSettled: () => {
+			setIsSubmitting(false);
+		},
 	});
 
 	const onSubmit = async (data: ServiceFormValues) => {
-		const validateCaptcha = await validateCaptchaToken();
+		setIsSubmitting(true);
 
-		if (validateCaptcha.success) {
-			mutation.mutate(data);
+		if (environment.app.envProd) {
+			// Validate reCAPTCHA token
+			const token = await getReCaptchaToken();
+			const validateCaptcha = await validateCaptchaToken(token);
+
+			if (validateCaptcha.success) {
+				mutation.mutate(data);
+			} else {
+				toast({
+					title: "Error",
+					description: "Failed to verify reCAPTCHA. Please try again.",
+					variant: "destructive",
+				});
+				setIsSubmitting(false);
+			}
 		} else {
-			toast({
-				title: "Error",
-				description: "Failed to verify reCAPTCHA. Please try again.",
-				variant: "destructive",
-			});
+			mutation.mutate(data);
 		}
 	};
 
@@ -584,9 +598,9 @@ const Services = () => {
 											"bg-primary hover:bg-primary/90 text-primary-foreground",
 											"group overflow-hidden relative",
 										)}
-										disabled={mutation.isPending}
+										disabled={mutation.isPending || isSubmitting}
 									>
-										{mutation.isPending ? (
+										{mutation.isPending || isSubmitting ? (
 											<span className="flex items-center">
 												<svg
 													className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
