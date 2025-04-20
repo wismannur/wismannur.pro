@@ -1,5 +1,4 @@
 import { APP_CONFIG } from "@/constants/app";
-import { TAny } from "@/types/global";
 import { clsx, type ClassValue } from "clsx";
 import { format, parseISO } from "date-fns";
 import { twMerge } from "tailwind-merge";

@@ -165,7 +165,7 @@ const Dashboard = () => {
 							title="New Blog Post"
 							description="Create and publish a new blog article"
 							icon={<FilePlus className="h-5 w-5" />}
-							link="/blog/new"
+							link="/cms/blogs/form"
 							color="bg-blue-50 dark:bg-blue-950/30"
 							iconColor="text-blue-500"
 						/>
@@ -174,7 +174,7 @@ const Dashboard = () => {
 							title="New Project"
 							description="Add a new project to your portfolio"
 							icon={<PlusCircle className="h-5 w-5" />}
-							link="/projects/new"
+							link="/cms/projects/form"
 							color="bg-purple-50 dark:bg-purple-950/30"
 							iconColor="text-purple-500"
 						/>

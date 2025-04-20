@@ -368,7 +368,7 @@ const CmsBlogs = () => {
 
 					<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
 						<Button asChild>
-							<Link to="/blog/new">
+							<Link to="/cms/blogs/form">
 								<FilePlus className="mr-2 h-4 w-4" />
 								New Blog Post
 							</Link>

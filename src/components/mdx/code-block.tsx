@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { TAny } from "@/types/global";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, CodeIcon, Copy } from "lucide-react";
 import React, { useEffect, useState } from "react";

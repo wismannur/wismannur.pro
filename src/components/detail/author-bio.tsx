@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { MY_USER_ID } from "@/constants/app";
 import { db } from "@/lib/firebase";
-import { TAny } from "@/types/global";
 import { doc, getDoc } from "firebase/firestore";
 import {
 	ArrowRight,

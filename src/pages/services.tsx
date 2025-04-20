@@ -61,7 +61,7 @@ const services = [
 		description:
 			"Modern, high-performance web applications using React, Vue, and Angular with clean, maintainable code and best practices.",
 		icon: Code,
-		price: "$25/hour",
+		price: "$15/hour",
 		features: [
 			"Responsive design for all devices",
 			"Cross-browser compatibility",
@@ -76,7 +76,7 @@ const services = [
 		description:
 			"Pixel-perfect user interfaces from Figma and design mockups with attention to detail, consistency, and usability.",
 		icon: Lightbulb,
-		price: "$15/hour",
+		price: "$10/hour",
 		features: [
 			"Figma to code conversion",
 			"Design system implementation",
@@ -91,7 +91,7 @@ const services = [
 		description:
 			"Optimize websites to load faster using code splitting, lazy loading, caching strategies, and minimizing render-blocking resources.",
 		icon: Gauge,
-		price: "$15/hour",
+		price: "$10/hour",
 		features: [
 			"Core Web Vitals improvement",
 			"Lighthouse score optimization",
@@ -106,7 +106,7 @@ const services = [
 		description:
 			"Seamless integration of frontend applications with backend systems using RESTful APIs and Firebase.",
 		icon: Database,
-		price: "$15/hour",
+		price: "$10/hour",
 		features: [
 			"RESTful API integration",
 			"GraphQL implementation",
@@ -136,7 +136,7 @@ const services = [
 		description:
 			"Leading development teams, conducting code reviews, and ensuring efficient collaboration with coding standards.",
 		icon: Users,
-		price: "$30/hour",
+		price: "$25/hour",
 		features: [
 			"Code review & mentoring",
 			"Architecture planning",

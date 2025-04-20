@@ -27,7 +27,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/hooks/use-theme";
 import { db } from "@/lib/firebase";
-import { TAny } from "@/types/global";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { Bell, Globe, Info, Laptop, Loader2, Moon, Palette, Save, Sun } from "lucide-react";
