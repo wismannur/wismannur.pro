@@ -428,7 +428,7 @@ const CmsProjects = () => {
 
 					<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
 						<Button asChild>
-							<Link to="/projects/new">
+							<Link to="/cms/projects/form">
 								<FolderPlus className="mr-2 h-4 w-4" />
 								New Project
 							</Link>

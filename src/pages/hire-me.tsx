@@ -72,7 +72,7 @@ const serviceTiers = [
 	{
 		id: "basic",
 		name: "Basic",
-		price: "$25/hour",
+		price: "$15/hour",
 		description: "Perfect for small projects and quick tasks",
 		features: [
 			"Responsive design implementation",
@@ -87,7 +87,7 @@ const serviceTiers = [
 	{
 		id: "professional",
 		name: "Professional",
-		price: "$799/week",
+		price: "$499/week",
 		description: "Ideal for medium-sized projects and ongoing development",
 		features: [
 			"Everything in Basic tier",

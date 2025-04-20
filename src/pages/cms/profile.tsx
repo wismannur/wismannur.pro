@@ -29,7 +29,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth-context";
 import { db, storage } from "@/lib/firebase";
-import { TAny } from "@/types/global";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	EmailAuthProvider,

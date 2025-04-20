@@ -2,7 +2,6 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { TAny } from "@/types/global";
 import { AlertCircle, AlertTriangle, CheckCircle, ExternalLink, Info } from "lucide-react";
 import React, { useMemo } from "react";
 import { jsx, jsxs } from "react/jsx-runtime";

@@ -1,5 +1,3 @@
-import { TAny } from "@/types/global";
-
 interface ProjectResultsInfoProps {
 	filteredProjects: TAny[];
 	paginatedProjects: TAny[];

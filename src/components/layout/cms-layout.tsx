@@ -119,7 +119,7 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 				{
 					label: "Add Blog",
 					icon: <PenSquare className="h-4 w-4" />,
-					path: "/blog/new",
+					path: "/cms/blogs/form",
 				},
 				{
 					label: "Projects",
@@ -129,7 +129,7 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 				{
 					label: "Add Project",
 					icon: <FolderPlus className="h-4 w-4" />,
-					path: "/projects/new",
+					path: "/cms/projects/form",
 				},
 				{
 					label: "Contacts",
