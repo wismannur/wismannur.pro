@@ -42,7 +42,6 @@ import {
 	MessageSquare,
 	Moon,
 	PenSquare,
-	Settings,
 	Sun,
 	User,
 } from "lucide-react";
@@ -173,14 +172,14 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 					<SidebarGroupLabel>{group.group}</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<SidebarMenu>
-							{group.items.map((item) => (
+							{group.items.map(item => (
 								<SidebarMenuItem key={item.path}>
 									<SidebarMenuButton
 										asChild
 										tooltip={item.label}
 										className={cn(
 											"transition-colors",
-											location.pathname === item.path && "bg-primary/10 text-primary font-medium",
+											location.pathname === item.path && "bg-primary/10 text-primary font-medium"
 										)}
 									>
 										<Link to={item.path}>
@@ -277,10 +276,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 									<DropdownMenuItem onClick={() => navigate("/cms/profile")}>
 										<User className="h-4 w-4 mr-2" />
 										Profile
-									</DropdownMenuItem>
-									<DropdownMenuItem onClick={() => navigate("/cms/settings")}>
-										<Settings className="h-4 w-4 mr-2" />
-										Settings
 									</DropdownMenuItem>
 									<DropdownMenuItem onClick={() => navigate("/")}>
 										<Home className="h-4 w-4 mr-2" />

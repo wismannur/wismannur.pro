@@ -123,7 +123,7 @@ const FormProject = () => {
 	}, [id, form, navigate]);
 
 	useEffect(() => {
-		const subscription = form.watch((value) => {
+		const subscription = form.watch(value => {
 			if (value.description) {
 				const time = calculateReadingTime(value.description);
 				setReadingTime(time);
@@ -148,8 +148,8 @@ const FormProject = () => {
 		try {
 			const techList = data.technologies
 				.split(",")
-				.map((tech) => tech.trim())
-				.filter((tech) => tech.length > 0);
+				.map(tech => tech.trim())
+				.filter(tech => tech.length > 0);
 
 			const imageUrl = data.image || currentProject?.image || "";
 			const readingTime = calculateReadingTime(data.description);
@@ -221,7 +221,7 @@ const FormProject = () => {
 	return (
 		<CmsLayout>
 			<div className="max-w-6xl mx-auto">
-				<div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0 mb-8">
+				<div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0 mb-6 sm:mb-8">
 					<h1 className="text-3xl font-bold">{isEditMode ? "Edit Project" : "Add New Project"}</h1>
 					<div className="flex items-center text-muted-foreground">
 						<Clock className="h-4 w-4 mr-1.5" />
@@ -233,14 +233,14 @@ const FormProject = () => {
 					<form onSubmit={form.handleSubmit(onSubmit)}>
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 							<div className="lg:col-span-2">
-								<Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-									<CardHeader className="bg-muted/30 border-b border-border/30">
+								<Card className="border-x-0 border-b-0 sm:border-border/50 shadow-none sm:shadow-md rounded-none sm:rounded-xl overflow-hidden">
+									<CardHeader className="bg-muted/30 border-b border-border/30 px-0 py-4 sm:p-6">
 										<CardTitle className="flex items-center">
 											<Briefcase className="h-5 w-5 mr-2 text-primary" />
 											Project Content
 										</CardTitle>
 									</CardHeader>
-									<CardContent className="space-y-6 p-6">
+									<CardContent className="space-y-6 px-0 py-4 sm:p-6">
 										{/* Publication Status Toggle */}
 										<FormField
 											control={form.control}
@@ -335,7 +335,7 @@ const FormProject = () => {
 													<FormControl>
 														<MDXEditor
 															initialCode={descriptionValues}
-															onChange={(code) => field.onChange(code)}
+															onChange={code => field.onChange(code)}
 														/>
 													</FormControl>
 													<FormMessage />
@@ -449,7 +449,7 @@ const FormProject = () => {
 																		placeholder="Enter image URL"
 																		className="rounded-lg border-border/50 focus-visible:ring-primary/30"
 																		value={selectedImage || ""}
-																		onChange={(e) => {
+																		onChange={e => {
 																			setSelectedImage(e.target.value);
 																			form.setValue("image", e.target.value);
 																		}}
@@ -461,7 +461,7 @@ const FormProject = () => {
 																			src={selectedImage || "/placeholder.svg"}
 																			alt="Preview"
 																			className="w-full h-full object-cover"
-																			onError={(e) => {
+																			onError={e => {
 																				e.currentTarget.src = "/placeholder.svg";
 																			}}
 																		/>

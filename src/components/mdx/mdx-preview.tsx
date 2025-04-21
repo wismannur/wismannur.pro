@@ -13,6 +13,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import CodeBlock from "./code-block";
+import ImageWithPreviewAndCaption from "./image-with-preview-and-caption";
 
 interface MDXPreviewProps {
 	code: string;
@@ -79,9 +80,20 @@ const components = {
 			id={props.id || props.children?.toString().toLowerCase().replace(/\s+/g, "-")}
 		/>
 	),
-	p: (props: React.HTMLAttributes<HTMLParagraphElement>) => (
-		<p {...props} className="my-4 leading-7" />
-	),
+	p: (props: React.HTMLAttributes<HTMLParagraphElement>) => {
+		const children = React.Children.toArray(props.children);
+
+		if (
+			children.length === 1 &&
+			React.isValidElement(children[0]) &&
+			children[0].key.includes("img")
+		) {
+			return children[0];
+		}
+
+		return <p {...props} className="my-4 leading-7" />;
+	},
+
 	ul: (props: React.HTMLAttributes<HTMLUListElement>) => (
 		<ul {...props} className="list-disc pl-6 my-4 space-y-2" />
 	),
@@ -158,11 +170,7 @@ const components = {
 		);
 	},
 	img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
-		<img
-			{...props}
-			className="max-w-full h-auto my-6 rounded-lg border border-border/50 shadow-sm"
-			loading="lazy"
-		/>
+		<ImageWithPreviewAndCaption {...props} />
 	),
 	table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
 		<div className="overflow-x-auto my-6 rounded-lg border border-border/50">
@@ -272,7 +280,7 @@ const MDXPreview = ({ code, innerRef, isLoading = false }: MDXPreviewProps) => {
 				"prose-pre:bg-muted prose-pre:rounded-lg prose-pre:border prose-pre:border-border/50",
 				"prose-img:rounded-lg prose-img:border prose-img:border-border/50 prose-img:shadow-sm",
 				"prose-blockquote:border-l-4 prose-blockquote:border-primary/50 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground",
-				"prose-li:marker:text-muted-foreground",
+				"prose-li:marker:text-muted-foreground"
 			)}
 		>
 			<Content />

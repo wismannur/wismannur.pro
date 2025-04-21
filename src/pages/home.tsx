@@ -78,7 +78,7 @@ const Home = () => {
 
 	const { data: projects = [], isLoading: isProjectsLoading } = useQuery({
 		queryKey: ["latestProjects"],
-		queryFn: () => projectService.getLatest(3),
+		queryFn: () => projectService.getLatest(2),
 	});
 
 	return (
@@ -135,7 +135,7 @@ const Home = () => {
 										className={clsx(
 											"absolute rounded-2xl blur-lg opacity-70 group-hover:opacity-100 transition duration-500",
 											"-inset-2 bg-gradient-to-tr from-primary/30 to-primary/60",
-											"dark:from-primary/50 dark:to-primary/90",
+											"dark:from-primary/50 dark:to-primary/90"
 										)}
 									></div>
 									<div className="relative rounded-2xl overflow-hidden shadow-xl border border-border/50">
@@ -159,7 +159,12 @@ const Home = () => {
 				<section className="py-24 relative overflow-hidden">
 					<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none"></div>
 					<div className="container px-4 max-w-6xl mx-auto">
-						<SectionHeader title="What I Do" subtitle="Services" className="text-center mb-16" />
+						<SectionHeader
+							title="What I Do"
+							subtitle="Services"
+							description="Delivering high-quality web solutions with modern technologies and best practices"
+							className="text-center mb-16"
+						/>
 
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 							{services.map((service, index) => {
@@ -170,7 +175,7 @@ const Home = () => {
 										className={cn(
 											"group bg-background border border-border/50 rounded-xl p-8",
 											"hover:border-primary/30 dark:hover:border-primary/70 hover:shadow-lg transition-all duration-300",
-											"flex flex-col h-full",
+											"flex flex-col h-full"
 										)}
 										style={{ animationDelay: service.delay }}
 									>
@@ -249,7 +254,7 @@ const Home = () => {
 							className="text-center mb-16"
 						/>
 
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 							{isProjectsLoading
 								? // Loading placeholders
 									Array.from({ length: 3 }).map((_, i) => (

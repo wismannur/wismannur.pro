@@ -102,7 +102,7 @@ const FormBlog = () => {
 	}, [id, form, navigate]);
 
 	useEffect(() => {
-		const subscription = form.watch((value) => {
+		const subscription = form.watch(value => {
 			if (value.content) {
 				const time = calculateReadingTime(value.content);
 				setReadingTime(time);
@@ -129,8 +129,8 @@ const FormBlog = () => {
 		try {
 			const tagList = data.tags
 				.split(",")
-				.map((tag) => tag.trim())
-				.filter((tag) => tag.length > 0);
+				.map(tag => tag.trim())
+				.filter(tag => tag.length > 0);
 
 			const imageUrl = data.image || currentBlog?.image || "";
 			const readingTime = calculateReadingTime(data.content);
@@ -197,7 +197,7 @@ const FormBlog = () => {
 	return (
 		<CmsLayout>
 			<div className="max-w-6xl mx-auto">
-				<div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0 mb-8">
+				<div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0 mb-6 sm:mb-8">
 					<h1 className="text-3xl font-bold">
 						{isEditMode ? "Edit Blog Post" : "Create New Blog Post"}
 					</h1>
@@ -211,14 +211,14 @@ const FormBlog = () => {
 					<form onSubmit={form.handleSubmit(onSubmit)}>
 						<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 							<div className="lg:col-span-2">
-								<Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-									<CardHeader className="bg-muted/30 border-b border-border/30">
+								<Card className="border-x-0 border-b-0 sm:border-border/50 sm:shadow-md rounded-none sm:rounded-xl overflow-hidden">
+									<CardHeader className="bg-muted/30 border-b border-border/30 p-4 sm:p-6">
 										<CardTitle className="flex items-center">
 											<FileText className="h-5 w-5 mr-2 text-primary" />
 											Blog Content
 										</CardTitle>
 									</CardHeader>
-									<CardContent className="space-y-6 p-6">
+									<CardContent className="space-y-6 px-0 py-4 sm:p-6">
 										<FormField
 											control={form.control}
 											name="isPublished"
@@ -291,7 +291,7 @@ const FormBlog = () => {
 													<FormControl>
 														<MDXEditor
 															initialCode={contentValues}
-															onChange={(code) => field.onChange(code)}
+															onChange={code => field.onChange(code)}
 														/>
 													</FormControl>
 													<FormMessage />
@@ -349,7 +349,7 @@ const FormBlog = () => {
 																		placeholder="Enter image URL"
 																		className="rounded-lg border-border/50 focus-visible:ring-primary/30"
 																		value={selectedImage || ""}
-																		onChange={(e) => {
+																		onChange={e => {
 																			setSelectedImage(e.target.value);
 																			form.setValue("image", e.target.value);
 																		}}
@@ -361,7 +361,7 @@ const FormBlog = () => {
 																			src={selectedImage || "/placeholder.svg"}
 																			alt="Preview"
 																			className="w-full h-full object-cover"
-																			onError={(e) => {
+																			onError={e => {
 																				e.currentTarget.src = "/placeholder.svg";
 																			}}
 																		/>

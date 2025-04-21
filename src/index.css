@@ -220,9 +220,7 @@
 	width: 70px !important;
 	overflow: hidden !important;
 	transition: all 0.3s ease !important;
-	/* left: 16px !important;
-	bottom: 16px !important; */
-	@apply !left-1 sm:!left-4 !bottom-4;
+	@apply !left-2 sm:!left-4 !bottom-2 sm:!bottom-4;
 }
 .grecaptcha-badge:hover {
 	width: 256px !important;
