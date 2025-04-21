@@ -119,14 +119,14 @@ const CmsProjects = () => {
 					collection(db, "projects"),
 					// orderBy("createdAt", "desc"),
 					startAfter(lastVisibleDoc),
-					limit(1),
+					limit(1)
 				);
 				const nextSnapshot = await getDocs(nextQuery);
 				hasMoreResults = !nextSnapshot.empty;
 			}
 
 			// Convert the documents to Project objects
-			const projects = snapshot.docs.map((doc) => ({
+			const projects = snapshot.docs.map(doc => ({
 				id: doc.id,
 				...doc.data(),
 			})) as Project[];
@@ -161,13 +161,13 @@ const CmsProjects = () => {
 		if (data?.projects) {
 			if (searchQuery) {
 				const filtered = data.projects.filter(
-					(project) =>
+					project =>
 						project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
 						project.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
 						(project.technologies &&
-							project.technologies.some((tech) =>
-								tech.toLowerCase().includes(searchQuery.toLowerCase()),
-							)),
+							project.technologies.some(tech =>
+								tech.toLowerCase().includes(searchQuery.toLowerCase())
+							))
 				);
 				setFilteredProjects(filtered);
 			} else {
@@ -232,13 +232,13 @@ const CmsProjects = () => {
 	const columns: ColumnDef<Project>[] = [
 		{
 			header: "Title",
-			cell: (project) => (
+			cell: project => (
 				<div className="flex flex-col">
 					<div className="font-medium">{project.title}</div>
 					<div className="text-sm text-muted-foreground truncate max-w-lg">{project.summary}</div>
 					<div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-1">
 						{project.technologies &&
-							project.technologies.slice(0, 3).map((tech) => <Chip key={tech}>{tech}</Chip>)}
+							project.technologies.slice(0, 3).map(tech => <Chip key={tech}>{tech}</Chip>)}
 						{project.technologies && project.technologies.length > 3 && (
 							<Chip>+{project.technologies.length - 3}</Chip>
 						)}
@@ -249,7 +249,7 @@ const CmsProjects = () => {
 		},
 		{
 			header: "Status",
-			cell: (project) => (
+			cell: project => (
 				<div className="flex flex-col items-start gap-1">
 					<Badge variant={project.isPublished ? "default" : "secondary"}>
 						{project.isPublished ? "Published" : "Draft"}
@@ -265,7 +265,7 @@ const CmsProjects = () => {
 		},
 		{
 			header: "Date",
-			cell: (project) => (
+			cell: project => (
 				<div className="flex flex-col gap-y-1">
 					<div className="flex items-center text-muted-foreground text-sm">
 						<CalendarArrowUp className="w-4 h-4 mr-1.5" />
@@ -285,7 +285,7 @@ const CmsProjects = () => {
 		},
 		{
 			header: "Links",
-			cell: (project) => (
+			cell: project => (
 				<div className="flex space-x-3">
 					{project.demoUrl && (
 						<a
@@ -315,7 +315,7 @@ const CmsProjects = () => {
 		},
 		{
 			header: "Stats",
-			cell: (project) => (
+			cell: project => (
 				<div className="text-sm">
 					<div className="flex items-center gap-1">
 						<Eye className="h-3.5 w-3.5" />
@@ -327,11 +327,11 @@ const CmsProjects = () => {
 		},
 		{
 			header: "Actions",
-			cell: (project) => (
+			cell: project => (
 				<div className="flex justify-end">
 					<AlertDialog
 						open={projectToDelete === project.id}
-						onOpenChange={(open) => !open && setProjectToDelete(null)}
+						onOpenChange={open => !open && setProjectToDelete(null)}
 					>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
@@ -345,7 +345,7 @@ const CmsProjects = () => {
 									<Eye className="h-4 w-4 mr-2" />
 									View
 								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => navigate(`/projects/edit/${project.id}`)}>
+								<DropdownMenuItem onClick={() => navigate(`/cms/projects/form/${project.id}`)}>
 									<Pencil className="h-4 w-4 mr-2" />
 									Edit
 								</DropdownMenuItem>
@@ -442,7 +442,7 @@ const CmsProjects = () => {
 						<Input
 							placeholder="Search projects..."
 							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
+							onChange={e => setSearchQuery(e.target.value)}
 							className="pl-9 w-full md:w-[250px] rounded-lg"
 						/>
 					</form>
@@ -494,7 +494,7 @@ const CmsProjects = () => {
 						hasMore,
 						onPageChange: handlePageChange,
 					}}
-					rowClassName={(project) => (!project.isPublished ? "bg-muted/30" : "")}
+					rowClassName={project => (!project.isPublished ? "bg-muted/30" : "")}
 				/>
 			</div>
 		</CmsLayout>

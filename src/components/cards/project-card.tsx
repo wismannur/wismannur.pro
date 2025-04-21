@@ -23,7 +23,7 @@ const ProjectCard = React.memo(
 				className={cn(
 					"group overflow-hidden rounded-lg bg-card border border-border/40 flex flex-col card-hover h-full transition-all duration-300 hover:shadow-md hover:border-primary/40",
 					isFeatured && "md:flex-row",
-					className,
+					className
 				)}
 				style={style}
 			>
@@ -31,7 +31,7 @@ const ProjectCard = React.memo(
 					to={`/projects/${project.slug}`}
 					className={cn(
 						"relative aspect-video overflow-hidden bg-muted",
-						isFeatured ? "md:w-1/2" : "w-full",
+						isFeatured ? "md:w-1/2" : "w-full"
 					)}
 				>
 					<img
@@ -42,7 +42,7 @@ const ProjectCard = React.memo(
 					<div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 				</Link>
 
-				<div className={cn("flex flex-col p-5 h-full max-h-72", isFeatured && "md:w-1/2 md:p-6")}>
+				<div className={cn("flex flex-col p-5 h-full max-h-64", isFeatured && "md:w-1/2 md:p-6")}>
 					<div className="flex flex-wrap items-center text-xs text-muted-foreground mb-3 gap-y-2">
 						<div className="flex items-center">
 							<Calendar size={14} className="mr-1" />
@@ -70,7 +70,7 @@ const ProjectCard = React.memo(
 						<h3
 							className={cn(
 								"font-bold group-hover:text-primary transition-colors duration-300",
-								isFeatured ? "text-2xl mb-3" : "text-lg mb-2",
+								isFeatured ? "text-2xl mb-3" : "text-lg mb-2"
 							)}
 						>
 							{project.title}
@@ -82,7 +82,7 @@ const ProjectCard = React.memo(
 					</p>
 
 					<div className="flex flex-wrap gap-2">
-						{project.technologies.slice(0, 4).map((tech) => (
+						{project.technologies.slice(0, 4).map(tech => (
 							<Chip
 								key={tech}
 								className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
@@ -101,7 +101,7 @@ const ProjectCard = React.memo(
 									target="_blank"
 									rel="noopener noreferrer"
 									className="text-sm text-foreground flex items-center hover:underline transition-all duration-200 hover:translate-y-[-1px]"
-									onClick={(e) => e.stopPropagation()}
+									onClick={e => e.stopPropagation()}
 									aria-label={`View live demo for ${project.title}`}
 								>
 									<ExternalLink size={14} className="mr-1" />
@@ -115,7 +115,7 @@ const ProjectCard = React.memo(
 									target="_blank"
 									rel="noopener noreferrer"
 									className="text-sm text-foreground flex items-center hover:underline transition-all duration-200 hover:translate-y-[-1px]"
-									onClick={(e) => e.stopPropagation()}
+									onClick={e => e.stopPropagation()}
 									aria-label={`View source code for ${project.title}`}
 								>
 									<Github size={14} className="mr-1" />
@@ -146,7 +146,7 @@ const ProjectCard = React.memo(
 			prevProps.project.id === nextProps.project.id &&
 			prevProps.project.updatedAt === nextProps.project.updatedAt
 		);
-	},
+	}
 );
 
 export { ProjectCard };

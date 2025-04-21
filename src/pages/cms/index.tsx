@@ -23,8 +23,10 @@ const CmsRoutes = () => {
 				<Route path="/dashboard" element={<Dashboard />} />
 				<Route path="/blogs" element={<CmsBlogs />} />
 				<Route path="/blogs/form" element={<FormBlog />} />
+				<Route path="/blogs/form/:id" element={<FormBlog />} />
 				<Route path="/projects" element={<CmsProjects />} />
 				<Route path="/projects/form" element={<FormProject />} />
+				<Route path="/projects/form/:id" element={<FormProject />} />
 				<Route path="/contacts" element={<CmsContacts />} />
 				<Route path="/services" element={<CmsServices />} />
 				<Route path="/consultations" element={<CmsConsultations />} />
