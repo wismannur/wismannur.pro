@@ -30,32 +30,36 @@ const experiences = [
 		company: "Rumah Siap Kerja",
 		period: "May 2021 - Sep 2024",
 		location: "South Jakarta, Indonesia.",
-		description:
-			"Problem: The platform needed a complete UI overhaul to improve user engagement and reduce bounce rates. Role: Led frontend development for the career platform, focusing on responsive design and performance optimization. Action: Implemented a component-based architecture using React and TypeScript, created a design system, and optimized for mobile devices. Quantifiable results: Improved page load times by 40%, increased user engagement by 35%, and reduced bounce rates by 25%.",
+		description: "",
+		// description:
+		// 	"Problem: The platform needed a complete UI overhaul to improve user engagement and reduce bounce rates. Role: Led frontend development for the career platform, focusing on responsive design and performance optimization. Action: Implemented a component-based architecture using React and TypeScript, created a design system, and optimized for mobile devices. Quantifiable results: Improved page load times by 40%, increased user engagement by 35%, and reduced bounce rates by 25%.",
 	},
 	{
 		title: "Frontend Developer",
 		company: "BIT - Barito Technologies Group",
 		period: "Jun 2019 - Sep 2021",
 		location: "West Jakarta, Indonesia.",
-		description:
-			"Problem: Legacy systems were causing slow performance and poor user experience across multiple products. Role: Developed and maintained frontend applications for enterprise clients in the energy sector. Action: Migrated legacy applications to Vue.js, implemented state management with Vuex, and created reusable component libraries. Quantifiable results: Delivered 5 major projects on time, reduced code base by 30% through component reuse, and improved application performance by 50%.",
+		description: "",
+		// description:
+		// 	"Problem: Legacy systems were causing slow performance and poor user experience across multiple products. Role: Developed and maintained frontend applications for enterprise clients in the energy sector. Action: Migrated legacy applications to Vue.js, implemented state management with Vuex, and created reusable component libraries. Quantifiable results: Delivered 5 major projects on time, reduced code base by 30% through component reuse, and improved application performance by 50%.",
 	},
 	{
 		title: "Frontend Developer",
 		company: "Arisot Riset Infomatika",
 		period: "Nov 2018 - May 2019",
 		location: "Bandung, Indonesia.",
-		description:
-			"Problem: Clients needed custom web applications with complex data visualization requirements. Role: Developed frontend solutions for data-intensive applications and research projects. Action: Built interactive dashboards using D3.js and React, implemented responsive layouts, and optimized for cross-browser compatibility. Quantifiable results: Successfully delivered 8 client projects, reduced development time by 20% through reusable components, and achieved 95% client satisfaction rating.",
+		description: "",
+		// description:
+		// 	"Problem: Clients needed custom web applications with complex data visualization requirements. Role: Developed frontend solutions for data-intensive applications and research projects. Action: Built interactive dashboards using D3.js and React, implemented responsive layouts, and optimized for cross-browser compatibility. Quantifiable results: Successfully delivered 8 client projects, reduced development time by 20% through reusable components, and achieved 95% client satisfaction rating.",
 	},
 	{
 		title: "Jr. Frontend Developer",
 		company: "Navcore Nextology",
 		period: "Feb 2018 - Sep 2018",
 		location: "South Jakarta, Indonesia.",
-		description:
-			"Problem: The company needed to rapidly develop prototypes for client presentations and proof of concepts. Role: Assisted senior developers in building UI components and implementing designs. Action: Created HTML/CSS layouts, implemented JavaScript functionality, and participated in code reviews and testing. Quantifiable results: Contributed to 3 successful product launches, reduced UI bug reports by 15%, and improved team velocity by taking ownership of component development.",
+		description: "",
+		// description:
+		// 	"Problem: The company needed to rapidly develop prototypes for client presentations and proof of concepts. Role: Assisted senior developers in building UI components and implementing designs. Action: Created HTML/CSS layouts, implemented JavaScript functionality, and participated in code reviews and testing. Quantifiable results: Contributed to 3 successful product launches, reduced UI bug reports by 15%, and improved team velocity by taking ownership of component development.",
 	},
 ];
 
@@ -222,7 +226,7 @@ const About = () => {
 								className={cn(
 									"p-4 bg-background rounded-xl border border-border/50 shadow-sm",
 									"hover:border-primary/30 dark:hover:border-primary/70 hover:shadow-md transition-all duration-300",
-									"flex items-center justify-center text-center"
+									"flex items-center justify-center text-center",
 								)}
 								style={{ animationDelay: `${index * 0.05}s` }}
 							>
