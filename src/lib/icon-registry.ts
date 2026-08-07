@@ -1,0 +1,76 @@
+import {
+	Award,
+	Briefcase,
+	Calendar,
+	CheckCircle,
+	Clock,
+	Code,
+	Code2,
+	Database,
+	FileText,
+	Gauge,
+	Github,
+	Globe,
+	LayoutGrid,
+	Lightbulb,
+	Linkedin,
+	Mail,
+	MapPin,
+	MessageSquare,
+	RefreshCw,
+	Rocket,
+	Search,
+	ServerCog,
+	Shield,
+	ShoppingCart,
+	Smartphone,
+	Sparkles,
+	Twitter,
+	User,
+	Users,
+	Zap,
+	type LucideIcon,
+} from "lucide-react";
+
+// DB rows store lucide icons as kebab-case name strings (services.icon,
+// offers.icon, process_steps.icon, …) — this registry maps them back to
+// components. Keep names kebab-case to match lucide's own naming.
+export const contentIcons: Record<string, LucideIcon> = {
+	award: Award,
+	briefcase: Briefcase,
+	calendar: Calendar,
+	"check-circle": CheckCircle,
+	clock: Clock,
+	code: Code,
+	"code-2": Code2,
+	database: Database,
+	"file-text": FileText,
+	gauge: Gauge,
+	github: Github,
+	globe: Globe,
+	"layout-grid": LayoutGrid,
+	lightbulb: Lightbulb,
+	linkedin: Linkedin,
+	mail: Mail,
+	"map-pin": MapPin,
+	"message-square": MessageSquare,
+	"refresh-cw": RefreshCw,
+	rocket: Rocket,
+	search: Search,
+	"server-cog": ServerCog,
+	shield: Shield,
+	"shopping-cart": ShoppingCart,
+	smartphone: Smartphone,
+	sparkles: Sparkles,
+	twitter: Twitter,
+	user: User,
+	users: Users,
+	zap: Zap,
+};
+
+// Fallback keeps an unknown/renamed icon from crashing a public page.
+export const getContentIcon = (name: string | null | undefined): LucideIcon =>
+	(name && contentIcons[name]) || Sparkles;
+
+// Options for the CMS icon <Select> fields.
+export const contentIconNames = Object.keys(contentIcons).sort();

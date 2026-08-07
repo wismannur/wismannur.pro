@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1785657493282,
+      "tag": "0000_dizzy_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785918067636,
+      "tag": "0001_fantastic_next_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786077016047,
+      "tag": "0002_numerous_trauma",
+      "breakpoints": true
+    }
+  ]
+}
