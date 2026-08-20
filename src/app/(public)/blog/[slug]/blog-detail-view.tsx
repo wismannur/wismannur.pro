@@ -105,6 +105,10 @@ export function BlogDetailView({ slug }: { slug: string }) {
 	// Default reading time if not provided
 	const readingTime = `${blog.readingTime ?? 10} min read`;
 
+	// The latest-blogs list includes the article being viewed, so drop it before
+	// deciding whether the section has anything to show.
+	const relatedArticles = relatedBlogs.filter((related) => related.id !== blog.id).slice(0, 2);
+
 	return (
 		<div className="py-10">
 			<ReadingProgress value={readingProgress} />
@@ -151,16 +155,13 @@ export function BlogDetailView({ slug }: { slug: string }) {
 						</article>
 
 						{/* Related Articles */}
-						{relatedBlogs.length > 0 && (
+						{relatedArticles.length > 0 && (
 							<div className="mt-16 pt-8 border-t border-border animate-fade-in">
 								<h2 className="text-2xl font-bold mb-8">Related Articles</h2>
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									{relatedBlogs
-										.filter((related) => related.id !== blog.id)
-										.slice(0, 2)
-										.map((relatedBlog) => (
-											<BlogCard key={relatedBlog.id} blog={relatedBlog} variant="compact" />
-										))}
+									{relatedArticles.map((relatedBlog) => (
+										<BlogCard key={relatedBlog.id} blog={relatedBlog} variant="compact" />
+									))}
 								</div>
 							</div>
 						)}

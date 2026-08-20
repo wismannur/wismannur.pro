@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Check, Info, Loader2, Quote, Save, Star } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -28,7 +29,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { queryClient } from "@/lib/query-client";
 import { testimonialsService } from "@/services";
 
 const testimonialSchema = z.object({
@@ -45,6 +45,7 @@ type TestimonialFormValues = z.infer<typeof testimonialSchema>;
 
 export function TestimonialsForm() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowRight,
 	Briefcase,
@@ -38,7 +39,6 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { queryClient } from "@/lib/query-client";
 import { formatResumePeriod } from "@/lib/resume";
 import { resumeService, type ResumeKind } from "@/services";
 
@@ -75,6 +75,7 @@ type ResumeFormValues = z.infer<typeof resumeSchema>;
 
 export function ResumeForm() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const searchParams = useSearchParams();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);

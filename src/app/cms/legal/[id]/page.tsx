@@ -6,10 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { queryClient } from "@/lib/query-client";
 import { formatDate } from "@/lib/utils";
 import { sitePagesService } from "@/services";
 import type { SitePage } from "@/services/site-pages/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -21,6 +21,7 @@ const MDXEditor = lazy(() => import("@/components/mdx/mdx-editor"));
 
 export default function CmsLegalEditorPage() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id: string }>();
 
 	const [page, setPage] = useState<SitePage | null>(null);
