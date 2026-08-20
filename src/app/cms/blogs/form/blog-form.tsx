@@ -15,10 +15,10 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth-context";
 import { calculateReadingTime } from "@/lib/mdx";
-import { queryClient } from "@/lib/query-client";
 import { slugify } from "@/lib/utils";
 import { type Blog, blogService, type NewBlog } from "@/services";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Check, Clock, FileText, Info, Loader2, Save, Tag } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { lazy, useEffect, useState } from "react";
@@ -42,6 +42,7 @@ type BlogFormValues = z.infer<typeof blogSchema>;
 export function BlogForm() {
 	const { user } = useAuth();
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);
 
@@ -163,7 +164,12 @@ export function BlogForm() {
 				toast.success("Blog post published successfully!");
 			}
 
-			queryClient.invalidateQueries({ queryKey: ["blogs", "latestBlogs"] });
+			// One key per call — a composite key is a single hierarchical key, not a list.
+			queryClient.invalidateQueries({ queryKey: ["blogs"] });
+			queryClient.invalidateQueries({ queryKey: ["blog"] });
+			queryClient.invalidateQueries({ queryKey: ["latestBlogs"] });
+			queryClient.invalidateQueries({ queryKey: ["relatedBlogs"] });
+			queryClient.invalidateQueries({ queryKey: ["blogTags"] });
 			router.push("/cms/blogs");
 		} catch (error) {
 			console.error("Error saving blog:", error);

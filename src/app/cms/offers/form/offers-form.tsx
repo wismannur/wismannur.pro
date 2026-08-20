@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowRight,
 	Check,
@@ -37,7 +38,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { contentIconNames, getContentIcon } from "@/lib/icon-registry";
-import { queryClient } from "@/lib/query-client";
 import { offersService } from "@/services";
 
 // Prices are integer IDR, shown without decimals: "Rp5.000.000".
@@ -86,6 +86,7 @@ type OfferFormValues = z.infer<typeof offerSchema>;
 
 export function OffersForm() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);
 

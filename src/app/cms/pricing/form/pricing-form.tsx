@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Check, Info, Loader2, Save, Settings2, Tag } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -21,7 +22,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { queryClient } from "@/lib/query-client";
 import { pricingTiersService } from "@/services";
 
 const pricingSchema = z.object({
@@ -45,6 +45,7 @@ type PricingFormValues = z.infer<typeof pricingSchema>;
 
 export function PricingForm() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);
 

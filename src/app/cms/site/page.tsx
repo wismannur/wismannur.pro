@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { siteSettingsService } from "@/services";
 import type { SiteSettings } from "@/services/site-settings/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Contact, Globe, Layout, ListChecks, Loader2, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -106,6 +106,7 @@ const toFormValues = (settings: SiteSettings): SiteFormValues => ({
 });
 
 export default function CmsSitePage() {
+	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const { data: settings, isLoading } = useQuery({
@@ -176,6 +177,7 @@ export default function CmsSitePage() {
 				requestTimeframes: parseOptionLines(data.requestTimeframesText),
 				requestBudgetRanges: parseOptionLines(data.requestBudgetRangesText),
 			});
+			queryClient.invalidateQueries({ queryKey: ["cmsSiteSettings"] });
 			toast.success("Site settings saved — public pages update immediately");
 		} catch (error) {
 			console.error("Error saving site settings:", error);
