@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { ContactForm, contactService } from "@/services";
 import type { ContactCopy } from "@/services/page-copy/types";
 import type { SiteSettings } from "@/services/site-settings/types";
+import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
 import { getReCaptchaToken } from "@/services/recaptcha";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -278,6 +279,8 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 												</>
 											)}
 										</Button>
+
+										<RecaptchaDisclaimer />
 									</form>
 								</Form>
 							</div>
