@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import type { SiteSettings } from "@/services/site-settings/types";
 
-const navLinks = [
+const baseNavLinks = [
 	{ to: "/", label: "Home" },
 	{ to: "/blog", label: "Blog" },
 	{ to: "/projects", label: "Projects" },
@@ -14,6 +14,7 @@ const navLinks = [
 
 export const Footer = ({ settings }: { settings: SiteSettings }) => {
 	const currentYear = new Date().getFullYear();
+	const navLinks = baseNavLinks.filter((link) => link.to !== "/blog" || settings.enableBlog);
 
 	const socialLinks = [
 		{ href: settings.social.github, icon: Github, label: "GitHub" },

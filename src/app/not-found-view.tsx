@@ -8,7 +8,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-export function NotFoundView({ copy }: { copy: NotFoundCopy }) {
+export function NotFoundView({
+	copy,
+	enableBlog = true,
+}: {
+	copy: NotFoundCopy;
+	enableBlog?: boolean;
+}) {
 	const pathname = usePathname();
 
 	useEffect(() => {
@@ -176,15 +182,19 @@ export function NotFoundView({ copy }: { copy: NotFoundCopy }) {
 							{ title: "Blog", path: "/blog" },
 							{ title: "Projects", path: "/projects" },
 							{ title: "About", path: "/about" },
-						].map((link) => (
-							<Link
-								key={link.path}
-								href={link.path}
-								className="px-4 py-2 rounded-lg bg-background/80 hover:bg-primary/10 border border-border text-center transition-colors"
-							>
-								{link.title}
-							</Link>
-						))}
+							{ title: "Services", path: "/services" },
+						]
+							.filter((link) => link.path !== "/blog" || enableBlog)
+							.slice(0, 3)
+							.map((link) => (
+								<Link
+									key={link.path}
+									href={link.path}
+									className="px-4 py-2 rounded-lg bg-background/80 hover:bg-primary/10 border border-border text-center transition-colors"
+								>
+									{link.title}
+								</Link>
+							))}
 					</div>
 				</div>
 			</motion.div>

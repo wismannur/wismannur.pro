@@ -36,6 +36,7 @@ import { serviceRequestService } from "@/services";
 import type { Faq } from "@/services/faqs/types";
 import type { ServicesCopy } from "@/services/page-copy/types";
 import type { ProcessStep } from "@/services/process-steps/types";
+import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
 import { getReCaptchaToken } from "@/services/recaptcha";
 import type { ServiceItem } from "@/services/service-catalog/types";
 import type { SelectOption } from "@/services/site-settings/types";
@@ -495,6 +496,8 @@ export function ServicesView({
 											</>
 										)}
 									</Button>
+
+									<RecaptchaDisclaimer />
 								</form>
 							</Form>
 						</div>

@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
+const baseNavLinks = [
 	{ title: "Home", path: "/" },
 	{ title: "Blog", path: "/blog" },
 	{ title: "Projects", path: "/projects" },
@@ -20,7 +20,14 @@ const navLinks = [
 	{ title: "Contact", path: "/contact" },
 ];
 
-export const Navbar = ({ copyrightName = "Wisman Nur" }: { copyrightName?: string }) => {
+export const Navbar = ({
+	copyrightName = "Wisman Nur",
+	enableBlog = true,
+}: {
+	copyrightName?: string;
+	enableBlog?: boolean;
+}) => {
+	const navLinks = baseNavLinks.filter((link) => link.path !== "/blog" || enableBlog);
 	const [isOpen, setIsOpen] = useState(false);
 	const [isScrolled, setIsScrolled] = useState(false);
 	const pathname = usePathname();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { getCachedSiteSettings } from "@/lib/site-metadata";
 import { pageCopyService, serviceCatalogService } from "@/services";
 import { HomeView } from "./home-view";
 
@@ -14,10 +15,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-	const [copy, services] = await Promise.all([
+	const [copy, services, settings] = await Promise.all([
 		pageCopyService.get("home"),
 		serviceCatalogService.getPublished(),
+		getCachedSiteSettings(),
 	]);
 
-	return <HomeView copy={copy} services={services.filter((service) => service.showOnHome)} />;
+	return (
+		<HomeView
+			copy={copy}
+			services={services.filter((service) => service.showOnHome)}
+			enableBlog={settings.enableBlog}
+		/>
+	);
 }
