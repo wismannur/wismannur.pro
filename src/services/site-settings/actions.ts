@@ -48,6 +48,7 @@ const settingsUpdateSchema = z.object({
 	footerProjectLinks: z.array(labeledLinkSchema).optional(),
 	requestTimeframes: z.array(selectOptionSchema).optional(),
 	requestBudgetRanges: z.array(selectOptionSchema).optional(),
+	enableBlog: z.boolean().optional(),
 });
 
 export async function getSiteSettings(): Promise<SiteSettings> {

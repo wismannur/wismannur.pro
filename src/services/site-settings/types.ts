@@ -38,6 +38,7 @@ export interface SiteSettings {
 	footerProjectLinks: LabeledLink[];
 	requestTimeframes: SelectOption[];
 	requestBudgetRanges: SelectOption[];
+	enableBlog: boolean;
 	updatedAt: Date;
 }
 
