@@ -3,13 +3,16 @@ import type { MetadataRoute } from "next";
 
 import { getDb, schema } from "@/db";
 import { SITE_URL as BASE_URL } from "@/lib/site-url";
+import { siteSettingsService } from "@/services";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	const now = new Date();
+	const settings = await siteSettingsService.get();
+	const enableBlog = settings.enableBlog;
 
 	const staticPaths = [
 		"",
-		"/blog",
+		...(enableBlog ? ["/blog"] : []),
 		"/projects",
 		"/about",
 		"/services",
@@ -29,10 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 	const db = getDb();
 	const [blogRows, projectRows] = await Promise.all([
-		db
-			.select({ slug: schema.blogs.slug, updatedAt: schema.blogs.updatedAt })
-			.from(schema.blogs)
-			.where(eq(schema.blogs.isPublished, true)),
+		enableBlog
+			? db
+					.select({ slug: schema.blogs.slug, updatedAt: schema.blogs.updatedAt })
+					.from(schema.blogs)
+					.where(eq(schema.blogs.isPublished, true))
+			: Promise.resolve([]),
 		db
 			.select({ slug: schema.projects.slug, updatedAt: schema.projects.updatedAt })
 			.from(schema.projects)

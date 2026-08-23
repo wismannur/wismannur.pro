@@ -27,7 +27,12 @@ export const Layout = ({
 }: LayoutProps) => {
 	return (
 		<div className={cn("flex flex-col min-h-screen", className)}>
-			{!hideNavbar && <Navbar copyrightName={settings.copyrightName} />}
+			{!hideNavbar && (
+				<Navbar
+					copyrightName={settings.copyrightName}
+					enableBlog={settings.enableBlog}
+				/>
+			)}
 			<main className="flex-1 pt-20">{children}</main>
 			{!hideFooter && <Footer settings={settings} />}
 			<ScrollToTop />
