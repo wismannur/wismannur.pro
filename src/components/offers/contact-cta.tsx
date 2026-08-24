@@ -1,7 +1,9 @@
+"use client";
 
 import { Button } from "@/components/ui/button";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { cn } from "@/lib/utils";
-import { ArrowRight, Calendar, MessageCircleIcon, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, Calendar, MessageCircleIcon, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 interface ContactCTAProps {
@@ -26,91 +28,88 @@ export function ContactCTA({
 	secondaryButtonLink = "/projects",
 }: ContactCTAProps) {
 	return (
-		<div
+		<SpotlightCard
 			className={cn(
-				"w-full max-w-5xl mx-auto px-8 py-12 rounded-2xl relative overflow-hidden",
-				variant === "default" &&
-					"bg-gradient-to-br from-primary/10 via-primary/5 to-secondary/10 border border-primary/20",
+				"w-full max-w-5xl mx-auto p-8 md:p-12 rounded-3xl relative overflow-hidden bg-card/70 border border-border/50 shadow-xl",
 				variant === "gradient" &&
-					"bg-gradient-to-br from-primary via-primary/80 to-secondary text-white",
-				variant === "subtle" && "bg-muted/50 border border-border/60",
+					"bg-gradient-to-br from-primary/90 via-primary to-secondary text-primary-foreground border-transparent",
+				variant === "subtle" && "bg-muted/40 border-border/50",
 				className,
 			)}
 		>
-			{/* Decorative elements */}
-			{variant === "gradient" && (
-				<>
-					<div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-black/20 mix-blend-overlay"></div>
-					<div className="absolute top-0 right-0 w-full h-full overflow-hidden opacity-20 mix-blend-soft-light">
-						<div className="absolute -top-1/2 -left-1/2 w-full h-full rounded-full bg-white/30 blur-3xl"></div>
-						<div className="absolute -bottom-1/4 -right-1/4 w-full h-full rounded-full bg-white/30 blur-3xl"></div>
-					</div>
-					<div className="absolute -right-10 top-10 opacity-10 pointer-events-none">
-						<Zap size={120} strokeWidth={1} />
-					</div>
-				</>
-			)}
-
-			<div className="relative z-10 text-center space-y-6">
+			<div className="relative z-10 text-center space-y-6 max-w-3xl mx-auto">
 				{variant === "gradient" ? (
-					<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-medium mb-2">
-						<Sparkles size={16} className="text-white" />
-						LIMITED AVAILABILITY
+					<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-semibold tracking-wide">
+						<Sparkles size={14} className="text-white animate-pulse" />
+						<span>LIMITED AVAILABILITY</span>
 					</div>
 				) : (
-					<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-medium mb-2">
-						<Calendar size={16} />
-						TAKING NEW PROJECTS
+					<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
+						<Calendar size={14} />
+						<span>TAKING NEW PROJECTS</span>
 					</div>
 				)}
 
 				<h2
-					className={cn("text-2xl md:text-3xl font-bold", variant === "gradient" && "text-white")}
+					className={cn(
+						"text-2xl md:text-4xl font-extrabold tracking-tight",
+						variant === "gradient" ? "text-white" : "text-foreground",
+					)}
 				>
 					{title}
 				</h2>
 
 				<p
 					className={cn(
-						"max-w-2xl mx-auto",
+						"text-sm md:text-base leading-relaxed max-w-2xl mx-auto",
 						variant === "gradient" ? "text-white/90" : "text-muted-foreground",
 					)}
 				>
 					{description}
 				</p>
 
-				<div className="flex flex-col sm:flex-row justify-center gap-4 pt-2">
+				<div className="flex flex-col sm:flex-row justify-center items-center gap-3.5 pt-2">
 					<Button
 						asChild
 						size="lg"
 						className={cn(
-							"gap-2 rounded-full px-8 group",
-							variant === "gradient" && "bg-white text-primary hover:bg-white/90",
+							"rounded-full px-7 h-12 text-xs md:text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group w-full sm:w-auto",
+							variant === "gradient" && "bg-white text-primary hover:bg-white/90 shadow-black/20",
 						)}
 					>
-						<Link href={primaryButtonLink} data-umami-event="offers-cta-primary-click" data-umami-event-label={primaryButtonText}>
-							<MessageCircleIcon size={18} />
-							{primaryButtonText}
+						<Link
+							href={primaryButtonLink}
+							data-umami-event="offers-cta-primary-click"
+							data-umami-event-label={primaryButtonText}
+							className="inline-flex items-center justify-center gap-2"
+						>
+							<MessageCircleIcon size={15} />
+							<span>{primaryButtonText}</span>
 						</Link>
 					</Button>
 
 					<Button
 						asChild
 						size="lg"
-						variant={variant === "gradient" ? "outline" : "secondary"}
+						variant="outline"
 						className={cn(
-							"gap-2 rounded-full px-8 group bg-muted/5",
-							variant === "gradient" && "text-white border-white/40 hover:bg-white/10",
+							"rounded-full px-7 h-12 text-xs md:text-sm font-semibold border-border/60 bg-card/70 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/40 hover:text-primary shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group w-full sm:w-auto",
+							variant === "gradient" &&
+								"text-white border-white/40 bg-white/10 hover:bg-white/20 hover:text-white hover:border-white/60",
 						)}
 					>
-						<Link href={secondaryButtonLink} data-umami-event="offers-cta-secondary-click" data-umami-event-label={secondaryButtonText}>
-							<Sparkles size={18} />
-							{secondaryButtonText}
-							<ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+						<Link
+							href={secondaryButtonLink}
+							data-umami-event="offers-cta-secondary-click"
+							data-umami-event-label={secondaryButtonText}
+							className="inline-flex items-center justify-center gap-2"
+						>
+							<span>{secondaryButtonText}</span>
+							<ArrowRight size={15} className="group-hover:translate-x-1 transition-transform duration-200" />
 						</Link>
 					</Button>
 				</div>
 			</div>
-		</div>
+		</SpotlightCard>
 	);
 }
