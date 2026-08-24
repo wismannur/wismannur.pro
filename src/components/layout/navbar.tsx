@@ -68,7 +68,13 @@ export const Navbar = ({
 	}, [isOpen]);
 
 	const toggleMenu = () => setIsOpen(!isOpen);
-	const toggleTheme = () => setTheme(isDark ? "light" : "dark");
+	const toggleTheme = () => {
+		const nextTheme = isDark ? "light" : "dark";
+		setTheme(nextTheme);
+		if (typeof window !== "undefined" && window.umami) {
+			window.umami.track("theme-toggle", { theme: nextTheme });
+		}
+	};
 
 	return (
 		<header
@@ -83,6 +89,7 @@ export const Navbar = ({
 				{/* Logo */}
 				<Link
 					href="/"
+					data-umami-event="navbar-logo-click"
 					className="text-xl font-bold tracking-tighter relative z-10 flex items-center group"
 				>
 					<div className="relative">
@@ -101,6 +108,8 @@ export const Navbar = ({
 						<Link
 							key={link.path}
 							href={link.path}
+							data-umami-event="navbar-nav-click"
+							data-umami-event-label={link.title}
 							className={cn(
 								"px-3 py-2 rounded-full text-sm font-medium transition-all hover:bg-primary/10",
 								pathname === link.path
@@ -117,6 +126,7 @@ export const Navbar = ({
 							variant="ghost"
 							size="icon"
 							onClick={toggleTheme}
+							data-umami-event="theme-toggle-click"
 							className="rounded-full h-8 w-8"
 							aria-label="Toggle theme"
 						>
@@ -130,14 +140,14 @@ export const Navbar = ({
 
 					{user ? (
 						<Button className="rounded-full px-6 ml-2 group" asChild>
-							<Link href="/cms/dashboard">
+							<Link href="/cms/dashboard" data-umami-event="navbar-dashboard-click">
 								<User size={16} className="mr-1 group-hover:animate-pulse" />
 								Dashboard
 							</Link>
 						</Button>
 					) : (
 						<Button className="rounded-full px-6 ml-2 group" asChild>
-							<Link href="/hire-me">
+							<Link href="/hire-me" data-umami-event="navbar-hire-me-click">
 								<Sparkles size={16} className="mr-1 animate-pulse" />
 								Hire Me
 							</Link>
@@ -195,6 +205,8 @@ export const Navbar = ({
 							<Link
 								key={link.path}
 								href={link.path}
+								data-umami-event="mobile-navbar-nav-click"
+								data-umami-event-label={link.title}
 								className={cn(
 									"text-xl font-medium transition-all px-6 py-3 rounded-full",
 									"transform transition-transform",
@@ -219,7 +231,7 @@ export const Navbar = ({
 								}}
 								asChild
 							>
-								<Link href="/cms/dashboard">
+								<Link href="/cms/dashboard" data-umami-event="mobile-navbar-dashboard-click">
 									<User size={18} className="mr-2" /> Dashboard
 								</Link>
 							</Button>
@@ -233,7 +245,7 @@ export const Navbar = ({
 								}}
 								asChild
 							>
-								<Link href="/hire-me">
+								<Link href="/hire-me" data-umami-event="mobile-navbar-hire-me-click">
 									<Zap size={18} className="mr-2" /> Hire Me
 								</Link>
 							</Button>
