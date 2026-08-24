@@ -1,10 +1,12 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { formatResumePeriod } from "@/lib/resume";
 import { trackEvent } from "@/lib/umami";
 import type { ResumeEntry } from "@/services/resume/types";
-import { BriefcaseIcon, Calendar, GraduationCap, MapPin } from "lucide-react";
+import { ArrowRight, BriefcaseIcon, Calendar, FileText, GraduationCap, MapPin } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 type ResumeSectionProps = {
@@ -25,7 +27,7 @@ export function ResumeSection({ experiences, education }: ResumeSectionProps) {
 
 	return (
 		<section className="py-24 relative">
-			<div className="container max-w-7xl px-4">
+			<div className="container px-4 lg:px-0">
 				<SectionHeader
 					title={activeTab === "experience" ? "Work Experience" : "Education & Certification"}
 					subtitle={activeTab === "experience" ? "My Journey" : "My Academic Background"}
@@ -219,6 +221,20 @@ export function ResumeSection({ experiences, education }: ResumeSectionProps) {
 							))}
 						</div>
 					)}
+				</div>
+
+				{/* View Full CV Link */}
+				<div className="mt-16 text-center">
+					<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
+						<Link href="/cv" data-umami-event="about-view-full-cv-click" className="hover:text-white">
+							<FileText size={16} className="mr-2" />
+							View Full CV / Resume
+							<ArrowRight
+								size={16}
+								className="ml-2 group-hover:translate-x-1 transition-transform"
+							/>
+						</Link>
+					</Button>
 				</div>
 			</div>
 		</section>

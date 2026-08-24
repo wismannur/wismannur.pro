@@ -28,7 +28,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 		<div className="space-y-24">
 			{/* Hero Section */}
 			<section className="relative overflow-hidden pt-8 md:pt-16">
-				<div className="container max-w-7xl px-4 relative">
+				<div className="container px-4 lg:px-0 relative">
 					<div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
 						<div className="lg:w-2/5 animate-scale-in">
 							<div className="relative group">
@@ -78,11 +78,11 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 								{hero?.badge}
 							</div>
 
-							<h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 tracking-tight leading-tight">
+							<h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold mb-6 tracking-tight leading-tight">
 								<HighlightedText text={hero?.title ?? ""} />
 							</h1>
 
-							<div className="space-y-4 text-lg text-muted-foreground mb-8 leading-relaxed">
+							<div className="space-y-4 text-base text-muted-foreground mb-8 leading-relaxed">
 								{hero?.paragraphs?.map((paragraph, index) => (
 									<p key={index}>
 										<HighlightedText text={paragraph} boldClassName="font-bold" />
@@ -115,7 +115,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 			{/* Skills Section */}
 			<section className="py-20 relative overflow-hidden">
 				<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none"></div>
-				<div className="container max-w-7xl px-4 relative">
+				<div className="container px-4 lg:px-0 relative">
 					<SectionHeader
 						title={copy?.skillsSection.title}
 						subtitle={copy?.skillsSection.subtitle}
