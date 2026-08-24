@@ -51,5 +51,6 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
 		{ id: "10000-plus", label: "$ 10,000+" },
 		{ id: "hourly", label: "Hourly rate" },
 	],
+	enableBlog: true,
 	updatedAt: new Date(0),
 };

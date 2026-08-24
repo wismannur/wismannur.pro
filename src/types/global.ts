@@ -6,7 +6,13 @@ declare global {
 
 	interface Window {
 		umami?: {
-			track: (eventName: string, eventData?: Record<string, TAny>) => void;
+			track: (
+				eventNameOrCustomFn?:
+					| string
+					| ((props: Record<string, TAny>) => Record<string, TAny>),
+				eventData?: Record<string, TAny>,
+			) => void;
+			identify?: (sessionData: Record<string, TAny>) => void;
 		};
 		grecaptcha?: {
 			enterprise: TAny;

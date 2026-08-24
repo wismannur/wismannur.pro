@@ -7,6 +7,9 @@ import { SITE_URL } from "@/lib/site-url";
 import { Providers } from "./providers";
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+const UMAMI_WEBSITE_ID = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
+const UMAMI_SCRIPT_URL =
+	process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
 
 const inter = Inter({
 	subsets: ["latin"],
@@ -71,6 +74,13 @@ export default function RootLayout({
 		<html lang="en" className={inter.variable} suppressHydrationWarning>
 			<body className="font-sans antialiased">
 				<Providers>{children}</Providers>
+				{UMAMI_WEBSITE_ID && (
+					<Script
+						src={UMAMI_SCRIPT_URL}
+						data-website-id={UMAMI_WEBSITE_ID}
+						strategy="afterInteractive"
+					/>
+				)}
 				{RECAPTCHA_SITE_KEY && (
 					<Script
 						src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}

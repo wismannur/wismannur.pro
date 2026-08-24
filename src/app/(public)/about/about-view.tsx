@@ -28,7 +28,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 		<div className="space-y-24">
 			{/* Hero Section */}
 			<section className="relative overflow-hidden pt-8 md:pt-16">
-				<div className="container max-w-7xl px-4 relative">
+				<div className="container px-4 lg:px-0 relative">
 					<div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
 						<div className="lg:w-2/5 animate-scale-in">
 							<div className="relative group">
@@ -78,11 +78,11 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 								{hero?.badge}
 							</div>
 
-							<h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold mb-6 tracking-tight leading-tight">
+							<h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold mb-6 tracking-tight leading-tight">
 								<HighlightedText text={hero?.title ?? ""} />
 							</h1>
 
-							<div className="space-y-4 text-lg text-muted-foreground mb-8 leading-relaxed">
+							<div className="space-y-4 text-base text-muted-foreground mb-8 leading-relaxed">
 								{hero?.paragraphs?.map((paragraph, index) => (
 									<p key={index}>
 										<HighlightedText text={paragraph} boldClassName="font-bold" />
@@ -92,13 +92,13 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 
 							<div className="flex flex-wrap gap-4">
 								<Button asChild size="lg" className="rounded-full px-8 group">
-									<Link href="/hire-me">
+									<Link href="/hire-me" data-umami-event="about-hero-hire-me-click">
 										<Sparkles size={16} className="mr-2" />
 										Hire Me
 									</Link>
 								</Button>
 								<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-									<Link href="/projects" className="hover:text-white">
+									<Link href="/projects" data-umami-event="about-hero-view-work-click" className="hover:text-white">
 										View My Work
 										<ChevronRight
 											size={16}
@@ -115,7 +115,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 			{/* Skills Section */}
 			<section className="py-20 relative overflow-hidden">
 				<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none"></div>
-				<div className="container max-w-7xl px-4 relative">
+				<div className="container px-4 lg:px-0 relative">
 					<SectionHeader
 						title={copy?.skillsSection.title}
 						subtitle={copy?.skillsSection.subtitle}
@@ -176,7 +176,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 
 					<div className="mt-12 text-center">
 						<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-							<Link href="/services" className="hover:text-white">
+							<Link href="/services" data-umami-event="about-services-cta-click" className="hover:text-white">
 								Explore My Services
 								<ArrowRight
 									size={16}

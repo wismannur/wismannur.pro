@@ -19,6 +19,7 @@ const ProjectLinks = ({ demoUrl, repoUrl }: ProjectLinksProps) => {
             href={demoUrl}
             target="_blank"
             rel="noopener noreferrer"
+            data-umami-event="project-detail-demo-click"
             className="flex items-center gap-2"
           >
             <ExternalLink size={18} className="group-hover:animate-pulse" />
@@ -38,6 +39,7 @@ const ProjectLinks = ({ demoUrl, repoUrl }: ProjectLinksProps) => {
             href={repoUrl}
             target="_blank"
             rel="noopener noreferrer"
+            data-umami-event="project-detail-repo-click"
             className="flex items-center gap-2"
           >
             <Github

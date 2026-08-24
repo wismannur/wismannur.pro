@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowRight,
 	Calendar,
@@ -36,7 +37,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { queryClient } from "@/lib/query-client";
 import { availabilityService } from "@/services";
 
 // `month` is stored as 1-12; the Select shows full month names.
@@ -76,6 +76,7 @@ type AvailabilityFormValues = z.infer<typeof availabilitySchema>;
 
 export function AvailabilityForm() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);
 

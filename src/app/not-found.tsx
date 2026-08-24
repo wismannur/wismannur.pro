@@ -1,3 +1,4 @@
+import { getCachedSiteSettings } from "@/lib/site-metadata";
 import { pageCopyService } from "@/services";
 import type { NotFoundCopy } from "@/services/page-copy/types";
 import { NotFoundView } from "./not-found-view";
@@ -16,11 +17,17 @@ const FALLBACK: NotFoundCopy = {
 
 export default async function NotFound() {
 	let copy = FALLBACK;
+	let enableBlog = true;
 	try {
-		copy = (await pageCopyService.get("not-found")) ?? FALLBACK;
+		const [copyData, settings] = await Promise.all([
+			pageCopyService.get("not-found"),
+			getCachedSiteSettings(),
+		]);
+		if (copyData) copy = copyData;
+		if (settings) enableBlog = settings.enableBlog;
 	} catch {
 		// keep fallback
 	}
 
-	return <NotFoundView copy={copy} />;
+	return <NotFoundView copy={copy} enableBlog={enableBlog} />;
 }

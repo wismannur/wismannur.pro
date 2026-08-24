@@ -6,9 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { queryClient } from "@/lib/query-client";
 import { pageCopyService, siteSettingsService } from "@/services";
 import type { PageCopyContent, PageKey } from "@/services/page-copy/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Save, Upload } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -269,6 +269,7 @@ function Node({
 
 export default function CmsPageCopyEditor() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { page } = useParams<{ page: string }>();
 	const [content, setContent] = useState<PageCopyContent | null>(null);
 	const [isLoading, setIsLoading] = useState(true);

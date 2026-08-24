@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/umami";
 import { Code, X } from "lucide-react";
 
 interface ProjectFiltersProps {
@@ -18,6 +19,11 @@ const ProjectFilters = ({
 	setSelectedTech,
 	allTechnologies,
 }: ProjectFiltersProps) => {
+	const handleTechClick = (tech: string | null) => {
+		setSelectedTech(tech);
+		trackEvent("project-filter-tech", { tech: tech ?? "all" });
+	};
+
 	return (
 		<div className="bg-background border border-border/40 rounded-2xl p-6 mb-12 shadow-sm">
 			<div className="flex flex-col justify-between gap-6">
@@ -49,7 +55,8 @@ const ProjectFilters = ({
 					<Button
 						variant={selectedTech === null ? "default" : "outline"}
 						size="sm"
-						onClick={() => setSelectedTech(null)}
+						onClick={() => handleTechClick(null)}
+						data-umami-event="project-filter-all"
 						className="rounded-full px-4"
 					>
 						All
@@ -59,7 +66,9 @@ const ProjectFilters = ({
 							key={tech}
 							variant={selectedTech === tech ? "default" : "outline"}
 							size="sm"
-							onClick={() => setSelectedTech(tech === selectedTech ? null : tech)}
+							onClick={() => handleTechClick(tech === selectedTech ? null : tech)}
+							data-umami-event="project-filter-tech-click"
+							data-umami-event-tech={tech}
 							className="rounded-full px-4 group"
 						>
 							<span>{tech}</span>

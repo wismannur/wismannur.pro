@@ -88,7 +88,7 @@ export function ContactCTA({
 							variant === "gradient" && "bg-white text-primary hover:bg-white/90",
 						)}
 					>
-						<Link href={primaryButtonLink}>
+						<Link href={primaryButtonLink} data-umami-event="offers-cta-primary-click" data-umami-event-label={primaryButtonText}>
 							<MessageCircleIcon size={18} />
 							{primaryButtonText}
 						</Link>
@@ -103,7 +103,7 @@ export function ContactCTA({
 							variant === "gradient" && "text-white border-white/40 hover:bg-white/10",
 						)}
 					>
-						<Link href={secondaryButtonLink}>
+						<Link href={secondaryButtonLink} data-umami-event="offers-cta-secondary-click" data-umami-event-label={secondaryButtonText}>
 							<Sparkles size={18} />
 							{secondaryButtonText}
 							<ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />

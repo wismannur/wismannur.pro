@@ -40,6 +40,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { HighlightedText } from "@/components/ui/highlighted-text";
 import { toast } from "@/components/ui/use-toast";
 import { getContentIcon } from "@/lib/icon-registry";
+import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
 import { serviceRequestService } from "@/services";
 import type { AvailabilitySlot } from "@/services/availability/types";
@@ -47,6 +48,7 @@ import type { Faq } from "@/services/faqs/types";
 import type { HireMeCopy } from "@/services/page-copy/types";
 import type { PricingTier } from "@/services/pricing-tiers/types";
 import type { ProcessStep } from "@/services/process-steps/types";
+import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
 import { getReCaptchaToken } from "@/services/recaptcha";
 import type { ServiceItem } from "@/services/service-catalog/types";
 import type { SelectOption } from "@/services/site-settings/types";
@@ -161,6 +163,12 @@ export const HireMeView = ({
 				title: "Request submitted!",
 				description: "Thanks for your interest. I'll get back to you soon.",
 			});
+			const vals = form.getValues();
+			trackEvent("hire-me-form-submit-success", {
+				serviceType: vals.serviceType,
+				budget: vals.budget,
+				timeframe: vals.timeframe,
+			});
 			form.reset();
 		},
 		onError: () => {
@@ -169,6 +177,7 @@ export const HireMeView = ({
 				description: "Failed to send your request. Please try again.",
 				variant: "destructive",
 			});
+			trackEvent("hire-me-form-submit-error");
 		},
 		onSettled: () => {
 			setIsSubmitting(false);
@@ -177,6 +186,10 @@ export const HireMeView = ({
 
 	const onSubmit = async (data: HireFormValues) => {
 		setIsSubmitting(true);
+		trackEvent("hire-me-form-submit-attempt", {
+			serviceType: data.serviceType,
+			budget: data.budget,
+		});
 		// Token is verified server-side inside `submit` (empty in stub mode).
 		const token = await getReCaptchaToken();
 		mutation.mutate({ form: data, token });
@@ -185,6 +198,7 @@ export const HireMeView = ({
 	const handleServiceSelect = (serviceId: string) => {
 		setSelectedService(serviceId);
 		form.setValue("serviceType", serviceId);
+		trackEvent("hire-me-service-selected", { serviceId });
 
 		// Scroll to the contact form
 		const contactForm = document.getElementById("contact-form");
@@ -841,6 +855,8 @@ export const HireMeView = ({
 											</>
 										)}
 									</Button>
+
+									<RecaptchaDisclaimer />
 								</form>
 							</Form>
 						</div>

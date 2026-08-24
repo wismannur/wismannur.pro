@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Check, Info, Loader2, Save, Settings2, Workflow } from "lucide-react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -29,7 +30,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { contentIconNames, getContentIcon } from "@/lib/icon-registry";
-import { queryClient } from "@/lib/query-client";
 import { processStepsService, type ProcessScope } from "@/services";
 
 // Radix Select forbids empty-string values, so "no icon" travels as "none".
@@ -48,6 +48,7 @@ type ProcessStepFormValues = z.infer<typeof processStepSchema>;
 
 export function ProcessStepsForm() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const searchParams = useSearchParams();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);

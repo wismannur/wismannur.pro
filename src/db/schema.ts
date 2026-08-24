@@ -268,6 +268,7 @@ export const siteSettings = pgTable("site_settings", {
 		.$type<Array<{ id: string; label: string }>>()
 		.notNull()
 		.default(sql`'[]'::jsonb`),
+	enableBlog: boolean("enable_blog").notNull().default(true),
 	updatedAt: timestamp("updated_at", { withTimezone: true })
 		.notNull()
 		.defaultNow()

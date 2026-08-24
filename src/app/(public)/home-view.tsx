@@ -20,12 +20,14 @@ import Link from "next/link";
 type HomeViewProps = {
 	copy: HomeCopy | null;
 	services: ServiceItem[];
+	enableBlog?: boolean;
 };
 
-export function HomeView({ copy, services }: HomeViewProps) {
+export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 	const { data: blogs = [], isLoading: isBlogsLoading } = useQuery({
 		queryKey: ["latestBlogs"],
 		queryFn: () => blogService.getLatest(3),
+		enabled: enableBlog,
 	});
 
 	const { data: projects = [], isLoading: isProjectsLoading } = useQuery({
@@ -55,13 +57,13 @@ export function HomeView({ copy, services }: HomeViewProps) {
 
 								<div className="flex flex-wrap gap-4">
 									<Button asChild size="lg" className="rounded-full px-8 group">
-										<Link href="/hire-me">
+										<Link href="/hire-me" data-umami-event="home-hero-hire-me-click">
 											<Sparkles size={16} className="mr-2 animate-pulse" />
 											Hire Me
 										</Link>
 									</Button>
 									<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-										<Link href="/contact" className="hover:text-white">
+										<Link href="/contact" data-umami-event="home-hero-contact-click" className="hover:text-white">
 											Contact me
 											<ChevronRight
 												size={16}
@@ -133,7 +135,7 @@ export function HomeView({ copy, services }: HomeViewProps) {
 
 						<div className="mt-16 text-center">
 							<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-								<Link href="/services" className="hover:text-white">
+								<Link href="/services" data-umami-event="home-services-cta-click" className="hover:text-white">
 									Request Services
 									<ArrowRight
 										size={16}
@@ -145,43 +147,45 @@ export function HomeView({ copy, services }: HomeViewProps) {
 					</div>
 				</section>
 
-				<section className="py-24">
-					<div className="container px-4 max-w-6xl mx-auto">
-						<SectionHeader
-							title={copy?.sections.blog.title}
-							subtitle={copy?.sections.blog.subtitle}
-							className="text-center mb-16"
-						/>
+				{enableBlog && (
+					<section className="py-24">
+						<div className="container px-4 max-w-6xl mx-auto">
+							<SectionHeader
+								title={copy?.sections.blog.title}
+								subtitle={copy?.sections.blog.subtitle}
+								className="text-center mb-16"
+							/>
 
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-							{isBlogsLoading
-								? // Loading placeholders
-									Array.from({ length: 3 }).map((_, i) => (
-										<div key={i} className="bg-muted/30 h-[420px] rounded-xl animate-pulse" />
-									))
-								: blogs.map((blog, index) => (
-										<BlogCard
-											key={blog.id}
-											blog={blog}
-											className="animate-fade-in"
-											style={{ animationDelay: `${index * 0.1}s` }}
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+								{isBlogsLoading
+									? // Loading placeholders
+										Array.from({ length: 3 }).map((_, i) => (
+											<div key={i} className="bg-muted/30 h-[420px] rounded-xl animate-pulse" />
+										))
+									: blogs.map((blog, index) => (
+											<BlogCard
+												key={blog.id}
+												blog={blog}
+												className="animate-fade-in"
+												style={{ animationDelay: `${index * 0.1}s` }}
+											/>
+										))}
+							</div>
+
+							<div className="mt-16 text-center">
+								<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
+									<Link href="/blog" data-umami-event="home-blog-cta-click" className="hover:text-white">
+										View all articles
+										<ArrowRight
+											size={16}
+											className="ml-2 group-hover:translate-x-1 transition-transform"
 										/>
-									))}
+									</Link>
+								</Button>
+							</div>
 						</div>
-
-						<div className="mt-16 text-center">
-							<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-								<Link href="/blog" className="hover:text-white">
-									View all articles
-									<ArrowRight
-										size={16}
-										className="ml-2 group-hover:translate-x-1 transition-transform"
-									/>
-								</Link>
-							</Button>
-						</div>
-					</div>
-				</section>
+					</section>
+				)}
 
 				<section className="py-24 relative overflow-hidden">
 					<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none"></div>
@@ -210,7 +214,7 @@ export function HomeView({ copy, services }: HomeViewProps) {
 
 						<div className="mt-16 text-center">
 							<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-								<Link href="/projects" className="hover:text-white">
+								<Link href="/projects" data-umami-event="home-projects-cta-click" className="hover:text-white">
 									View all projects
 									<ArrowRight
 										size={16}

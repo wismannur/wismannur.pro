@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Check, Info, ListOrdered, Loader2, Save, Wrench } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -20,7 +21,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { queryClient } from "@/lib/query-client";
 import { skillsService } from "@/services";
 
 const skillSchema = z.object({
@@ -33,6 +33,7 @@ type SkillFormValues = z.infer<typeof skillSchema>;
 
 export function SkillsForm() {
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);
 

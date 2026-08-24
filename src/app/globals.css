@@ -216,13 +216,7 @@
 	}
 }
 
-/* override google recaptcha */
+/* Hide floating Google reCAPTCHA badge (disclaimer is rendered on submit forms per Google policy) */
 .grecaptcha-badge {
-	width: 70px !important;
-	overflow: hidden !important;
-	transition: all 0.3s ease !important;
-	@apply !left-2 sm:!left-4 !bottom-2 sm:!bottom-4;
-}
-.grecaptcha-badge:hover {
-	width: 256px !important;
+	visibility: hidden !important;
 }

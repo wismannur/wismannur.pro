@@ -4,6 +4,7 @@ import React from "react";
 import { SearchIcon, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/umami";
 
 interface BlogFiltersProps {
   searchTerm: string;
@@ -20,6 +21,11 @@ const BlogFilters = ({
   setSelectedTag,
   allTags,
 }: BlogFiltersProps) => {
+  const handleTagClick = (tag: string | null) => {
+    setSelectedTag(tag);
+    trackEvent("blog-filter-tag", { tag: tag ?? "all" });
+  };
+
   return (
     <div className="bg-background border border-border/40 rounded-2xl p-6 mb-12 shadow-sm">
       <div className="flex flex-col justify-between gap-6">
@@ -51,7 +57,8 @@ const BlogFilters = ({
           <Button
             variant={selectedTag === null ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedTag(null)}
+            onClick={() => handleTagClick(null)}
+            data-umami-event="blog-filter-all"
             className="rounded-full px-4"
           >
             All
@@ -61,7 +68,9 @@ const BlogFilters = ({
               key={tag}
               variant={selectedTag === tag ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+              onClick={() => handleTagClick(tag === selectedTag ? null : tag)}
+              data-umami-event="blog-filter-tag-click"
+              data-umami-event-tag={tag}
               className="rounded-full px-4 group"
             >
               <span>{tag}</span>

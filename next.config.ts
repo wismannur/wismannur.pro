@@ -13,6 +13,15 @@ const nextConfig: NextConfig = {
 			{ protocol: "https", hostname: "picsum.photos" },
 		],
 	},
+	async redirects() {
+		return [
+			{
+				source: "/resume",
+				destination: "/cv",
+				permanent: true,
+			},
+		];
+	},
 };
 
 export default nextConfig;

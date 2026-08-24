@@ -85,6 +85,8 @@ const PowerfulCTACard = ({
 							size="lg"
 							className="bg-white text-primary hover:bg-white/90 rounded-full px-8 group"
 							onClick={primaryButtonScrollTo ? () => scrollToElement() : undefined}
+							data-umami-event="cta-primary-click"
+							data-umami-event-label={primaryButtonText}
 						>
 							{primaryButtonScrollTo ? (
 								<div className="flex items-center">
@@ -92,7 +94,7 @@ const PowerfulCTACard = ({
 									{primaryButtonText}
 								</div>
 							) : (
-								<Link href={primaryButtonLink}>
+								<Link href={primaryButtonLink} data-umami-event="cta-primary-link-click" data-umami-event-label={primaryButtonText}>
 									<Sparkles size={18} className="mr-2" />
 									{primaryButtonText}
 								</Link>
@@ -104,7 +106,7 @@ const PowerfulCTACard = ({
 							size="lg"
 							className="text-white border-white/40 hover:bg-white/20 rounded-full px-8 bg-muted/5 group"
 						>
-							<Link href={secondaryButtonLink}>
+							<Link href={secondaryButtonLink} data-umami-event="cta-secondary-click" data-umami-event-label={secondaryButtonText}>
 								{secondaryButtonText}
 								<ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
 							</Link>

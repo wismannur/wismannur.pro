@@ -12,13 +12,14 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { siteSettingsService } from "@/services";
 import type { SiteSettings } from "@/services/site-settings/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
-import { Contact, Globe, Layout, ListChecks, Loader2, Save } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Contact, Globe, Layout, ListChecks, Loader2, Save, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -75,6 +76,7 @@ const siteFormSchema = z.object({
 	footerProjectLinksText: z.string(),
 	requestTimeframesText: z.string(),
 	requestBudgetRangesText: z.string(),
+	enableBlog: z.boolean(),
 });
 
 type SiteFormValues = z.infer<typeof siteFormSchema>;
@@ -103,9 +105,11 @@ const toFormValues = (settings: SiteSettings): SiteFormValues => ({
 	footerProjectLinksText: toPairLines(settings.footerProjectLinks, "link"),
 	requestTimeframesText: toPairLines(settings.requestTimeframes, "option"),
 	requestBudgetRangesText: toPairLines(settings.requestBudgetRanges, "option"),
+	enableBlog: settings.enableBlog ?? true,
 });
 
 export default function CmsSitePage() {
+	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const { data: settings, isLoading } = useQuery({
@@ -139,6 +143,7 @@ export default function CmsSitePage() {
 			footerProjectLinksText: "",
 			requestTimeframesText: "",
 			requestBudgetRangesText: "",
+			enableBlog: true,
 		},
 	});
 
@@ -175,7 +180,9 @@ export default function CmsSitePage() {
 				footerProjectLinks: parseLinkLines(data.footerProjectLinksText),
 				requestTimeframes: parseOptionLines(data.requestTimeframesText),
 				requestBudgetRanges: parseOptionLines(data.requestBudgetRangesText),
+				enableBlog: data.enableBlog,
 			});
+			queryClient.invalidateQueries({ queryKey: ["cmsSiteSettings"] });
 			toast.success("Site settings saved — public pages update immediately");
 		} catch (error) {
 			console.error("Error saving site settings:", error);
@@ -194,8 +201,12 @@ export default function CmsSitePage() {
 		);
 	}
 
+	type StringFieldKeys = {
+		[K in keyof SiteFormValues]: SiteFormValues[K] extends string ? K : never;
+	}[keyof SiteFormValues];
+
 	const textInput = (
-		name: keyof SiteFormValues,
+		name: StringFieldKeys,
 		label: string,
 		placeholder = "",
 		description?: string,
@@ -221,7 +232,7 @@ export default function CmsSitePage() {
 	);
 
 	const textArea = (
-		name: keyof SiteFormValues,
+		name: StringFieldKeys,
 		label: string,
 		rows: number,
 		description?: string,
@@ -268,6 +279,10 @@ export default function CmsSitePage() {
 								<Globe className="mr-2 h-4 w-4" />
 								Identity & SEO
 							</TabsTrigger>
+							<TabsTrigger value="features">
+								<SlidersHorizontal className="mr-2 h-4 w-4" />
+								Features
+							</TabsTrigger>
 							<TabsTrigger value="contact">
 								<Contact className="mr-2 h-4 w-4" />
 								Contact & Social
@@ -281,6 +296,41 @@ export default function CmsSitePage() {
 								Form Options
 							</TabsTrigger>
 						</TabsList>
+
+						<TabsContent value="features" className="mt-6">
+							<Card className="border-border/50 shadow-md rounded-xl">
+								<CardHeader>
+									<CardTitle>Site Features & Modules</CardTitle>
+									<CardDescription>
+										Control the visibility of public sections and pages without affecting CMS access
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="space-y-6">
+									<FormField
+										control={form.control}
+										name="enableBlog"
+										render={({ field }) => (
+											<FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/50 p-4 shadow-sm">
+												<div className="space-y-0.5 pr-4">
+													<FormLabel className="text-base font-medium text-foreground">
+														Enable Blog Module
+													</FormLabel>
+													<FormDescription>
+														When enabled, the /blog page, article previews on the home page, navigation links, and sitemap entries will be visible to public visitors. When disabled, the public pages return 404 while remaining fully editable in the CMS.
+													</FormDescription>
+												</div>
+												<FormControl>
+													<Switch
+														checked={field.value}
+														onCheckedChange={field.onChange}
+													/>
+												</FormControl>
+											</FormItem>
+										)}
+									/>
+								</CardContent>
+							</Card>
+						</TabsContent>
 
 						<TabsContent value="identity" className="mt-6">
 							<Card className="border-border/50 shadow-md rounded-xl">

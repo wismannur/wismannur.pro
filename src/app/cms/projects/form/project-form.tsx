@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	ArrowRight,
 	Briefcase,
@@ -35,7 +36,6 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth-context";
 import { calculateReadingTime } from "@/lib/mdx";
-import { queryClient } from "@/lib/query-client";
 import { slugify } from "@/lib/utils";
 import { projectService, type TProjectResponse } from "@/services";
 
@@ -58,6 +58,7 @@ type ProjectFormValues = z.infer<typeof projectSchema>;
 export function ProjectForm() {
 	const { user } = useAuth();
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const { id } = useParams<{ id?: string }>();
 	const isEditMode = Boolean(id);
 
@@ -188,7 +189,12 @@ export function ProjectForm() {
 				toast.success("Project created successfully!");
 			}
 
-			queryClient.invalidateQueries({ queryKey: ["projects", "latestProjects"] });
+			// One key per call — a composite key is a single hierarchical key, not a list.
+			queryClient.invalidateQueries({ queryKey: ["projects"] });
+			queryClient.invalidateQueries({ queryKey: ["project"] });
+			queryClient.invalidateQueries({ queryKey: ["latestProjects"] });
+			queryClient.invalidateQueries({ queryKey: ["featuredProjects"] });
+			queryClient.invalidateQueries({ queryKey: ["projectTechnologies"] });
 			router.push("/cms/projects");
 		} catch (error) {
 			console.error("Error saving project:", error);

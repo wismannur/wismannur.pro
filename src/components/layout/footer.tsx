@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import type { SiteSettings } from "@/services/site-settings/types";
 
-const navLinks = [
+const baseNavLinks = [
 	{ to: "/", label: "Home" },
 	{ to: "/blog", label: "Blog" },
 	{ to: "/projects", label: "Projects" },
@@ -14,6 +14,7 @@ const navLinks = [
 
 export const Footer = ({ settings }: { settings: SiteSettings }) => {
 	const currentYear = new Date().getFullYear();
+	const navLinks = baseNavLinks.filter((link) => link.to !== "/blog" || settings.enableBlog);
 
 	const socialLinks = [
 		{ href: settings.social.github, icon: Github, label: "GitHub" },
@@ -42,6 +43,8 @@ export const Footer = ({ settings }: { settings: SiteSettings }) => {
 									href={href}
 									target="_blank"
 									rel="noopener noreferrer"
+									data-umami-event="footer-social-click"
+									data-umami-event-platform={label}
 									className="p-2.5 bg-background border border-border/50 rounded-xl text-muted-foreground hover:text-primary hover:border-primary/50 hover:shadow-md transition-all duration-300"
 									aria-label={label}
 								>
@@ -60,6 +63,8 @@ export const Footer = ({ settings }: { settings: SiteSettings }) => {
 								<li key={to}>
 									<Link
 										href={to}
+										data-umami-event="footer-nav-click"
+										data-umami-event-label={label}
 										className="group inline-flex items-center hover:text-primary transition-colors"
 									>
 										{label}
@@ -84,6 +89,8 @@ export const Footer = ({ settings }: { settings: SiteSettings }) => {
 											href={href}
 											target="_blank"
 											rel="noopener noreferrer"
+											data-umami-event="footer-project-click"
+											data-umami-event-label={label}
 											className="group inline-flex items-center hover:text-primary transition-colors"
 										>
 											{label}
@@ -109,6 +116,7 @@ export const Footer = ({ settings }: { settings: SiteSettings }) => {
 								/>
 								<a
 									href={`mailto:${settings.publicEmail}`}
+									data-umami-event="footer-email-click"
 									className="hover:text-primary transition-colors"
 									rel="noopener noreferrer"
 									target="_blank"
@@ -143,6 +151,7 @@ export const Footer = ({ settings }: { settings: SiteSettings }) => {
 						<a
 							className="hover:underline flex"
 							href={settings.repoUrl}
+							data-umami-event="footer-repo-click"
 							target="_blank"
 							rel="noopener noreferrer"
 						>

@@ -1,10 +1,14 @@
-// Custom event tracking.
-// During the frontend-only phase there is no real Umami instance, so this falls
-// back to a dev console log. It still forwards to `window.umami` if present.
-export const trackEvent = (eventName: string, eventData?: Record<string, TAny>) => {
+// Custom event tracking for Umami Analytics.
+// In development without an Umami script loaded, it logs to the dev console.
+// When window.umami is available, it dispatches the event.
+export const trackEvent = (
+	eventName: string,
+	eventData?: Record<string, string | number | boolean | null | undefined>,
+) => {
 	if (typeof window !== "undefined" && window.umami) {
-		window.umami.track(eventName, eventData);
+		window.umami.track(eventName, eventData as Record<string, TAny>);
 	} else if (process.env.NODE_ENV !== "production") {
-		console.log(`[DEV Analytics] Event: ${eventName}`, eventData || {});
+		console.log(`[Analytics DEV] ${eventName}:`, eventData ?? {});
 	}
 };
+
