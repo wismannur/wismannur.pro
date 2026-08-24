@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -51,11 +52,21 @@ export function PageLoader({ className }: PageLoaderProps) {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="mb-8 text-3xl font-bold tracking-tighter flex items-center"
+              className="mb-8 flex items-center gap-3"
             >
-              <span className="text-primary mr-1">&lt;</span>
-              <span>w.pro</span>
-              <span className="text-primary ml-1">/&gt;</span>
+              <div className="relative w-12 h-12 rounded-2xl overflow-hidden border border-border/60 bg-card shadow-lg">
+                <Image
+                  src="/logo.webp"
+                  alt="wismannur.pro logo"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              </div>
+              <span className="text-2xl font-black tracking-tight text-foreground">
+                wismannur<span className="text-primary">.pro</span>
+              </span>
             </motion.div>
 
             {/* Progress bar */}
