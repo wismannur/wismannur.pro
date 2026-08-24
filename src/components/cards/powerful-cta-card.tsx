@@ -43,30 +43,32 @@ const PowerfulCTACard = ({
 	};
 
 	return (
-		<div className={cn("relative overflow-hidden rounded-3xl shadow-xl", className)}>
+		<div className={cn("relative overflow-hidden rounded-3xl shadow-2xl border border-primary/20", className)}>
 			{/* Background gradient */}
-			<div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary to-secondary z-0"></div>
+			<div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-primary/70 z-0" />
 
 			{/* Decorative shapes */}
-			<div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 mix-blend-soft-light">
-				<div className="absolute -top-1/2 -left-1/2 w-full h-full rounded-full bg-white/30 blur-3xl"></div>
-				<div className="absolute -bottom-1/4 -right-1/4 w-full h-full rounded-full bg-white/30 blur-3xl"></div>
+			<div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-25 mix-blend-soft-light pointer-events-none">
+				<div className="absolute -top-1/2 -left-1/2 w-full h-full rounded-full bg-white/40 blur-3xl" />
+				<div className="absolute -bottom-1/4 -right-1/4 w-full h-full rounded-full bg-white/30 blur-3xl" />
 			</div>
 
 			{/* Decorative icons */}
-			<div className="absolute top-10 right-10 text-white/10 transform rotate-12">
+			<div className="absolute top-10 right-10 text-white/10 transform rotate-12 pointer-events-none">
 				<Code size={140} strokeWidth={1} />
 			</div>
-			<div className="absolute bottom-10 left-10 text-white/10 transform -rotate-12">
+			<div className="absolute bottom-10 left-10 text-white/10 transform -rotate-12 pointer-events-none">
 				<Zap size={120} strokeWidth={1} />
 			</div>
 
-			<div className="relative z-10 p-10 md:p-16 flex flex-col md:flex-row items-center gap-10 md:gap-16">
-				<div className="w-full">
-					<div className="inline-block px-4 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-sm font-semibold mb-6">
-						{badge}
+			<div className="relative z-10 p-8 md:p-14 flex flex-col md:flex-row items-center gap-8 md:gap-14">
+				<div className="w-full max-w-2xl">
+					<div className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-semibold mb-6 border border-white/20">
+						<Sparkles size={13} className="animate-pulse" />
+						<span>{badge}</span>
 					</div>
-					<h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 tracking-tight">
+
+					<h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white mb-5 tracking-tight leading-[1.15]">
 						{title.includes("ideas") ? (
 							<>
 								{title.split("ideas")[0]}
@@ -77,46 +79,61 @@ const PowerfulCTACard = ({
 							title
 						)}
 					</h2>
-					<p className="text-white/90 text-lg mb-8 max-w-xl">{description}</p>
 
-					<div className="flex flex-wrap gap-4">
+					<p className="text-white/90 text-sm md:text-base leading-relaxed mb-8 max-w-xl">
+						{description}
+					</p>
+
+					<div className="flex flex-wrap items-center gap-3.5">
 						<Button
 							asChild={!primaryButtonScrollTo}
 							size="lg"
-							className="bg-white text-primary hover:bg-white/90 rounded-full px-8 group"
+							className="bg-white text-primary hover:bg-white/95 rounded-full px-7 h-12 text-xs md:text-sm font-bold shadow-lg shadow-black/15 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
 							onClick={primaryButtonScrollTo ? () => scrollToElement() : undefined}
 							data-umami-event="cta-primary-click"
 							data-umami-event-label={primaryButtonText}
 						>
 							{primaryButtonScrollTo ? (
-								<div className="flex items-center">
-									<Sparkles size={18} className="mr-2" />
-									{primaryButtonText}
+								<div className="flex items-center gap-2">
+									<Sparkles size={15} className="animate-pulse" />
+									<span>{primaryButtonText}</span>
 								</div>
 							) : (
-								<Link href={primaryButtonLink} data-umami-event="cta-primary-link-click" data-umami-event-label={primaryButtonText}>
-									<Sparkles size={18} className="mr-2" />
-									{primaryButtonText}
+								<Link
+									href={primaryButtonLink}
+									data-umami-event="cta-primary-link-click"
+									data-umami-event-label={primaryButtonText}
+									className="flex items-center gap-2"
+								>
+									<Sparkles size={15} className="animate-pulse" />
+									<span>{primaryButtonText}</span>
 								</Link>
 							)}
 						</Button>
+
 						<Button
 							asChild
 							variant="outline"
 							size="lg"
-							className="text-white border-white/40 hover:bg-white/20 rounded-full px-8 bg-muted/5 group"
+							className="text-white border-white/30 hover:border-white/60 bg-white/10 hover:bg-white/20 hover:text-white rounded-full px-7 h-12 text-xs md:text-sm font-semibold backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
 						>
-							<Link href={secondaryButtonLink} data-umami-event="cta-secondary-click" data-umami-event-label={secondaryButtonText}>
-								{secondaryButtonText}
-								<ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+							<Link
+								href={secondaryButtonLink}
+								data-umami-event="cta-secondary-click"
+								data-umami-event-label={secondaryButtonText}
+								className="flex items-center gap-2"
+							>
+								<span>{secondaryButtonText}</span>
+								<ArrowRight size={15} className="group-hover:translate-x-1 transition-transform duration-200" />
 							</Link>
 						</Button>
 					</div>
 
 					{responseTime && (
-						<div className="mt-8 flex items-center space-x-2 text-white/80">
-							<span className="text-sm">Typical response time:</span>
-							<span className="font-medium text-white text-sm">{responseTime}</span>
+						<div className="mt-8 flex items-center space-x-2 text-white/80 text-xs font-medium">
+							<div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+							<span>Typical response time:</span>
+							<span className="font-bold text-white">{responseTime}</span>
 						</div>
 					)}
 				</div>

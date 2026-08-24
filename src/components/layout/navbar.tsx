@@ -1,11 +1,13 @@
 "use client";
 
-import { Menu, Moon, Sparkles, Sun, User, X, Zap } from "lucide-react";
+import { Menu, Moon, Search, Sparkles, Sun, User, X, Zap } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { openCommandPalette } from "@/components/common/command-palette";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
@@ -37,23 +39,22 @@ export const Navbar = ({
 	// Handle scroll effect - improved for performance
 	useEffect(() => {
 		const handleScroll = () => {
-			const scrollTop = window.scrollY;
-			if (scrollTop > 10) {
-				if (!isScrolled) setIsScrolled(true);
+			if (window.scrollY > 20) {
+				setIsScrolled(true);
 			} else {
-				if (isScrolled) setIsScrolled(false);
+				setIsScrolled(false);
 			}
 		};
 
-		// Add passive listener for better performance
 		window.addEventListener("scroll", handleScroll, { passive: true });
 		return () => window.removeEventListener("scroll", handleScroll);
-	}, [isScrolled]);
+	}, []);
 
-	// Close mobile menu when changing routes
-	useEffect(() => {
+	const [prevPathname, setPrevPathname] = useState(pathname);
+	if (pathname !== prevPathname) {
+		setPrevPathname(pathname);
 		setIsOpen(false);
-	}, [pathname]);
+	}
 
 	// Prevent scroll when mobile menu is open
 	useEffect(() => {
@@ -85,20 +86,27 @@ export const Navbar = ({
 					: "bg-transparent py-5",
 			)}
 		>
-			<div className="container px-4 md:px-0 mx-auto flex items-center justify-between">
+			<div className="container px-4 max-w-6xl mx-auto flex items-center justify-between">
 				{/* Logo */}
 				<Link
 					href="/"
 					data-umami-event="navbar-logo-click"
 					className="text-xl font-bold tracking-tighter relative z-10 flex items-center group"
 				>
-					<div className="relative">
-						<div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-primary/40 dark:from-primary/50 dark:to-primary/90 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-500"></div>
-						<div className="relative flex items-center">
-							<span className="text-primary mr-1">&lt;</span>
-							<span>w.pro</span>
-							<span className="text-primary ml-1">/&gt;</span>
+					<div className="relative flex items-center gap-3">
+						<div className="relative w-10 h-8 md:w-11 md:h-9 rounded overflow-hidden border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm group-hover:border-primary/50 group-hover:shadow-md transition-all duration-300 flex-shrink-0">
+							<Image
+								src="/logo.webp"
+								alt="wismannur.pro logo"
+								width={36}
+								height={36}
+								className="w-full h-full object-cover rounded group-hover:scale-105 transition-transform duration-300"
+								priority
+							/>
 						</div>
+						<span className="font-extrabold tracking-tight text-lg bg-gradient-to-r from-foreground via-foreground/90 to-foreground/80 bg-clip-text text-transparent group-hover:text-primary transition-colors">
+							wismannur<span className="text-primary">.pro</span>
+						</span>
 					</div>
 				</Link>
 
@@ -121,7 +129,32 @@ export const Navbar = ({
 						</Link>
 					))}
 
-					<div className="ml-2 p-1 bg-background/50 border border-border/40 rounded-full flex items-center">
+					{/* Search / Command Palette Trigger */}
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={openCommandPalette}
+						data-umami-event="navbar-search-click"
+						className="hidden lg:inline-flex items-center gap-2 rounded-full px-3 py-1.5 h-8 text-xs text-muted-foreground border-border/50 hover:text-foreground bg-background/50 hover:bg-primary/5 ml-1"
+					>
+						<Search size={13} className="text-muted-foreground" />
+						<span>Search</span>
+						<kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-0.5 rounded border border-border/60 bg-muted/60 px-1 font-mono text-[10px] font-medium text-muted-foreground">
+							<span>⌘</span>K
+						</kbd>
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={openCommandPalette}
+						data-umami-event="navbar-search-click"
+						className="lg:hidden rounded-full h-8 w-8 text-muted-foreground hover:text-foreground"
+						aria-label="Open search command palette"
+					>
+						<Search size={16} />
+					</Button>
+
+					<div className="p-1 bg-background/50 border border-border/40 rounded-full flex items-center">
 						<Button
 							variant="ghost"
 							size="icon"
@@ -156,8 +189,17 @@ export const Navbar = ({
 				</nav>
 
 				{/* Mobile Navigation */}
-				<div className="md:hidden flex items-center gap-2">
-					<div className="p-1 bg-background/50 border border-border/40 rounded-full">
+				<div className="md:hidden flex items-center gap-1.5">
+					<div className="p-1 bg-background/50 border border-border/40 rounded-full flex items-center gap-0.5">
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={openCommandPalette}
+							aria-label="Open search command palette"
+							className="relative z-10 rounded-full h-8 w-8 text-foreground/80"
+						>
+							<Search size={15} />
+						</Button>
 						<Button
 							variant="ghost"
 							size="icon"
@@ -220,6 +262,24 @@ export const Navbar = ({
 								{link.title}
 							</Link>
 						))}
+
+						<button
+							type="button"
+							onClick={() => {
+								setIsOpen(false);
+								openCommandPalette();
+							}}
+							data-umami-event="mobile-navbar-search-click"
+							className={cn(
+								"text-xl font-medium transition-all px-6 py-3 rounded-full flex items-center gap-2 text-foreground/80 hover:bg-primary/5",
+								"transform transition-transform",
+								isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0",
+							)}
+							style={{ transitionDelay: `${navLinks.length * 50}ms` }}
+						>
+							<Search size={18} />
+							<span>Search (⌘K)</span>
+						</button>
 
 						{user ? (
 							<Button

@@ -2,14 +2,6 @@
 
 import PowerfulCTACard from "@/components/cards/powerful-cta-card";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Form,
@@ -30,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { getContentIcon } from "@/lib/icon-registry";
 import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
@@ -43,7 +36,7 @@ import type { ServiceItem } from "@/services/service-catalog/types";
 import type { SelectOption } from "@/services/site-settings/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, CheckCircle, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
@@ -146,7 +139,6 @@ export function ServicesView({
 			serviceType: data.serviceType,
 			budget: data.budget,
 		});
-		// Token is verified server-side inside `submit` (empty in stub mode).
 		const token = await getReCaptchaToken();
 		mutation.mutate({ form: data, token });
 	};
@@ -155,66 +147,85 @@ export function ServicesView({
 		setSelectedService(serviceId);
 		form.setValue("serviceType", serviceId);
 		trackEvent("services-card-selected", { serviceId });
+
+		const formEl = document.getElementById("request-service-form");
+		if (formEl) {
+			formEl.scrollIntoView({ behavior: "smooth" });
+		}
 	};
 
 	return (
-		<div className="space-y-24">
+		<div className="space-y-20 md:space-y-28 pb-12">
 			{/* Hero Section */}
-			<section className="relative overflow-hidden py-12 md:py-20">
+			<section className="relative overflow-hidden pt-6 md:pt-12">
 				<div className="container px-4 max-w-6xl mx-auto">
 					<SectionHeader
-						title={copy?.header.title}
-						subtitle={copy?.header.subtitle}
+						title={copy?.header.title || "Engineering Services"}
+						subtitle={copy?.header.subtitle || "What I Do"}
 						description={copy?.header.description}
-						className="mb-16"
+						className="mb-14 text-center"
 					/>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 						{services.map((service) => {
 							const Icon = getContentIcon(service.icon);
+							const isSelected = selectedService === service.slug;
+
 							return (
-								<Card
+								<SpotlightCard
 									key={service.id}
 									className={cn(
-										"border border-border/40 transition-all duration-300 overflow-hidden",
-										selectedService === service.slug
-											? "ring-2 ring-primary border-transparent shadow-lg"
-											: "hover:border-primary/30 hover:shadow-md",
+										"p-7 flex flex-col justify-between h-full rounded-2xl bg-card/60 border transition-all duration-300",
+										isSelected
+											? "border-primary ring-2 ring-primary/30 shadow-xl"
+											: "border-border/50 hover:border-primary/40 hover:shadow-lg",
 									)}
 								>
-									<CardHeader className="pb-4">
-										<div className="p-3 bg-primary/10 rounded-xl text-primary mb-4 w-fit">
-											<Icon size={24} />
+									<div>
+										<div className="flex items-center justify-between mb-5">
+											<div className="p-3.5 bg-primary/10 rounded-2xl text-primary">
+												<Icon size={24} />
+											</div>
+											{service.priceLabel && (
+												<span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold border border-primary/20">
+													{service.priceLabel}
+												</span>
+											)}
 										</div>
-										<CardTitle className="text-xl">{service.title}</CardTitle>
-										<CardDescription className="text-sm mt-2">
+
+										<h3 className="text-xl font-bold mb-2.5 text-foreground group-hover:text-primary transition-colors">
+											{service.title}
+										</h3>
+
+										<p className="text-sm text-muted-foreground leading-relaxed mb-6">
 											{service.description}
-										</CardDescription>
-									</CardHeader>
-									<CardContent className="pb-4">
-										<div className="font-bold text-lg mb-4">{service.priceLabel}</div>
-										<ul className="space-y-2">
-											{service.features.map((feature, index) => (
-												<li key={index} className="flex items-start text-sm text-muted-foreground">
-													<CheckCircle
-														size={16}
-														className="mr-2 mt-0.5 text-primary flex-shrink-0"
-													/>
-													{feature}
-												</li>
-											))}
-										</ul>
-									</CardContent>
-									<CardFooter>
+										</p>
+
+										{service.features && service.features.length > 0 && (
+											<ul className="space-y-2.5 mb-6 border-t border-border/40 pt-4">
+												{service.features.map((feature, index) => (
+													<li key={index} className="flex items-start text-xs text-muted-foreground">
+														<CheckCircle2
+															size={15}
+															className="mr-2 mt-0.5 text-primary flex-shrink-0"
+														/>
+														<span>{feature}</span>
+													</li>
+												))}
+											</ul>
+										)}
+									</div>
+
+									<div className="pt-4 border-t border-border/40">
 										<Button
-											variant={selectedService === service.slug ? "default" : "outline"}
-											className="w-full rounded-xl"
+											variant={isSelected ? "default" : "outline"}
+											className="w-full rounded-xl text-xs font-semibold h-10"
 											onClick={() => handleServiceSelect(service.slug)}
 										>
-											{selectedService === service.slug ? "Selected" : "Select Service"}
+											{isSelected ? "Selected for Inquiry" : "Select Service"}
 										</Button>
-									</CardFooter>
-								</Card>
+									</div>
+								</SpotlightCard>
 							);
 						})}
 					</div>
@@ -222,104 +233,68 @@ export function ServicesView({
 			</section>
 
 			{/* Process Section */}
-			<section className="py-16 relative overflow-hidden">
-				<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none"></div>
+			<section className="py-8 relative overflow-hidden">
 				<div className="container px-4 max-w-6xl mx-auto">
 					<SectionHeader
-						title={copy?.processSection.title}
-						subtitle={copy?.processSection.subtitle}
+						title={copy?.processSection.title || "How We Work"}
+						subtitle={copy?.processSection.subtitle || "The Process"}
 						description={copy?.processSection.description}
-						className="mb-16"
+						className="mb-14 text-center"
 					/>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 						{processSteps.map((step, index) => (
-							<div
+							<SpotlightCard
 								key={step.id}
-								className="bg-background border border-border/40 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 relative overflow-hidden"
+								className="p-6 rounded-2xl bg-card/60 border border-border/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 relative flex flex-col justify-between"
 							>
-								<div className="absolute top-0 right-0 w-16 h-16 bg-primary/10 rounded-bl-2xl flex items-center justify-center font-bold text-primary">
-									<span className="text-2xl font-bold">{index + 1}</span>
+								<div>
+									<div className="flex items-center justify-between mb-5">
+										<span className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-mono font-bold text-sm border border-primary/20">
+											0{index + 1}
+										</span>
+									</div>
+
+									<h3 className="text-lg font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
+										{step.title}
+									</h3>
+
+									<p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+										{step.description}
+									</p>
 								</div>
-								<h3 className="text-xl font-bold mb-4 mt-6">{step.title}</h3>
-								<p className="text-muted-foreground">{step.description}</p>
-							</div>
+							</SpotlightCard>
 						))}
 					</div>
 				</div>
 			</section>
 
 			{/* Request Form Section */}
-			<section className="bg-gradient-to-b from-background to-muted/30">
-				<div id="request-service-form" className="container px-4 py-16 max-w-6xl mx-auto">
+			<section className="py-8">
+				<div id="request-service-form" className="container px-4 max-w-4xl mx-auto">
 					<SectionHeader
-						title={copy?.requestSection.title}
-						subtitle={copy?.requestSection.subtitle}
+						title={copy?.requestSection.title || "Request a Service"}
+						subtitle={copy?.requestSection.subtitle || "Get in Touch"}
 						description={copy?.requestSection.description}
-						className="mb-16"
+						className="mb-12 text-center"
 					/>
 
-					<div className="bg-background border border-border/40 rounded-3xl p-8 md:p-12 shadow-lg relative overflow-hidden max-w-4xl mx-auto">
-						<div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-background pointer-events-none"></div>
-
-						<div className="relative">
-							<Form {...form}>
-								<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-										<FormField
-											control={form.control}
-											name="name"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-foreground/80 font-medium">
-														Name <span className="text-primary">*</span>
-													</FormLabel>
-													<FormControl>
-														<Input
-															placeholder="Your name"
-															className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80 backdrop-blur-sm"
-															{...field}
-														/>
-													</FormControl>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-
-										<FormField
-											control={form.control}
-											name="email"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-foreground/80 font-medium">
-														Email <span className="text-primary">*</span>
-													</FormLabel>
-													<FormControl>
-														<Input
-															placeholder="Your email"
-															type="email"
-															className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80 backdrop-blur-sm"
-															{...field}
-														/>
-													</FormControl>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-									</div>
-
+					<SpotlightCard className="p-8 md:p-12 rounded-3xl bg-card/80 border border-border/50 shadow-xl">
+						<Form {...form}>
+							<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 									<FormField
 										control={form.control}
-										name="company"
+										name="name"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium">
-													Company (Optional)
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Name <span className="text-primary">*</span>
 												</FormLabel>
 												<FormControl>
 													<Input
-														placeholder="Your company name"
-														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80 backdrop-blur-sm"
+														placeholder="Your name"
+														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
 														{...field}
 													/>
 												</FormControl>
@@ -328,106 +303,19 @@ export function ServicesView({
 										)}
 									/>
 
-									<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-										<FormField
-											control={form.control}
-											name="serviceType"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-foreground/80 font-medium">
-														Service Type <span className="text-primary">*</span>
-													</FormLabel>
-													<Select
-														onValueChange={field.onChange}
-														defaultValue={field.value}
-														value={field.value}
-													>
-														<FormControl>
-															<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80 backdrop-blur-sm">
-																<SelectValue placeholder="Select a service" />
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent>
-															{services.map((service) => (
-																<SelectItem key={service.id} value={service.slug}>
-																	{service.title}
-																</SelectItem>
-															))}
-														</SelectContent>
-													</Select>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-
-										<FormField
-											control={form.control}
-											name="budget"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-foreground/80 font-medium">
-														Budget <span className="text-primary">*</span>
-													</FormLabel>
-													<Select onValueChange={field.onChange} defaultValue={field.value}>
-														<FormControl>
-															<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80 backdrop-blur-sm">
-																<SelectValue placeholder="Select budget range" />
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent>
-															{budgetRanges.map((range) => (
-																<SelectItem key={range.id} value={range.id}>
-																	{range.label}
-																</SelectItem>
-															))}
-														</SelectContent>
-													</Select>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-
-										<FormField
-											control={form.control}
-											name="timeframe"
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel className="text-foreground/80 font-medium">
-														Timeframe <span className="text-primary">*</span>
-													</FormLabel>
-													<Select onValueChange={field.onChange} defaultValue={field.value}>
-														<FormControl>
-															<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80 backdrop-blur-sm">
-																<SelectValue placeholder="Select timeframe" />
-															</SelectTrigger>
-														</FormControl>
-														<SelectContent>
-															{timeframes.map((timeframe) => (
-																<SelectItem key={timeframe.id} value={timeframe.id}>
-																	{timeframe.label}
-																</SelectItem>
-															))}
-														</SelectContent>
-													</Select>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-									</div>
-
 									<FormField
 										control={form.control}
-										name="projectDetails"
+										name="email"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium">
-													Project Details <span className="text-primary">*</span>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Email <span className="text-primary">*</span>
 												</FormLabel>
 												<FormControl>
-													<Textarea
-														placeholder="Describe your project, requirements, and any specific details that would help me understand your needs better."
-														rows={6}
-														className="rounded-xl border-border/50 focus-visible:ring-primary/30 resize-none bg-background/80 backdrop-blur-sm"
+													<Input
+														placeholder="Your email"
+														type="email"
+														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
 														{...field}
 													/>
 												</FormControl>
@@ -435,114 +323,213 @@ export function ServicesView({
 											</FormItem>
 										)}
 									/>
+								</div>
 
+								<FormField
+									control={form.control}
+									name="company"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel className="text-foreground/80 font-medium text-xs">
+												Company (Optional)
+											</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="Your company or team name"
+													className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 									<FormField
 										control={form.control}
-										name="termsAccepted"
+										name="serviceType"
 										render={({ field }) => (
-											<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-4 bg-muted/30">
-												<FormControl>
-													<Checkbox checked={field.value} onCheckedChange={field.onChange} />
-												</FormControl>
-												<div className="space-y-1 leading-none">
-													<FormLabel className="text-sm">
-														I agree to the{" "}
-														<Link href="/terms-of-service" className="text-primary hover:underline">
-															terms of service
-														</Link>{" "}
-														and{" "}
-														<Link href="/privacy-policy" className="text-primary hover:underline">
-															privacy policy
-														</Link>
-														.
-													</FormLabel>
-													<FormMessage />
-												</div>
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Service Type <span className="text-primary">*</span>
+												</FormLabel>
+												<Select
+													onValueChange={field.onChange}
+													defaultValue={field.value}
+													value={field.value}
+												>
+													<FormControl>
+														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
+															<SelectValue placeholder="Select a service" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														{services.map((service) => (
+															<SelectItem key={service.id} value={service.slug}>
+																{service.title}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+												<FormMessage />
 											</FormItem>
 										)}
 									/>
 
-									<Button
-										type="submit"
-										size="lg"
-										className={cn(
-											"w-full md:w-auto px-8 rounded-full transition-all duration-300",
-											"bg-primary hover:bg-primary/90 text-primary-foreground",
-											"group overflow-hidden relative",
+									<FormField
+										control={form.control}
+										name="budget"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Budget Range <span className="text-primary">*</span>
+												</FormLabel>
+												<Select onValueChange={field.onChange} defaultValue={field.value}>
+													<FormControl>
+														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
+															<SelectValue placeholder="Select budget range" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														{budgetRanges.map((range) => (
+															<SelectItem key={range.id} value={range.id}>
+																{range.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
 										)}
-										disabled={mutation.isPending || isSubmitting}
-									>
-										{mutation.isPending || isSubmitting ? (
-											<span className="flex items-center">
-												<svg
-													className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-													xmlns="http://www.w3.org/2000/svg"
-													fill="none"
-													viewBox="0 0 24 24"
-												>
-													<circle
-														className="opacity-25"
-														cx="12"
-														cy="12"
-														r="10"
-														stroke="currentColor"
-														strokeWidth="4"
-													></circle>
-													<path
-														className="opacity-75"
-														fill="currentColor"
-														d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-													></path>
-												</svg>
-												Submitting...
-											</span>
-										) : (
-											<>
-												<span className="flex items-center gap-2 group-hover:-translate-x-2 transition-transform duration-300">
-													Submit Request
-													<ArrowRight className="w-4 h-4 group-hover:translate-x-4 transition-transform duration-300" />
-												</span>
-												<span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-primary">
-													<CheckCircle2 className="w-5 h-5 mr-2" />
-													Ready to Submit
-												</span>
-											</>
-										)}
-									</Button>
+									/>
 
-									<RecaptchaDisclaimer />
-								</form>
-							</Form>
-						</div>
-					</div>
+									<FormField
+										control={form.control}
+										name="timeframe"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Timeframe <span className="text-primary">*</span>
+												</FormLabel>
+												<Select onValueChange={field.onChange} defaultValue={field.value}>
+													<FormControl>
+														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
+															<SelectValue placeholder="Select timeframe" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														{timeframes.map((timeframe) => (
+															<SelectItem key={timeframe.id} value={timeframe.id}>
+																{timeframe.label}
+															</SelectItem>
+														))}
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+
+								<FormField
+									control={form.control}
+									name="projectDetails"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel className="text-foreground/80 font-medium text-xs">
+												Project Details & Goals <span className="text-primary">*</span>
+											</FormLabel>
+											<FormControl>
+												<Textarea
+													placeholder="Describe your project, goals, and any specific technical requirements..."
+													rows={5}
+													className="rounded-xl border-border/50 focus-visible:ring-primary/30 resize-none bg-background/80"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="termsAccepted"
+									render={({ field }) => (
+										<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl p-4 bg-muted/40 border border-border/40">
+											<FormControl>
+												<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+											</FormControl>
+											<div className="space-y-1 leading-none">
+												<FormLabel className="text-xs text-muted-foreground">
+													I agree to the{" "}
+													<Link href="/terms-of-service" className="text-primary hover:underline font-medium">
+														terms of service
+													</Link>{" "}
+													and{" "}
+													<Link href="/privacy-policy" className="text-primary hover:underline font-medium">
+														privacy policy
+													</Link>
+													.
+												</FormLabel>
+												<FormMessage />
+											</div>
+										</FormItem>
+									)}
+								/>
+
+								<Button
+									type="submit"
+									size="lg"
+									className="w-full md:w-auto px-8 rounded-full shadow-lg shadow-primary/20 group"
+									disabled={mutation.isPending || isSubmitting}
+								>
+									{mutation.isPending || isSubmitting ? (
+										<span className="flex items-center">
+											<Sparkles className="animate-spin -ml-1 mr-2 h-4 w-4" />
+											Submitting Inquiry...
+										</span>
+									) : (
+										<span className="flex items-center gap-2">
+											Submit Service Inquiry
+											<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+										</span>
+									)}
+								</Button>
+
+								<RecaptchaDisclaimer />
+							</form>
+						</Form>
+					</SpotlightCard>
 				</div>
 			</section>
 
 			{/* FAQ Section */}
-			<section className="py-16">
+			<section className="py-8">
 				<div className="container px-4 max-w-6xl mx-auto">
 					<SectionHeader
-						title={copy?.faqSection.title}
-						subtitle={copy?.faqSection.subtitle}
-						className="mb-16"
+						title={copy?.faqSection.title || "Frequently Asked Questions"}
+						subtitle={copy?.faqSection.subtitle || "Got Questions?"}
+						className="mb-14 text-center"
 					/>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
 						{faqs.map((faq) => (
-							<div
+							<SpotlightCard
 								key={faq.id}
-								className="bg-background border border-border/40 rounded-xl p-6 hover:border-primary/30 hover:shadow-sm transition-all duration-300"
+								className="p-6 rounded-2xl bg-card/60 border border-border/50 hover:border-primary/40 hover:shadow-md transition-all duration-300"
 							>
-								<h3 className="text-lg font-bold mb-2">{faq.question}</h3>
-								<p className="text-muted-foreground">{faq.answer}</p>
-							</div>
+								<h3 className="text-base font-bold mb-2 text-foreground">{faq.question}</h3>
+								<p className="text-xs md:text-sm text-muted-foreground leading-relaxed">{faq.answer}</p>
+							</SpotlightCard>
 						))}
 					</div>
 				</div>
 			</section>
 
-			{/* Enhanced CTA Section */}
-			<section className="pb-16">
+			{/* Bottom CTA Section */}
+			<section className="pb-8">
 				<div className="container px-4 max-w-6xl mx-auto">
 					{ctaData && <PowerfulCTACard {...ctaData} />}
 				</div>

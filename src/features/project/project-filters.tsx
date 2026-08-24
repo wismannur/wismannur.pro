@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { trackEvent } from "@/lib/umami";
 import { Code, X } from "lucide-react";
 
@@ -25,41 +26,21 @@ const ProjectFilters = ({
 	};
 
 	return (
-		<div className="bg-background border border-border/40 rounded-2xl p-6 mb-12 shadow-sm">
-			<div className="flex flex-col justify-between gap-6">
-				{/* <div className="relative w-full">
-          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-            <Search size={16} />
-          </div>
-          <Input
-            placeholder="Search projects..."
-            className="pl-10 rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div> */}
-
+		<SpotlightCard className="p-5 md:p-6 mb-12 rounded-2xl bg-card/60 border border-border/50 shadow-sm">
+			<div className="flex flex-col justify-between gap-4">
 				<div className="flex items-center flex-wrap gap-2">
-					<div className="flex items-center mr-2 text-muted-foreground">
-						<Code size={16} className="mr-2" />
-						<span className="text-sm font-medium">Technology:</span>
+					<div className="flex items-center mr-2 text-foreground font-medium text-xs md:text-sm">
+						<Code size={16} className="mr-1.5 text-primary" />
+						<span>Filter by Stack:</span>
 					</div>
 					<Button
 						variant={selectedTech === null ? "default" : "outline"}
 						size="sm"
 						onClick={() => handleTechClick(null)}
 						data-umami-event="project-filter-all"
-						className="rounded-full px-4"
+						className="rounded-full px-3.5 h-8 text-xs font-semibold"
 					>
-						All
+						All Projects
 					</Button>
 					{allTechnologies.map((tech) => (
 						<Button
@@ -69,10 +50,10 @@ const ProjectFilters = ({
 							onClick={() => handleTechClick(tech === selectedTech ? null : tech)}
 							data-umami-event="project-filter-tech-click"
 							data-umami-event-tech={tech}
-							className="rounded-full px-4 group"
+							className="rounded-full px-3.5 h-8 text-xs font-medium group border-border/60"
 						>
 							<span>{tech}</span>
-							{selectedTech === tech && <X size={14} className="ml-2 group-hover:text-red-500" />}
+							{selectedTech === tech && <X size={13} className="ml-1.5 group-hover:text-red-500" />}
 						</Button>
 					))}
 				</div>
@@ -80,42 +61,34 @@ const ProjectFilters = ({
 
 			{/* Active filters display */}
 			{(searchTerm || selectedTech) && (
-				<div className="mt-4 pt-4 border-t border-border/40 flex items-center flex-wrap gap-2">
-					<span className="text-sm text-muted-foreground">Active filters:</span>
-					{searchTerm && (
-						<div className="bg-background border border-border/50 rounded-full px-3 py-1 text-xs flex items-center">
-							<span className="font-medium mr-1">Search:</span> "{searchTerm}"
-							<button
-								onClick={() => setSearchTerm("")}
-								className="ml-2 text-muted-foreground hover:text-red-500"
-							>
-								<X size={12} />
-							</button>
-						</div>
-					)}
+				<div className="mt-4 pt-4 border-t border-border/40 flex items-center flex-wrap gap-2 text-xs">
+					<span className="text-muted-foreground">Active filter:</span>
 					{selectedTech && (
-						<div className="bg-background border border-border/50 rounded-full px-3 py-1 text-xs flex items-center">
-							<span className="font-medium mr-1">Technology:</span> {selectedTech}
+						<div className="bg-primary/10 border border-primary/20 text-primary rounded-full px-3 py-1 flex items-center font-medium">
+							<span>{selectedTech}</span>
 							<button
+								type="button"
 								onClick={() => setSelectedTech(null)}
-								className="ml-2 text-muted-foreground hover:text-red-500"
+								className="ml-1.5 hover:text-red-500"
+								aria-label="Clear tech filter"
 							>
 								<X size={12} />
 							</button>
 						</div>
 					)}
 					<button
+						type="button"
 						onClick={() => {
 							setSearchTerm("");
 							setSelectedTech(null);
 						}}
-						className="text-xs text-primary hover:underline ml-2"
+						className="text-primary hover:underline ml-2 font-medium"
 					>
-						Clear all
+						Reset
 					</button>
 				</div>
 			)}
-		</div>
+		</SpotlightCard>
 	);
 };
 
