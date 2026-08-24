@@ -2,6 +2,7 @@
 
 import { SectionHeader } from "@/components/ui/section-header";
 import { formatResumePeriod } from "@/lib/resume";
+import { trackEvent } from "@/lib/umami";
 import type { ResumeEntry } from "@/services/resume/types";
 import { BriefcaseIcon, Calendar, GraduationCap, MapPin } from "lucide-react";
 import { useState } from "react";
@@ -17,6 +18,11 @@ type ResumeSectionProps = {
 export function ResumeSection({ experiences, education }: ResumeSectionProps) {
 	const [activeTab, setActiveTab] = useState("experience");
 
+	const handleTabChange = (tab: "experience" | "education") => {
+		setActiveTab(tab);
+		trackEvent("about-resume-tab-change", { tab });
+	};
+
 	return (
 		<section className="py-24 relative">
 			<div className="container max-w-7xl px-4">
@@ -31,7 +37,9 @@ export function ResumeSection({ experiences, education }: ResumeSectionProps) {
 				<div className="flex justify-center mb-12">
 					<div className="inline-flex p-1 rounded-full bg-muted">
 						<button
-							onClick={() => setActiveTab("experience")}
+							onClick={() => handleTabChange("experience")}
+							data-umami-event="about-resume-tab-click"
+							data-umami-event-tab="experience"
 							className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all ${
 								activeTab === "experience"
 									? "bg-primary text-primary-foreground shadow-md"
@@ -42,7 +50,9 @@ export function ResumeSection({ experiences, education }: ResumeSectionProps) {
 							Experience
 						</button>
 						<button
-							onClick={() => setActiveTab("education")}
+							onClick={() => handleTabChange("education")}
+							data-umami-event="about-resume-tab-click"
+							data-umami-event-tab="education"
 							className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all ${
 								activeTab === "education"
 									? "bg-primary text-primary-foreground shadow-md"

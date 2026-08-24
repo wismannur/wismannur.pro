@@ -31,6 +31,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { getContentIcon } from "@/lib/icon-registry";
+import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
 import { serviceRequestService } from "@/services";
 import type { Faq } from "@/services/faqs/types";
@@ -118,6 +119,12 @@ export function ServicesView({
 				title: "Request submitted!",
 				description: "Thanks for your interest. I'll get back to you soon.",
 			});
+			const vals = form.getValues();
+			trackEvent("services-form-submit-success", {
+				serviceType: vals.serviceType,
+				budget: vals.budget,
+				timeframe: vals.timeframe,
+			});
 			form.reset();
 		},
 		onError: () => {
@@ -126,6 +133,7 @@ export function ServicesView({
 				description: "Failed to send your request. Please try again.",
 				variant: "destructive",
 			});
+			trackEvent("services-form-submit-error");
 		},
 		onSettled: () => {
 			setIsSubmitting(false);
@@ -134,6 +142,10 @@ export function ServicesView({
 
 	const onSubmit = async (data: ServiceFormValues) => {
 		setIsSubmitting(true);
+		trackEvent("services-form-submit-attempt", {
+			serviceType: data.serviceType,
+			budget: data.budget,
+		});
 		// Token is verified server-side inside `submit` (empty in stub mode).
 		const token = await getReCaptchaToken();
 		mutation.mutate({ form: data, token });
@@ -142,6 +154,7 @@ export function ServicesView({
 	const handleServiceSelect = (serviceId: string) => {
 		setSelectedService(serviceId);
 		form.setValue("serviceType", serviceId);
+		trackEvent("services-card-selected", { serviceId });
 	};
 
 	return (

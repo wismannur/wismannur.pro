@@ -73,7 +73,9 @@ export function OfferCard({ offer, className }: OfferCardProps) {
 
 			<CardFooter className="flex flex-col space-y-3 pt-2">
 				<Button asChild className="w-full">
-					<Link href="/contact?service=custom">Get Started</Link>
+					<Link href="/contact?service=custom" data-umami-event="offer-card-get-started-click" data-umami-event-offer={title}>
+						Get Started
+					</Link>
 				</Button>
 			</CardFooter>
 		</Card>

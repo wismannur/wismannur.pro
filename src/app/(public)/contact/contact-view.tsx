@@ -19,6 +19,7 @@ import type { ContactCopy } from "@/services/page-copy/types";
 import type { SiteSettings } from "@/services/site-settings/types";
 import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
 import { getReCaptchaToken } from "@/services/recaptcha";
+import { trackEvent } from "@/lib/umami";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -92,6 +93,7 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 				title: "Message sent!",
 				description: "Thanks for reaching out. I'll get back to you soon.",
 			});
+			trackEvent("contact-form-submit-success", { subject: form.getValues().subject });
 			form.reset();
 		},
 		onError: () => {
@@ -100,6 +102,7 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 				description: "Failed to send your message. Please try again.",
 				variant: "destructive",
 			});
+			trackEvent("contact-form-submit-error");
 		},
 		onSettled: () => {
 			setIsSubmitting(false);
@@ -111,6 +114,7 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 
 	const onSubmit = async (data: z.infer<typeof contactFormSchema>) => {
 		setIsSubmitting(true);
+		trackEvent("contact-form-submit-attempt", { subject: data.subject });
 		// Token is verified server-side inside `submit` (empty in stub mode).
 		const token = await getReCaptchaToken();
 		mutation.mutate({ form: data as ContactForm, token });
@@ -309,6 +313,8 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 												{link ? (
 													<a
 														href={link}
+														data-umami-event="contact-info-link-click"
+														data-umami-event-label={title}
 														className="text-muted-foreground hover:text-primary transition-colors"
 														rel="noopener noreferrer"
 														target="_blank"
@@ -332,6 +338,8 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 												href={url}
 												target="_blank"
 												rel="noopener noreferrer"
+												data-umami-event="contact-social-click"
+												data-umami-event-platform={label}
 												className="p-3 bg-background border border-border/50 rounded-xl text-muted-foreground hover:text-primary hover:border-primary/50 hover:shadow-md transition-all duration-300"
 												aria-label={label}
 											>

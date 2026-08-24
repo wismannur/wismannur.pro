@@ -85,7 +85,13 @@ const AuthorBio = () => {
 													className="h-8 w-8 rounded-full hover:bg-primary/10 hover:text-primary"
 													asChild
 												>
-													<a href={link.url} target="_blank" rel="noopener noreferrer">
+													<a
+														href={link.url}
+														target="_blank"
+														rel="noopener noreferrer"
+														data-umami-event="author-social-click"
+														data-umami-event-platform={link.name}
+													>
 														{link.icon}
 													</a>
 												</Button>
@@ -117,7 +123,7 @@ const AuthorBio = () => {
 							{/* Call-to-actions */}
 							<div className="flex flex-wrap gap-3 mt-4">
 								<Button variant="outline" size="sm" className="group" asChild>
-									<Link href="/about">
+									<Link href="/about" data-umami-event="author-about-click">
 										<BookOpen size={14} className="mr-1" />
 										About Me
 										<ArrowRight
@@ -127,7 +133,7 @@ const AuthorBio = () => {
 									</Link>
 								</Button>
 								<Button variant="outline" size="sm" className="group" asChild>
-									<Link href="/contact">
+									<Link href="/contact" data-umami-event="author-contact-click">
 										<MessageCircle size={14} className="mr-1" />
 										Contact Me
 										<ArrowRight
