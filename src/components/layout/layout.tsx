@@ -6,6 +6,7 @@ import type { SiteSettings } from "@/services/site-settings/types";
 import { Footer } from "./footer";
 import { Navbar } from "./navbar";
 import { ScrollToTop } from "./scroll-to-top";
+import { CommandPalette } from "@/components/common/command-palette";
 
 interface LayoutProps {
 	children: React.ReactNode;
@@ -36,6 +37,11 @@ export const Layout = ({
 			<main className="flex-1 pt-20">{children}</main>
 			{!hideFooter && <Footer settings={settings} />}
 			<ScrollToTop />
+			<CommandPalette
+				publicEmail={settings.publicEmail}
+				enableBlog={settings.enableBlog}
+			/>
 		</div>
 	);
 };
+
