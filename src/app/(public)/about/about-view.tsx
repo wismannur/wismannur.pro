@@ -92,13 +92,13 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 
 							<div className="flex flex-wrap gap-4">
 								<Button asChild size="lg" className="rounded-full px-8 group">
-									<Link href="/hire-me">
+									<Link href="/hire-me" data-umami-event="about-hero-hire-me-click">
 										<Sparkles size={16} className="mr-2" />
 										Hire Me
 									</Link>
 								</Button>
 								<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-									<Link href="/projects" className="hover:text-white">
+									<Link href="/projects" data-umami-event="about-hero-view-work-click" className="hover:text-white">
 										View My Work
 										<ChevronRight
 											size={16}
@@ -176,7 +176,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 
 					<div className="mt-12 text-center">
 						<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-							<Link href="/services" className="hover:text-white">
+							<Link href="/services" data-umami-event="about-services-cta-click" className="hover:text-white">
 								Explore My Services
 								<ArrowRight
 									size={16}

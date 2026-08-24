@@ -57,13 +57,13 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 
 								<div className="flex flex-wrap gap-4">
 									<Button asChild size="lg" className="rounded-full px-8 group">
-										<Link href="/hire-me">
+										<Link href="/hire-me" data-umami-event="home-hero-hire-me-click">
 											<Sparkles size={16} className="mr-2 animate-pulse" />
 											Hire Me
 										</Link>
 									</Button>
 									<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-										<Link href="/contact" className="hover:text-white">
+										<Link href="/contact" data-umami-event="home-hero-contact-click" className="hover:text-white">
 											Contact me
 											<ChevronRight
 												size={16}
@@ -135,7 +135,7 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 
 						<div className="mt-16 text-center">
 							<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-								<Link href="/services" className="hover:text-white">
+								<Link href="/services" data-umami-event="home-services-cta-click" className="hover:text-white">
 									Request Services
 									<ArrowRight
 										size={16}
@@ -174,7 +174,7 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 
 							<div className="mt-16 text-center">
 								<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-									<Link href="/blog" className="hover:text-white">
+									<Link href="/blog" data-umami-event="home-blog-cta-click" className="hover:text-white">
 										View all articles
 										<ArrowRight
 											size={16}
@@ -214,7 +214,7 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 
 						<div className="mt-16 text-center">
 							<Button asChild variant="outline" size="lg" className="rounded-full px-8 group">
-								<Link href="/projects" className="hover:text-white">
+								<Link href="/projects" data-umami-event="home-projects-cta-click" className="hover:text-white">
 									View all projects
 									<ArrowRight
 										size={16}

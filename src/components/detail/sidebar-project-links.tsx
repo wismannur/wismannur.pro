@@ -21,6 +21,7 @@ const SidebarProjectLinks = ({ demoUrl, repoUrl }: SidebarProjectLinksProps) => 
               href={demoUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-umami-event="sidebar-project-demo-click"
               className="flex items-center justify-center gap-2"
             >
               <ExternalLink size={16} />
@@ -34,6 +35,7 @@ const SidebarProjectLinks = ({ demoUrl, repoUrl }: SidebarProjectLinksProps) => 
               href={repoUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-umami-event="sidebar-project-repo-click"
               className="flex items-center justify-center gap-2"
             >
               <Github size={16} />

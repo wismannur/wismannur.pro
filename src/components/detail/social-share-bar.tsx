@@ -8,6 +8,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
 import { Check, Copy, Facebook, Heart, Linkedin, Share2, Twitter } from "lucide-react";
 import { useState } from "react";
@@ -23,11 +24,22 @@ interface SocialShareBarProps {
 const SocialShareBar = ({ id, likes, isLiked, onLike, contentType }: SocialShareBarProps) => {
 	const [copied, setCopied] = useState(false);
 
+	const handleLike = () => {
+		onLike();
+		trackEvent(`${contentType}-like-click`, { id, isLiked: !isLiked });
+	};
+
 	// Copy URL to clipboard
 	const copyToClipboard = () => {
 		navigator.clipboard.writeText(window.location.href);
 		setCopied(true);
+		trackEvent(`${contentType}-share-copy-link`, { id });
 		setTimeout(() => setCopied(false), 2000);
+	};
+
+	const shareSocial = (platform: string, url: string) => {
+		trackEvent(`${contentType}-share-social`, { id, platform });
+		window.open(url, "_blank");
 	};
 
 	return (
@@ -48,7 +60,7 @@ const SocialShareBar = ({ id, likes, isLiked, onLike, contentType }: SocialShare
 									"rounded-full transition-all",
 									isLiked && "text-red-500 hover:text-red-600",
 								)}
-								onClick={onLike}
+								onClick={handleLike}
 							>
 								<Heart className={cn(isLiked && "fill-current")} size={18} />
 								<span className="sr-only">{isLiked ? "Liked" : `Like this ${contentType}`}</span>
@@ -98,11 +110,11 @@ const SocialShareBar = ({ id, likes, isLiked, onLike, contentType }: SocialShare
 					<DropdownMenuContent align="center" className="min-w-[180px]">
 						<DropdownMenuItem
 							onClick={() =>
-								window.open(
+								shareSocial(
+									"twitter",
 									`https://twitter.com/intent/tweet?url=${encodeURIComponent(
 										window.location.href,
 									)}`,
-									"_blank",
 								)
 							}
 						>
@@ -111,11 +123,11 @@ const SocialShareBar = ({ id, likes, isLiked, onLike, contentType }: SocialShare
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={() =>
-								window.open(
+								shareSocial(
+									"facebook",
 									`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
 										window.location.href,
 									)}`,
-									"_blank",
 								)
 							}
 						>
@@ -124,11 +136,11 @@ const SocialShareBar = ({ id, likes, isLiked, onLike, contentType }: SocialShare
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={() =>
-								window.open(
+								shareSocial(
+									"linkedin",
 									`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
 										window.location.href,
 									)}`,
-									"_blank",
 								)
 							}
 						>

@@ -24,6 +24,8 @@ export const BlogCard = memo(
 			return (
 				<Link
 					href={`/blog/${blog.slug}`}
+					data-umami-event="blog-card-compact-click"
+					data-umami-event-slug={blog.slug}
 					className={cn(
 						"group flex gap-4 p-4 rounded-xl border border-border/40 bg-background hover:border-primary/30 hover:shadow-md transition-all duration-300",
 						className,
@@ -73,7 +75,7 @@ export const BlogCard = memo(
 				)}
 				style={style}
 			>
-				<Link href={`/blog/${blog.slug}`} className="block">
+				<Link href={`/blog/${blog.slug}`} data-umami-event="blog-card-image-click" data-umami-event-slug={blog.slug} className="block">
 					<div className="aspect-video overflow-hidden">
 						<img
 							src={blog.image || "/placeholder.svg"}
@@ -89,6 +91,8 @@ export const BlogCard = memo(
 							<Link
 								key={tag}
 								href={`/blog?tag=${tag}`}
+								data-umami-event="blog-card-tag-click"
+								data-umami-event-tag={tag}
 								className="px-2.5 py-0.5 text-xs rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
 								onClick={(e) => e.stopPropagation()}
 							>
@@ -102,7 +106,7 @@ export const BlogCard = memo(
 						)}
 					</div>
 
-					<Link href={`/blog/${blog.slug}`} className="block">
+					<Link href={`/blog/${blog.slug}`} data-umami-event="blog-card-title-click" data-umami-event-slug={blog.slug} className="block">
 						<h3 className="text-xl font-bold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
 							{blog.title}
 						</h3>
@@ -134,7 +138,7 @@ export const BlogCard = memo(
 							className="p-0 h-auto text-primary font-medium hover:bg-transparent hover:text-primary/80 group-hover:translate-x-1 transition-transform"
 							asChild
 						>
-							<Link href={`/blog/${blog.slug}`}>
+							<Link href={`/blog/${blog.slug}`} data-umami-event="blog-card-readmore-click" data-umami-event-slug={blog.slug}>
 								Read more
 								<ArrowRight size={14} className="ml-1" />
 							</Link>

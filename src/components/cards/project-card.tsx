@@ -31,6 +31,8 @@ const ProjectCard = React.memo(
 			>
 				<Link
 					href={`/projects/${project.slug}`}
+					data-umami-event="project-card-image-click"
+					data-umami-event-project={project.slug}
 					className={cn(
 						"relative aspect-video overflow-hidden bg-muted",
 						isFeatured ? "md:w-1/2" : "w-full"
@@ -68,7 +70,7 @@ const ProjectCard = React.memo(
 						</div>
 					</div>
 
-					<Link href={`/projects/${project.slug}`}>
+					<Link href={`/projects/${project.slug}`} data-umami-event="project-card-title-click" data-umami-event-project={project.slug}>
 						<h3
 							className={cn(
 								"font-bold group-hover:text-primary transition-colors duration-300",
@@ -102,6 +104,8 @@ const ProjectCard = React.memo(
 									href={project.demoUrl}
 									target="_blank"
 									rel="noopener noreferrer"
+									data-umami-event="project-card-demo-click"
+									data-umami-event-project={project.slug}
 									className="text-sm text-foreground flex items-center hover:underline transition-all duration-200 hover:translate-y-[-1px]"
 									onClick={e => e.stopPropagation()}
 									aria-label={`View live demo for ${project.title}`}
@@ -116,6 +120,8 @@ const ProjectCard = React.memo(
 									href={project.repoUrl}
 									target="_blank"
 									rel="noopener noreferrer"
+									data-umami-event="project-card-repo-click"
+									data-umami-event-project={project.slug}
 									className="text-sm text-foreground flex items-center hover:underline transition-all duration-200 hover:translate-y-[-1px]"
 									onClick={e => e.stopPropagation()}
 									aria-label={`View source code for ${project.title}`}
@@ -132,7 +138,7 @@ const ProjectCard = React.memo(
 							className="p-0 h-auto text-primary font-medium hover:bg-transparent hover:text-primary/80 group-hover:translate-x-1 transition-transform"
 							asChild
 						>
-							<Link href={`/projects/${project.slug}`}>
+							<Link href={`/projects/${project.slug}`} data-umami-event="project-card-view-click" data-umami-event-project={project.slug}>
 								View Project
 								<ArrowRight size={14} className="ml-1" />
 							</Link>
