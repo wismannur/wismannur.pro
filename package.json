@@ -7,7 +7,8 @@
     "node": "24.x"
   },
   "scripts": {
-    "dev": "next dev -p 7000",
+    "dev": "node scripts/dev.mjs",
+    "dev:prod": "node scripts/dev.mjs --prod",
     "build": "drizzle-kit migrate && next build",
     "start": "next start",
     "lint": "eslint",
