@@ -100,7 +100,8 @@ pnpm db:migrate   # apply migrations from src/db/migrations
 ### 4. Run
 
 ```bash
-pnpm dev          # http://localhost:7000
+pnpm dev          # Run dev with Neon development database (http://localhost:7000)
+pnpm dev --prod   # Run dev connected to Neon production / main branch (or: pnpm dev:prod)
 ```
 
 Log in to the CMS at `/login` with the `ADMIN_EMAIL` / password you configured, then start filling in content.
@@ -109,7 +110,8 @@ Log in to the CMS at `/login` with the `ADMIN_EMAIL` / password you configured, 
 
 | Command | Description |
 | --- | --- |
-| `pnpm dev` | Dev server on port **7000** |
+| `pnpm dev` | Dev server with Neon development database (port **7000**) |
+| `pnpm dev --prod` | Dev server connected to Neon production / main database branch (alias: `pnpm dev:prod`) |
 | `pnpm build` | Runs pending DB migrations, then `next build` |
 | `pnpm start` | Serve the production build |
 | `pnpm lint` | ESLint |
