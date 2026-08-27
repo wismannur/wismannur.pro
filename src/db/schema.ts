@@ -45,6 +45,65 @@ export const colorScheme = pgEnum("color_scheme", [
 	"red",
 ]);
 
+export const jobApplicationStatus = pgEnum("job_application_status", [
+	"wishlist",
+	"applied",
+	"screening",
+	"interview_hr",
+	"interview_tech",
+	"interview_user",
+	"offering",
+	"accepted",
+	"rejected",
+	"withdrawn",
+	"ghosted",
+]);
+
+export const jobPlatform = pgEnum("job_platform", [
+	"linkedin",
+	"jobstreet",
+	"glints",
+	"techinasia",
+	"indeed",
+	"company_website",
+	"referral",
+	"other",
+]);
+
+export const workplaceType = pgEnum("workplace_type", [
+	"remote",
+	"hybrid",
+	"onsite",
+]);
+
+export const jobEmploymentType = pgEnum("job_employment_type", [
+	"full_time",
+	"contract",
+	"part_time",
+	"freelance",
+	"internship",
+]);
+
+export const interviewStageType = pgEnum("interview_stage_type", [
+	"hr_screening",
+	"technical_interview",
+	"live_coding",
+	"take_home_test",
+	"user_interview",
+	"system_design",
+	"final_leadership",
+	"offering_discussion",
+	"other",
+]);
+
+export const interviewStatus = pgEnum("interview_status", [
+	"scheduled",
+	"completed",
+	"passed",
+	"failed",
+	"cancelled",
+]);
+
 export const blogs = pgTable("blogs", {
 	id: text("id")
 		.primaryKey()
@@ -485,6 +544,77 @@ export const sitePages = pgTable("site_pages", {
 		.$onUpdate(() => new Date()),
 });
 
+export const jobApplications = pgTable("job_applications", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	companyName: text("company_name").notNull(),
+	companyLogo: text("company_logo"),
+	companyWebsite: text("company_website"),
+	jobTitle: text("job_title").notNull(),
+	jobUrl: text("job_url"),
+	platform: jobPlatform("platform").notNull().default("linkedin"),
+	location: text("location"),
+	workplaceType: workplaceType("workplace_type").notNull().default("remote"),
+	jobType: jobEmploymentType("job_type").notNull().default("full_time"),
+	salaryMin: integer("salary_min"),
+	salaryMax: integer("salary_max"),
+	salaryCurrency: text("salary_currency").notNull().default("IDR"),
+	salaryPeriod: text("salary_period").notNull().default("monthly"),
+	jobDescriptionRaw: text("job_description_raw"),
+	requirements: text("requirements")
+		.array()
+		.notNull()
+		.default(sql`'{}'::text[]`),
+	status: jobApplicationStatus("status").notNull().default("wishlist"),
+	appliedAt: timestamp("applied_at", { withTimezone: true }),
+	atsScore: integer("ats_score"),
+	atsAnalysis: jsonb("ats_analysis"),
+	tailoredSummary: text("tailored_summary"),
+	tailoredBulletPoints: jsonb("tailored_bullet_points"),
+	coverLetter: text("cover_letter"),
+	notes: text("notes"),
+	contactName: text("contact_name"),
+	contactEmail: text("contact_email"),
+	contactPhone: text("contact_phone"),
+	followUpDate: timestamp("follow_up_date", { withTimezone: true }),
+	sortOrder: integer("sort_order").notNull().default(0),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
+
+export const jobInterviews = pgTable("job_interviews", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	applicationId: text("application_id")
+		.notNull()
+		.references(() => jobApplications.id, { onDelete: "cascade" }),
+	stageType: interviewStageType("stage_type").notNull().default("hr_screening"),
+	title: text("title").notNull(),
+	scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+	interviewers: text("interviewers"),
+	meetingLink: text("meeting_link"),
+	rawInvitation: text("raw_invitation"),
+	aiSummary: text("ai_summary"),
+	aiPredictedQuestions: jsonb("ai_predicted_questions"),
+	notes: text("notes"),
+	feedback: text("feedback"),
+	status: interviewStatus("status").notNull().default("scheduled"),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
+
 export type BlogRow = typeof blogs.$inferSelect;
 export type ProjectRow = typeof projects.$inferSelect;
 export type ResumeEntryRow = typeof resumeEntries.$inferSelect;
@@ -503,3 +633,5 @@ export type TestimonialRow = typeof testimonials.$inferSelect;
 export type AvailabilitySlotRow = typeof availabilitySlots.$inferSelect;
 export type OfferRow = typeof offers.$inferSelect;
 export type SitePageRow = typeof sitePages.$inferSelect;
+export type JobApplicationRow = typeof jobApplications.$inferSelect;
+export type JobInterviewRow = typeof jobInterviews.$inferSelect;
