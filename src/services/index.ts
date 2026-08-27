@@ -18,6 +18,7 @@ export { siteSettingsService } from "./site-settings";
 export { skillsService } from "./skills";
 export { testimonialsService } from "./testimonials";
 export { userService } from "./user";
+export { jobTrackerService } from "./job-tracker";
 
 // Export all domain types
 export * from "./availability/types";
@@ -38,3 +39,4 @@ export * from "./site-settings/types";
 export * from "./skills/types";
 export * from "./testimonials/types";
 export * from "./user/types";
+export * from "./job-tracker/types";
