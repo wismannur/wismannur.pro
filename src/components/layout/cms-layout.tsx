@@ -138,6 +138,16 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 			],
 		},
 		{
+			group: "Career Hub",
+			items: [
+				{
+					label: "Job Tracker",
+					icon: <Briefcase className="h-4 w-4" />,
+					path: "/cms/job-tracker",
+				},
+			],
+		},
+		{
 			group: "Site",
 			items: [
 				{
