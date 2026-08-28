@@ -231,6 +231,7 @@ export const users = pgTable("users", {
 	uid: text("uid").primaryKey(),
 	displayName: text("display_name").notNull(),
 	email: text("email").notNull().unique(),
+	passwordHash: text("password_hash"),
 	photoURL: text("photo_url"),
 	bio: text("bio").notNull().default(""),
 	location: text("location").notNull().default(""),
@@ -615,6 +616,31 @@ export const jobInterviews = pgTable("job_interviews", {
 		.$onUpdate(() => new Date()),
 });
 
+export const messageSenderType = pgEnum("message_sender_type", [
+	"admin",
+	"client",
+]);
+
+export const inquiryType = pgEnum("inquiry_type", [
+	"contact",
+	"service_request",
+]);
+
+export const inquiryMessages = pgTable("inquiry_messages", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	inquiryId: text("inquiry_id").notNull(),
+	inquiryType: inquiryType("inquiry_type").notNull(),
+	senderType: messageSenderType("sender_type").notNull(),
+	senderName: text("sender_name").notNull(),
+	senderEmail: text("sender_email").notNull(),
+	message: text("message").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+});
+
 export type BlogRow = typeof blogs.$inferSelect;
 export type ProjectRow = typeof projects.$inferSelect;
 export type ResumeEntryRow = typeof resumeEntries.$inferSelect;
@@ -635,3 +661,5 @@ export type OfferRow = typeof offers.$inferSelect;
 export type SitePageRow = typeof sitePages.$inferSelect;
 export type JobApplicationRow = typeof jobApplications.$inferSelect;
 export type JobInterviewRow = typeof jobInterviews.$inferSelect;
+export type InquiryMessageRow = typeof inquiryMessages.$inferSelect;
+

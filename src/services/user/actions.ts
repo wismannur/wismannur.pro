@@ -1,5 +1,6 @@
 "use server";
 
+import bcrypt from "bcryptjs";
 import { del, put } from "@vercel/blob";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -7,7 +8,13 @@ import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { requireAdminUid } from "../core/auth-guard";
 import { ServiceError } from "../core/base-service";
-import type { UserProfile, UserProfileUpdate, UserSettings, UserSettingsUpdate } from "./types";
+import type {
+	ChangePasswordInput,
+	UserProfile,
+	UserProfileUpdate,
+	UserSettings,
+	UserSettingsUpdate,
+} from "./types";
 
 // Server actions backing `userService` (phase 8.5). `getAuthorProfile` is the
 // one public read (author-bio on blog/project detail pages); everything else
@@ -177,3 +184,44 @@ export async function updateSettings(data: UserSettingsUpdate): Promise<void> {
 			set: { ...clean, updatedAt: new Date() },
 		});
 }
+
+const changePasswordSchema = z.object({
+	currentPassword: z.string().min(1, "Current password is required"),
+	newPassword: z.string().min(6, "New password must be at least 6 characters"),
+});
+
+export async function changePassword(data: ChangePasswordInput): Promise<void> {
+	const uid = await requireAdminUid();
+	const parsed = changePasswordSchema.safeParse(data);
+	if (!parsed.success) {
+		throw new ServiceError("Validation failed", "invalid-input", parsed.error);
+	}
+	const { currentPassword, newPassword } = parsed.data;
+
+	const db = getDb();
+	const [user] = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
+	if (!user) {
+		throw new ServiceError("User not found", "not-found");
+	}
+
+	let targetPasswordHash = user.passwordHash;
+	if (!targetPasswordHash && process.env.ADMIN_PASSWORD_HASH_B64) {
+		targetPasswordHash = Buffer.from(
+			process.env.ADMIN_PASSWORD_HASH_B64,
+			"base64",
+		).toString("utf8");
+	}
+
+	if (!targetPasswordHash) {
+		throw new ServiceError("No password is currently set", "invalid-input");
+	}
+
+	const ok = await bcrypt.compare(currentPassword, targetPasswordHash);
+	if (!ok) {
+		throw new ServiceError("Current password is incorrect", "invalid-input");
+	}
+
+	const newHash = await bcrypt.hash(newPassword, 10);
+	await db.update(users).set({ passwordHash: newHash }).where(eq(users.uid, uid));
+}
+

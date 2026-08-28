@@ -8,15 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
-import {
 	Form,
 	FormControl,
 	FormDescription,
@@ -32,8 +23,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { userService } from "@/services";
 import type { UserProfile } from "@/services";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Camera, Info, Key, Loader2, Mail, Save, Shield, User } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Camera, Info, Key, Loader2, Save, Shield, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -63,20 +53,12 @@ const passwordFormSchema = z
 		path: ["confirmPassword"],
 	});
 
-// Email verification form schema
-const emailVerificationFormSchema = z.object({
-	password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 type PasswordFormValues = z.infer<typeof passwordFormSchema>;
-type EmailVerificationFormValues = z.infer<typeof emailVerificationFormSchema>;
 
 const CmsProfile = () => {
-	const { user, signOut } = useAuth();
-	const router = useRouter();
+	const { user } = useAuth();
 	const [isLoading, setIsLoading] = useState(false);
-	const [isEmailVerificationOpen, setIsEmailVerificationOpen] = useState(false);
 	const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 	const [isCropperOpen, setIsCropperOpen] = useState(false);
 	const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -135,23 +117,9 @@ const CmsProfile = () => {
 		},
 	});
 
-	// Email verification form
-	const emailVerificationForm = useForm<EmailVerificationFormValues>({
-		resolver: zodResolver(emailVerificationFormSchema),
-		defaultValues: {
-			password: "",
-		},
-	});
-
 	const onProfileSubmit = async (data: ProfileFormValues) => {
 		setIsLoading(true);
 		try {
-			// If the email changed, open the verification dialog instead of saving directly.
-			if (data.email !== displayEmail) {
-				setIsEmailVerificationOpen(true);
-				return;
-			}
-
 			const social = {
 				github: data.github?.trim() || "",
 				twitter: data.twitter?.trim() || "",
@@ -185,23 +153,26 @@ const CmsProfile = () => {
 		}
 	};
 
-	// Password lives in the deployment env (ADMIN_PASSWORD_HASH_B64), not the
-	// database — it can't be changed from the CMS in the single-admin setup.
-	const onPasswordSubmit = (_data: PasswordFormValues) => {
-		passwordForm.reset({
-			currentPassword: "",
-			newPassword: "",
-			confirmPassword: "",
-		});
-		toast.info("Password is managed via the deployment environment and can't be changed here.");
-	};
-
-	// Same for the login email (ADMIN_EMAIL).
-	const onEmailVerificationSubmit = (_data: EmailVerificationFormValues) => {
-		setIsEmailVerificationOpen(false);
-		emailVerificationForm.reset();
-		profileForm.setValue("email", displayEmail);
-		toast.info("Email is managed via the deployment environment and can't be changed here.");
+	const onPasswordSubmit = async (data: PasswordFormValues) => {
+		setIsLoading(true);
+		try {
+			await userService.changePassword({
+				currentPassword: data.currentPassword,
+				newPassword: data.newPassword,
+			});
+			passwordForm.reset({
+				currentPassword: "",
+				newPassword: "",
+				confirmPassword: "",
+			});
+			toast.success("Password updated successfully");
+		} catch (error) {
+			console.error("Error changing password:", error);
+			const message = error instanceof Error ? error.message : "Failed to update password";
+			toast.error(message);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	// Handle file input change with validation
@@ -364,10 +335,16 @@ const CmsProfile = () => {
 												<FormItem>
 													<FormLabel>Email</FormLabel>
 													<FormControl>
-														<Input placeholder="Your email" type="email" {...field} />
+														<Input
+															placeholder="Your email"
+															type="email"
+															disabled
+															className="bg-muted/50 text-muted-foreground cursor-not-allowed"
+															{...field}
+														/>
 													</FormControl>
 													<FormDescription>
-														Changing your email will require verification.
+														Admin login email is configured via the ADMIN_EMAIL environment variable.
 													</FormDescription>
 													<FormMessage />
 												</FormItem>
@@ -568,69 +545,6 @@ const CmsProfile = () => {
 							</CardContent>
 						</Card>
 
-						{/* Danger Zone */}
-						<Card className="border-destructive/50">
-							<CardHeader>
-								<CardTitle className="text-destructive">Danger Zone</CardTitle>
-								<CardDescription>
-									Irreversible and destructive actions for your account.
-								</CardDescription>
-							</CardHeader>
-							<CardContent className="space-y-4">
-								<div className="flex items-center justify-between">
-									<div>
-										<h3 className="font-medium">Delete Account</h3>
-										<p className="text-sm text-muted-foreground">
-											Permanently delete your account and all of your content.
-										</p>
-									</div>
-									<div>
-										<Dialog>
-											<DialogTrigger asChild>
-												<Button variant="destructive" size="sm">
-													Delete Account
-												</Button>
-											</DialogTrigger>
-											<DialogContent>
-												<DialogHeader>
-													<DialogTitle>Are you absolutely sure?</DialogTitle>
-													<DialogDescription>
-														This action cannot be undone. This will permanently delete your account
-														and remove your data from our servers.
-													</DialogDescription>
-												</DialogHeader>
-												<div className="space-y-4 py-4">
-													<Alert variant="destructive">
-														<AlertCircle className="h-4 w-4" />
-														<AlertTitle>Warning</AlertTitle>
-														<AlertDescription>
-															All of your data will be permanently deleted. This action cannot be
-															undone.
-														</AlertDescription>
-													</Alert>
-													<div className="flex items-center space-x-2">
-														<Input placeholder="Type 'delete' to confirm" className="flex-1" />
-													</div>
-												</div>
-												<DialogFooter>
-													<Button variant="outline">Cancel</Button>
-													<Button
-														variant="destructive"
-														onClick={async () => {
-															toast.success("Account deleted");
-															await signOut();
-															router.push("/");
-														}}
-													>
-														Delete Account
-													</Button>
-												</DialogFooter>
-											</DialogContent>
-										</Dialog>
-									</div>
-								</div>
-							</CardContent>
-						</Card>
 					</TabsContent>
 				</Tabs>
 			</div>
@@ -642,62 +556,6 @@ const CmsProfile = () => {
 				onClose={() => setIsCropperOpen(false)}
 				onCropComplete={handleCroppedImage}
 			/>
-
-			{/* Email Verification Dialog */}
-			<Dialog open={isEmailVerificationOpen} onOpenChange={setIsEmailVerificationOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Verify Your Identity</DialogTitle>
-						<DialogDescription>
-							Please enter your current password to verify your identity and update your email
-							address.
-						</DialogDescription>
-					</DialogHeader>
-					<Form {...emailVerificationForm}>
-						<form
-							onSubmit={emailVerificationForm.handleSubmit(onEmailVerificationSubmit)}
-							className="space-y-4"
-						>
-							<FormField
-								control={emailVerificationForm.control}
-								name="password"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Current Password</FormLabel>
-										<FormControl>
-											<Input placeholder="••••••••" type="password" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<DialogFooter>
-								<Button
-									type="button"
-									variant="outline"
-									onClick={() => setIsEmailVerificationOpen(false)}
-									disabled={isLoading}
-								>
-									Cancel
-								</Button>
-								<Button type="submit" disabled={isLoading}>
-									{isLoading ? (
-										<>
-											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-											Verifying...
-										</>
-									) : (
-										<>
-											<Mail className="mr-2 h-4 w-4" />
-											Update Email
-										</>
-									)}
-								</Button>
-							</DialogFooter>
-						</form>
-					</Form>
-				</DialogContent>
-			</Dialog>
 		</>
 	);
 };

@@ -45,3 +45,8 @@ export interface UserSettings {
 }
 
 export type UserSettingsUpdate = Partial<Omit<UserSettings, "updatedAt">>;
+
+export interface ChangePasswordInput {
+	currentPassword: string;
+	newPassword: string;
+}
