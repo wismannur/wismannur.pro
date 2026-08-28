@@ -83,6 +83,12 @@ NEXT_PUBLIC_UMAMI_SCRIPT_URL="..."
 
 # Uploads (optional — needed for CMS image/avatar uploads)
 BLOB_READ_WRITE_TOKEN="..."
+
+# Email (Resend — inbox notifications and client auto-replies)
+RESEND_API_KEY="re_..."
+ADMIN_NOTIFICATION_EMAIL="wismannur.pro@gmail.com"
+RESEND_FROM_NOTIFICATIONS="Wisman Nur <notifications@wismannur.pro>"
+RESEND_FROM_HI="Wisman Nur <hi@wismannur.pro>"
 ```
 
 > **Why base64?** bcrypt hashes contain `$`, which Next's `.env` loader mangles through variable expansion. Generate the value with:
@@ -100,7 +106,8 @@ pnpm db:migrate   # apply migrations from src/db/migrations
 ### 4. Run
 
 ```bash
-pnpm dev          # http://localhost:7000
+pnpm dev          # Run dev with Neon development database (http://localhost:7000)
+pnpm dev --prod   # Run dev connected to Neon production / main branch (or: pnpm dev:prod)
 ```
 
 Log in to the CMS at `/login` with the `ADMIN_EMAIL` / password you configured, then start filling in content.
@@ -109,7 +116,8 @@ Log in to the CMS at `/login` with the `ADMIN_EMAIL` / password you configured, 
 
 | Command | Description |
 | --- | --- |
-| `pnpm dev` | Dev server on port **7000** |
+| `pnpm dev` | Dev server with Neon development database (port **7000**) |
+| `pnpm dev --prod` | Dev server connected to Neon production / main database branch (alias: `pnpm dev:prod`) |
 | `pnpm build` | Runs pending DB migrations, then `next build` |
 | `pnpm start` | Serve the production build |
 | `pnpm lint` | ESLint |

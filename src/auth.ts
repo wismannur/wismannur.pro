@@ -26,25 +26,37 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 					.toLowerCase();
 				const password = String(credentials?.password ?? "");
 				const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-				// base64-encoded because bcrypt hashes contain `$`, which Next's
-				// .env loader (dotenv-expand) mangles via variable expansion.
-				const passwordHash = Buffer.from(
-					process.env.ADMIN_PASSWORD_HASH_B64 ?? "",
-					"base64",
-				).toString("utf8");
-				if (!adminEmail || !passwordHash) {
-					console.error("Auth is not configured: set ADMIN_EMAIL and ADMIN_PASSWORD_HASH_B64");
+				if (!adminEmail) {
+					console.error("Auth is not configured: set ADMIN_EMAIL");
 					return null;
 				}
 				if (email !== adminEmail) return null;
-				const ok = await bcrypt.compare(password, passwordHash);
-				if (!ok) return null;
 
 				const [profile] = await getDb()
 					.select()
 					.from(schema.users)
 					.where(eq(schema.users.email, adminEmail))
 					.limit(1);
+
+				// Priority: 1. DB password_hash, 2. ADMIN_PASSWORD_HASH_B64 env fallback
+				let targetPasswordHash = profile?.passwordHash;
+				if (!targetPasswordHash && process.env.ADMIN_PASSWORD_HASH_B64) {
+					targetPasswordHash = Buffer.from(
+						process.env.ADMIN_PASSWORD_HASH_B64,
+						"base64",
+					).toString("utf8");
+				}
+
+				if (!targetPasswordHash) {
+					console.error(
+						"Auth is not configured: no password hash in database or ADMIN_PASSWORD_HASH_B64",
+					);
+					return null;
+				}
+
+				const ok = await bcrypt.compare(password, targetPasswordHash);
+				if (!ok) return null;
+
 				return {
 					id: profile?.uid ?? "admin",
 					email: adminEmail,

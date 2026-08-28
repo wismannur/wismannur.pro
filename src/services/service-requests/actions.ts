@@ -9,6 +9,7 @@ import { countRows } from "@/db/sort";
 import { ServiceError } from "../core/base-service";
 import { assertSubmissionAllowed } from "../core/rate-limit";
 import { assertHuman } from "../core/recaptcha";
+import { sendServiceRequestEmails } from "../core/resend";
 import type { NewServiceRequest, ServiceRequest } from "./types";
 
 // Server actions backing `serviceRequestService`. `submit` is the public
@@ -83,6 +84,9 @@ export async function submit(data: NewServiceRequest, recaptchaToken?: string): 
 		.insert(serviceRequests)
 		.values({ ...clean, status: "new" })
 		.returning({ id: serviceRequests.id });
+
+	await sendServiceRequestEmails(clean);
+
 	return id;
 }
 

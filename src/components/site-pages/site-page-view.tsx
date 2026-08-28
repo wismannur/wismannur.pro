@@ -38,7 +38,7 @@ export function SitePageView({ title, lastUpdatedLabel, content, icon }: SitePag
 		<div className="container max-w-4xl mx-auto py-16 px-4">
 			<div className="flex items-center gap-2 mb-8">
 				<Button variant="ghost" size="sm" asChild className="rounded-full">
-					<Link href="/" className="flex items-center gap-2">
+					<Link href="/" data-umami-event="legal-back-home-click" className="flex items-center gap-2">
 						<ArrowLeft size={16} />
 						Back to Home
 					</Link>

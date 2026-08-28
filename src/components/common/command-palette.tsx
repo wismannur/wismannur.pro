@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/command";
 import { useTheme } from "@/hooks/use-theme";
 import { toast } from "@/components/ui/use-toast";
+import { trackEvent } from "@/lib/umami";
 import { blogService, projectService } from "@/services";
 import type { Blog } from "@/services/blog/types";
 import type { Project } from "@/services/project/types";
@@ -89,14 +90,18 @@ export function CommandPalette({
 		}
 	}, [open, projects.length, blogs.length, enableBlog]);
 
-	const runCommand = React.useCallback((command: () => void) => {
+	const runCommand = React.useCallback((command: () => void, label?: string) => {
 		setOpen(false);
+		if (label) {
+			trackEvent("command-palette-select", { label });
+		}
 		command();
 	}, []);
 
 	const copyEmail = () => {
 		navigator.clipboard.writeText(publicEmail);
 		setHasCopied(true);
+		trackEvent("command-palette-copy-email", { email: publicEmail });
 		toast({
 			title: "Email copied to clipboard!",
 			description: publicEmail,
@@ -117,11 +122,13 @@ export function CommandPalette({
 					<CommandItem
 						onSelect={() =>
 							runCommand(() => {
-								setTheme(isDark ? "light" : "dark");
+								const nextTheme = isDark ? "light" : "dark";
+								setTheme(nextTheme);
+								trackEvent("theme-toggle", { theme: nextTheme, source: "command-palette" });
 								toast({
-									title: `Switched to ${isDark ? "Light" : "Dark"} mode`,
+									title: `Switched to ${nextTheme === "light" ? "Light" : "Dark"} mode`,
 								});
-							})
+							}, "Toggle Theme")
 						}
 					>
 						{isDark ? (
@@ -137,7 +144,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								copyEmail();
-							})
+							}, "Copy Email")
 						}
 					>
 						{hasCopied ? (
@@ -152,7 +159,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/hire-me");
-							})
+							}, "Hire Me")
 						}
 					>
 						<Sparkles className="mr-2 h-4 w-4 text-amber-500 animate-pulse" />
@@ -168,7 +175,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/");
-							})
+							}, "Nav: Home")
 						}
 					>
 						<Home className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -180,7 +187,7 @@ export function CommandPalette({
 							onSelect={() =>
 								runCommand(() => {
 									router.push("/blog");
-								})
+								}, "Nav: Blog")
 							}
 						>
 							<BookOpen className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -192,7 +199,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/projects");
-							})
+							}, "Nav: Projects")
 						}
 					>
 						<FolderGit2 className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -203,7 +210,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/services");
-							})
+							}, "Nav: Services")
 						}
 					>
 						<Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -214,7 +221,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/about");
-							})
+							}, "Nav: About")
 						}
 					>
 						<User className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -225,7 +232,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/cv");
-							})
+							}, "Nav: CV")
 						}
 					>
 						<FileText className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -236,7 +243,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/contact");
-							})
+							}, "Nav: Contact")
 						}
 					>
 						<Mail className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -247,7 +254,7 @@ export function CommandPalette({
 						onSelect={() =>
 							runCommand(() => {
 								router.push("/login");
-							})
+							}, "Nav: Login")
 						}
 					>
 						<ShieldCheck className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -266,7 +273,7 @@ export function CommandPalette({
 									onSelect={() =>
 										runCommand(() => {
 											router.push(`/projects/${project.slug}`);
-										})
+										}, `Project: ${project.title}`)
 									}
 								>
 									<Code2 className="mr-2 h-4 w-4 text-primary" />
@@ -291,7 +298,7 @@ export function CommandPalette({
 									onSelect={() =>
 										runCommand(() => {
 											router.push(`/blog/${blog.slug}`);
-										})
+										}, `Blog: ${blog.title}`)
 									}
 								>
 									<BookOpen className="mr-2 h-4 w-4 text-primary" />

@@ -9,12 +9,17 @@ import {
 	Calendar,
 	CheckCircle,
 	Clock,
+	CornerDownRight,
 	DollarSign,
 	Eye,
 	Filter,
+	Loader2,
 	Mail,
+	MessageSquare,
 	RefreshCw,
 	Search,
+	Send,
+	User,
 	XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -40,8 +45,9 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { useLoadingState } from "@/hooks/use-loading-state";
-import { serviceRequestService, type ServiceRequest } from "@/services";
+import { serviceRequestService, inquiryMessagesService, type ServiceRequest, type InquiryMessage } from "@/services";
 
 export default function CmsServicesPage() {
 	const [currentPage, setCurrentPage] = useState(1);
@@ -51,12 +57,24 @@ export default function CmsServicesPage() {
 	const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
 	const [isDetailOpen, setIsDetailOpen] = useState(false);
 	const [filteredRequests, setFilteredRequests] = useState<ServiceRequest[]>([]);
+	const [threadMessages, setThreadMessages] = useState<InquiryMessage[]>([]);
+	const [replyMessage, setReplyMessage] = useState("");
+	const [isSendingReply, setIsSendingReply] = useState(false);
 	const { withLoading } = useLoadingState();
 
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["serviceRequests", currentPage, filterStatus],
 		queryFn: () => serviceRequestService.getRequests(currentPage, null, filterStatus || undefined),
 	});
+
+	const loadThread = async (requestId: string) => {
+		try {
+			const messages = await inquiryMessagesService.getThreadMessages(requestId);
+			setThreadMessages(messages);
+		} catch (err) {
+			console.error("Failed to load service request thread:", err);
+		}
+	};
 
 	useEffect(() => {
 		if (data) {
@@ -90,6 +108,8 @@ export default function CmsServicesPage() {
 
 			if (request) {
 				setSelectedRequest(request);
+				setReplyMessage("");
+				loadThread(id);
 				setIsDetailOpen(true);
 
 				// Mark as in-progress if it's new
@@ -101,6 +121,35 @@ export default function CmsServicesPage() {
 		} catch (error) {
 			console.error("Error fetching service request details:", error);
 			toast.error("Failed to load service request details");
+		}
+	};
+
+	const handleSendReply = async () => {
+		if (!selectedRequest || !replyMessage.trim()) return;
+
+		setIsSendingReply(true);
+		try {
+			await inquiryMessagesService.sendAdminReply({
+				inquiryId: selectedRequest.id,
+				inquiryType: "service_request",
+				toEmail: selectedRequest.email,
+				toName: selectedRequest.name,
+				subject: selectedRequest.serviceType,
+				message: replyMessage.trim(),
+				originalMessageSnippet: selectedRequest.projectDetails,
+			});
+
+			toast.success("Balasan email berhasil dikirim ke klien!");
+			setReplyMessage("");
+			loadThread(selectedRequest.id);
+			setSelectedRequest({ ...selectedRequest, status: "in-progress" });
+			refetch();
+		} catch (error) {
+			console.error("Error sending reply:", error);
+			const msg = error instanceof Error ? error.message : "Gagal mengirim balasan email";
+			toast.error(msg);
+		} finally {
+			setIsSendingReply(false);
 		}
 	};
 
@@ -349,53 +398,71 @@ export default function CmsServicesPage() {
 				keyField="id"
 			/>
 
-			{/* Service Request Detail Dialog */}
+			{/* Service Request Detail & Conversation Thread Dialog */}
 			<Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-				<DialogContent className="sm:max-w-2xl">
-					<DialogHeader>
-						<DialogTitle>Service Request</DialogTitle>
+				<DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
+					<DialogHeader className="px-6 pt-6 pb-2">
+						<DialogTitle className="flex items-center gap-2">
+							<MessageSquare className="h-5 w-5 text-primary" />
+							<span>Project Request & Conversation</span>
+						</DialogTitle>
 						<DialogDescription>
-							Request from {selectedRequest?.name} ({selectedRequest?.email})
+							Thread percakapan dengan {selectedRequest?.name} ({selectedRequest?.email})
 						</DialogDescription>
 					</DialogHeader>
 
 					{selectedRequest && (
-						<div className="space-y-4">
-							<div className="flex justify-between items-center">
-								<div className="text-sm text-muted-foreground">
-									<Calendar className="inline-block h-3.5 w-3.5 mr-1.5 -mt-0.5" />
-									{formatDate(selectedRequest.createdAt)}
+						<div className="flex-1 overflow-y-auto px-6 py-2 space-y-5">
+							{/* Status & Date bar */}
+							<div className="flex justify-between items-center bg-muted/20 p-3 rounded-lg border border-border/40">
+								<div className="text-xs text-muted-foreground flex items-center gap-1.5">
+									<Calendar className="h-3.5 w-3.5" />
+									<span>Diajukan: {formatDate(selectedRequest.createdAt)}</span>
 								</div>
 								{getStatusBadge(selectedRequest.status)}
 							</div>
 
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<div className="bg-muted/30 p-4 rounded-lg">
-									<div className="font-medium mb-2">Service Details</div>
-									<div className="space-y-2 text-sm">
-										<div>
-											<span className="text-muted-foreground">Service Type:</span>{" "}
-											{getServiceTypeLabel(selectedRequest.serviceType)}
+							{/* Client & Project Overview Cards */}
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+								<div className="border border-border/60 rounded-xl p-3.5 bg-card/60 space-y-2">
+									<div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+										<Briefcase className="h-3.5 w-3.5 text-primary" />
+										<span>Detail Layanan</span>
+									</div>
+									<div className="space-y-1.5 text-xs">
+										<div className="flex justify-between">
+											<span className="text-muted-foreground">Layanan:</span>
+											<span className="font-medium text-foreground">
+												{getServiceTypeLabel(selectedRequest.serviceType)}
+											</span>
 										</div>
-										<div>
-											<span className="text-muted-foreground">Budget:</span>{" "}
-											{getBudgetLabel(selectedRequest.budget)}
+										<div className="flex justify-between">
+											<span className="text-muted-foreground">Estimasi Budget:</span>
+											<span className="font-medium text-foreground">
+												{getBudgetLabel(selectedRequest.budget)}
+											</span>
 										</div>
-										<div>
-											<span className="text-muted-foreground">Timeframe:</span>{" "}
-											{getTimeframeLabel(selectedRequest.timeframe)}
+										<div className="flex justify-between">
+											<span className="text-muted-foreground">Target Waktu:</span>
+											<span className="font-medium text-foreground">
+												{getTimeframeLabel(selectedRequest.timeframe)}
+											</span>
 										</div>
 									</div>
 								</div>
 
-								<div className="bg-muted/30 p-4 rounded-lg">
-									<div className="font-medium mb-2">Client Information</div>
-									<div className="space-y-2 text-sm">
-										<div>
-											<span className="text-muted-foreground">Name:</span> {selectedRequest.name}
+								<div className="border border-border/60 rounded-xl p-3.5 bg-card/60 space-y-2">
+									<div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+										<User className="h-3.5 w-3.5 text-primary" />
+										<span>Informasi Klien</span>
+									</div>
+									<div className="space-y-1.5 text-xs">
+										<div className="flex justify-between">
+											<span className="text-muted-foreground">Nama:</span>
+											<span className="font-medium text-foreground">{selectedRequest.name}</span>
 										</div>
-										<div>
-											<span className="text-muted-foreground">Email:</span>{" "}
+										<div className="flex justify-between">
+											<span className="text-muted-foreground">Email:</span>
 											<a
 												href={`mailto:${selectedRequest.email}`}
 												className="text-primary hover:underline"
@@ -404,26 +471,123 @@ export default function CmsServicesPage() {
 											</a>
 										</div>
 										{selectedRequest.company && (
-											<div>
-												<span className="text-muted-foreground">Company:</span>{" "}
-												{selectedRequest.company}
+											<div className="flex justify-between">
+												<span className="text-muted-foreground">Perusahaan:</span>
+												<span className="font-medium text-foreground">
+													{selectedRequest.company}
+												</span>
 											</div>
 										)}
 									</div>
 								</div>
 							</div>
 
-							<div>
-								<h3 className="text-lg font-semibold mb-2">Project Details</h3>
-								<Separator className="my-2" />
-								<div className="whitespace-pre-wrap text-muted-foreground bg-muted/20 p-4 rounded-lg max-h-60 overflow-y-auto">
+							{/* Original Project Details */}
+							<div className="border border-border/60 rounded-xl p-4 bg-card/60 shadow-sm space-y-2">
+								<div className="flex items-center justify-between">
+									<span className="font-semibold text-xs text-foreground">
+										Rincian Kebutuhan Proyek:
+									</span>
+									<Badge variant="outline" className="text-[10px]">
+										Inquiry Awal
+									</Badge>
+								</div>
+								<div className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed bg-background/50 p-3 rounded-lg border border-border/30">
 									{selectedRequest.projectDetails}
+								</div>
+							</div>
+
+							{/* Thread Conversation History */}
+							{threadMessages.length > 0 && (
+								<div className="space-y-3 pt-2">
+									<div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+										<CornerDownRight className="h-3.5 w-3.5 text-primary" />
+										<span>Riwayat Balasan ({threadMessages.length})</span>
+									</div>
+
+									<div className="space-y-3">
+										{threadMessages.map((msg) => {
+											const isAdmin = msg.senderType === "admin";
+											return (
+												<div
+													key={msg.id}
+													className={`rounded-xl p-4 text-xs transition-all border ${
+														isAdmin
+															? "bg-primary/5 border-primary/20 ml-6 md:ml-12"
+															: "bg-muted/40 border-border/50 mr-6 md:mr-12"
+													}`}
+												>
+													<div className="flex justify-between items-center mb-1.5">
+														<div className="flex items-center gap-1.5 font-semibold">
+															<span className={isAdmin ? "text-primary" : "text-foreground"}>
+																{isAdmin ? "Wisman Nur (Admin)" : msg.senderName}
+															</span>
+															<span className="text-[10px] text-muted-foreground font-normal">
+																({msg.senderEmail})
+															</span>
+														</div>
+														<span className="text-[10px] text-muted-foreground">
+															{formatDate(msg.createdAt)}
+														</span>
+													</div>
+													<div className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
+														{msg.message}
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								</div>
+							)}
+
+							{/* Reply Box */}
+							<div className="border border-border/60 rounded-xl p-4 bg-muted/10 space-y-3">
+								<div className="flex justify-between items-center">
+									<label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+										<Mail className="h-3.5 w-3.5 text-primary" />
+										<span>Kirim Balasan Email ke Klien</span>
+									</label>
+									<span className="text-[11px] text-muted-foreground">
+										Dikirim dari: <strong className="text-primary">hi@wismannur.pro</strong>
+									</span>
+								</div>
+
+								<Textarea
+									placeholder={`Tulis estimasi, pertanyaan, atau tawaran kerja sama untuk ${selectedRequest.name}... (Akan dikirimkan ke ${selectedRequest.email})`}
+									value={replyMessage}
+									onChange={(e) => setReplyMessage(e.target.value)}
+									rows={4}
+									className="text-xs resize-none rounded-lg border-border/60 focus-visible:ring-primary/30"
+								/>
+
+								<div className="flex justify-between items-center">
+									<span className="text-[11px] text-muted-foreground">
+										Klien dapat langsung membalas email Anda via inbox mereka.
+									</span>
+									<Button
+										size="sm"
+										onClick={handleSendReply}
+										disabled={isSendingReply || !replyMessage.trim()}
+										className="rounded-lg text-xs"
+									>
+										{isSendingReply ? (
+											<>
+												<Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+												Mengirim...
+											</>
+										) : (
+											<>
+												<Send className="h-3.5 w-3.5 mr-1.5" />
+												Kirim Balasan Email
+											</>
+										)}
+									</Button>
 								</div>
 							</div>
 						</div>
 					)}
 
-					<DialogFooter className="flex-col sm:flex-row gap-2">
+					<DialogFooter className="px-6 py-3 border-t border-border/40 bg-muted/10 flex-col sm:flex-row gap-2 justify-between">
 						<div className="flex gap-2 w-full sm:w-auto">
 							<Button
 								variant="outline"
@@ -432,10 +596,10 @@ export default function CmsServicesPage() {
 									selectedRequest && handleUpdateStatus(selectedRequest.id, "in-progress")
 								}
 								disabled={selectedRequest?.status === "in-progress"}
-								className="flex-1"
+								className="flex-1 text-xs"
 							>
-								<Clock className="h-4 w-4 mr-2" />
-								Mark In Progress
+								<Clock className="h-3.5 w-3.5 mr-1.5" />
+								In Progress
 							</Button>
 
 							<Button
@@ -445,10 +609,10 @@ export default function CmsServicesPage() {
 									selectedRequest && handleUpdateStatus(selectedRequest.id, "completed")
 								}
 								disabled={selectedRequest?.status === "completed"}
-								className="flex-1"
+								className="flex-1 text-xs"
 							>
-								<CheckCircle className="h-4 w-4 mr-2" />
-								Mark Completed
+								<CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+								Completed
 							</Button>
 
 							<Button
@@ -458,18 +622,20 @@ export default function CmsServicesPage() {
 									selectedRequest && handleUpdateStatus(selectedRequest.id, "cancelled")
 								}
 								disabled={selectedRequest?.status === "cancelled"}
-								className="flex-1 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+								className="flex-1 text-xs hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
 							>
-								<XCircle className="h-4 w-4 mr-2" />
+								<XCircle className="h-3.5 w-3.5 mr-1.5" />
 								Cancel
 							</Button>
 						</div>
 
-						<Button asChild className="w-full sm:w-auto">
-							<a href={`mailto:${selectedRequest?.email}`}>
-								<Mail className="h-4 w-4 mr-2" />
-								Reply via Email
-							</a>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => setIsDetailOpen(false)}
+							className="text-xs"
+						>
+							Tutup
 						</Button>
 					</DialogFooter>
 				</DialogContent>

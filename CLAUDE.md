@@ -7,7 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-pnpm dev          # dev server on port 7000 (not 3000)
+pnpm dev          # dev server with Neon development DB (port 7000)
+pnpm dev --prod   # dev server with Neon production DB / main branch (alias: pnpm dev:prod)
 pnpm build        # runs drizzle-kit migrate FIRST, then next build — needs DATABASE_URL
 pnpm lint         # eslint
 pnpm exec tsc --noEmit   # typecheck (no test suite exists in this repo)
@@ -17,7 +18,7 @@ pnpm db:migrate   # apply migrations (needs DATABASE_URL in .env.local)
 pnpm db:studio    # browse the DB
 ```
 
-Environment lives in `.env.local` (never committed). Required: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH_B64`. The password hash is base64-encoded because bcrypt hashes contain `$`, which Next's env loader mangles via variable expansion. See README for the full list.
+Environment lives in `.env.local` (never committed). You can configure `DATABASE_URL` (or `DATABASE_URL_DEV` and `DATABASE_URL_PROD` for easy switching between Neon branches). Required: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH_B64`. The password hash is base64-encoded because bcrypt hashes contain `$`, which Next's env loader mangles via variable expansion. See README for the full list.
 
 ## Architecture
 

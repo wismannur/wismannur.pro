@@ -228,6 +228,7 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 									<Button
 										type="submit"
 										size="lg"
+										data-umami-event="contact-form-submit-click"
 										className="w-full md:w-auto px-8 rounded-full shadow-lg shadow-primary/20 group"
 										disabled={mutation.isPending || isSubmitting}
 									>

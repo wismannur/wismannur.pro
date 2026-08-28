@@ -10,4 +10,7 @@ export const userService = {
 	updateAvatar: actions.updateAvatar,
 	getSettings: actions.getSettings,
 	updateSettings: actions.updateSettings,
+	changePassword: actions.changePassword,
 };
+
+export type { ChangePasswordInput, UserProfile, UserProfileUpdate, UserSettings, UserSettingsUpdate } from "./types";

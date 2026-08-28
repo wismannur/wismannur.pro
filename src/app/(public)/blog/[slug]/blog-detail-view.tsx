@@ -6,7 +6,6 @@ import AuthorBio from "@/components/detail/author-bio";
 import ContentHeader from "@/components/detail/content-header";
 import ContentSkeleton from "@/components/detail/content-skeleton";
 import FeaturedImage from "@/components/detail/featured-image";
-import NewsletterSignup from "@/components/detail/newsletter-signup";
 import ReadingProgress from "@/components/detail/reading-progress";
 import SocialShareBar from "@/components/detail/social-share-bar";
 import { Separator } from "@/components/ui/separator";
@@ -174,8 +173,6 @@ export function BlogDetailView({ slug }: { slug: string }) {
 								containerRef={contentRef}
 								className="bg-background border border-border/40 rounded-xl shadow-sm"
 							/>
-
-							<NewsletterSignup />
 						</div>
 					</aside>
 				</div>

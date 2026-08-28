@@ -293,11 +293,19 @@ export const Footer = ({ settings }: { settings: SiteSettings }) => {
 					</div>
 
 					<div className="flex items-center gap-3 text-xs">
-						<Link href="/privacy-policy" className="hover:text-primary transition-colors">
+						<Link
+							href="/privacy-policy"
+							data-umami-event="footer-privacy-policy-click"
+							className="hover:text-primary transition-colors"
+						>
 							Privacy Policy
 						</Link>
 						<span>•</span>
-						<Link href="/terms-of-service" className="hover:text-primary transition-colors">
+						<Link
+							href="/terms-of-service"
+							data-umami-event="footer-terms-of-service-click"
+							className="hover:text-primary transition-colors"
+						>
 							Terms of Service
 						</Link>
 						{settings.repoUrl && (
