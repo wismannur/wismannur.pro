@@ -19,6 +19,7 @@ export { skillsService } from "./skills";
 export { testimonialsService } from "./testimonials";
 export { userService } from "./user";
 export { jobTrackerService } from "./job-tracker";
+export { inquiryMessagesService } from "./inquiry-messages";
 
 // Export all domain types
 export * from "./availability/types";
@@ -40,3 +41,4 @@ export * from "./skills/types";
 export * from "./testimonials/types";
 export * from "./user/types";
 export * from "./job-tracker/types";
+export * from "./inquiry-messages/types";

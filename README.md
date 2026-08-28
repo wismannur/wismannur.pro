@@ -83,6 +83,12 @@ NEXT_PUBLIC_UMAMI_SCRIPT_URL="..."
 
 # Uploads (optional — needed for CMS image/avatar uploads)
 BLOB_READ_WRITE_TOKEN="..."
+
+# Email (Resend — inbox notifications and client auto-replies)
+RESEND_API_KEY="re_..."
+ADMIN_NOTIFICATION_EMAIL="wismannur.pro@gmail.com"
+RESEND_FROM_NOTIFICATIONS="Wisman Nur <notifications@wismannur.pro>"
+RESEND_FROM_HI="Wisman Nur <hi@wismannur.pro>"
 ```
 
 > **Why base64?** bcrypt hashes contain `$`, which Next's `.env` loader mangles through variable expansion. Generate the value with:

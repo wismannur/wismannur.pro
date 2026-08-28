@@ -9,6 +9,7 @@ import { countRows } from "@/db/sort";
 import { ServiceError } from "../core/base-service";
 import { assertSubmissionAllowed } from "../core/rate-limit";
 import { assertHuman } from "../core/recaptcha";
+import { sendContactEmails } from "../core/resend";
 import type { Contact, ContactForm } from "./types";
 
 // Server actions backing `contactService`. `submit` is the public contact
@@ -75,5 +76,8 @@ export async function submit(formData: ContactForm, recaptchaToken?: string): Pr
 		.insert(contacts)
 		.values({ ...clean, status: "new" })
 		.returning({ id: contacts.id });
+
+	await sendContactEmails(clean);
+
 	return id;
 }
