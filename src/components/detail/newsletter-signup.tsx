@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { Mail, Sparkles, Check } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { trackEvent } from "@/lib/umami";
 
 const NewsletterSignup = () => {
 	const [email, setEmail] = useState("");
@@ -18,10 +19,13 @@ const NewsletterSignup = () => {
 				title: "Please enter a valid email",
 				variant: "destructive",
 			});
+			trackEvent("newsletter-subscribe-error", { reason: "invalid_email" });
 			return;
 		}
 
+		trackEvent("newsletter-subscribe-attempt");
 		setIsSubmitted(true);
+		trackEvent("newsletter-subscribe-success");
 		toast({
 			title: "Subscribed successfully!",
 			description: "Thanks for joining. You will receive new updates.",
@@ -59,6 +63,7 @@ const NewsletterSignup = () => {
 				/>
 				<Button
 					type="submit"
+					data-umami-event="newsletter-subscribe-click"
 					className="w-full h-9 rounded-xl text-xs font-semibold shadow-sm"
 					disabled={isSubmitted}
 				>

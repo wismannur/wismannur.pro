@@ -2,8 +2,7 @@
 
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { useAuth } from "@/contexts/auth-context";
-import { trackEvent } from "@/lib/umami";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 interface ProtectedRouteProps {
@@ -22,18 +21,7 @@ export const ProtectedRoute = ({
 	redirectPath = "/login",
 }: ProtectedRouteProps) => {
 	const { user, loading: isLoading, error } = useAuth();
-	const pathname = usePathname();
 	const router = useRouter();
-
-	// Track unauthorized access attempts
-	useEffect(() => {
-		if (requireAuth && !user && !isLoading) {
-			trackEvent("unauthorized_access_attempt", {
-				path: pathname,
-				timestamp: new Date().toISOString(),
-			});
-		}
-	}, [user, isLoading, pathname, requireAuth]);
 
 	// Perform redirects as a side-effect once auth has resolved.
 	useEffect(() => {

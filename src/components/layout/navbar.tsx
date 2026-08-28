@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { openCommandPalette } from "@/components/common/command-palette";
 import { useAuth } from "@/contexts/auth-context";
 import { useTheme } from "@/hooks/use-theme";
+import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
 
 const baseNavLinks = [
@@ -72,9 +73,7 @@ export const Navbar = ({
 	const toggleTheme = () => {
 		const nextTheme = isDark ? "light" : "dark";
 		setTheme(nextTheme);
-		if (typeof window !== "undefined" && window.umami) {
-			window.umami.track("theme-toggle", { theme: nextTheme });
-		}
+		trackEvent("theme-toggle", { theme: nextTheme, source: "navbar" });
 	};
 
 	return (

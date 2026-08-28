@@ -69,6 +69,8 @@ const ProjectFilters = ({
 							<button
 								type="button"
 								onClick={() => setSelectedTech(null)}
+								data-umami-event="project-filter-clear-tech"
+								data-umami-event-tech={selectedTech}
 								className="ml-1.5 hover:text-red-500"
 								aria-label="Clear tech filter"
 							>
@@ -82,6 +84,7 @@ const ProjectFilters = ({
 							setSearchTerm("");
 							setSelectedTech(null);
 						}}
+						data-umami-event="project-filter-reset"
 						className="text-primary hover:underline ml-2 font-medium"
 					>
 						Reset

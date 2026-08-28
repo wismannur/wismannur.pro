@@ -218,6 +218,7 @@ export function HireMeView({
 						<div className="flex flex-wrap gap-3.5 justify-center animate-fade-in">
 							<Button
 								size="lg"
+								data-umami-event="hire-me-start-project-hero-click"
 								className="rounded-full px-7 h-12 text-xs md:text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
 								onClick={() => {
 									const contactForm = document.getElementById("contact-form");
@@ -233,6 +234,7 @@ export function HireMeView({
 							<Button
 								variant="outline"
 								size="lg"
+								data-umami-event="hire-me-view-packages-click"
 								className="rounded-full px-7 h-12 text-xs md:text-sm font-semibold border-border/60 bg-card/70 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/40 hover:text-primary shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group"
 								onClick={() => {
 									const servicesSection = document.getElementById("services-section");
@@ -295,7 +297,7 @@ export function HireMeView({
 								</div>
 
 								<Button size="lg" className="rounded-full px-8 w-full md:w-auto shadow-md" asChild>
-									<Link href="/contact">
+									<Link href="/contact" data-umami-event="hire-me-direct-contact-click">
 										<MessageSquare size={16} className="mr-2" />
 										Direct Contact
 									</Link>
@@ -322,16 +324,23 @@ export function HireMeView({
 						className="text-center mb-14"
 					/>
 
-					<Tabs defaultValue="services" className="w-full" onValueChange={setActiveTab}>
+					<Tabs defaultValue="services" className="w-full" onValueChange={(val) => {
+						setActiveTab(val);
+						trackEvent("hire-me-tab-change", { tab: val });
+					}}>
 						<TabsList className="grid w-full max-w-xs mx-auto grid-cols-2 mb-12 p-1 bg-muted/60 rounded-full border border-border/40">
 							<TabsTrigger
 								value="services"
+								data-umami-event="hire-me-tab-click"
+								data-umami-event-tab="services"
 								className="rounded-full text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 							>
 								Packages
 							</TabsTrigger>
 							<TabsTrigger
 								value="expertise"
+								data-umami-event="hire-me-tab-click"
+								data-umami-event-tab="expertise"
 								className="rounded-full text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
 							>
 								Expertise
@@ -385,6 +394,8 @@ export function HireMeView({
 													variant={isSelected ? "default" : "outline"}
 													className="w-full rounded-xl text-xs font-semibold h-10"
 													onClick={() => handleServiceSelect(tier.slug)}
+													data-umami-event="hire-me-select-package-click"
+													data-umami-event-package={tier.slug}
 												>
 													{tier.ctaLabel || "Select Package"}
 												</Button>
@@ -764,6 +775,7 @@ export function HireMeView({
 								<Button
 									type="submit"
 									size="lg"
+									data-umami-event="hire-me-form-submit-click"
 									className="w-full md:w-auto px-8 rounded-full shadow-lg shadow-primary/20 group"
 									disabled={mutation.isPending || isSubmitting}
 								>

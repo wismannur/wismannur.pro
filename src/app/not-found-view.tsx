@@ -97,13 +97,13 @@ export function NotFoundView({
 						variants={itemVariants}
 					>
 						<Button asChild size="lg" className="rounded-full">
-							<Link href="/" className="flex items-center gap-2">
+							<Link href="/" data-umami-event="not-found-home-click" className="flex items-center gap-2">
 								<Home size={16} />
 								{copy.primaryLabel}
 							</Link>
 						</Button>
 						<Button asChild variant="outline" size="lg" className="rounded-full">
-							<Link href="/contact" className="flex items-center gap-2">
+							<Link href="/contact" data-umami-event="not-found-contact-click" className="flex items-center gap-2">
 								{copy.secondaryLabel}
 								<ArrowRight size={16} />
 							</Link>
@@ -190,6 +190,8 @@ export function NotFoundView({
 								<Link
 									key={link.path}
 									href={link.path}
+									data-umami-event="not-found-quick-link-click"
+									data-umami-event-label={link.title}
 									className="px-4 py-2 rounded-lg bg-background/80 hover:bg-primary/10 border border-border text-center transition-colors"
 								>
 									{link.title}

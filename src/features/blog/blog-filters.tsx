@@ -44,6 +44,7 @@ const BlogFilters = ({
 						<button
 							type="button"
 							onClick={() => setSearchTerm("")}
+							data-umami-event="blog-filter-clear-search"
 							className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
 							aria-label="Clear search"
 						>
@@ -95,6 +96,7 @@ const BlogFilters = ({
 							<button
 								type="button"
 								onClick={() => setSearchTerm("")}
+								data-umami-event="blog-filter-clear-search-chip"
 								className="ml-1.5 hover:text-red-500"
 								aria-label="Clear search filter"
 							>
@@ -108,6 +110,8 @@ const BlogFilters = ({
 							<button
 								type="button"
 								onClick={() => setSelectedTag(null)}
+								data-umami-event="blog-filter-clear-tag-chip"
+								data-umami-event-tag={selectedTag}
 								className="ml-1.5 hover:text-red-500"
 								aria-label="Clear tag filter"
 							>
@@ -121,6 +125,7 @@ const BlogFilters = ({
 							setSearchTerm("");
 							setSelectedTag(null);
 						}}
+						data-umami-event="blog-filter-clear-all"
 						className="text-primary hover:underline ml-2 font-medium"
 					>
 						Clear all
