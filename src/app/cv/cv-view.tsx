@@ -135,9 +135,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
 	const toggleTheme = () => {
 		const nextTheme = isDark ? "light" : "dark";
 		setTheme(nextTheme);
-		if (typeof window !== "undefined" && window.umami) {
-			window.umami.track("theme-toggle", { theme: nextTheme, source: "cv-page" });
-		}
+		trackEvent("theme-toggle", { theme: nextTheme, source: "cv-page" });
 	};
 
 	const handlePrint = () => {
@@ -204,7 +202,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
 							size="sm"
 							className="rounded-full text-xs text-muted-foreground hover:text-primary font-medium px-3 h-9 hidden sm:inline-flex"
 						>
-							<Link href="/about">About</Link>
+							<Link href="/about" data-umami-event="cv-about-click">About</Link>
 						</Button>
 						<Button
 							asChild
@@ -212,7 +210,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
 							size="sm"
 							className="rounded-full text-xs text-muted-foreground hover:text-primary font-medium px-3 h-9 hidden sm:inline-flex"
 						>
-							<Link href="/projects">Projects</Link>
+							<Link href="/projects" data-umami-event="cv-projects-click">Projects</Link>
 						</Button>
 					</div>
 

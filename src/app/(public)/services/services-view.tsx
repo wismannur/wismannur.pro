@@ -221,6 +221,8 @@ export function ServicesView({
 											variant={isSelected ? "default" : "outline"}
 											className="w-full rounded-xl text-xs font-semibold h-10"
 											onClick={() => handleServiceSelect(service.slug)}
+											data-umami-event="services-card-select-click"
+											data-umami-event-service={service.slug}
 										>
 											{isSelected ? "Selected for Inquiry" : "Select Service"}
 										</Button>
@@ -482,6 +484,7 @@ export function ServicesView({
 								<Button
 									type="submit"
 									size="lg"
+									data-umami-event="services-form-submit-click"
 									className="w-full md:w-auto px-8 rounded-full shadow-lg shadow-primary/20 group"
 									disabled={mutation.isPending || isSubmitting}
 								>

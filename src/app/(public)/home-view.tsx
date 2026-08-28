@@ -176,7 +176,11 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 								<div className="mt-5 pt-3.5 border-t border-border/40 flex items-center justify-between">
 									<span className="text-xs text-muted-foreground">Ready to collaborate?</span>
 									<Button asChild variant="ghost" size="sm" className="text-xs text-primary font-semibold p-0 hover:bg-transparent">
-										<Link href="/hire-me" className="flex items-center gap-1">
+										<Link
+											href="/hire-me"
+											data-umami-event="home-engineering-book-slot-click"
+											className="flex items-center gap-1"
+										>
 											Book a slot <ArrowRight size={13} />
 										</Link>
 									</Button>
@@ -234,7 +238,13 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 										<div className="pt-3.5 border-t border-border/40 flex items-center justify-between">
 											<span className="text-xs font-semibold text-primary">{service.priceLabel}</span>
 											<Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary p-0">
-												<Link href="/services">Learn more →</Link>
+												<Link
+													href="/services"
+													data-umami-event="home-service-learn-more-click"
+													data-umami-event-service={service.slug || service.title}
+												>
+													Learn more →
+												</Link>
 											</Button>
 										</div>
 									)}

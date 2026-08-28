@@ -70,6 +70,8 @@ On branch main (100% test passing) 🚀`,
 					<button
 						type="button"
 						onClick={() => setActiveTab("config")}
+						data-umami-event="hero-terminal-tab-click"
+						data-umami-event-tab="config"
 						className={cn(
 							"px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5",
 							activeTab === "config"
@@ -84,6 +86,8 @@ On branch main (100% test passing) 🚀`,
 					<button
 						type="button"
 						onClick={() => setActiveTab("terminal")}
+						data-umami-event="hero-terminal-tab-click"
+						data-umami-event-tab="terminal"
 						className={cn(
 							"px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5",
 							activeTab === "terminal"
@@ -98,6 +102,8 @@ On branch main (100% test passing) 🚀`,
 					<button
 						type="button"
 						onClick={() => setActiveTab("stack")}
+						data-umami-event="hero-terminal-tab-click"
+						data-umami-event-tab="stack"
 						className={cn(
 							"px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5",
 							activeTab === "stack"
@@ -115,6 +121,8 @@ On branch main (100% test passing) 🚀`,
 					type="button"
 					onClick={handleCopy}
 					aria-label="Copy snippet"
+					data-umami-event="hero-terminal-copy-click"
+					data-umami-event-tab={activeTab}
 					className="p-1.5 rounded-md hover:bg-[#21262d] text-gray-400 hover:text-gray-200 transition-colors"
 				>
 					{hasCopied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
