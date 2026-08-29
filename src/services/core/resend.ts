@@ -8,8 +8,10 @@ import AdminServiceRequestNotificationEmail from "@/components/emails/admin-serv
 import ClientContactAutoReplyEmail from "@/components/emails/client-contact-auto-reply";
 import ClientServiceRequestAutoReplyEmail from "@/components/emails/client-service-request-auto-reply";
 
-const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
+function getResendClient(): Resend | null {
+	const resendApiKey = process.env.RESEND_API_KEY?.trim();
+	return resendApiKey ? new Resend(resendApiKey) : null;
+}
 
 const ADMIN_EMAIL =
 	process.env.ADMIN_NOTIFICATION_EMAIL ||
@@ -66,6 +68,7 @@ interface InboundAlertPayload {
  * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
  */
 export async function sendContactEmails(payload: ContactEmailPayload): Promise<void> {
+	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
 		return;
@@ -114,6 +117,7 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
  * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
  */
 export async function sendServiceRequestEmails(payload: ServiceRequestEmailPayload): Promise<void> {
+	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
 		return;
@@ -166,15 +170,21 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
  * Sends an email response from the Admin directly to the Client.
  */
 export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promise<void> {
+	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping reply email.");
 		return;
 	}
 
 	try {
-		const formattedSubject = payload.subject.startsWith("Re:")
-			? payload.subject
-			: `Re: [Ref: #${payload.inquiryId}] ${payload.subject}`;
+		let formattedSubject = payload.subject.trim();
+		const refSnippet = `[Ref: #${payload.inquiryId}]`;
+		if (!formattedSubject.includes(refSnippet)) {
+			formattedSubject = `${refSnippet} ${formattedSubject}`;
+		}
+		if (!formattedSubject.toLowerCase().startsWith("re:")) {
+			formattedSubject = `Re: ${formattedSubject}`;
+		}
 
 		await resend.emails.send({
 			from: SENDER_HI,
@@ -198,6 +208,7 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
  * Sends an alert to Admin when a Client sends an inbound reply via email.
  */
 export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Promise<void> {
+	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping inbound alert.");
 		return;
