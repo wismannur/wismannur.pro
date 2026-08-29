@@ -25,6 +25,7 @@ const SENDER_HI =
 	"Wisman Nur <hi@wismannur.pro>";
 
 interface ContactEmailPayload {
+	id?: string;
 	name: string;
 	email: string;
 	subject: string;
@@ -32,6 +33,7 @@ interface ContactEmailPayload {
 }
 
 interface ServiceRequestEmailPayload {
+	id?: string;
 	name: string;
 	email: string;
 	company?: string;
@@ -71,6 +73,7 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+		const refTag = payload.id ? `[Ref: #${payload.id}]` : `[Ref: #${payload.subject}]`;
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -93,7 +96,7 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
 				from: SENDER_HI,
 				to: payload.email,
 				replyTo: "hi@wismannur.pro",
-				subject: `[Ref: #${payload.subject}] Pesan Anda telah diterima - Wisman Nur`,
+				subject: `${refTag} Pesan Anda telah diterima - Wisman Nur`,
 				react: ClientContactAutoReplyEmail({
 					name: payload.name,
 					subject: payload.subject,
@@ -118,6 +121,7 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+		const refTag = payload.id ? `[Ref: #${payload.id}]` : `[Ref: #${payload.serviceType}]`;
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -143,7 +147,7 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 				from: SENDER_HI,
 				to: payload.email,
 				replyTo: "hi@wismannur.pro",
-				subject: `[Ref: #${payload.serviceType}] Permintaan proyek diterima - Wisman Nur`,
+				subject: `${refTag} Permintaan proyek diterima - Wisman Nur`,
 				react: ClientServiceRequestAutoReplyEmail({
 					name: payload.name,
 					serviceType: payload.serviceType,

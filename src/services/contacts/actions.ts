@@ -77,7 +77,7 @@ export async function submit(formData: ContactForm, recaptchaToken?: string): Pr
 		.values({ ...clean, status: "new" })
 		.returning({ id: contacts.id });
 
-	await sendContactEmails(clean);
+	await sendContactEmails({ ...clean, id });
 
 	return id;
 }

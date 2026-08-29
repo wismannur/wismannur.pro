@@ -85,7 +85,7 @@ export async function submit(data: NewServiceRequest, recaptchaToken?: string): 
 		.values({ ...clean, status: "new" })
 		.returning({ id: serviceRequests.id });
 
-	await sendServiceRequestEmails(clean);
+	await sendServiceRequestEmails({ ...clean, id });
 
 	return id;
 }
