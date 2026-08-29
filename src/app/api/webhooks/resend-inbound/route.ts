@@ -1,23 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { desc, eq } from "drizzle-orm";
+import { Resend } from "resend";
 import { Webhook } from "svix";
 
 import { getDb, schema } from "@/db";
 import { sendInboundAlertToAdmin } from "@/services/core/resend";
 
 const { contacts, serviceRequests, inquiryMessages } = schema;
+const resendApiKey = process.env.RESEND_API_KEY;
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
-function extractCleanEmail(rawFrom: string): { name: string; email: string } {
-	const match = rawFrom.match(/(.*?)\s*<([^>]+)>/);
+function extractCleanEmail(rawFrom: unknown): { name: string; email: string } {
+	const fromStr =
+		Array.isArray(rawFrom) ? String(rawFrom[0] || "") : typeof rawFrom === "string" ? rawFrom : "";
+	const match = fromStr.match(/(.*?)\s*<([^>]+)>/);
 	if (match) {
 		return {
 			name: match[1]?.trim() || match[2]?.trim() || "Client",
-			email: match[2]?.trim() || rawFrom.trim(),
+			email: match[2]?.trim() || fromStr.trim(),
 		};
 	}
 	return {
-		name: rawFrom.split("@")[0] || "Client",
-		email: rawFrom.trim(),
+		name: fromStr.split("@")[0] || "Client",
+		email: fromStr.trim(),
 	};
 }
 
@@ -25,6 +30,23 @@ function extractInquiryId(subject: string): string | null {
 	// Look for pattern [Ref: #ID] or [Ref: ID]
 	const match = subject.match(/\[Ref:\s*#?([a-zA-Z0-9_-]+)\]/i);
 	return match ? match[1].trim() : null;
+}
+
+function htmlToPlainText(html: string): string {
+	return html
+		.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+		.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+		.replace(/<br\s*[\/]?>/gi, "\n")
+		.replace(/<\/p>/gi, "\n\n")
+		.replace(/<\/div>/gi, "\n")
+		.replace(/<[^>]+>/g, "")
+		.replace(/&nbsp;/g, " ")
+		.replace(/&amp;/g, "&")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.trim();
 }
 
 function cleanReplyBody(text: string): string {
@@ -57,6 +79,7 @@ export async function POST(req: NextRequest) {
 			const svixSignature = req.headers.get("svix-signature");
 
 			if (!svixId || !svixTimestamp || !svixSignature) {
+				console.error("[Resend Inbound] Missing Svix headers while RESEND_WEBHOOK_SECRET is set");
 				return NextResponse.json({ error: "Missing Svix headers" }, { status: 400 });
 			}
 
@@ -68,22 +91,50 @@ export async function POST(req: NextRequest) {
 					"svix-signature": svixSignature,
 				});
 			} catch (err) {
-				console.error("Invalid webhook signature:", err);
+				console.error("[Resend Inbound] Invalid webhook signature:", err);
 				return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 			}
 		}
 
 		const body = JSON.parse(rawPayload);
 
-		// Handle both Resend standard webhook payload and direct inbound formats
+		// Handle Resend standard webhook payload (e.g. type: "email.received")
 		const data = body.data || body;
-		const fromRaw = data.from || "";
-		const subject = data.subject || "(No Subject)";
-		const textContent = cleanReplyBody(data.text || data.html || "");
+		let fromRaw = data.from || "";
+		let subject = data.subject || "(No Subject)";
+		let rawText = data.text || "";
+		let rawHtml = data.html || "";
+
+		// Resend's email.received webhook payload only contains metadata (email_id).
+		// We fetch the full body content via Resend Receiving API.
+		const emailId = data.email_id || data.id;
+		if (!rawText && !rawHtml && emailId && resend) {
+			try {
+				const { data: fullEmail, error } = await resend.emails.receiving.get(emailId);
+				if (error) {
+					console.error("[Resend Inbound] Failed to fetch email from Resend API:", error);
+				} else if (fullEmail) {
+					if (fullEmail.from) fromRaw = fullEmail.from;
+					if (fullEmail.subject) subject = fullEmail.subject;
+					if (fullEmail.text) rawText = fullEmail.text;
+					if (fullEmail.html) rawHtml = fullEmail.html;
+				}
+			} catch (err) {
+				console.error("[Resend Inbound] Error calling resend.emails.receiving.get:", err);
+			}
+		}
+
+		let textContent = "";
+		if (rawText) {
+			textContent = cleanReplyBody(rawText);
+		} else if (rawHtml) {
+			textContent = cleanReplyBody(htmlToPlainText(rawHtml));
+		}
 
 		const { name: senderName, email: senderEmail } = extractCleanEmail(fromRaw);
 
 		if (!senderEmail || !textContent) {
+			console.warn("[Resend Inbound] Incomplete email payload skipped. senderEmail:", senderEmail, "hasContent:", !!textContent);
 			return NextResponse.json({ message: "Incomplete email payload, skipped" }, { status: 200 });
 		}
 
@@ -182,11 +233,15 @@ export async function POST(req: NextRequest) {
 				subject: targetSubject,
 				message: textContent,
 			});
+
+			console.log(`[Resend Inbound] Successfully linked message to inquiry ${targetInquiryId} (${targetInquiryType}) from ${senderEmail}`);
+		} else {
+			console.warn(`[Resend Inbound] Inbound email received but no matching inquiry found for sender: ${senderEmail}, subject: ${subject}`);
 		}
 
 		return NextResponse.json({ success: true, matched: !!targetInquiryId });
 	} catch (error) {
-		console.error("Error processing inbound email webhook:", error);
+		console.error("[Resend Inbound] Error processing inbound email webhook:", error);
 		return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
 	}
 }

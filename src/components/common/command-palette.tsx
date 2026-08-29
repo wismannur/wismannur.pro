@@ -14,7 +14,6 @@ import {
 	Moon,
 	Copy,
 	Check,
-	ShieldCheck,
 	Code2,
 	FileText,
 } from "lucide-react";
@@ -248,17 +247,6 @@ export function CommandPalette({
 					>
 						<Mail className="mr-2 h-4 w-4 text-muted-foreground" />
 						<span>Contact Me</span>
-					</CommandItem>
-
-					<CommandItem
-						onSelect={() =>
-							runCommand(() => {
-								router.push("/login");
-							}, "Nav: Login")
-						}
-					>
-						<ShieldCheck className="mr-2 h-4 w-4 text-muted-foreground" />
-						<span>Admin Login / CMS</span>
 					</CommandItem>
 				</CommandGroup>
 
