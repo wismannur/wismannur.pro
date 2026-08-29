@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { Webhook } from "svix";
 
@@ -7,32 +7,55 @@ import { getDb, schema } from "@/db";
 import { sendInboundAlertToAdmin } from "@/services/core/resend";
 
 const { contacts, serviceRequests, inquiryMessages } = schema;
-const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 function extractCleanEmail(rawFrom: unknown): { name: string; email: string } {
-	const fromStr =
-		Array.isArray(rawFrom) ? String(rawFrom[0] || "") : typeof rawFrom === "string" ? rawFrom : "";
+	if (!rawFrom) return { name: "Client", email: "" };
+
+	const first = Array.isArray(rawFrom) ? rawFrom[0] : rawFrom;
+	if (typeof first === "object" && first !== null) {
+		const obj = first as Record<string, unknown>;
+		const email = String(obj.email || obj.address || "").trim().toLowerCase();
+		const name = String(obj.name || email.split("@")[0] || "Client")
+			.trim()
+			.replace(/^["']|["']$/g, "");
+		return { name: name || "Client", email };
+	}
+
+	const fromStr = typeof first === "string" ? first.trim() : "";
 	const match = fromStr.match(/(.*?)\s*<([^>]+)>/);
 	if (match) {
+		const rawName = match[1]?.trim().replace(/^["']|["']$/g, "") || "";
+		const email = match[2]?.trim().toLowerCase();
 		return {
-			name: match[1]?.trim() || match[2]?.trim() || "Client",
-			email: match[2]?.trim() || fromStr.trim(),
+			name: rawName || email.split("@")[0] || "Client",
+			email,
 		};
 	}
+
+	const cleanStr = fromStr.replace(/[<>]/g, "").trim().toLowerCase();
 	return {
-		name: fromStr.split("@")[0] || "Client",
-		email: fromStr.trim(),
+		name: cleanStr.split("@")[0] || "Client",
+		email: cleanStr,
 	};
 }
 
 function extractInquiryId(subject: string): string | null {
-	// Look for pattern [Ref: #ID] or [Ref: ID]
-	const match = subject.match(/\[Ref:\s*#?([a-zA-Z0-9_-]+)\]/i);
-	return match ? match[1].trim() : null;
+	if (!subject) return null;
+	// 1. Look for explicit pattern [Ref: #ID] or (Ref: ID) or Ref: ID
+	const refMatch = subject.match(/(?:\[|\()?\bRef:\s*#?([a-zA-Z0-9_-]+)(?:\]|\))?/i);
+	if (refMatch && refMatch[1]) {
+		return refMatch[1].trim();
+	}
+	// 2. Fallback: match standard UUID pattern anywhere in subject
+	const uuidMatch = subject.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+	if (uuidMatch && uuidMatch[1]) {
+		return uuidMatch[1].trim();
+	}
+	return null;
 }
 
 function htmlToPlainText(html: string): string {
+	if (!html) return "";
 	return html
 		.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
 		.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
@@ -51,13 +74,13 @@ function htmlToPlainText(html: string): string {
 
 function cleanReplyBody(text: string): string {
 	if (!text) return "";
-	// Strip common email quote footers
 	const lines = text.split("\n");
 	const cleanedLines: string[] = [];
 
 	for (const line of lines) {
-		// Stop at standard "On ... wrote:" quotes
+		// Stop at common email quote headers
 		if (line.match(/^On\s.+wrote:$/i)) break;
+		if (line.match(/^Pada\s.+menulis:$/i)) break;
 		if (line.match(/^---+\s*Original Message\s*---+/i)) break;
 		if (line.match(/^_{5,}/)) break;
 		cleanedLines.push(line);
@@ -70,17 +93,29 @@ function cleanReplyBody(text: string): string {
 export async function POST(req: NextRequest) {
 	try {
 		const rawPayload = await req.text();
-		const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+		const webhookSecret = process.env.RESEND_WEBHOOK_SECRET?.trim();
 
-		// Verify Svix signature if secret is provided in environment
+		// 1. Verify Svix / StandardWebhooks signature if secret is configured in environment
 		if (webhookSecret) {
-			const svixId = req.headers.get("svix-id");
-			const svixTimestamp = req.headers.get("svix-timestamp");
-			const svixSignature = req.headers.get("svix-signature");
+			const svixId =
+				req.headers.get("svix-id") ||
+				req.headers.get("webhook-id") ||
+				req.headers.get("x-svix-id");
+			const svixTimestamp =
+				req.headers.get("svix-timestamp") ||
+				req.headers.get("webhook-timestamp") ||
+				req.headers.get("x-svix-timestamp");
+			const svixSignature =
+				req.headers.get("svix-signature") ||
+				req.headers.get("webhook-signature") ||
+				req.headers.get("x-svix-signature");
 
 			if (!svixId || !svixTimestamp || !svixSignature) {
-				console.error("[Resend Inbound] Missing Svix headers while RESEND_WEBHOOK_SECRET is set");
-				return NextResponse.json({ error: "Missing Svix headers" }, { status: 400 });
+				console.error(
+					"[Resend Inbound] Missing webhook signature headers while RESEND_WEBHOOK_SECRET is set",
+					{ svixId: !!svixId, svixTimestamp: !!svixTimestamp, svixSignature: !!svixSignature }
+				);
+				return NextResponse.json({ error: "Missing webhook signature headers" }, { status: 400 });
 			}
 
 			try {
@@ -96,23 +131,36 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
-		const body = JSON.parse(rawPayload);
+		let body: Record<string, unknown> = {};
+		try {
+			body = JSON.parse(rawPayload);
+		} catch {
+			return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
+		}
 
-		// Handle Resend standard webhook payload (e.g. type: "email.received")
-		const data = body.data || body;
+		// 2. Ignore non-receiving event types (e.g. email.sent, email.delivered)
+		const eventType = String(body.type || "");
+		if (eventType && eventType !== "email.received") {
+			console.log(`[Resend Inbound] Ignored non-inbound event: ${eventType}`);
+			return NextResponse.json({ message: `Ignored event: ${eventType}` }, { status: 200 });
+		}
+
+		const data = (body.data as Record<string, unknown>) || body;
 		let fromRaw = data.from || "";
-		let subject = data.subject || "(No Subject)";
-		let rawText = data.text || "";
-		let rawHtml = data.html || "";
+		let subject = String(data.subject || "(No Subject)");
+		let rawText = typeof data.text === "string" ? data.text : "";
+		let rawHtml = typeof data.html === "string" ? data.html : "";
 
-		// Resend's email.received webhook payload only contains metadata (email_id).
-		// We fetch the full body content via Resend Receiving API.
-		const emailId = data.email_id || data.id;
-		if (!rawText && !rawHtml && emailId && resend) {
+		// 3. Resend's email.received webhook payload contains email_id. Fetch full body via Receiving API.
+		const emailId = String(data.email_id || data.id || body.email_id || body.id || "");
+		const resendApiKey = process.env.RESEND_API_KEY?.trim();
+		const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
+
+		if (emailId && resendClient) {
 			try {
-				const { data: fullEmail, error } = await resend.emails.receiving.get(emailId);
+				const { data: fullEmail, error } = await resendClient.emails.receiving.get(emailId);
 				if (error) {
-					console.error("[Resend Inbound] Failed to fetch email from Resend API:", error);
+					console.error("[Resend Inbound] Failed to fetch email from Resend Receiving API:", error);
 				} else if (fullEmail) {
 					if (fullEmail.from) fromRaw = fullEmail.from;
 					if (fullEmail.subject) subject = fullEmail.subject;
@@ -124,27 +172,32 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
+		// 4. Extract message text content
 		let textContent = "";
 		if (rawText) {
 			textContent = cleanReplyBody(rawText);
-		} else if (rawHtml) {
+		}
+		if (!textContent && rawHtml) {
 			textContent = cleanReplyBody(htmlToPlainText(rawHtml));
+		}
+		if (!textContent) {
+			textContent = rawText.trim() || htmlToPlainText(rawHtml) || subject || "(Pesan masuk tanpa teks)";
 		}
 
 		const { name: senderName, email: senderEmail } = extractCleanEmail(fromRaw);
 
-		if (!senderEmail || !textContent) {
-			console.warn("[Resend Inbound] Incomplete email payload skipped. senderEmail:", senderEmail, "hasContent:", !!textContent);
-			return NextResponse.json({ message: "Incomplete email payload, skipped" }, { status: 200 });
+		if (!senderEmail) {
+			console.warn("[Resend Inbound] Webhook received but sender email is missing. fromRaw:", fromRaw);
+			return NextResponse.json({ message: "Sender email missing, skipped" }, { status: 200 });
 		}
 
 		const db = getDb();
-		let targetInquiryId = extractInquiryId(subject);
+		let targetInquiryId: string | null = extractInquiryId(subject);
 		let targetInquiryType: "contact" | "service_request" = "contact";
 		let targetSubject = subject;
 
+		// 5. Match by explicit reference ID if found
 		if (targetInquiryId) {
-			// 1. Check if ID exists in contacts table
 			const [contactRow] = await db
 				.select()
 				.from(contacts)
@@ -155,7 +208,6 @@ export async function POST(req: NextRequest) {
 				targetInquiryType = "contact";
 				targetSubject = contactRow.subject;
 			} else {
-				// 2. Check if ID exists in serviceRequests table
 				const [serviceRow] = await db
 					.select()
 					.from(serviceRequests)
@@ -171,75 +223,108 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
-		// Fallback: If no ref tag in subject, match by sender email with latest active inquiry
-		if (!targetInquiryId) {
-			const [latestContact] = await db
-				.select()
-				.from(contacts)
-				.where(eq(contacts.email, senderEmail))
-				.orderBy(desc(contacts.createdAt))
-				.limit(1);
-
-			if (latestContact) {
-				targetInquiryId = latestContact.id;
-				targetInquiryType = "contact";
-				targetSubject = latestContact.subject;
-			} else {
-				const [latestService] = await db
+		// 6. Fallback: match by sender email with most recent inquiry (case-insensitive)
+		if (!targetInquiryId && senderEmail) {
+			const [latestContactRows, latestServiceRows] = await Promise.all([
+				db
+					.select()
+					.from(contacts)
+					.where(sql`lower(${contacts.email}) = ${senderEmail.toLowerCase()}`)
+					.orderBy(desc(contacts.createdAt))
+					.limit(1),
+				db
 					.select()
 					.from(serviceRequests)
-					.where(eq(serviceRequests.email, senderEmail))
+					.where(sql`lower(${serviceRequests.email}) = ${senderEmail.toLowerCase()}`)
 					.orderBy(desc(serviceRequests.createdAt))
-					.limit(1);
+					.limit(1),
+			]);
 
-				if (latestService) {
-					targetInquiryId = latestService.id;
+			const contactMatch = latestContactRows[0];
+			const serviceMatch = latestServiceRows[0];
+
+			if (contactMatch && serviceMatch) {
+				if (new Date(contactMatch.createdAt).getTime() >= new Date(serviceMatch.createdAt).getTime()) {
+					targetInquiryId = contactMatch.id;
+					targetInquiryType = "contact";
+					targetSubject = contactMatch.subject;
+				} else {
+					targetInquiryId = serviceMatch.id;
 					targetInquiryType = "service_request";
-					targetSubject = latestService.serviceType;
+					targetSubject = serviceMatch.serviceType;
 				}
+			} else if (contactMatch) {
+				targetInquiryId = contactMatch.id;
+				targetInquiryType = "contact";
+				targetSubject = contactMatch.subject;
+			} else if (serviceMatch) {
+				targetInquiryId = serviceMatch.id;
+				targetInquiryType = "service_request";
+				targetSubject = serviceMatch.serviceType;
 			}
 		}
 
-		// If matched to an inquiry, store the inbound reply in DB
-		if (targetInquiryId) {
-			await db.insert(inquiryMessages).values({
-				inquiryId: targetInquiryId,
-				inquiryType: targetInquiryType,
-				senderType: "client",
-				senderName,
-				senderEmail,
-				message: textContent,
-			});
+		// 7. If still not matched, create a new contact inquiry so the email is NEVER lost and visible in CMS
+		if (!targetInquiryId) {
+			const cleanSubject = subject.replace(/^(Re:\s*)+/i, "").trim() || "Inbound Email";
+			const [newContact] = await db
+				.insert(contacts)
+				.values({
+					name: senderName || "Client",
+					email: senderEmail,
+					subject: cleanSubject,
+					message: textContent,
+					status: "new",
+				})
+				.returning({ id: contacts.id });
 
-			// Re-open / update inquiry status so it's highlighted in CMS
-			if (targetInquiryType === "contact") {
-				await db
-					.update(contacts)
-					.set({ status: "new" })
-					.where(eq(contacts.id, targetInquiryId));
-			} else {
-				await db
-					.update(serviceRequests)
-					.set({ status: "new" })
-					.where(eq(serviceRequests.id, targetInquiryId));
-			}
+			targetInquiryId = newContact.id;
+			targetInquiryType = "contact";
+			targetSubject = cleanSubject;
 
-			// Send instant alert email to Admin
-			await sendInboundAlertToAdmin({
-				inquiryId: targetInquiryId,
-				inquiryType: targetInquiryType,
-				clientName: senderName,
-				clientEmail: senderEmail,
-				subject: targetSubject,
-				message: textContent,
-			});
+			console.log(
+				`[Resend Inbound] No existing inquiry found. Created new contact ${targetInquiryId} for ${senderEmail}`
+			);
+		}
 
-			console.log(`[Resend Inbound] Successfully linked message to inquiry ${targetInquiryId} (${targetInquiryType}) from ${senderEmail}`);
+		// 8. Insert inbound message into inquiryMessages thread
+		await db.insert(inquiryMessages).values({
+			inquiryId: targetInquiryId,
+			inquiryType: targetInquiryType,
+			senderType: "client",
+			senderName: senderName || "Client",
+			senderEmail,
+			message: textContent,
+		});
+
+		// 9. Update inquiry status to "new" to highlight it in CMS
+		if (targetInquiryType === "contact") {
+			await db
+				.update(contacts)
+				.set({ status: "new" })
+				.where(eq(contacts.id, targetInquiryId));
 		} else {
-			console.warn(`[Resend Inbound] Inbound email received but no matching inquiry found for sender: ${senderEmail}, subject: ${subject}`);
+			await db
+				.update(serviceRequests)
+				.set({ status: "new" })
+				.where(eq(serviceRequests.id, targetInquiryId));
 		}
 
-		return NextResponse.json({ success: true, matched: !!targetInquiryId });
+		// 10. Send email alert to Admin
+		await sendInboundAlertToAdmin({
+			inquiryId: targetInquiryId,
+			inquiryType: targetInquiryType,
+			clientName: senderName || "Client",
+			clientEmail: senderEmail,
+			subject: targetSubject,
+			message: textContent,
+		});
+
+		console.log(
+			`[Resend Inbound] Successfully recorded inbound email for inquiry ${targetInquiryId} (${targetInquiryType}) from ${senderEmail}`
+		);
+
+		return NextResponse.json({ success: true, inquiryId: targetInquiryId, matched: true });
 	} catch (error) {
 		console.error("[Resend Inbound] Error processing inbound email webhook:", error);
 		return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
