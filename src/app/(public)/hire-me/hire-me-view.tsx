@@ -35,7 +35,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { getContentIcon } from "@/lib/icon-registry";
 import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
-import { serviceRequestService } from "@/services";
+import { hireRequestService } from "@/services";
 import type { AvailabilitySlot } from "@/services/availability/types";
 import type { Faq } from "@/services/faqs/types";
 import type { HireMeCopy } from "@/services/page-copy/types";
@@ -50,9 +50,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import {
 	ArrowRight,
+	Briefcase,
+	Building2,
 	CheckCircle2,
 	ChevronDown,
 	Clock,
+	DollarSign,
+	MapPin,
 	MessageSquare,
 	Sparkles,
 	Star,
@@ -78,13 +82,15 @@ const MONTH_LABELS = [
 ];
 
 const hireFormSchema = z.object({
-	name: z.string().min(1, { message: "Name is required" }),
-	email: z.string().min(1, { message: "Email is required" }).email("Invalid email address"),
-	company: z.string().optional(),
-	serviceType: z.string().min(1, { message: "Please select a service type" }),
-	budget: z.string().min(1, { message: "Please select a budget range" }),
-	timeframe: z.string().min(1, { message: "Please select a timeframe" }),
-	projectDetails: z.string().min(20, { message: "Project details must be at least 20 characters" }),
+	name: z.string().min(1, { message: "Your name is required" }),
+	email: z.string().min(1, { message: "Work email is required" }).email("Invalid email address"),
+	company: z.string().min(1, { message: "Company / Organization name is required" }),
+	roleTitle: z.string().min(1, { message: "Position or role title is required" }),
+	employmentType: z.string().min(1, { message: "Please select employment type" }),
+	workplaceType: z.string().min(1, { message: "Please select workplace policy" }),
+	location: z.string().optional(),
+	salaryRange: z.string().optional(),
+	message: z.string().min(10, { message: "Please provide at least 10 characters about the role" }),
 	termsAccepted: z.boolean().refine((val) => val === true, {
 		message: "You must accept the terms and conditions",
 	}),
@@ -126,46 +132,51 @@ export function HireMeView({
 			name: "",
 			email: "",
 			company: "",
-			serviceType: "",
-			budget: "",
-			timeframe: "",
-			projectDetails: "",
+			roleTitle: "",
+			employmentType: "full_time",
+			workplaceType: "remote",
+			location: "",
+			salaryRange: "",
+			message: "",
 			termsAccepted: false,
 		},
 	});
 
 	const mutation = useMutation({
 		mutationFn: ({ form, token }: { form: HireFormValues; token: string }) => {
-			return serviceRequestService.submit(
+			return hireRequestService.submit(
 				{
 					name: form.name,
 					email: form.email,
-					company: form.company || undefined,
-					serviceType: form.serviceType,
-					budget: form.budget,
-					timeframe: form.timeframe,
-					projectDetails: form.projectDetails,
+					company: form.company,
+					roleTitle: form.roleTitle,
+					employmentType: form.employmentType,
+					workplaceType: form.workplaceType,
+					location: form.location || undefined,
+					salaryRange: form.salaryRange || undefined,
+					message: form.message,
 				},
 				token,
 			);
 		},
 		onSuccess: () => {
 			toast({
-				title: "Request submitted!",
-				description: "Thanks for your interest. I'll get back to you soon.",
+				title: "Inquiry submitted successfully!",
+				description: "Thank you for reaching out! I will review the role details and get back to you soon.",
 			});
 			const vals = form.getValues();
 			trackEvent("hire-me-form-submit-success", {
-				serviceType: vals.serviceType,
-				budget: vals.budget,
-				timeframe: vals.timeframe,
+				roleTitle: vals.roleTitle,
+				company: vals.company,
+				employmentType: vals.employmentType,
+				workplaceType: vals.workplaceType,
 			});
 			form.reset();
 		},
 		onError: () => {
 			toast({
 				title: "Error",
-				description: "Failed to send your request. Please try again.",
+				description: "Failed to send your inquiry. Please try again or email hi@wismannur.pro directly.",
 				variant: "destructive",
 			});
 			trackEvent("hire-me-form-submit-error");
@@ -178,8 +189,8 @@ export function HireMeView({
 	const onSubmit = async (data: HireFormValues) => {
 		setIsSubmitting(true);
 		trackEvent("hire-me-form-submit-attempt", {
-			serviceType: data.serviceType,
-			budget: data.budget,
+			roleTitle: data.roleTitle,
+			company: data.company,
 		});
 		const token = await getReCaptchaToken();
 		mutation.mutate({ form: data, token });
@@ -187,7 +198,10 @@ export function HireMeView({
 
 	const handleServiceSelect = (serviceId: string) => {
 		setSelectedService(serviceId);
-		form.setValue("serviceType", serviceId);
+		const matchingTier = pricingTiers.find((t) => t.slug === serviceId);
+		if (matchingTier) {
+			form.setValue("roleTitle", matchingTier.name);
+		}
 		trackEvent("hire-me-service-selected", { serviceId });
 
 		const contactForm = document.getElementById("contact-form");
@@ -561,13 +575,16 @@ export function HireMeView({
 				</div>
 			</section>
 
-			{/* Contact / Project Request Form Section */}
+			{/* Recruiter / Full-time Hiring Inquiry Form Section */}
 			<section id="contact-form" className="py-8 relative overflow-hidden">
 				<div className="container px-4 max-w-4xl mx-auto">
 					<SectionHeader
-						title={copy?.contactSection.title || "Let's Build Something Great"}
-						subtitle={copy?.contactSection.subtitle || "Project Inquiry"}
-						description={copy?.contactSection.description}
+						title={copy?.contactSection.title || "Let's Explore Working Together"}
+						subtitle={copy?.contactSection.subtitle || "Full-time & Career Inquiries"}
+						description={
+							copy?.contactSection.description ||
+							"Interested in bringing me onto your team full-time, hiring for a technical lead role, or discussing a high-impact engineering position? Share the details below."
+						}
 						className="text-center mb-12"
 					/>
 
@@ -581,11 +598,11 @@ export function HireMeView({
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Name <span className="text-primary">*</span>
+													Your Name <span className="text-primary">*</span>
 												</FormLabel>
 												<FormControl>
 													<Input
-														placeholder="Your name"
+														placeholder="e.g. Alex Johnson"
 														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
 														{...field}
 													/>
@@ -601,12 +618,135 @@ export function HireMeView({
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Email <span className="text-primary">*</span>
+													Work Email <span className="text-primary">*</span>
 												</FormLabel>
 												<FormControl>
 													<Input
-														placeholder="Your email address"
+														placeholder="alex@company.com"
 														type="email"
+														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<FormField
+										control={form.control}
+										name="company"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Company / Organization <span className="text-primary">*</span>
+												</FormLabel>
+												<FormControl>
+													<Input
+														placeholder="e.g. Acme Tech, Series A Startup"
+														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="roleTitle"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Position / Role Title <span className="text-primary">*</span>
+												</FormLabel>
+												<FormControl>
+													<Input
+														placeholder="e.g. Senior Frontend / Staff Engineer"
+														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+								</div>
+
+								<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+									<FormField
+										control={form.control}
+										name="employmentType"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Employment Type <span className="text-primary">*</span>
+												</FormLabel>
+												<Select
+													onValueChange={field.onChange}
+													defaultValue={field.value}
+													value={field.value}
+												>
+													<FormControl>
+														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
+															<SelectValue placeholder="Select type" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														<SelectItem value="full_time">Full-time Employee</SelectItem>
+														<SelectItem value="contract">Long-term Contract</SelectItem>
+														<SelectItem value="advisory">Advisory / Fractional</SelectItem>
+														<SelectItem value="other">Other</SelectItem>
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="workplaceType"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Workplace Policy <span className="text-primary">*</span>
+												</FormLabel>
+												<Select
+													onValueChange={field.onChange}
+													defaultValue={field.value}
+													value={field.value}
+												>
+													<FormControl>
+														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
+															<SelectValue placeholder="Select policy" />
+														</SelectTrigger>
+													</FormControl>
+													<SelectContent>
+														<SelectItem value="remote">Remote (Preferred)</SelectItem>
+														<SelectItem value="hybrid">Hybrid</SelectItem>
+														<SelectItem value="onsite">On-site</SelectItem>
+													</SelectContent>
+												</Select>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+
+									<FormField
+										control={form.control}
+										name="salaryRange"
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel className="text-foreground/80 font-medium text-xs">
+													Budget / Compensation Range (Optional)
+												</FormLabel>
+												<FormControl>
+													<Input
+														placeholder="e.g. IDR 30M - 50M / Negotiable"
 														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
 														{...field}
 													/>
@@ -619,15 +759,15 @@ export function HireMeView({
 
 								<FormField
 									control={form.control}
-									name="company"
+									name="location"
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-foreground/80 font-medium text-xs">
-												Company / Organization (Optional)
+												Company Location / Timezone (Optional)
 											</FormLabel>
 											<FormControl>
 												<Input
-													placeholder="Your company or project name"
+													placeholder="e.g. Jakarta, Indonesia / Singapore / Worldwide (UTC+7)"
 													className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
 													{...field}
 												/>
@@ -637,105 +777,17 @@ export function HireMeView({
 									)}
 								/>
 
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-									<FormField
-										control={form.control}
-										name="serviceType"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Service Package <span className="text-primary">*</span>
-												</FormLabel>
-												<Select
-													onValueChange={field.onChange}
-													defaultValue={field.value}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
-															<SelectValue placeholder="Select a package" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{pricingTiers.map((tier) => (
-															<SelectItem key={tier.id} value={tier.slug}>
-																{tier.name}
-															</SelectItem>
-														))}
-														<SelectItem value="custom">Custom Engagement</SelectItem>
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="budget"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Budget Range <span className="text-primary">*</span>
-												</FormLabel>
-												<Select onValueChange={field.onChange} defaultValue={field.value}>
-													<FormControl>
-														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
-															<SelectValue placeholder="Select budget range" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{budgetRanges.map((range) => (
-															<SelectItem key={range.id} value={range.id}>
-																{range.label}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-
-									<FormField
-										control={form.control}
-										name="timeframe"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Target Timeframe <span className="text-primary">*</span>
-												</FormLabel>
-												<Select onValueChange={field.onChange} defaultValue={field.value}>
-													<FormControl>
-														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
-															<SelectValue placeholder="Select timeframe" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														{timeframes.map((timeframe) => (
-															<SelectItem key={timeframe.id} value={timeframe.id}>
-																{timeframe.label}
-															</SelectItem>
-														))}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
-
 								<FormField
 									control={form.control}
-									name="projectDetails"
+									name="message"
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel className="text-foreground/80 font-medium text-xs">
-												Project Overview & Scope <span className="text-primary">*</span>
+												Role Overview & Next Steps <span className="text-primary">*</span>
 											</FormLabel>
 											<FormControl>
 												<Textarea
-													placeholder="Describe your goals, tech preferences, and any timeline expectations..."
+													placeholder="Tell me about the product mission, your tech stack, team structure, and how we might work together..."
 													rows={5}
 													className="rounded-xl border-border/50 focus-visible:ring-primary/30 resize-none bg-background/80"
 													{...field}
@@ -782,11 +834,11 @@ export function HireMeView({
 									{mutation.isPending || isSubmitting ? (
 										<span className="flex items-center">
 											<Sparkles className="animate-spin -ml-1 mr-2 h-4 w-4" />
-											Submitting...
+											Submitting Proposal...
 										</span>
 									) : (
 										<span className="flex items-center gap-2">
-											Submit Inquiry
+											Submit Hiring Inquiry
 											<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
 										</span>
 									)}
