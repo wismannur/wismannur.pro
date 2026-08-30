@@ -9,11 +9,11 @@ import { ServiceError } from "../core/base-service";
 import { sendAdminReplyToClient } from "../core/resend";
 import type { InquiryMessage, SendAdminReplyInput } from "./types";
 
-const { inquiryMessages, contacts, serviceRequests } = schema;
+const { inquiryMessages, contacts, serviceRequests, hireRequests } = schema;
 
 const sendReplySchema = z.object({
 	inquiryId: z.string().min(1),
-	inquiryType: z.enum(["contact", "service_request"]),
+	inquiryType: z.enum(["contact", "service_request", "hire_request"]),
 	toEmail: z.string().trim().email(),
 	toName: z.string().trim().min(1),
 	subject: z.string().trim().min(1),
@@ -33,7 +33,7 @@ export async function getThreadMessages(inquiryId: string): Promise<InquiryMessa
 	return rows.map((row) => ({
 		id: row.id,
 		inquiryId: row.inquiryId,
-		inquiryType: row.inquiryType,
+		inquiryType: row.inquiryType as InquiryMessage["inquiryType"],
 		senderType: row.senderType,
 		senderName: row.senderName,
 		senderEmail: row.senderEmail,
@@ -76,6 +76,11 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 			.update(serviceRequests)
 			.set({ status: "in-progress" })
 			.where(eq(serviceRequests.id, clean.inquiryId));
+	} else if (clean.inquiryType === "hire_request") {
+		await db
+			.update(hireRequests)
+			.set({ status: "reviewed", updatedAt: new Date() })
+			.where(eq(hireRequests.id, clean.inquiryId));
 	}
 
 	// 3. Send email to client via Resend

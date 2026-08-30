@@ -18,7 +18,7 @@ import type {
 // tables into the browser (the old dashboard did, and its contact counts were
 // silently capped at one pagination page).
 
-const { availabilitySlots, blogs, contacts, projects, serviceRequests, sitePages } = schema;
+const { availabilitySlots, blogs, contacts, projects, serviceRequests, hireRequests, sitePages } = schema;
 
 const INBOX_LIMIT = 6;
 const DRAFTS_LIMIT = 6;
@@ -34,8 +34,10 @@ export async function getSummary(): Promise<DashboardSummary> {
 		[projectStats],
 		[contactStats],
 		[requestStats],
+		[hireStats],
 		recentContacts,
 		recentRequests,
+		recentHires,
 		blogDrafts,
 		projectDrafts,
 		topBlogs,
@@ -71,6 +73,12 @@ export async function getSummary(): Promise<DashboardSummary> {
 			.from(serviceRequests),
 		db
 			.select({
+				total: countRows,
+				pending: sql<number>`count(*) filter (where ${hireRequests.status} = 'new')::int`,
+			})
+			.from(hireRequests),
+		db
+			.select({
 				id: contacts.id,
 				name: contacts.name,
 				subject: contacts.subject,
@@ -90,6 +98,17 @@ export async function getSummary(): Promise<DashboardSummary> {
 			})
 			.from(serviceRequests)
 			.orderBy(desc(serviceRequests.createdAt))
+			.limit(INBOX_LIMIT),
+		db
+			.select({
+				id: hireRequests.id,
+				name: hireRequests.name,
+				subject: sql<string>`${hireRequests.roleTitle} || ' @ ' || ${hireRequests.company}`,
+				status: hireRequests.status,
+				createdAt: hireRequests.createdAt,
+			})
+			.from(hireRequests)
+			.orderBy(desc(hireRequests.createdAt))
 			.limit(INBOX_LIMIT),
 		db
 			.select({ id: blogs.id, title: blogs.title, updatedAt: blogs.updatedAt })
@@ -139,6 +158,7 @@ export async function getSummary(): Promise<DashboardSummary> {
 	const inbox: InboxEntry[] = [
 		...recentContacts.map((row) => ({ ...row, kind: "contact" as const })),
 		...recentRequests.map((row) => ({ ...row, kind: "service-request" as const })),
+		...recentHires.map((row) => ({ ...row, kind: "hire-request" as const })),
 	]
 		.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
 		.slice(0, INBOX_LIMIT);
@@ -206,6 +226,7 @@ export async function getSummary(): Promise<DashboardSummary> {
 			projects: { total: projectStats.total, published: projectStats.published },
 			contacts: { total: contactStats.total, unread: contactStats.unread },
 			serviceRequests: { total: requestStats.total, pending: requestStats.pending },
+			hireRequests: { total: hireStats.total, pending: hireStats.pending },
 			totalViews: blogStats.views + projectStats.views,
 		},
 		inbox,
