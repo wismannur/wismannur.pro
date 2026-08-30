@@ -6,7 +6,8 @@ import { Webhook } from "svix";
 import { getDb, schema } from "@/db";
 import { sendInboundAlertToAdmin } from "@/services/core/resend";
 
-const { contacts, serviceRequests, hireRequests, inquiryMessages } = schema;
+const { contacts, serviceRequests, hireRequests, inquiryMessages, jobOutreaches, jobOutreachMessages } = schema;
+
 
 function extractCleanEmail(rawFrom: unknown): { name: string; email: string } {
 	if (!rawFrom) return { name: "Client", email: "" };
@@ -39,20 +40,72 @@ function extractCleanEmail(rawFrom: unknown): { name: string; email: string } {
 	};
 }
 
-function extractInquiryId(subject: string): string | null {
-	if (!subject) return null;
-	// 1. Look for explicit pattern [Ref: #ID] or (Ref: ID) or Ref: ID
-	const refMatch = subject.match(/(?:\[|\()?\bRef:\s*#?([a-zA-Z0-9_-]+)(?:\]|\))?/i);
-	if (refMatch && refMatch[1]) {
-		return refMatch[1].trim();
+function extractIdFromToAddress(toRaw: unknown): {
+	id: string | null;
+	type?: "job_outreach" | "contact" | "service_request" | "hire_request";
+} {
+	const toList = Array.isArray(toRaw) ? toRaw : [toRaw];
+	for (const item of toList) {
+		const str =
+			typeof item === "string"
+				? item
+				: typeof item === "object" && item
+					? String((item as Record<string, unknown>).email || (item as Record<string, unknown>).address || "")
+					: "";
+
+		const outreachMatch = str.match(/(?:^|\+)(?:outreach|job)[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		if (outreachMatch && outreachMatch[1]) {
+			return { id: outreachMatch[1], type: "job_outreach" };
+		}
+		const contactMatch = str.match(/(?:^|\+)contact[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		if (contactMatch && contactMatch[1]) {
+			return { id: contactMatch[1], type: "contact" };
+		}
+		const serviceMatch = str.match(/(?:^|\+)service[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		if (serviceMatch && serviceMatch[1]) {
+			return { id: serviceMatch[1], type: "service_request" };
+		}
+		const hireMatch = str.match(/(?:^|\+)hire[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		if (hireMatch && hireMatch[1]) {
+			return { id: hireMatch[1], type: "hire_request" };
+		}
+		const anyUuidMatch = str.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		if (anyUuidMatch && anyUuidMatch[1]) {
+			return { id: anyUuidMatch[1] };
+		}
 	}
-	// 2. Fallback: match standard UUID pattern anywhere in subject
-	const uuidMatch = subject.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
-	if (uuidMatch && uuidMatch[1]) {
-		return uuidMatch[1].trim();
+	return { id: null };
+}
+
+function extractInquiryId(subject: string, rawBody?: string): string | null {
+	// 1. Look for explicit pattern [Ref: #ID] or (Ref: ID) or Ref: ID in subject
+	if (subject) {
+		const refMatch = subject.match(/(?:\[|\()?\bRef:\s*#?([a-zA-Z0-9_-]+)(?:\]|\))?/i);
+		if (refMatch && refMatch[1]) {
+			return refMatch[1].trim();
+		}
+		// Fallback: match standard UUID pattern anywhere in subject
+		const uuidMatch = subject.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		if (uuidMatch && uuidMatch[1]) {
+			return uuidMatch[1].trim();
+		}
 	}
+
+	// 2. Check quoted reply headers in email body
+	if (rawBody) {
+		const refMatchBody = rawBody.match(/(?:\[|\()?\bRef:\s*#?([a-zA-Z0-9_-]+)(?:\]|\))?/i);
+		if (refMatchBody && refMatchBody[1]) {
+			return refMatchBody[1].trim();
+		}
+		const uuidMatchBody = rawBody.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		if (uuidMatchBody && uuidMatchBody[1]) {
+			return uuidMatchBody[1].trim();
+		}
+	}
+
 	return null;
 }
+
 
 function htmlToPlainText(html: string): string {
 	if (!html) return "";
@@ -155,17 +208,19 @@ export async function POST(req: NextRequest) {
 		const emailId = String(data.email_id || data.id || body.email_id || body.id || "");
 		const resendApiKey = process.env.RESEND_API_KEY?.trim();
 		const resendClient = resendApiKey ? new Resend(resendApiKey) : null;
+		let fullEmail: Record<string, unknown> | null = null;
 
 		if (emailId && resendClient) {
 			try {
-				const { data: fullEmail, error } = await resendClient.emails.receiving.get(emailId);
+				const { data: resEmail, error } = await resendClient.emails.receiving.get(emailId);
 				if (error) {
 					console.error("[Resend Inbound] Failed to fetch email from Resend Receiving API:", error);
-				} else if (fullEmail) {
-					if (fullEmail.from) fromRaw = fullEmail.from;
-					if (fullEmail.subject) subject = fullEmail.subject;
-					if (fullEmail.text) rawText = fullEmail.text;
-					if (fullEmail.html) rawHtml = fullEmail.html;
+				} else if (resEmail) {
+					fullEmail = resEmail as unknown as Record<string, unknown>;
+					if (resEmail.from) fromRaw = resEmail.from;
+					if (resEmail.subject) subject = resEmail.subject;
+					if (resEmail.text) rawText = resEmail.text;
+					if (resEmail.html) rawHtml = resEmail.html;
 				}
 			} catch (err) {
 				console.error("[Resend Inbound] Error calling resend.emails.receiving.get:", err);
@@ -192,12 +247,73 @@ export async function POST(req: NextRequest) {
 		}
 
 		const db = getDb();
-		let targetInquiryId: string | null = extractInquiryId(subject);
-		let targetInquiryType: "contact" | "service_request" | "hire_request" = "contact";
+		const toInfo = extractIdFromToAddress(data.to || fullEmail?.to || data.recipient || body.to);
+		const emailHeaders = (fullEmail?.headers || {}) as Record<string, unknown>;
+		const headerRefId =
+			typeof emailHeaders["x-entity-ref-id"] === "string"
+				? (emailHeaders["x-entity-ref-id"] as string)
+				: typeof emailHeaders["X-Entity-Ref-ID"] === "string"
+					? (emailHeaders["X-Entity-Ref-ID"] as string)
+					: null;
+
+		let targetInquiryId: string | null =
+			toInfo.id ||
+			headerRefId ||
+			extractInquiryId(subject, rawText || rawHtml);
+		let targetInquiryType: "contact" | "service_request" | "hire_request" =
+			(toInfo.type && toInfo.type !== "job_outreach" ? toInfo.type : undefined) || "contact";
 		let targetSubject = subject;
+
 
 		// 5. Match by explicit reference ID if found
 		if (targetInquiryId) {
+			// Check job outreaches first
+			const [outreachRow] = await db
+				.select()
+				.from(jobOutreaches)
+				.where(eq(jobOutreaches.id, targetInquiryId))
+				.limit(1);
+
+
+			if (outreachRow) {
+				await db.insert(jobOutreachMessages).values({
+					outreachId: outreachRow.id,
+					senderType: "client",
+					senderName: senderName || outreachRow.contactName || "Recruiter",
+					senderEmail,
+					message: textContent,
+				});
+
+				await db
+					.update(jobOutreaches)
+					.set({
+						status: "replied",
+						lastRepliedAt: new Date(),
+						updatedAt: new Date(),
+					})
+					.where(eq(jobOutreaches.id, outreachRow.id));
+
+				await sendInboundAlertToAdmin({
+					inquiryId: outreachRow.id,
+					inquiryType: "job_outreach",
+					clientName: senderName || outreachRow.contactName || "Recruiter",
+					clientEmail: senderEmail,
+					subject: outreachRow.subject,
+					message: textContent,
+				});
+
+				console.log(
+					`[Resend Inbound] Recorded reply for Job Outreach ${outreachRow.id} (${outreachRow.companyName}) from ${senderEmail}`
+				);
+
+				return NextResponse.json({
+					success: true,
+					outreachId: outreachRow.id,
+					matched: true,
+					type: "job_outreach",
+				});
+			}
+
 			const [contactRow] = await db
 				.select()
 				.from(contacts)
@@ -234,9 +350,15 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
-		// 6. Fallback: match by sender email with most recent inquiry (case-insensitive)
+		// 6. Fallback: match by sender email with most recent entity (outreach or inquiry)
 		if (!targetInquiryId && senderEmail) {
-			const [latestContactRows, latestServiceRows, latestHireRows] = await Promise.all([
+			const [latestOutreachRows, latestContactRows, latestServiceRows, latestHireRows] = await Promise.all([
+				db
+					.select()
+					.from(jobOutreaches)
+					.where(sql`lower(${jobOutreaches.contactEmail}) = ${senderEmail.toLowerCase()}`)
+					.orderBy(desc(jobOutreaches.createdAt))
+					.limit(1),
 				db
 					.select()
 					.from(contacts)
@@ -257,12 +379,22 @@ export async function POST(req: NextRequest) {
 					.limit(1),
 			]);
 
-			const matches = [
+			const allMatches = [
+				latestOutreachRows[0]
+					? {
+							id: latestOutreachRows[0].id,
+							type: "job_outreach" as const,
+							subject: latestOutreachRows[0].subject,
+							contactName: latestOutreachRows[0].contactName,
+							createdAt: new Date(latestOutreachRows[0].sentAt || latestOutreachRows[0].createdAt).getTime(),
+						}
+					: null,
 				latestContactRows[0]
 					? {
 							id: latestContactRows[0].id,
 							type: "contact" as const,
 							subject: latestContactRows[0].subject,
+							contactName: latestContactRows[0].name,
 							createdAt: new Date(latestContactRows[0].createdAt).getTime(),
 						}
 					: null,
@@ -271,6 +403,7 @@ export async function POST(req: NextRequest) {
 							id: latestServiceRows[0].id,
 							type: "service_request" as const,
 							subject: latestServiceRows[0].serviceType,
+							contactName: latestServiceRows[0].name,
 							createdAt: new Date(latestServiceRows[0].createdAt).getTime(),
 						}
 					: null,
@@ -279,23 +412,68 @@ export async function POST(req: NextRequest) {
 							id: latestHireRows[0].id,
 							type: "hire_request" as const,
 							subject: `${latestHireRows[0].roleTitle} @ ${latestHireRows[0].company}`,
+							contactName: latestHireRows[0].name,
 							createdAt: new Date(latestHireRows[0].createdAt).getTime(),
 						}
 					: null,
 			].filter(Boolean) as Array<{
 				id: string;
-				type: "contact" | "service_request" | "hire_request";
+				type: "job_outreach" | "contact" | "service_request" | "hire_request";
 				subject: string;
+				contactName: string;
 				createdAt: number;
 			}>;
 
-			if (matches.length > 0) {
-				matches.sort((a, b) => b.createdAt - a.createdAt);
-				targetInquiryId = matches[0].id;
-				targetInquiryType = matches[0].type;
-				targetSubject = matches[0].subject;
+			if (allMatches.length > 0) {
+				allMatches.sort((a, b) => b.createdAt - a.createdAt);
+				const bestMatch = allMatches[0];
+
+				if (bestMatch.type === "job_outreach") {
+					await db.insert(jobOutreachMessages).values({
+						outreachId: bestMatch.id,
+						senderType: "client",
+						senderName: senderName || bestMatch.contactName || "Recruiter",
+						senderEmail,
+						message: textContent,
+					});
+
+					await db
+						.update(jobOutreaches)
+						.set({
+							status: "replied",
+							lastRepliedAt: new Date(),
+							updatedAt: new Date(),
+						})
+						.where(eq(jobOutreaches.id, bestMatch.id));
+
+					await sendInboundAlertToAdmin({
+						inquiryId: bestMatch.id,
+						inquiryType: "job_outreach",
+						clientName: senderName || bestMatch.contactName || "Recruiter",
+						clientEmail: senderEmail,
+						subject: bestMatch.subject,
+						message: textContent,
+					});
+
+					console.log(
+						`[Resend Inbound] Fallback matched email to Job Outreach ${bestMatch.id} from ${senderEmail}`
+					);
+
+					return NextResponse.json({
+						success: true,
+						outreachId: bestMatch.id,
+						matched: true,
+						type: "job_outreach",
+					});
+				}
+
+				targetInquiryId = bestMatch.id;
+				targetInquiryType = bestMatch.type;
+				targetSubject = bestMatch.subject;
 			}
 		}
+
+
 
 		// 7. If still not matched, create a new contact inquiry so the email is NEVER lost and visible in CMS
 		if (!targetInquiryId) {
