@@ -5,14 +5,15 @@ export interface DashboardCounts {
 	projects: { total: number; published: number };
 	contacts: { total: number; unread: number };
 	serviceRequests: { total: number; pending: number };
+	hireRequests: { total: number; pending: number };
 	totalViews: number;
 }
 
 export interface InboxEntry {
 	id: string;
-	kind: "contact" | "service-request";
+	kind: "contact" | "service-request" | "hire-request";
 	name: string;
-	// Contact subject, or the requested service type.
+	// Contact subject, requested service type, or job role & company.
 	subject: string;
 	status: string;
 	createdAt: Date;
