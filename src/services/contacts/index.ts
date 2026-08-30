@@ -7,4 +7,5 @@ export const contactService = {
 	getById: actions.getById,
 	updateStatus: actions.updateStatus,
 	submit: actions.submit,
+	delete: actions.deleteContact,
 };

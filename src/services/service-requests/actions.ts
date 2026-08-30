@@ -85,7 +85,7 @@ export async function submit(data: NewServiceRequest, recaptchaToken?: string): 
 		.values({ ...clean, status: "new" })
 		.returning({ id: serviceRequests.id });
 
-	await sendServiceRequestEmails(clean);
+	await sendServiceRequestEmails({ ...clean, id });
 
 	return id;
 }
@@ -93,4 +93,11 @@ export async function submit(data: NewServiceRequest, recaptchaToken?: string): 
 export async function updateStatus(id: string, status: ServiceRequest["status"]): Promise<void> {
 	await assertAdmin();
 	await getDb().update(serviceRequests).set({ status }).where(eq(serviceRequests.id, id));
+}
+
+export async function deleteServiceRequest(id: string): Promise<void> {
+	await assertAdmin();
+	const db = getDb();
+	await db.delete(schema.inquiryMessages).where(eq(schema.inquiryMessages.inquiryId, id));
+	await db.delete(serviceRequests).where(eq(serviceRequests.id, id));
 }

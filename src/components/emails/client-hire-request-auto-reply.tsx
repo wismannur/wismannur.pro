@@ -12,24 +12,52 @@ import {
 	Text,
 } from "@react-email/components";
 
-interface ClientServiceRequestAutoReplyProps {
+interface ClientHireRequestAutoReplyProps {
 	name: string;
-	serviceType: string;
-	budget: string;
-	timeframe: string;
-	projectDetails: string;
+	company: string;
+	roleTitle: string;
+	employmentType: string;
+	workplaceType: string;
+	message: string;
 	refId?: string;
 }
 
-export const ClientServiceRequestAutoReplyEmail = ({
+export const ClientHireRequestAutoReplyEmail = ({
 	name,
-	serviceType,
-	budget,
-	timeframe,
-	projectDetails,
+	company,
+	roleTitle,
+	employmentType,
+	workplaceType,
+	message,
 	refId,
-}: ClientServiceRequestAutoReplyProps) => {
-	const previewText = `Terima kasih atas permintaan proyek Anda, ${name}! - Wisman Nur`;
+}: ClientHireRequestAutoReplyProps) => {
+	const previewText = `Terima kasih atas penawaran posisi ${roleTitle} di ${company}, ${name}! - Wisman Nur`;
+
+	const formatEmployment = (type: string) => {
+		switch (type) {
+			case "full_time":
+				return "Full-time Employee";
+			case "contract":
+				return "Long-term Contract";
+			case "advisory":
+				return "Advisory / Fractional";
+			default:
+				return type;
+		}
+	};
+
+	const formatWorkplace = (type: string) => {
+		switch (type) {
+			case "remote":
+				return "Remote";
+			case "hybrid":
+				return "Hybrid";
+			case "onsite":
+				return "On-site";
+			default:
+				return type;
+		}
+	};
 
 	return (
 		<Html>
@@ -38,41 +66,41 @@ export const ClientServiceRequestAutoReplyEmail = ({
 			<Body style={main}>
 				<Container style={container}>
 					<Section style={headerSection}>
-						<Text style={brand}>Wisman Nur · Project Inquiry</Text>
-						<Heading style={headerTitle}>Permintaan Proyek Anda Diterima 🚀</Heading>
-						<Text style={headerSubtitle}>Terima kasih telah mempercayakan kebutuhan Anda.</Text>
+						<Text style={brand}>Wisman Nur · Career Opportunity</Text>
+						<Heading style={headerTitle}>Pesan Penawaran / Lowongan Diterima 🎯</Heading>
+						<Text style={headerSubtitle}>Terima kasih atas ketertarikan Anda untuk bekerja sama.</Text>
 					</Section>
 
 					<Section style={bodySection}>
 						<Text style={greeting}>Halo {name},</Text>
 						<Text style={paragraph}>
-							Terima kasih telah mengajukan permintaan kerja sama untuk layanan{" "}
-							<strong>{serviceType}</strong> melalui{" "}
+							Terima kasih telah menghubungi saya mengenai peluang posisi{" "}
+							<strong>{roleTitle}</strong> di <strong>{company}</strong> via{" "}
 							<Link href="https://wismannur.pro/hire-me" style={linkStyle}>
 								wismannur.pro/hire-me
 							</Link>
 							.
 						</Text>
 						<Text style={paragraph}>
-							Saya akan meninjau detail proyek serta ketersediaan jadwal, dan akan segera membalas
-							dengan estimasi atau langkah selanjutnya maksimal dalam waktu{" "}
-							<strong>1x24 jam</strong> kerja.
+							Saya sangat mengapresiasi penawaran ini. Saya akan mempelajari profil perusahaan,
+							detail peran, dan kesesuaian teknis secara mendalam, lalu akan segera membalas email Anda
+							maksimal dalam waktu <strong>1x24 jam</strong> kerja.
 						</Text>
 					</Section>
 
 					<Section style={summaryCard}>
-						<Text style={summaryLabel}>Ringkasan Permintaan Proyek:</Text>
+						<Text style={summaryLabel}>Ringkasan Informasi:</Text>
 						<Text style={summaryItem}>
-							<strong>Layanan:</strong> {serviceType}
+							<strong>Perusahaan:</strong> {company}
 						</Text>
 						<Text style={summaryItem}>
-							<strong>Estimasi Budget:</strong> {budget}
+							<strong>Posisi:</strong> {roleTitle}
 						</Text>
 						<Text style={summaryItem}>
-							<strong>Target Waktu:</strong> {timeframe}
+							<strong>Skema Kerja:</strong> {formatEmployment(employmentType)} · {formatWorkplace(workplaceType)}
 						</Text>
-						<Text style={summaryItemLabel}>Detail Kebutuhan:</Text>
-						<Text style={summaryMessage}>{projectDetails}</Text>
+						<Text style={summaryItemLabel}>Pesan / Gambaran Peran:</Text>
+						<Text style={summaryMessage}>{message}</Text>
 					</Section>
 
 					<Section style={signatureSection}>
@@ -99,7 +127,7 @@ export const ClientServiceRequestAutoReplyEmail = ({
 
 					<Section style={footerSection}>
 						<Text style={footerText}>
-							Email ini dikirim secara otomatis sebagai tanda terima resmi permohonan layanan.
+							Email ini dikirim secara otomatis sebagai tanda terima pesan penawaran kerja sama/rekrutmen.
 						</Text>
 						{refId && (
 							<Text style={refFooterText}>
@@ -113,12 +141,12 @@ export const ClientServiceRequestAutoReplyEmail = ({
 	);
 };
 
-
-export default ClientServiceRequestAutoReplyEmail;
+export default ClientHireRequestAutoReplyEmail;
 
 const main: React.CSSProperties = {
 	backgroundColor: "#090d16",
-	fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
+	fontFamily:
+		'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
 	padding: "40px 0",
 };
 

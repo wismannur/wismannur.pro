@@ -6,34 +6,43 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
 	Archive,
-	Calendar,
 	CheckCircle,
-	CornerDownRight,
+	CheckCircle2,
+	Clock,
 	Eye,
 	Filter,
 	Inbox,
 	Loader2,
 	Mail,
-	MessageSquare,
+	MoreHorizontal,
 	RefreshCw,
 	Search,
-	Send,
-	User,
+	Trash2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -42,37 +51,28 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { useLoadingState } from "@/hooks/use-loading-state";
-import { contactService, inquiryMessagesService, type Contact, type InquiryMessage } from "@/services";
+import { cn } from "@/lib/utils";
+import { contactService, type Contact } from "@/services";
 
 export default function CmsContactsPage() {
+	const router = useRouter();
 	const [currentPage, setCurrentPage] = useState(1);
 	const [hasMore, setHasMore] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filterStatus, setFilterStatus] = useState<string>("");
-	const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-	const [isDetailOpen, setIsDetailOpen] = useState(false);
+	const [contactToDelete, setContactToDelete] = useState<Contact | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 	const [filteredContacts, setFilteredContacts] = useState<Contact[]>([]);
-	const [threadMessages, setThreadMessages] = useState<InquiryMessage[]>([]);
-	const [replyMessage, setReplyMessage] = useState("");
-	const [isSendingReply, setIsSendingReply] = useState(false);
-	const { withLoading } = useLoadingState();
 
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["contacts", currentPage, filterStatus],
-		queryFn: () => contactService.getContacts(currentPage, null, filterStatus || undefined),
+		queryFn: () =>
+			contactService.getContacts(
+				currentPage,
+				null,
+				filterStatus === "all" ? undefined : filterStatus || undefined,
+			),
 	});
-
-	const loadThread = async (contactId: string) => {
-		try {
-			const messages = await inquiryMessagesService.getThreadMessages(contactId);
-			setThreadMessages(messages);
-		} catch (err) {
-			console.error("Failed to load thread messages:", err);
-		}
-	};
 
 	useEffect(() => {
 		if (data) {
@@ -80,11 +80,13 @@ export default function CmsContactsPage() {
 
 			// Apply client-side search filtering
 			if (searchQuery) {
+				const query = searchQuery.toLowerCase();
 				const filtered = data.contacts.filter(
 					(contact) =>
-						contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-						contact.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-						contact.subject.toLowerCase().includes(searchQuery.toLowerCase()),
+						contact.name.toLowerCase().includes(query) ||
+						contact.email.toLowerCase().includes(query) ||
+						contact.subject.toLowerCase().includes(query) ||
+						contact.message.toLowerCase().includes(query),
 				);
 				setFilteredContacts(filtered);
 			} else {
@@ -93,62 +95,20 @@ export default function CmsContactsPage() {
 		}
 	}, [data, searchQuery]);
 
-	const handleViewContact = async (id: string) => {
-		try {
-			// Start loading state
-			const contact = await withLoading(
-				async () => {
-					const result = await contactService.getById(id);
-					return result;
-				},
-				{ loadingText: "Loading contact details..." },
-			);
+	// Overview metrics
+	const stats = useMemo(() => {
+		const contacts = data?.contacts || [];
+		return {
+			total: contacts.length,
+			new: contacts.filter((c) => c.status === "new").length,
+			read: contacts.filter((c) => c.status === "read").length,
+			replied: contacts.filter((c) => c.status === "replied").length,
+			archived: contacts.filter((c) => c.status === "archived").length,
+		};
+	}, [data]);
 
-			if (contact) {
-				setSelectedContact(contact);
-				setReplyMessage("");
-				loadThread(id);
-				setIsDetailOpen(true);
-
-				// Mark as read if it's new
-				if (contact.status === "new") {
-					await contactService.updateStatus(id, "read");
-					refetch();
-				}
-			}
-		} catch (error) {
-			console.error("Error fetching contact details:", error);
-			toast.error("Failed to load contact details");
-		}
-	};
-
-	const handleSendReply = async () => {
-		if (!selectedContact || !replyMessage.trim()) return;
-
-		setIsSendingReply(true);
-		try {
-			await inquiryMessagesService.sendAdminReply({
-				inquiryId: selectedContact.id,
-				inquiryType: "contact",
-				toEmail: selectedContact.email,
-				toName: selectedContact.name,
-				subject: selectedContact.subject,
-				message: replyMessage.trim(),
-				originalMessageSnippet: selectedContact.message,
-			});
-
-			toast.success("Balasan email berhasil dikirim ke klien!");
-			setReplyMessage("");
-			loadThread(selectedContact.id);
-			setSelectedContact({ ...selectedContact, status: "replied" });
-			refetch();
-		} catch (error) {
-			console.error("Error sending reply:", error);
-			const msg = error instanceof Error ? error.message : "Gagal mengirim balasan email";
-			toast.error(msg);
-		} finally {
-			setIsSendingReply(false);
-		}
+	const handleViewContact = (id: string) => {
+		router.push(`/cms/contacts/${id}`);
 	};
 
 	const handleUpdateStatus = async (
@@ -157,14 +117,27 @@ export default function CmsContactsPage() {
 	) => {
 		try {
 			await contactService.updateStatus(id, status);
-			toast.success(`Contact marked as ${status}`);
+			toast.success(`Status updated to ${status}`);
 			refetch();
-			if (selectedContact?.id === id) {
-				setSelectedContact({ ...selectedContact, status });
-			}
 		} catch (error) {
 			console.error("Error updating contact status:", error);
 			toast.error("Failed to update contact status");
+		}
+	};
+
+	const handleDeleteContact = async () => {
+		if (!contactToDelete) return;
+		setIsDeleting(true);
+		try {
+			await contactService.delete(contactToDelete.id);
+			toast.success("Pesan kontak berhasil dihapus");
+			setContactToDelete(null);
+			refetch();
+		} catch (error) {
+			console.error("Error deleting contact:", error);
+			toast.error("Gagal menghapus pesan kontak");
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
@@ -174,126 +147,333 @@ export default function CmsContactsPage() {
 
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault();
-		// Search is applied client-side in the useEffect
 	};
 
 	const handleFilterChange = (value: string) => {
 		setFilterStatus(value);
-		setCurrentPage(1); // Reset to first page when filter changes
+		setCurrentPage(1);
+	};
+
+	const getInitials = (name: string) => {
+		if (!name) return "CT";
+		const parts = name.trim().split(/\s+/);
+		if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+		return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 	};
 
 	const getStatusBadge = (status: string) => {
 		switch (status) {
 			case "new":
-				return <Badge variant="default">New</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 whitespace-nowrap">
+						<span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+						New
+					</span>
+				);
 			case "read":
-				return <Badge variant="secondary">Read</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 whitespace-nowrap">
+						<span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+						Read
+					</span>
+				);
 			case "replied":
 				return (
-					<Badge variant="default" className="bg-green-500">
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+						<span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
 						Replied
-					</Badge>
+					</span>
 				);
 			case "archived":
-				return <Badge variant="outline">Archived</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border whitespace-nowrap">
+						Archived
+					</span>
+				);
 			default:
-				return <Badge variant="outline">{status}</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border whitespace-nowrap">
+						{status}
+					</span>
+				);
 		}
-	};
-
-	const formatDate = (date: Date) => {
-		return format(date, "dd MMM yyyy HH:mm");
 	};
 
 	// Define columns for the DataTable
 	const columns: ColumnDef<Contact>[] = [
 		{
-			header: "Name",
-			cell: (contact) => (
-				<div className="flex items-start gap-2">
-					<Mail
-						className={`h-4 w-4 mt-1 ${
-							contact.status === "new" ? "text-primary" : "text-muted-foreground"
-						}`}
-					/>
-					<div>
-						<div>{contact.name}</div>
-						<div className="text-sm text-muted-foreground">{contact.email}</div>
+			header: "Contact",
+			cell: (contact) => {
+				const isNew = contact.status === "new";
+				return (
+					<div className="flex items-center gap-3 py-1 group/contact">
+						<Avatar className="h-9 w-9 shrink-0 border border-border/60 bg-muted/60 group-hover/contact:border-primary/40 transition-colors">
+							<AvatarFallback
+								className={cn(
+									"font-semibold text-xs transition-colors",
+									isNew
+										? "bg-primary/15 text-primary group-hover/contact:bg-primary/25"
+										: "bg-muted text-muted-foreground group-hover/contact:text-foreground",
+								)}
+							>
+								{getInitials(contact.name)}
+							</AvatarFallback>
+						</Avatar>
+						<div className="flex flex-col min-w-0">
+							<div className="flex items-center gap-1.5">
+								<span className="font-semibold text-foreground text-sm truncate max-w-[170px] group-hover/contact:text-primary transition-colors">
+									{contact.name}
+								</span>
+								{isNew && (
+									<span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-blue-500/15 text-blue-500 dark:text-blue-400">
+										NEW
+									</span>
+								)}
+							</div>
+							<span
+								onClick={(e) => {
+									e.stopPropagation();
+									window.open(`mailto:${contact.email}`, "_self");
+								}}
+								className="text-xs text-muted-foreground hover:text-primary transition-colors truncate max-w-[180px]"
+								title={contact.email}
+							>
+								{contact.email}
+							</span>
+						</div>
 					</div>
-				</div>
-			),
-			className: "w-[250px]",
+				);
+			},
+			className: "min-w-[230px]",
 		},
 		{
-			header: "Subject",
-			cell: (contact) => <div className="max-w-xs truncate">{contact.subject}</div>,
+			header: "Subject & Message",
+			cell: (contact) => (
+				<div className="flex flex-col gap-1 py-1 min-w-0">
+					<div className="font-medium text-xs text-foreground truncate max-w-[280px]">
+						{contact.subject}
+					</div>
+					{contact.message && (
+						<p
+							className="text-xs text-muted-foreground/80 line-clamp-1 max-w-[320px]"
+							title={contact.message}
+						>
+							{contact.message}
+						</p>
+					)}
+				</div>
+			),
+			className: "min-w-[260px]",
 		},
 		{
 			header: "Date",
-			cell: (contact) => (
-				<div className="flex items-center text-muted-foreground text-sm">
-					<Calendar className="h-3.5 w-3.5 mr-1.5" />
-					{formatDate(contact.createdAt)}
-				</div>
-			),
-			className: "hidden md:table-cell",
+			cell: (contact) => {
+				const createdDate = new Date(contact.createdAt);
+				return (
+					<div className="flex flex-col text-xs">
+						<span className="font-medium text-foreground whitespace-nowrap">
+							{format(createdDate, "dd MMM yyyy")}
+						</span>
+						<span className="text-[11px] text-muted-foreground flex items-center gap-1 whitespace-nowrap mt-0.5">
+							<Clock className="h-3 w-3 text-muted-foreground/60" />
+							{format(createdDate, "HH:mm")}
+						</span>
+					</div>
+				);
+			},
+			className: "hidden md:table-cell min-w-[120px] whitespace-nowrap",
 		},
 		{
 			header: "Status",
 			cell: (contact) => getStatusBadge(contact.status),
-			className: "hidden md:table-cell",
+			className: "hidden sm:table-cell min-w-[110px] whitespace-nowrap",
 		},
 		{
-			header: "Actions",
+			header: "",
 			cell: (contact) => (
-				<div className="flex justify-end gap-2">
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => handleViewContact(contact.id)}
-						className="h-8 px-2"
-					>
-						<Eye className="h-4 w-4 mr-1" />
-						View
-					</Button>
+				<div
+					className="flex items-center justify-end"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+							>
+								<MoreHorizontal className="h-4 w-4" />
+								<span className="sr-only">Actions</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-48">
+							<DropdownMenuItem onClick={() => handleViewContact(contact.id)}>
+								<Eye className="h-4 w-4 mr-2" />
+								View Details & Thread
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								onClick={() => handleUpdateStatus(contact.id, "read")}
+								disabled={contact.status === "read"}
+							>
+								<Eye className="h-4 w-4 mr-2 text-slate-400" />
+								Mark as Read
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => handleUpdateStatus(contact.id, "replied")}
+								disabled={contact.status === "replied"}
+							>
+								<CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
+								Mark as Replied
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => handleUpdateStatus(contact.id, "archived")}
+								disabled={contact.status === "archived"}
+							>
+								<Archive className="h-4 w-4 mr-2 text-muted-foreground" />
+								Archive Message
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								onClick={() => setContactToDelete(contact)}
+								className="text-destructive focus:text-destructive focus:bg-destructive/10"
+							>
+								<Trash2 className="h-4 w-4 mr-2" />
+								Delete Message
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			),
-			className: "text-right",
+			className: "text-right w-[60px] whitespace-nowrap",
 		},
 	];
 
 	return (
 		<div className="space-y-6">
+			{/* Page Header */}
 			<div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
 				<div>
 					<h1 className="text-2xl font-bold tracking-tight">Contact Messages</h1>
-					<p className="text-muted-foreground">Manage and respond to contact form submissions</p>
+					<p className="text-sm text-muted-foreground mt-0.5">
+						Manage, review, and respond to incoming inquiries from your contact form
+					</p>
 				</div>
+			</div>
 
-				<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-					<form onSubmit={handleSearch} className="relative w-full sm:w-auto">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-						<Input
-							placeholder="Search contacts..."
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="pl-9 w-full sm:w-[250px] rounded-lg"
-						/>
-					</form>
+			{/* Metric Overview Cards */}
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+				<button
+					type="button"
+					onClick={() => handleFilterChange("all")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-border",
+						filterStatus === "all" || !filterStatus
+							? "ring-1 ring-primary/40 border-primary/40 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">Total Messages</span>
+						<Mail className="h-4 w-4 text-muted-foreground/60" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight">{stats.total}</div>
+				</button>
 
+				<button
+					type="button"
+					onClick={() => handleFilterChange("new")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-blue-500/40",
+						filterStatus === "new"
+							? "ring-1 ring-blue-500/40 border-blue-500/40 bg-blue-500/5 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">New</span>
+						<span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight text-blue-500">
+						{stats.new}
+					</div>
+				</button>
+
+				<button
+					type="button"
+					onClick={() => handleFilterChange("read")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-slate-500/40",
+						filterStatus === "read"
+							? "ring-1 ring-slate-500/40 border-slate-500/40 bg-slate-500/5 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">Read</span>
+						<Eye className="h-4 w-4 text-slate-400" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight text-slate-400">
+						{stats.read}
+					</div>
+				</button>
+
+				<button
+					type="button"
+					onClick={() => handleFilterChange("replied")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-emerald-500/40",
+						filterStatus === "replied"
+							? "ring-1 ring-emerald-500/40 border-emerald-500/40 bg-emerald-500/5 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">Replied</span>
+						<CheckCircle2 className="h-4 w-4 text-emerald-500" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight text-emerald-500">
+						{stats.replied}
+					</div>
+				</button>
+			</div>
+
+			{/* Search & Filter Bar */}
+			<div className="flex flex-col sm:flex-row justify-between gap-3">
+				<form onSubmit={handleSearch} className="relative w-full sm:w-[320px]">
+					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+					<Input
+						placeholder="Search by name, email, subject..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						className="pl-9 w-full rounded-lg text-xs"
+					/>
+				</form>
+
+				<div className="flex items-center gap-2.5">
 					<Select value={filterStatus} onValueChange={handleFilterChange}>
-						<SelectTrigger className="w-full sm:w-[180px] rounded-lg">
-							<div className="flex items-center">
-								<Filter className="mr-2 h-4 w-4" />
-								<SelectValue placeholder="Filter by status" />
+						<SelectTrigger className="w-full sm:w-[170px] rounded-lg text-xs">
+							<div className="flex items-center gap-1.5 truncate">
+								<Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+								<SelectValue placeholder="All Statuses" />
 							</div>
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="all">All Messages</SelectItem>
-							<SelectItem value="new">New</SelectItem>
-							<SelectItem value="read">Read</SelectItem>
-							<SelectItem value="replied">Replied</SelectItem>
-							<SelectItem value="archived">Archived</SelectItem>
+							<SelectItem value="all" className="text-xs">
+								All Messages
+							</SelectItem>
+							<SelectItem value="new" className="text-xs">
+								New
+							</SelectItem>
+							<SelectItem value="read" className="text-xs">
+								Read
+							</SelectItem>
+							<SelectItem value="replied" className="text-xs">
+								Replied
+							</SelectItem>
+							<SelectItem value="archived" className="text-xs">
+								Archived
+							</SelectItem>
 						</SelectContent>
 					</Select>
 
@@ -302,7 +482,8 @@ export default function CmsContactsPage() {
 						size="icon"
 						onClick={() => refetch()}
 						disabled={isRefetching}
-						className="rounded-lg"
+						className="rounded-lg shrink-0"
+						title="Refresh Table"
 					>
 						<RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
 						<span className="sr-only">Refresh</span>
@@ -310,17 +491,18 @@ export default function CmsContactsPage() {
 				</div>
 			</div>
 
+			{/* Data Table */}
 			<DataTable
 				columns={columns}
 				data={filteredContacts}
 				isLoading={isLoading}
 				loadingRows={5}
 				emptyState={{
-					icon: <Inbox className="h-8 w-8 mb-2" />,
+					icon: <Inbox className="h-8 w-8 mb-2 text-muted-foreground/60" />,
 					title: "No contacts found",
 					description: searchQuery
 						? "Try adjusting your search query"
-						: filterStatus
+						: filterStatus && filterStatus !== "all"
 							? `No ${filterStatus} messages found`
 							: "No contact messages yet",
 				}}
@@ -329,194 +511,49 @@ export default function CmsContactsPage() {
 					hasMore,
 					onPageChange: handlePageChange,
 				}}
-				rowClassName={(contact) => (contact.status === "new" ? "bg-primary/5" : "")}
+				onRowClick={(contact) => handleViewContact(contact.id)}
+				rowClassName={(contact) =>
+					cn(
+						"transition-colors hover:bg-muted/50 cursor-pointer",
+						contact.status === "new" && "bg-blue-500/[0.03] dark:bg-blue-500/[0.04]",
+					)
+				}
 				keyField="id"
 			/>
 
-			{/* Contact Detail & Conversation Thread Dialog */}
-			<Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-				<DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-					<DialogHeader className="px-6 pt-6 pb-2">
-						<DialogTitle className="flex items-center gap-2">
-							<MessageSquare className="h-5 w-5 text-primary" />
-							<span>Contact Inquiry & Conversation</span>
-						</DialogTitle>
-						<DialogDescription>
-							Thread percakapan dengan {selectedContact?.name} ({selectedContact?.email})
-						</DialogDescription>
-					</DialogHeader>
-
-					{selectedContact && (
-						<div className="flex-1 overflow-y-auto px-6 py-2 space-y-5">
-							{/* Status & Date bar */}
-							<div className="flex justify-between items-center bg-muted/20 p-3 rounded-lg border border-border/40">
-								<div className="text-xs text-muted-foreground flex items-center gap-1.5">
-									<Calendar className="h-3.5 w-3.5" />
-									<span>Diterima: {formatDate(selectedContact.createdAt)}</span>
-								</div>
-								{getStatusBadge(selectedContact.status)}
-							</div>
-
-							{/* Original Client Inquiry */}
-							<div className="border border-border/60 rounded-xl p-4 bg-card/60 shadow-sm space-y-2">
-								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-2">
-										<div className="p-1.5 rounded-full bg-primary/10 text-primary">
-											<User className="h-3.5 w-3.5" />
-										</div>
-										<span className="font-semibold text-sm">{selectedContact.name}</span>
-										<span className="text-xs text-muted-foreground">({selectedContact.email})</span>
-									</div>
-									<Badge variant="outline" className="text-[10px]">
-										Pesan Pertama
-									</Badge>
-								</div>
-								<div className="font-medium text-sm text-foreground pt-1">
-									{selectedContact.subject}
-								</div>
-								<div className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed bg-background/50 p-3 rounded-lg border border-border/30">
-									{selectedContact.message}
-								</div>
-							</div>
-
-							{/* Thread Conversation History */}
-							{threadMessages.length > 0 && (
-								<div className="space-y-3 pt-2">
-									<div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-										<CornerDownRight className="h-3.5 w-3.5 text-primary" />
-										<span>Riwayat Balasan ({threadMessages.length})</span>
-									</div>
-
-									<div className="space-y-3">
-										{threadMessages.map((msg) => {
-											const isAdmin = msg.senderType === "admin";
-											return (
-												<div
-													key={msg.id}
-													className={`rounded-xl p-4 text-xs transition-all border ${
-														isAdmin
-															? "bg-primary/5 border-primary/20 ml-6 md:ml-12"
-															: "bg-muted/40 border-border/50 mr-6 md:mr-12"
-													}`}
-												>
-													<div className="flex justify-between items-center mb-1.5">
-														<div className="flex items-center gap-1.5 font-semibold">
-															<span className={isAdmin ? "text-primary" : "text-foreground"}>
-																{isAdmin ? "Wisman Nur (Admin)" : msg.senderName}
-															</span>
-															<span className="text-[10px] text-muted-foreground font-normal">
-																({msg.senderEmail})
-															</span>
-														</div>
-														<span className="text-[10px] text-muted-foreground">
-															{formatDate(msg.createdAt)}
-														</span>
-													</div>
-													<div className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
-														{msg.message}
-													</div>
-												</div>
-											);
-										})}
-									</div>
-								</div>
-							)}
-
-							{/* Reply Box */}
-							<div className="border border-border/60 rounded-xl p-4 bg-muted/10 space-y-3">
-								<div className="flex justify-between items-center">
-									<label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-										<Mail className="h-3.5 w-3.5 text-primary" />
-										<span>Kirim Balasan Email ke Klien</span>
-									</label>
-									<span className="text-[11px] text-muted-foreground">
-										Dikirim dari: <strong className="text-primary">hi@wismannur.pro</strong>
-									</span>
-								</div>
-
-								<Textarea
-									placeholder={`Tulis pesan balasan untuk ${selectedContact.name}... (Akan langsung dikirimkan ke ${selectedContact.email})`}
-									value={replyMessage}
-									onChange={(e) => setReplyMessage(e.target.value)}
-									rows={4}
-									className="text-xs resize-none rounded-lg border-border/60 focus-visible:ring-primary/30"
-								/>
-
-								<div className="flex justify-between items-center">
-									<span className="text-[11px] text-muted-foreground">
-										Klien dapat langsung membalas email Anda via inbox mereka.
-									</span>
-									<Button
-										size="sm"
-										onClick={handleSendReply}
-										disabled={isSendingReply || !replyMessage.trim()}
-										className="rounded-lg text-xs"
-									>
-										{isSendingReply ? (
-											<>
-												<Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-												Mengirim...
-											</>
-										) : (
-											<>
-												<Send className="h-3.5 w-3.5 mr-1.5" />
-												Kirim Balasan Email
-											</>
-										)}
-									</Button>
-								</div>
-							</div>
-						</div>
-					)}
-
-					<DialogFooter className="px-6 py-3 border-t border-border/40 bg-muted/10 flex-col sm:flex-row gap-2 justify-between">
-						<div className="flex gap-2 w-full sm:w-auto">
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => selectedContact && handleUpdateStatus(selectedContact.id, "read")}
-								disabled={selectedContact?.status === "read"}
-								className="flex-1 text-xs"
-							>
-								<Eye className="h-3.5 w-3.5 mr-1.5" />
-								Mark Read
-							</Button>
-
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => selectedContact && handleUpdateStatus(selectedContact.id, "replied")}
-								disabled={selectedContact?.status === "replied"}
-								className="flex-1 text-xs"
-							>
-								<CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-								Mark Replied
-							</Button>
-
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => selectedContact && handleUpdateStatus(selectedContact.id, "archived")}
-								disabled={selectedContact?.status === "archived"}
-								className="flex-1 text-xs"
-							>
-								<Archive className="h-3.5 w-3.5 mr-1.5" />
-								Archive
-							</Button>
-						</div>
-
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => setIsDetailOpen(false)}
-							className="text-xs"
+			{/* Delete Confirmation Alert Dialog */}
+			<AlertDialog
+				open={Boolean(contactToDelete)}
+				onOpenChange={(open) => !open && setContactToDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Hapus Pesan Kontak?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Tindakan ini tidak dapat dibatalkan. Pesan kontak dari{" "}
+							<strong className="text-foreground">{contactToDelete?.name}</strong> (
+							{contactToDelete?.email}) beserta seluruh riwayat balasan email akan dihapus secara permanen.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+						<AlertDialogAction
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+							onClick={handleDeleteContact}
+							disabled={isDeleting}
 						>
-							Tutup
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+							{isDeleting ? (
+								<>
+									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+									Menghapus...
+								</>
+							) : (
+								"Hapus"
+							)}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }
-

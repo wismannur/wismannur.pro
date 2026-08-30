@@ -1,5 +1,5 @@
 export type MessageSenderType = "admin" | "client";
-export type InquiryType = "contact" | "service_request";
+export type InquiryType = "contact" | "service_request" | "hire_request";
 
 export interface InquiryMessage {
 	id: string;

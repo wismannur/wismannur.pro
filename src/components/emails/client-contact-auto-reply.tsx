@@ -16,12 +16,14 @@ interface ClientContactAutoReplyProps {
 	name: string;
 	subject: string;
 	message: string;
+	refId?: string;
 }
 
 export const ClientContactAutoReplyEmail = ({
 	name,
 	subject,
 	message,
+	refId,
 }: ClientContactAutoReplyProps) => {
 	const previewText = `Thanks for reaching out, ${name}! I have received your message.`;
 
@@ -87,12 +89,18 @@ export const ClientContactAutoReplyEmail = ({
 							Email ini dikirim secara otomatis sebagai konfirmasi bahwa pesan Anda telah berhasil
 							diterima.
 						</Text>
+						{refId && (
+							<Text style={refFooterText}>
+								Ref: #{refId}
+							</Text>
+						)}
 					</Section>
 				</Container>
 			</Body>
 		</Html>
 	);
 };
+
 
 export default ClientContactAutoReplyEmail;
 
@@ -230,3 +238,11 @@ const footerText: React.CSSProperties = {
 	margin: "0",
 	lineHeight: "1.4",
 };
+
+const refFooterText: React.CSSProperties = {
+	color: "#475569",
+	fontSize: "10px",
+	fontFamily: "monospace",
+	margin: "8px 0 0",
+};
+

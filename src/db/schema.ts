@@ -33,6 +33,15 @@ export const serviceRequestStatus = pgEnum("service_request_status", [
 	"cancelled",
 ]);
 
+export const hireRequestStatus = pgEnum("hire_request_status", [
+	"new",
+	"reviewed",
+	"interviewing",
+	"offered",
+	"rejected",
+	"archived",
+]);
+
 export const resumeKind = pgEnum("resume_kind", ["experience", "education"]);
 
 export const theme = pgEnum("theme", ["light", "dark", "system"]);
@@ -223,6 +232,29 @@ export const serviceRequests = pgTable("service_requests", {
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
+});
+
+export const hireRequests = pgTable("hire_requests", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	name: text("name").notNull(),
+	email: text("email").notNull(),
+	company: text("company").notNull(),
+	roleTitle: text("role_title").notNull(),
+	employmentType: text("employment_type").notNull().default("full_time"),
+	workplaceType: text("workplace_type").notNull().default("remote"),
+	location: text("location"),
+	salaryRange: text("salary_range"),
+	message: text("message").notNull(),
+	status: hireRequestStatus("status").notNull().default("new"),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
 });
 
 // Single admin row. Credentials live in env vars (Auth.js, phase 8.4) — this
@@ -624,7 +656,72 @@ export const messageSenderType = pgEnum("message_sender_type", [
 export const inquiryType = pgEnum("inquiry_type", [
 	"contact",
 	"service_request",
+	"hire_request",
 ]);
+
+export const outreachType = pgEnum("outreach_type", [
+	"direct_apply",
+	"cold_pitch",
+	"follow_up",
+]);
+
+export const outreachStatus = pgEnum("outreach_status", [
+	"draft",
+	"sent",
+	"follow_up_due",
+	"replied",
+	"converted",
+	"closed",
+]);
+
+export const jobOutreaches = pgTable("job_outreaches", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	jobApplicationId: text("job_application_id").references(
+		() => jobApplications.id,
+		{ onDelete: "set null" },
+	),
+	companyName: text("company_name").notNull(),
+	companyWebsite: text("company_website"),
+	jobTitle: text("job_title").notNull(),
+	contactName: text("contact_name").notNull(),
+	contactRole: text("contact_role"),
+	contactEmail: text("contact_email").notNull(),
+	contactLinkedin: text("contact_linkedin"),
+	outreachType: outreachType("outreach_type").notNull().default("cold_pitch"),
+	status: outreachStatus("status").notNull().default("draft"),
+	subject: text("subject").notNull(),
+	body: text("body").notNull(),
+	notes: text("notes"),
+	attachments: jsonb("attachments"),
+	sentAt: timestamp("sent_at", { withTimezone: true }),
+	followUpDueDate: timestamp("follow_up_due_date", { withTimezone: true }),
+	lastRepliedAt: timestamp("last_replied_at", { withTimezone: true }),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
+
+export const jobOutreachMessages = pgTable("job_outreach_messages", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	outreachId: text("outreach_id")
+		.notNull()
+		.references(() => jobOutreaches.id, { onDelete: "cascade" }),
+	senderType: messageSenderType("sender_type").notNull(),
+	senderName: text("sender_name").notNull(),
+	senderEmail: text("sender_email").notNull(),
+	message: text("message").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+});
 
 export const inquiryMessages = pgTable("inquiry_messages", {
 	id: text("id")
@@ -646,6 +743,7 @@ export type ProjectRow = typeof projects.$inferSelect;
 export type ResumeEntryRow = typeof resumeEntries.$inferSelect;
 export type ContactRow = typeof contacts.$inferSelect;
 export type ServiceRequestRow = typeof serviceRequests.$inferSelect;
+export type HireRequestRow = typeof hireRequests.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
 export type UserSettingsRow = typeof userSettings.$inferSelect;
 export type SiteSettingsRow = typeof siteSettings.$inferSelect;
@@ -662,4 +760,7 @@ export type SitePageRow = typeof sitePages.$inferSelect;
 export type JobApplicationRow = typeof jobApplications.$inferSelect;
 export type JobInterviewRow = typeof jobInterviews.$inferSelect;
 export type InquiryMessageRow = typeof inquiryMessages.$inferSelect;
+export type JobOutreachRow = typeof jobOutreaches.$inferSelect;
+export type JobOutreachMessageRow = typeof jobOutreachMessages.$inferSelect;
+
 

@@ -1,9 +1,16 @@
 import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
 
-// Next.js loads .env.local itself; the drizzle-kit CLI does not.
-config({ path: ".env.production.local" });
+// Next.js loads .env files itself; the drizzle-kit CLI does not.
+if (process.env.DB_ENV === "prod" || process.env.DB_ENV === "production") {
+	config({ path: ".env.production.local" });
+	config({ path: ".env.production" });
+} else {
+	config({ path: ".env.development.local" });
+	config({ path: ".env.development" });
+}
 config({ path: ".env.local" });
+config({ path: ".env" });
 
 const isProd =
 	process.env.DB_ENV === "prod" || process.env.DB_ENV === "production";

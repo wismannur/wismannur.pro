@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import {
 	Award,
 	Briefcase,
+	Building2,
 	CalendarClock,
 	FileText,
 	Folder,
@@ -52,6 +53,7 @@ import {
 	PenSquare,
 	Plus,
 	Scale,
+	SendHorizontal,
 	Settings,
 	Sun,
 	Tag,
@@ -145,6 +147,32 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 					icon: <Briefcase className="h-4 w-4" />,
 					path: "/cms/job-tracker",
 				},
+				{
+					label: "Job Outreaches",
+					icon: <SendHorizontal className="h-4 w-4" />,
+					path: "/cms/job-outreaches",
+				},
+			],
+		},
+
+		{
+			group: "Inbox",
+			items: [
+				{
+					label: "Contacts",
+					icon: <MessageSquare className="h-4 w-4" />,
+					path: "/cms/contacts",
+				},
+				{
+					label: "Service Requests",
+					icon: <Wrench className="h-4 w-4" />,
+					path: "/cms/services",
+				},
+				{
+					label: "Hire Inquiries",
+					icon: <Building2 className="h-4 w-4" />,
+					path: "/cms/hire-requests",
+				},
 			],
 		},
 		{
@@ -224,21 +252,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 					label: "Availability",
 					icon: <CalendarClock className="h-4 w-4" />,
 					path: "/cms/availability",
-				},
-			],
-		},
-		{
-			group: "Inbox",
-			items: [
-				{
-					label: "Contacts",
-					icon: <MessageSquare className="h-4 w-4" />,
-					path: "/cms/contacts",
-				},
-				{
-					label: "Service Requests",
-					icon: <Briefcase className="h-4 w-4" />,
-					path: "/cms/services",
 				},
 			],
 		},
