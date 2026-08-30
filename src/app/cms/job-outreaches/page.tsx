@@ -3,10 +3,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format, formatDistanceToNow } from "date-fns";
-import { id as idLocale } from "date-fns/locale";
 import {
 	AlertCircle,
-	ArrowUpRight,
 	Briefcase,
 	Building2,
 	Calendar,
@@ -14,9 +12,7 @@ import {
 	Clock,
 	ExternalLink,
 	Eye,
-	Inbox,
 	Linkedin,
-	Loader2,
 	Mail,
 	MessageSquare,
 	MoreVertical,
@@ -28,11 +24,11 @@ import {
 	Sparkles,
 	Trash2,
 	User,
-	Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+
 
 import {
 	AlertDialog,
@@ -73,7 +69,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
 	jobOutreachService,
-	type JobOutreach,
 	type OutreachStatus,
 	type OutreachType,
 } from "@/services";
@@ -131,8 +126,8 @@ const TYPE_CONFIG: Record<OutreachType, { label: string; color: string }> = {
 };
 
 export default function JobOutreachesPage() {
-	const router = useRouter();
 	const queryClient = useQueryClient();
+
 
 	const [statusTab, setStatusTab] = useState<string>("all");
 	const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -515,12 +510,13 @@ export default function JobOutreachesPage() {
 									{/* Subject & Preview */}
 									<div className="space-y-1">
 										<div className="text-xs font-semibold text-foreground line-clamp-1">
-											"{item.subject}"
+											&ldquo;{item.subject}&rdquo;
 										</div>
 										<p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
 											{item.body}
 										</p>
 									</div>
+
 
 									{/* Footer Meta */}
 									<div className="pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">

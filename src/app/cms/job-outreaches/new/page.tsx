@@ -3,23 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-
-	AlertCircle,
 	ArrowLeft,
 	Briefcase,
 	Building2,
 	Check,
-	ExternalLink,
 	FileText,
 	Globe,
 	Linkedin,
 	Loader2,
 	Mail,
 	Paperclip,
-	Plus,
 	Send,
 	Sparkles,
-	Trash2,
 	UploadCloud,
 	User,
 	X,
@@ -28,7 +23,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -63,8 +57,8 @@ export default function NewOutreachPage() {
 	const queryClient = useQueryClient();
 	const prefilledJobAppId = searchParams.get("jobAppId") || "none";
 
-
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const hasAutoFilledRef = useRef(false);
 
 	const [companyName, setCompanyName] = useState("");
 	const [companyWebsite, setCompanyWebsite] = useState("");
@@ -94,17 +88,28 @@ export default function NewOutreachPage() {
 
 	// Pre-fill fields if linked to a job application
 	useEffect(() => {
-		if (selectedJobAppId && selectedJobAppId !== "none" && jobApplications.length > 0) {
+		if (
+			!hasAutoFilledRef.current &&
+			selectedJobAppId &&
+			selectedJobAppId !== "none" &&
+			jobApplications.length > 0
+		) {
 			const app = jobApplications.find((a) => a.id === selectedJobAppId);
 			if (app) {
-				if (!companyName) setCompanyName(app.companyName);
-				if (!jobTitle) setJobTitle(app.jobTitle);
-				if (!companyWebsite && app.companyWebsite) setCompanyWebsite(app.companyWebsite);
-				if (!contactName && app.contactName) setContactName(app.contactName);
-				if (!contactEmail && app.contactEmail) setContactEmail(app.contactEmail);
+				hasAutoFilledRef.current = true;
+				const timer = setTimeout(() => {
+					setCompanyName((prev) => prev || app.companyName);
+					setJobTitle((prev) => prev || app.jobTitle);
+					if (app.companyWebsite) setCompanyWebsite((prev) => prev || app.companyWebsite || "");
+					if (app.contactName) setContactName((prev) => prev || app.contactName || "");
+					if (app.contactEmail) setContactEmail((prev) => prev || app.contactEmail || "");
+				}, 0);
+				return () => clearTimeout(timer);
 			}
 		}
 	}, [selectedJobAppId, jobApplications]);
+
+
 
 	const handleSelectJobApp = (appId: string) => {
 		setSelectedJobAppId(appId);

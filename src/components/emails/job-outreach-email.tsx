@@ -25,13 +25,14 @@ interface JobOutreachEmailProps {
 export const JobOutreachEmail = ({
 	contactName,
 	bodyMessage,
-	subject,
+	subject: _subject,
 	senderTitle = "Frontend Software Engineer & AI Agent Architect",
-	companyName,
-	jobTitle,
+	companyName: _companyName,
+	jobTitle: _jobTitle,
 	attachments = [],
 	refId,
 }: JobOutreachEmailProps) => {
+
 	const previewSnippet = bodyMessage.slice(0, 120);
 
 	return (

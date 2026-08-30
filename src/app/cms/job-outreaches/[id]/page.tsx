@@ -2,32 +2,28 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import {
 	AlertCircle,
 	ArrowLeft,
 	Briefcase,
 	Building2,
-	Calendar,
 	Check,
-	CheckCircle2,
 	Clock,
 	Copy,
 	ExternalLink,
 	FileText,
-	Globe,
 	Linkedin,
 	Loader2,
 	Mail,
-	MessageSquare,
 	Paperclip,
 	RefreshCw,
 	Send,
 	Sparkles,
 	Trash2,
 	User,
-	Users,
 } from "lucide-react";
+
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -407,8 +403,9 @@ export default function JobOutreachDetailPage() {
 								<div className="space-y-1">
 									<CardTitle className="text-base font-bold flex items-center gap-2">
 										<Mail className="h-4 w-4 text-primary" />
-										Email Thread: "{outreach.subject}"
+										Email Thread: &ldquo;{outreach.subject}&rdquo;
 									</CardTitle>
+
 									<CardDescription className="text-xs">
 										Ref ID: <span className="font-mono text-foreground font-semibold">#{outreach.id}</span> · Pengiriman dari <span className="text-primary font-mono">hi@wismannur.pro</span>
 									</CardDescription>
