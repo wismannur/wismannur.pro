@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import {
 	Award,
 	Briefcase,
+	Building2,
 	CalendarClock,
 	FileText,
 	Folder,
@@ -148,6 +149,26 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 			],
 		},
 		{
+			group: "Inbox",
+			items: [
+				{
+					label: "Contacts",
+					icon: <MessageSquare className="h-4 w-4" />,
+					path: "/cms/contacts",
+				},
+				{
+					label: "Service Requests",
+					icon: <Wrench className="h-4 w-4" />,
+					path: "/cms/services",
+				},
+				{
+					label: "Hire Inquiries",
+					icon: <Building2 className="h-4 w-4" />,
+					path: "/cms/hire-requests",
+				},
+			],
+		},
+		{
 			group: "Site",
 			items: [
 				{
@@ -224,21 +245,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 					label: "Availability",
 					icon: <CalendarClock className="h-4 w-4" />,
 					path: "/cms/availability",
-				},
-			],
-		},
-		{
-			group: "Inbox",
-			items: [
-				{
-					label: "Contacts",
-					icon: <MessageSquare className="h-4 w-4" />,
-					path: "/cms/contacts",
-				},
-				{
-					label: "Service Requests",
-					icon: <Briefcase className="h-4 w-4" />,
-					path: "/cms/services",
 				},
 			],
 		},

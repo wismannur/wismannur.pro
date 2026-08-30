@@ -18,6 +18,7 @@ import {
 	AlertTriangle,
 	ArrowUpRight,
 	Briefcase,
+	Building2,
 	Eye,
 	FileText,
 	Folder,
@@ -275,18 +276,31 @@ function AlertRow({ alert }: { alert: DashboardAlert }) {
 
 function InboxRow({ entry }: { entry: InboxEntry }) {
 	const isContact = entry.kind === "contact";
+	const isHire = entry.kind === "hire-request";
+	const href = isContact
+		? "/cms/contacts"
+		: isHire
+			? "/cms/hire-requests"
+			: "/cms/services";
+
+	const icon = isContact ? (
+		<MessageSquare className="h-4 w-4" />
+	) : isHire ? (
+		<Building2 className="h-4 w-4" />
+	) : (
+		<Briefcase className="h-4 w-4" />
+	);
+
+	const iconClass = isContact
+		? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+		: isHire
+			? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+			: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+
 	return (
-		<Link href={isContact ? "/cms/contacts" : "/cms/services"} className="block">
+		<Link href={href} className="block">
 			<div className="flex items-center gap-3 border rounded-lg p-3 hover:bg-accent/50 transition-colors">
-				<div
-					className={`p-2 rounded-full shrink-0 ${
-						isContact
-							? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-							: "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
-					}`}
-				>
-					{isContact ? <MessageSquare className="h-4 w-4" /> : <Briefcase className="h-4 w-4" />}
-				</div>
+				<div className={`p-2 rounded-full shrink-0 ${iconClass}`}>{icon}</div>
 				<div className="min-w-0 flex-1">
 					<p className="font-medium text-sm truncate">{entry.name}</p>
 					<p className="text-xs text-muted-foreground truncate">{entry.subject}</p>
