@@ -659,6 +659,70 @@ export const inquiryType = pgEnum("inquiry_type", [
 	"hire_request",
 ]);
 
+export const outreachType = pgEnum("outreach_type", [
+	"direct_apply",
+	"cold_pitch",
+	"follow_up",
+]);
+
+export const outreachStatus = pgEnum("outreach_status", [
+	"draft",
+	"sent",
+	"follow_up_due",
+	"replied",
+	"converted",
+	"closed",
+]);
+
+export const jobOutreaches = pgTable("job_outreaches", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	jobApplicationId: text("job_application_id").references(
+		() => jobApplications.id,
+		{ onDelete: "set null" },
+	),
+	companyName: text("company_name").notNull(),
+	companyWebsite: text("company_website"),
+	jobTitle: text("job_title").notNull(),
+	contactName: text("contact_name").notNull(),
+	contactRole: text("contact_role"),
+	contactEmail: text("contact_email").notNull(),
+	contactLinkedin: text("contact_linkedin"),
+	outreachType: outreachType("outreach_type").notNull().default("cold_pitch"),
+	status: outreachStatus("status").notNull().default("draft"),
+	subject: text("subject").notNull(),
+	body: text("body").notNull(),
+	notes: text("notes"),
+	attachments: jsonb("attachments"),
+	sentAt: timestamp("sent_at", { withTimezone: true }),
+	followUpDueDate: timestamp("follow_up_due_date", { withTimezone: true }),
+	lastRepliedAt: timestamp("last_replied_at", { withTimezone: true }),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
+
+export const jobOutreachMessages = pgTable("job_outreach_messages", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	outreachId: text("outreach_id")
+		.notNull()
+		.references(() => jobOutreaches.id, { onDelete: "cascade" }),
+	senderType: messageSenderType("sender_type").notNull(),
+	senderName: text("sender_name").notNull(),
+	senderEmail: text("sender_email").notNull(),
+	message: text("message").notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+});
+
 export const inquiryMessages = pgTable("inquiry_messages", {
 	id: text("id")
 		.primaryKey()
@@ -696,4 +760,7 @@ export type SitePageRow = typeof sitePages.$inferSelect;
 export type JobApplicationRow = typeof jobApplications.$inferSelect;
 export type JobInterviewRow = typeof jobInterviews.$inferSelect;
 export type InquiryMessageRow = typeof inquiryMessages.$inferSelect;
+export type JobOutreachRow = typeof jobOutreaches.$inferSelect;
+export type JobOutreachMessageRow = typeof jobOutreachMessages.$inferSelect;
+
 

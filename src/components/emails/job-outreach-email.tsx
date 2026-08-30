@@ -3,7 +3,6 @@ import {
 	Body,
 	Container,
 	Head,
-	Heading,
 	Hr,
 	Html,
 	Link,
@@ -12,22 +11,29 @@ import {
 	Text,
 } from "@react-email/components";
 
-interface AdminReplyToClientProps {
-	clientName: string;
-	replyMessage: string;
-	originalSubject: string;
-	originalMessageSnippet?: string;
-	inquiryId?: string;
+interface JobOutreachEmailProps {
+	contactName: string;
+	bodyMessage: string;
+	subject: string;
+	senderTitle?: string;
+	companyName?: string;
+	jobTitle?: string;
+	attachments?: Array<{ name: string; url: string }>;
+	refId?: string;
 }
 
-export const AdminReplyToClientEmail = ({
-	clientName,
-	replyMessage,
-	originalSubject,
-	originalMessageSnippet,
-	inquiryId,
-}: AdminReplyToClientProps) => {
-	const previewSnippet = replyMessage.slice(0, 100);
+export const JobOutreachEmail = ({
+	contactName,
+	bodyMessage,
+	subject: _subject,
+	senderTitle = "Frontend Software Engineer & AI Agent Architect",
+	companyName: _companyName,
+	jobTitle: _jobTitle,
+	attachments = [],
+	refId,
+}: JobOutreachEmailProps) => {
+
+	const previewSnippet = bodyMessage.slice(0, 120);
 
 	return (
 		<Html>
@@ -36,22 +42,27 @@ export const AdminReplyToClientEmail = ({
 			<Body style={main}>
 				<Container style={container}>
 					<Section style={bodySection}>
-						<Text style={greeting}>Halo {clientName},</Text>
-						<Text style={replyMessageBox}>{replyMessage}</Text>
+						<Text style={greeting}>Halo {contactName || "Team"},</Text>
+						<Text style={messageContent}>{bodyMessage}</Text>
 					</Section>
 
-					{originalMessageSnippet && (
-						<Section style={quoteCard}>
-							<Text style={quoteLabel}>Menanggapi pesan sebelumnya ({originalSubject}):</Text>
-							<Text style={quoteText}>{originalMessageSnippet}</Text>
+					{attachments.length > 0 && (
+						<Section style={attachmentSection}>
+							<Text style={attachmentHeading}>📎 Lampiran Dokumen:</Text>
+							{attachments.map((att, idx) => (
+								<Text key={idx} style={attachmentItem}>
+									•{" "}
+									<Link href={att.url} style={linkStyle}>
+										{att.name} (Download / View)
+									</Link>
+								</Text>
+							))}
 						</Section>
 					)}
 
 					<Section style={signatureSection}>
 						<Text style={signatureName}>Wisman Nur</Text>
-						<Text style={signatureTitle}>
-							Frontend Software Engineer & AI Agent Architect
-						</Text>
+						<Text style={signatureTitle}>{senderTitle}</Text>
 						<Text style={signatureLinks}>
 							<Link href="https://wismannur.pro" style={linkStyle}>
 								wismannur.pro
@@ -71,11 +82,15 @@ export const AdminReplyToClientEmail = ({
 
 					<Section style={footerSection}>
 						<Text style={footerText}>
-							Anda dapat langsung membalas (reply) email ini jika ada pertanyaan atau diskusi lanjutan.
+							Sent directly from Wisman Nur (
+							<Link href="mailto:hi@wismannur.pro" style={linkStyle}>
+								hi@wismannur.pro
+							</Link>
+							). Feel free to reply directly to this email.
 						</Text>
-						{inquiryId && (
+						{refId && (
 							<Text style={refFooterText}>
-								Ref: #{inquiryId}
+								Ref: #{refId}
 							</Text>
 						)}
 					</Section>
@@ -85,14 +100,14 @@ export const AdminReplyToClientEmail = ({
 	);
 };
 
-export default AdminReplyToClientEmail;
+export default JobOutreachEmail;
 
 
 const main: React.CSSProperties = {
 	backgroundColor: "#090d16",
 	fontFamily:
 		'-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
-	padding: "40px 0",
+	padding: "36px 0",
 };
 
 const container: React.CSSProperties = {
@@ -100,34 +115,14 @@ const container: React.CSSProperties = {
 	border: "1px solid #1f2937",
 	borderRadius: "16px",
 	margin: "0 auto",
-	padding: "36px",
+	padding: "32px",
 	maxWidth: "580px",
-};
-
-const headerSection: React.CSSProperties = {
-	marginBottom: "24px",
-};
-
-const brand: React.CSSProperties = {
-	color: "#6366f1",
-	fontSize: "13px",
-	fontWeight: "700",
-	textTransform: "uppercase",
-	letterSpacing: "1px",
-	margin: "0 0 6px",
-};
-
-const headerTitle: React.CSSProperties = {
-	color: "#f9fafb",
-	fontSize: "22px",
-	fontWeight: "700",
-	margin: "0",
 };
 
 const bodySection: React.CSSProperties = {
 	color: "#e5e7eb",
 	fontSize: "15px",
-	lineHeight: "1.6",
+	lineHeight: "1.65",
 	marginBottom: "24px",
 };
 
@@ -138,7 +133,7 @@ const greeting: React.CSSProperties = {
 	margin: "0 0 16px",
 };
 
-const replyMessageBox: React.CSSProperties = {
+const messageContent: React.CSSProperties = {
 	color: "#f3f4f6",
 	fontSize: "15px",
 	lineHeight: "1.7",
@@ -146,35 +141,31 @@ const replyMessageBox: React.CSSProperties = {
 	margin: "0",
 };
 
-const quoteCard: React.CSSProperties = {
+const attachmentSection: React.CSSProperties = {
 	backgroundColor: "#1f2937",
-	borderLeft: "3px solid #6366f1",
-	borderRadius: "0 10px 10px 0",
-	padding: "14px 18px",
-	margin: "24px 0",
+	borderRadius: "10px",
+	padding: "12px 16px",
+	margin: "18px 0",
+	border: "1px solid #374151",
 };
 
-const quoteLabel: React.CSSProperties = {
-	color: "#9ca3af",
-	fontSize: "11px",
+const attachmentHeading: React.CSSProperties = {
+	color: "#e5e7eb",
+	fontSize: "13px",
 	fontWeight: "600",
-	textTransform: "uppercase",
-	letterSpacing: "0.5px",
 	margin: "0 0 6px",
 };
 
-const quoteText: React.CSSProperties = {
-	color: "#9ca3af",
+const attachmentItem: React.CSSProperties = {
 	fontSize: "13px",
-	lineHeight: "1.5",
-	margin: "0",
-	whiteSpace: "pre-wrap",
-	fontStyle: "italic",
+	margin: "3px 0",
+	color: "#9ca3af",
 };
 
 const signatureSection: React.CSSProperties = {
 	marginTop: "28px",
 };
+
 
 const signatureName: React.CSSProperties = {
 	color: "#f9fafb",
@@ -222,4 +213,3 @@ const refFooterText: React.CSSProperties = {
 	fontFamily: "monospace",
 	margin: "8px 0 0",
 };
-

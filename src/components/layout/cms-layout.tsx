@@ -53,6 +53,7 @@ import {
 	PenSquare,
 	Plus,
 	Scale,
+	SendHorizontal,
 	Settings,
 	Sun,
 	Tag,
@@ -146,8 +147,14 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 					icon: <Briefcase className="h-4 w-4" />,
 					path: "/cms/job-tracker",
 				},
+				{
+					label: "Job Outreaches",
+					icon: <SendHorizontal className="h-4 w-4" />,
+					path: "/cms/job-outreaches",
+				},
 			],
 		},
+
 		{
 			group: "Inbox",
 			items: [
