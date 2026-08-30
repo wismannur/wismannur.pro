@@ -18,6 +18,7 @@ interface ClientServiceRequestAutoReplyProps {
 	budget: string;
 	timeframe: string;
 	projectDetails: string;
+	refId?: string;
 }
 
 export const ClientServiceRequestAutoReplyEmail = ({
@@ -26,6 +27,7 @@ export const ClientServiceRequestAutoReplyEmail = ({
 	budget,
 	timeframe,
 	projectDetails,
+	refId,
 }: ClientServiceRequestAutoReplyProps) => {
 	const previewText = `Terima kasih atas permintaan proyek Anda, ${name}! - Wisman Nur`;
 
@@ -99,12 +101,18 @@ export const ClientServiceRequestAutoReplyEmail = ({
 						<Text style={footerText}>
 							Email ini dikirim secara otomatis sebagai tanda terima resmi permohonan layanan.
 						</Text>
+						{refId && (
+							<Text style={refFooterText}>
+								Ref: #{refId}
+							</Text>
+						)}
 					</Section>
 				</Container>
 			</Body>
 		</Html>
 	);
 };
+
 
 export default ClientServiceRequestAutoReplyEmail;
 
@@ -249,3 +257,11 @@ const footerText: React.CSSProperties = {
 	margin: "0",
 	lineHeight: "1.4",
 };
+
+const refFooterText: React.CSSProperties = {
+	color: "#475569",
+	fontSize: "10px",
+	fontFamily: "monospace",
+	margin: "8px 0 0",
+};
+

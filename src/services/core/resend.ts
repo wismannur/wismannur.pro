@@ -9,6 +9,7 @@ import AdminServiceRequestNotificationEmail from "@/components/emails/admin-serv
 import ClientContactAutoReplyEmail from "@/components/emails/client-contact-auto-reply";
 import ClientHireRequestAutoReplyEmail from "@/components/emails/client-hire-request-auto-reply";
 import ClientServiceRequestAutoReplyEmail from "@/components/emails/client-service-request-auto-reply";
+import JobOutreachEmail from "@/components/emails/job-outreach-email";
 
 function getResendClient(): Resend | null {
 	const resendApiKey = process.env.RESEND_API_KEY?.trim();
@@ -71,12 +72,26 @@ interface AdminReplyPayload {
 
 interface InboundAlertPayload {
 	inquiryId: string;
-	inquiryType: "contact" | "service_request" | "hire_request";
+	inquiryType: "contact" | "service_request" | "hire_request" | "job_outreach";
 	clientName: string;
 	clientEmail: string;
 	subject: string;
 	message: string;
 }
+
+export interface JobOutreachSendPayload {
+	outreachId: string;
+	toEmail: string;
+	toName: string;
+	subject: string;
+	message: string;
+	companyName?: string;
+	jobTitle?: string;
+	isFollowUp?: boolean;
+	attachments?: Array<{ name: string; url: string }>;
+}
+
+
 
 /**
  * Sends both Admin notification and Client auto-reply for contact inquiries.
@@ -91,7 +106,7 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const refTag = payload.id ? `[Ref: #${payload.id}]` : `[Ref: #${payload.subject}]`;
+		const dynamicReplyTo = payload.id ? `hi+contact-${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -100,6 +115,7 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
 				to: ADMIN_EMAIL,
 				replyTo: payload.email,
 				subject: `[Contact Form] ${payload.subject} - ${payload.name}`,
+				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: AdminContactNotificationEmail({
 					name: payload.name,
 					email: payload.email,
@@ -113,12 +129,14 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
 			resend.emails.send({
 				from: SENDER_HI,
 				to: payload.email,
-				replyTo: "hi@wismannur.pro",
-				subject: `${refTag} Pesan Anda telah diterima - Wisman Nur`,
+				replyTo: dynamicReplyTo,
+				subject: "Pesan Anda telah diterima - Wisman Nur",
+				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: ClientContactAutoReplyEmail({
 					name: payload.name,
 					subject: payload.subject,
 					message: payload.message,
+					refId: payload.id,
 				}),
 			}),
 		]);
@@ -140,7 +158,7 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const refTag = payload.id ? `[Ref: #${payload.id}]` : `[Ref: #${payload.serviceType}]`;
+		const dynamicReplyTo = payload.id ? `hi+service-${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -149,6 +167,7 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 				to: ADMIN_EMAIL,
 				replyTo: payload.email,
 				subject: `[Hire Me Request] ${payload.serviceType} - ${payload.name}${payload.company ? ` (${payload.company})` : ""}`,
+				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: AdminServiceRequestNotificationEmail({
 					name: payload.name,
 					email: payload.email,
@@ -165,14 +184,16 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 			resend.emails.send({
 				from: SENDER_HI,
 				to: payload.email,
-				replyTo: "hi@wismannur.pro",
-				subject: `${refTag} Permintaan proyek diterima - Wisman Nur`,
+				replyTo: dynamicReplyTo,
+				subject: "Permintaan proyek diterima - Wisman Nur",
+				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: ClientServiceRequestAutoReplyEmail({
 					name: payload.name,
 					serviceType: payload.serviceType,
 					budget: payload.budget,
 					timeframe: payload.timeframe,
 					projectDetails: payload.projectDetails,
+					refId: payload.id,
 				}),
 			}),
 		]);
@@ -194,7 +215,7 @@ export async function sendHireRequestEmails(payload: HireRequestEmailPayload): P
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const refTag = payload.id ? `[Ref: #${payload.id}]` : `[Ref: #${payload.roleTitle}]`;
+		const dynamicReplyTo = payload.id ? `hi+hire-${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -203,6 +224,7 @@ export async function sendHireRequestEmails(payload: HireRequestEmailPayload): P
 				to: ADMIN_EMAIL,
 				replyTo: payload.email,
 				subject: `[Hire Inquiry] ${payload.roleTitle} @ ${payload.company} - ${payload.name}`,
+				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: AdminHireRequestNotificationEmail({
 					name: payload.name,
 					email: payload.email,
@@ -221,8 +243,9 @@ export async function sendHireRequestEmails(payload: HireRequestEmailPayload): P
 			resend.emails.send({
 				from: SENDER_HI,
 				to: payload.email,
-				replyTo: "hi@wismannur.pro",
-				subject: `${refTag} Pesan penawaran posisi ${payload.roleTitle} diterima - Wisman Nur`,
+				replyTo: dynamicReplyTo,
+				subject: `Pesan penawaran posisi ${payload.roleTitle} diterima - Wisman Nur`,
+				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: ClientHireRequestAutoReplyEmail({
 					name: payload.name,
 					company: payload.company,
@@ -230,6 +253,7 @@ export async function sendHireRequestEmails(payload: HireRequestEmailPayload): P
 					employmentType: payload.employmentType,
 					workplaceType: payload.workplaceType,
 					message: payload.message,
+					refId: payload.id,
 				}),
 			}),
 		]);
@@ -250,10 +274,6 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 
 	try {
 		let formattedSubject = payload.subject.trim();
-		const refSnippet = `[Ref: #${payload.inquiryId}]`;
-		if (!formattedSubject.includes(refSnippet)) {
-			formattedSubject = `${refSnippet} ${formattedSubject}`;
-		}
 		if (!formattedSubject.toLowerCase().startsWith("re:")) {
 			formattedSubject = `Re: ${formattedSubject}`;
 		}
@@ -261,13 +281,17 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 		await resend.emails.send({
 			from: SENDER_HI,
 			to: payload.toEmail,
-			replyTo: "hi@wismannur.pro",
+			replyTo: `hi+inquiry-${payload.inquiryId}@wismannur.pro`,
 			subject: formattedSubject,
+			headers: {
+				"X-Entity-Ref-ID": payload.inquiryId,
+			},
 			react: AdminReplyToClientEmail({
 				clientName: payload.toName,
 				replyMessage: payload.message,
 				originalSubject: payload.subject,
 				originalMessageSnippet: payload.originalMessageSnippet,
+				inquiryId: payload.inquiryId,
 			}),
 		});
 	} catch (error) {
@@ -277,7 +301,7 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 }
 
 /**
- * Sends an alert to Admin when a Client sends an inbound reply via email.
+ * Sends an alert to Admin when a Client or Recruiter sends an inbound reply via email.
  */
 export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Promise<void> {
 	const resend = getResendClient();
@@ -304,4 +328,58 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
 		console.error("Failed to send inbound alert email via Resend:", error);
 	}
 }
+
+/**
+ * Sends an outbound job application / cold outreach / follow-up email to a recruiter or company contact.
+ */
+export async function sendJobOutreachEmail(payload: JobOutreachSendPayload): Promise<void> {
+	const resend = getResendClient();
+	if (!resend) {
+		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping job outreach email.");
+		return;
+	}
+
+	try {
+		let formattedSubject = payload.subject.trim();
+		if (payload.isFollowUp && !formattedSubject.toLowerCase().startsWith("re:")) {
+			formattedSubject = `Re: ${formattedSubject}`;
+		}
+
+		const resendAttachments =
+			payload.attachments && payload.attachments.length > 0
+				? payload.attachments.map((att) => ({
+						filename: att.name,
+						path: att.url,
+					}))
+				: undefined;
+
+		await resend.emails.send({
+			from: SENDER_HI,
+			to: payload.toEmail,
+			replyTo: `hi+outreach-${payload.outreachId}@wismannur.pro`,
+			subject: formattedSubject,
+			attachments: resendAttachments,
+			headers: {
+				"X-Entity-Ref-ID": payload.outreachId,
+			},
+			react: JobOutreachEmail({
+				contactName: payload.toName,
+				bodyMessage: payload.message,
+				subject: payload.subject,
+				companyName: payload.companyName,
+				jobTitle: payload.jobTitle,
+				attachments: payload.attachments,
+				refId: payload.outreachId,
+			}),
+		});
+
+	} catch (error) {
+		console.error("Failed to send job outreach email via Resend:", error);
+		throw error;
+	}
+}
+
+
+
+
 
