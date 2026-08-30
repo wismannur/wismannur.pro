@@ -94,3 +94,10 @@ export async function updateStatus(id: string, status: ServiceRequest["status"])
 	await assertAdmin();
 	await getDb().update(serviceRequests).set({ status }).where(eq(serviceRequests.id, id));
 }
+
+export async function deleteServiceRequest(id: string): Promise<void> {
+	await assertAdmin();
+	const db = getDb();
+	await db.delete(schema.inquiryMessages).where(eq(schema.inquiryMessages.inquiryId, id));
+	await db.delete(serviceRequests).where(eq(serviceRequests.id, id));
+}

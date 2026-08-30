@@ -76,8 +76,14 @@ export async function submit(formData: ContactForm, recaptchaToken?: string): Pr
 		.insert(contacts)
 		.values({ ...clean, status: "new" })
 		.returning({ id: contacts.id });
-
 	await sendContactEmails({ ...clean, id });
 
 	return id;
+}
+
+export async function deleteContact(id: string): Promise<void> {
+	await assertAdmin();
+	const db = getDb();
+	await db.delete(schema.inquiryMessages).where(eq(schema.inquiryMessages.inquiryId, id));
+	await db.delete(contacts).where(eq(contacts.id, id));
 }

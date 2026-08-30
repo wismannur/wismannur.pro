@@ -9,4 +9,5 @@ export const serviceRequestService = {
 	getById: actions.getById,
 	submit: actions.submit,
 	updateStatus: actions.updateStatus,
+	delete: actions.deleteServiceRequest,
 };

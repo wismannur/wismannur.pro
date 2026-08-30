@@ -6,36 +6,55 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
 	Briefcase,
+	Building2,
 	Calendar,
 	CheckCircle,
+	CheckCircle2,
 	Clock,
-	CornerDownRight,
+	Code2,
 	DollarSign,
 	Eye,
 	Filter,
+	Flame,
+	Inbox,
+	Layout,
 	Loader2,
-	Mail,
-	MessageSquare,
+	MoreHorizontal,
+	Network,
 	RefreshCw,
 	Search,
-	Send,
-	User,
+	Sparkles,
+	Timer,
+	Trash2,
+	Users,
 	XCircle,
+	Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -44,37 +63,90 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import { useLoadingState } from "@/hooks/use-loading-state";
-import { serviceRequestService, inquiryMessagesService, type ServiceRequest, type InquiryMessage } from "@/services";
+import { cn } from "@/lib/utils";
+import { serviceRequestService, type ServiceRequest } from "@/services";
+
+const SERVICE_TYPE_CONFIG: Record<
+	string,
+	{ label: string; icon: React.ElementType; className: string }
+> = {
+	frontend: {
+		label: "Frontend Development",
+		icon: Code2,
+		className: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+	},
+	"ui-ux": {
+		label: "UI/UX Implementation",
+		icon: Layout,
+		className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+	},
+	performance: {
+		label: "Performance Optimization",
+		icon: Zap,
+		className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+	},
+	api: {
+		label: "API Integration",
+		icon: Network,
+		className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+	},
+	animation: {
+		label: "Web Animation",
+		icon: Sparkles,
+		className: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+	},
+	leadership: {
+		label: "Technical Leadership",
+		icon: Users,
+		className: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+	},
+};
+
+const TIMEFRAME_CONFIG: Record<
+	string,
+	{ label: string; icon: React.ElementType; className: string }
+> = {
+	asap: {
+		label: "As soon as possible",
+		icon: Flame,
+		className: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+	},
+	"1-2-weeks": {
+		label: "Within 1-2 weeks",
+		icon: Timer,
+		className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+	},
+	"1-month": {
+		label: "Within a month",
+		icon: Calendar,
+		className: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+	},
+	flexible: {
+		label: "Flexible / Not urgent",
+		icon: Clock,
+		className: "bg-muted/50 text-muted-foreground border-border/50",
+	},
+};
 
 export default function CmsServicesPage() {
+	const router = useRouter();
 	const [currentPage, setCurrentPage] = useState(1);
 	const [hasMore, setHasMore] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filterStatus, setFilterStatus] = useState<string>("");
-	const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
-	const [isDetailOpen, setIsDetailOpen] = useState(false);
+	const [requestToDelete, setRequestToDelete] = useState<ServiceRequest | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
 	const [filteredRequests, setFilteredRequests] = useState<ServiceRequest[]>([]);
-	const [threadMessages, setThreadMessages] = useState<InquiryMessage[]>([]);
-	const [replyMessage, setReplyMessage] = useState("");
-	const [isSendingReply, setIsSendingReply] = useState(false);
-	const { withLoading } = useLoadingState();
 
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["serviceRequests", currentPage, filterStatus],
-		queryFn: () => serviceRequestService.getRequests(currentPage, null, filterStatus || undefined),
+		queryFn: () =>
+			serviceRequestService.getRequests(
+				currentPage,
+				null,
+				filterStatus === "all" ? undefined : filterStatus || undefined,
+			),
 	});
-
-	const loadThread = async (requestId: string) => {
-		try {
-			const messages = await inquiryMessagesService.getThreadMessages(requestId);
-			setThreadMessages(messages);
-		} catch (err) {
-			console.error("Failed to load service request thread:", err);
-		}
-	};
 
 	useEffect(() => {
 		if (data) {
@@ -82,11 +154,14 @@ export default function CmsServicesPage() {
 
 			// Apply client-side search filtering
 			if (searchQuery) {
+				const query = searchQuery.toLowerCase();
 				const filtered = data.requests.filter(
 					(request) =>
-						request.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-						request.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-						request.serviceType.toLowerCase().includes(searchQuery.toLowerCase()),
+						request.name.toLowerCase().includes(query) ||
+						request.email.toLowerCase().includes(query) ||
+						request.serviceType.toLowerCase().includes(query) ||
+						(request.company && request.company.toLowerCase().includes(query)) ||
+						request.projectDetails.toLowerCase().includes(query),
 				);
 				setFilteredRequests(filtered);
 			} else {
@@ -95,62 +170,20 @@ export default function CmsServicesPage() {
 		}
 	}, [data, searchQuery]);
 
-	const handleViewRequest = async (id: string) => {
-		try {
-			// Start loading state
-			const request = await withLoading(
-				async () => {
-					const result = await serviceRequestService.getById(id);
-					return result;
-				},
-				{ loadingText: "Loading service request details..." },
-			);
+	// Calculate overview metrics from current requests
+	const stats = useMemo(() => {
+		const requests = data?.requests || [];
+		return {
+			total: requests.length,
+			new: requests.filter((r) => r.status === "new").length,
+			inProgress: requests.filter((r) => r.status === "in-progress").length,
+			completed: requests.filter((r) => r.status === "completed").length,
+			cancelled: requests.filter((r) => r.status === "cancelled").length,
+		};
+	}, [data]);
 
-			if (request) {
-				setSelectedRequest(request);
-				setReplyMessage("");
-				loadThread(id);
-				setIsDetailOpen(true);
-
-				// Mark as in-progress if it's new
-				if (request.status === "new") {
-					await serviceRequestService.updateStatus(id, "in-progress");
-					refetch();
-				}
-			}
-		} catch (error) {
-			console.error("Error fetching service request details:", error);
-			toast.error("Failed to load service request details");
-		}
-	};
-
-	const handleSendReply = async () => {
-		if (!selectedRequest || !replyMessage.trim()) return;
-
-		setIsSendingReply(true);
-		try {
-			await inquiryMessagesService.sendAdminReply({
-				inquiryId: selectedRequest.id,
-				inquiryType: "service_request",
-				toEmail: selectedRequest.email,
-				toName: selectedRequest.name,
-				subject: selectedRequest.serviceType,
-				message: replyMessage.trim(),
-				originalMessageSnippet: selectedRequest.projectDetails,
-			});
-
-			toast.success("Balasan email berhasil dikirim ke klien!");
-			setReplyMessage("");
-			loadThread(selectedRequest.id);
-			setSelectedRequest({ ...selectedRequest, status: "in-progress" });
-			refetch();
-		} catch (error) {
-			console.error("Error sending reply:", error);
-			const msg = error instanceof Error ? error.message : "Gagal mengirim balasan email";
-			toast.error(msg);
-		} finally {
-			setIsSendingReply(false);
-		}
+	const handleViewRequest = (id: string) => {
+		router.push(`/cms/services/${id}`);
 	};
 
 	const handleUpdateStatus = async (
@@ -159,14 +192,27 @@ export default function CmsServicesPage() {
 	) => {
 		try {
 			await serviceRequestService.updateStatus(id, status);
-			toast.success(`Service request marked as ${status}`);
+			toast.success(`Status updated to ${status}`);
 			refetch();
-			if (selectedRequest?.id === id) {
-				setSelectedRequest({ ...selectedRequest, status });
-			}
 		} catch (error) {
 			console.error("Error updating service request status:", error);
 			toast.error("Failed to update service request status");
+		}
+	};
+
+	const handleDeleteRequest = async () => {
+		if (!requestToDelete) return;
+		setIsDeleting(true);
+		try {
+			await serviceRequestService.delete(requestToDelete.id);
+			toast.success("Service request berhasil dihapus");
+			setRequestToDelete(null);
+			refetch();
+		} catch (error) {
+			console.error("Error deleting service request:", error);
+			toast.error("Gagal menghapus service request");
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
@@ -176,53 +222,62 @@ export default function CmsServicesPage() {
 
 	const handleSearch = (e: React.FormEvent) => {
 		e.preventDefault();
-		// Search is applied client-side in the useEffect
 	};
 
 	const handleFilterChange = (value: string) => {
 		setFilterStatus(value);
-		setCurrentPage(1); // Reset to first page when filter changes
+		setCurrentPage(1);
+	};
+
+	const getInitials = (name: string) => {
+		if (!name) return "CL";
+		const parts = name.trim().split(/\s+/);
+		if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+		return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 	};
 
 	const getStatusBadge = (status: string) => {
 		switch (status) {
 			case "new":
-				return <Badge variant="default">New</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 whitespace-nowrap">
+						<span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+						New
+					</span>
+				);
 			case "in-progress":
-				return <Badge variant="secondary">In Progress</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 whitespace-nowrap">
+						<span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+						In Progress
+					</span>
+				);
 			case "completed":
 				return (
-					<Badge variant="default" className="bg-green-500">
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+						<span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
 						Completed
-					</Badge>
+					</span>
 				);
 			case "cancelled":
-				return <Badge variant="destructive">Cancelled</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 whitespace-nowrap">
+						<span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+						Cancelled
+					</span>
+				);
 			default:
-				return <Badge variant="outline">{status}</Badge>;
+				return (
+					<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border whitespace-nowrap">
+						{status}
+					</span>
+				);
 		}
-	};
-
-	const formatDate = (date: Date) => {
-		return format(date, "dd MMM yyyy HH:mm");
-	};
-
-	const getServiceTypeLabel = (serviceType: string) => {
-		const serviceTypes: Record<string, string> = {
-			frontend: "Frontend Development",
-			"ui-ux": "UI/UX Implementation",
-			performance: "Performance Optimization",
-			api: "API Integration",
-			animation: "Web Animation",
-			leadership: "Technical Leadership",
-		};
-
-		return serviceTypes[serviceType] || serviceType;
 	};
 
 	const getBudgetLabel = (budget: string) => {
 		const budgets: Record<string, string> = {
-			"under-1000": "Under $1,000",
+			"under-1000": "< $1,000",
 			"1000-5000": "$1,000 - $5,000",
 			"5000-10000": "$5,000 - $10,000",
 			"10000-plus": "$10,000+",
@@ -232,133 +287,340 @@ export default function CmsServicesPage() {
 		return budgets[budget] || budget;
 	};
 
-	const getTimeframeLabel = (timeframe: string) => {
-		const timeframes: Record<string, string> = {
-			asap: "As soon as possible",
-			"1-2-weeks": "Within 1-2 weeks",
-			"1-month": "Within a month",
-			flexible: "Flexible / Not urgent",
-		};
-
-		return timeframes[timeframe] || timeframe;
-	};
-
 	// Define columns for the DataTable
 	const columns: ColumnDef<ServiceRequest>[] = [
 		{
 			header: "Client",
-			cell: (request) => (
-				<div className="flex items-start gap-2">
-					<Briefcase
-						className={`h-4 w-4 mt-1 ${
-							request.status === "new" ? "text-primary" : "text-muted-foreground"
-						}`}
-					/>
-					<div>
-						<div>{request.name}</div>
-						<div className="text-sm text-muted-foreground">{request.email}</div>
-						{request.company && (
-							<div className="text-xs text-muted-foreground">{request.company}</div>
-						)}
+			cell: (request) => {
+				const isNew = request.status === "new";
+				return (
+					<div className="flex items-center gap-3 py-1 group/client">
+						<Avatar className="h-9 w-9 shrink-0 border border-border/60 bg-muted/60 group-hover/client:border-primary/40 transition-colors">
+							<AvatarFallback
+								className={cn(
+									"font-semibold text-xs transition-colors",
+									isNew
+										? "bg-primary/15 text-primary group-hover/client:bg-primary/25"
+										: "bg-muted text-muted-foreground group-hover/client:text-foreground",
+								)}
+							>
+								{getInitials(request.name)}
+							</AvatarFallback>
+						</Avatar>
+						<div className="flex flex-col min-w-0">
+							<div className="flex items-center gap-1.5">
+								<span className="font-semibold text-foreground text-sm truncate max-w-[170px] group-hover/client:text-primary transition-colors">
+									{request.name}
+								</span>
+								{isNew && (
+									<span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-blue-500/15 text-blue-500 dark:text-blue-400">
+										NEW
+									</span>
+								)}
+							</div>
+							<span
+								onClick={(e) => {
+									e.stopPropagation();
+									window.open(`mailto:${request.email}`, "_self");
+								}}
+								className="text-xs text-muted-foreground hover:text-primary transition-colors truncate max-w-[180px]"
+								title={request.email}
+							>
+								{request.email}
+							</span>
+							{request.company && (
+								<div
+									className="flex items-center gap-1 text-[11px] text-muted-foreground/80 mt-0.5 truncate max-w-[180px]"
+									title={request.company}
+								>
+									<Building2 className="h-3 w-3 shrink-0 text-muted-foreground/60" />
+									<span className="truncate">{request.company}</span>
+								</div>
+							)}
+						</div>
 					</div>
-				</div>
-			),
-			className: "w-[250px]",
+				);
+			},
+			className: "min-w-[240px]",
 		},
 		{
 			header: "Service",
-			cell: (request) => (
-				<div className="max-w-xs truncate">{getServiceTypeLabel(request.serviceType)}</div>
-			),
+			cell: (request) => {
+				const config = SERVICE_TYPE_CONFIG[request.serviceType] || {
+					label: request.serviceType,
+					icon: Briefcase,
+					className: "bg-primary/10 text-primary border-primary/20",
+				};
+				const Icon = config.icon;
+				return (
+					<div className="flex flex-col gap-1 py-1 min-w-0">
+						<div className="flex items-center">
+							<Badge
+								variant="outline"
+								className={cn(
+									"text-xs font-medium px-2 py-0.5 inline-flex items-center gap-1.5 rounded-md",
+									config.className,
+								)}
+							>
+								<Icon className="h-3 w-3 shrink-0" />
+								<span className="truncate max-w-[170px]">{config.label}</span>
+							</Badge>
+						</div>
+						{request.projectDetails && (
+							<p
+								className="text-xs text-muted-foreground/80 line-clamp-1 max-w-[240px]"
+								title={request.projectDetails}
+							>
+								{request.projectDetails}
+							</p>
+						)}
+					</div>
+				);
+			},
+			className: "min-w-[220px]",
 		},
 		{
-			header: "Budget",
-			cell: (request) => (
-				<div className="flex items-center text-muted-foreground text-sm">
-					<DollarSign className="h-3.5 w-3.5 mr-1.5" />
-					{getBudgetLabel(request.budget)}
-				</div>
-			),
-			className: "hidden md:table-cell",
-		},
-		{
-			header: "Timeframe",
-			cell: (request) => (
-				<div className="flex items-center text-muted-foreground text-sm">
-					<Clock className="h-3.5 w-3.5 mr-1.5" />
-					{getTimeframeLabel(request.timeframe)}
-				</div>
-			),
-			className: "hidden md:table-cell",
+			header: "Budget & Timeline",
+			cell: (request) => {
+				const timeframeConfig = TIMEFRAME_CONFIG[request.timeframe] || {
+					label: request.timeframe,
+					icon: Clock,
+					className: "bg-muted/40 text-muted-foreground border-border/50",
+				};
+				const TimeframeIcon = timeframeConfig.icon;
+
+				return (
+					<div className="flex flex-col gap-1 py-0.5 min-w-0">
+						<div className="inline-flex items-center gap-1 text-xs font-semibold text-foreground whitespace-nowrap">
+							<DollarSign className="h-3.5 w-3.5 text-emerald-500 shrink-0 -mr-0.5" />
+							<span className="tabular-nums">{getBudgetLabel(request.budget)}</span>
+						</div>
+						<div className="flex items-center">
+							<Badge
+								variant="outline"
+								className={cn(
+									"text-[11px] font-medium px-1.5 py-0 inline-flex items-center gap-1 rounded whitespace-nowrap",
+									timeframeConfig.className,
+								)}
+							>
+								<TimeframeIcon className="h-2.5 w-2.5 shrink-0" />
+								<span>{timeframeConfig.label}</span>
+							</Badge>
+						</div>
+					</div>
+				);
+			},
+			className: "hidden md:table-cell min-w-[150px] whitespace-nowrap",
 		},
 		{
 			header: "Date",
-			cell: (request) => (
-				<div className="flex items-center text-muted-foreground text-sm">
-					<Calendar className="h-3.5 w-3.5 mr-1.5" />
-					{formatDate(request.createdAt)}
-				</div>
-			),
-			className: "hidden md:table-cell",
+			cell: (request) => {
+				const createdDate = new Date(request.createdAt);
+				return (
+					<div className="flex flex-col text-xs">
+						<span className="font-medium text-foreground whitespace-nowrap">
+							{format(createdDate, "dd MMM yyyy")}
+						</span>
+						<span className="text-[11px] text-muted-foreground flex items-center gap-1 whitespace-nowrap mt-0.5">
+							<Clock className="h-3 w-3 text-muted-foreground/60" />
+							{format(createdDate, "HH:mm")}
+						</span>
+					</div>
+				);
+			},
+			className: "hidden md:table-cell min-w-[120px] whitespace-nowrap",
 		},
 		{
 			header: "Status",
 			cell: (request) => getStatusBadge(request.status),
-			className: "hidden md:table-cell",
+			className: "hidden sm:table-cell min-w-[120px] whitespace-nowrap",
 		},
 		{
-			header: "Actions",
+			header: "",
 			cell: (request) => (
-				<div className="flex justify-end gap-2">
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => handleViewRequest(request.id)}
-						className="h-8 px-2"
-					>
-						<Eye className="h-4 w-4 mr-1" />
-						View
-					</Button>
+				<div
+					className="flex items-center justify-end"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+							>
+								<MoreHorizontal className="h-4 w-4" />
+								<span className="sr-only">Actions</span>
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end" className="w-48">
+							<DropdownMenuItem onClick={() => handleViewRequest(request.id)}>
+								<Eye className="h-4 w-4 mr-2" />
+								View Details & Thread
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								onClick={() => handleUpdateStatus(request.id, "in-progress")}
+								disabled={request.status === "in-progress"}
+							>
+								<Clock className="h-4 w-4 mr-2 text-purple-500" />
+								Set In Progress
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => handleUpdateStatus(request.id, "completed")}
+								disabled={request.status === "completed"}
+							>
+								<CheckCircle className="h-4 w-4 mr-2 text-emerald-500" />
+								Mark Completed
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => handleUpdateStatus(request.id, "cancelled")}
+								disabled={request.status === "cancelled"}
+							>
+								<XCircle className="h-4 w-4 mr-2 text-rose-500" />
+								Cancel Request
+							</DropdownMenuItem>
+							<DropdownMenuSeparator />
+							<DropdownMenuItem
+								onClick={() => setRequestToDelete(request)}
+								className="text-destructive focus:text-destructive focus:bg-destructive/10"
+							>
+								<Trash2 className="h-4 w-4 mr-2" />
+								Delete Request
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
 			),
-			className: "text-right",
+			className: "text-right w-[60px] whitespace-nowrap",
 		},
 	];
 
 	return (
 		<div className="space-y-6">
+			{/* Page Header */}
 			<div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
 				<div>
 					<h1 className="text-2xl font-bold tracking-tight">Service Requests</h1>
-					<p className="text-muted-foreground">
-						Manage and respond to service requests from clients
+					<p className="text-sm text-muted-foreground mt-0.5">
+						Manage, review, and respond to incoming service inquiries from clients
 					</p>
 				</div>
+			</div>
 
-				<div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-					<form onSubmit={handleSearch} className="relative w-full sm:w-auto">
-						<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-						<Input
-							placeholder="Search requests..."
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="pl-9 w-full sm:w-[250px] rounded-lg"
-						/>
-					</form>
+			{/* Metric Overview Cards */}
+			<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+				<button
+					type="button"
+					onClick={() => handleFilterChange("all")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-border",
+						filterStatus === "all" || !filterStatus
+							? "ring-1 ring-primary/40 border-primary/40 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">Total Requests</span>
+						<Briefcase className="h-4 w-4 text-muted-foreground/60" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight">{stats.total}</div>
+				</button>
 
+				<button
+					type="button"
+					onClick={() => handleFilterChange("new")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-blue-500/40",
+						filterStatus === "new"
+							? "ring-1 ring-blue-500/40 border-blue-500/40 bg-blue-500/5 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">New Requests</span>
+						<span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight text-blue-500">
+						{stats.new}
+					</div>
+				</button>
+
+				<button
+					type="button"
+					onClick={() => handleFilterChange("in-progress")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-purple-500/40",
+						filterStatus === "in-progress"
+							? "ring-1 ring-purple-500/40 border-purple-500/40 bg-purple-500/5 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">In Progress</span>
+						<Clock className="h-4 w-4 text-purple-500" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight text-purple-500">
+						{stats.inProgress}
+					</div>
+				</button>
+
+				<button
+					type="button"
+					onClick={() => handleFilterChange("completed")}
+					className={cn(
+						"cursor-pointer rounded-xl border p-3.5 text-left transition-all bg-card/50 hover:bg-card hover:border-emerald-500/40",
+						filterStatus === "completed"
+							? "ring-1 ring-emerald-500/40 border-emerald-500/40 bg-emerald-500/5 shadow-xs"
+							: "border-border/60",
+					)}
+				>
+					<div className="flex items-center justify-between">
+						<span className="text-xs font-medium text-muted-foreground">Completed</span>
+						<CheckCircle2 className="h-4 w-4 text-emerald-500" />
+					</div>
+					<div className="text-2xl font-bold mt-1.5 tracking-tight text-emerald-500">
+						{stats.completed}
+					</div>
+				</button>
+			</div>
+
+			{/* Search & Filter Bar */}
+			<div className="flex flex-col sm:flex-row justify-between gap-3">
+				<form onSubmit={handleSearch} className="relative w-full sm:w-[320px]">
+					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+					<Input
+						placeholder="Search by client, service, company..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						className="pl-9 w-full rounded-lg text-xs"
+					/>
+				</form>
+
+				<div className="flex items-center gap-2.5">
 					<Select value={filterStatus} onValueChange={handleFilterChange}>
-						<SelectTrigger className="w-full sm:w-[180px] rounded-lg">
-							<div className="flex items-center">
-								<Filter className="mr-2 h-4 w-4" />
-								<SelectValue placeholder="Filter by status" />
+						<SelectTrigger className="w-full sm:w-[170px] rounded-lg text-xs">
+							<div className="flex items-center gap-1.5 truncate">
+								<Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+								<SelectValue placeholder="All Statuses" />
 							</div>
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value="all">All Requests</SelectItem>
-							<SelectItem value="new">New</SelectItem>
-							<SelectItem value="in-progress">In Progress</SelectItem>
-							<SelectItem value="completed">Completed</SelectItem>
-							<SelectItem value="cancelled">Cancelled</SelectItem>
+							<SelectItem value="all" className="text-xs">
+								All Requests
+							</SelectItem>
+							<SelectItem value="new" className="text-xs">
+								New
+							</SelectItem>
+							<SelectItem value="in-progress" className="text-xs">
+								In Progress
+							</SelectItem>
+							<SelectItem value="completed" className="text-xs">
+								Completed
+							</SelectItem>
+							<SelectItem value="cancelled" className="text-xs">
+								Cancelled
+							</SelectItem>
 						</SelectContent>
 					</Select>
 
@@ -367,7 +629,8 @@ export default function CmsServicesPage() {
 						size="icon"
 						onClick={() => refetch()}
 						disabled={isRefetching}
-						className="rounded-lg"
+						className="rounded-lg shrink-0"
+						title="Refresh Table"
 					>
 						<RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
 						<span className="sr-only">Refresh</span>
@@ -375,271 +638,71 @@ export default function CmsServicesPage() {
 				</div>
 			</div>
 
+			{/* Data Table */}
 			<DataTable
 				columns={columns}
 				data={filteredRequests}
 				isLoading={isLoading}
 				loadingRows={5}
 				emptyState={{
-					icon: <Briefcase className="h-8 w-8 mb-2" />,
+					icon: <Inbox className="h-8 w-8 mb-2 text-muted-foreground/60" />,
 					title: "No service requests found",
 					description: searchQuery
 						? "Try adjusting your search query"
-						: filterStatus
-							? `No ${filterStatus} requests found`
-							: "No service requests yet",
+						: filterStatus && filterStatus !== "all"
+							? `No ${filterStatus} service requests found`
+							: "No service requests submitted yet",
 				}}
 				pagination={{
 					currentPage,
 					hasMore,
 					onPageChange: handlePageChange,
 				}}
-				rowClassName={(request) => (request.status === "new" ? "bg-primary/5" : "")}
+				onRowClick={(request) => handleViewRequest(request.id)}
+				rowClassName={(request) =>
+					cn(
+						"transition-colors hover:bg-muted/50 cursor-pointer",
+						request.status === "new" && "bg-blue-500/[0.03] dark:bg-blue-500/[0.04]",
+					)
+				}
 				keyField="id"
 			/>
 
-			{/* Service Request Detail & Conversation Thread Dialog */}
-			<Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-				<DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-					<DialogHeader className="px-6 pt-6 pb-2">
-						<DialogTitle className="flex items-center gap-2">
-							<MessageSquare className="h-5 w-5 text-primary" />
-							<span>Project Request & Conversation</span>
-						</DialogTitle>
-						<DialogDescription>
-							Thread percakapan dengan {selectedRequest?.name} ({selectedRequest?.email})
-						</DialogDescription>
-					</DialogHeader>
-
-					{selectedRequest && (
-						<div className="flex-1 overflow-y-auto px-6 py-2 space-y-5">
-							{/* Status & Date bar */}
-							<div className="flex justify-between items-center bg-muted/20 p-3 rounded-lg border border-border/40">
-								<div className="text-xs text-muted-foreground flex items-center gap-1.5">
-									<Calendar className="h-3.5 w-3.5" />
-									<span>Diajukan: {formatDate(selectedRequest.createdAt)}</span>
-								</div>
-								{getStatusBadge(selectedRequest.status)}
-							</div>
-
-							{/* Client & Project Overview Cards */}
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-								<div className="border border-border/60 rounded-xl p-3.5 bg-card/60 space-y-2">
-									<div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-										<Briefcase className="h-3.5 w-3.5 text-primary" />
-										<span>Detail Layanan</span>
-									</div>
-									<div className="space-y-1.5 text-xs">
-										<div className="flex justify-between">
-											<span className="text-muted-foreground">Layanan:</span>
-											<span className="font-medium text-foreground">
-												{getServiceTypeLabel(selectedRequest.serviceType)}
-											</span>
-										</div>
-										<div className="flex justify-between">
-											<span className="text-muted-foreground">Estimasi Budget:</span>
-											<span className="font-medium text-foreground">
-												{getBudgetLabel(selectedRequest.budget)}
-											</span>
-										</div>
-										<div className="flex justify-between">
-											<span className="text-muted-foreground">Target Waktu:</span>
-											<span className="font-medium text-foreground">
-												{getTimeframeLabel(selectedRequest.timeframe)}
-											</span>
-										</div>
-									</div>
-								</div>
-
-								<div className="border border-border/60 rounded-xl p-3.5 bg-card/60 space-y-2">
-									<div className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-										<User className="h-3.5 w-3.5 text-primary" />
-										<span>Informasi Klien</span>
-									</div>
-									<div className="space-y-1.5 text-xs">
-										<div className="flex justify-between">
-											<span className="text-muted-foreground">Nama:</span>
-											<span className="font-medium text-foreground">{selectedRequest.name}</span>
-										</div>
-										<div className="flex justify-between">
-											<span className="text-muted-foreground">Email:</span>
-											<a
-												href={`mailto:${selectedRequest.email}`}
-												className="text-primary hover:underline"
-											>
-												{selectedRequest.email}
-											</a>
-										</div>
-										{selectedRequest.company && (
-											<div className="flex justify-between">
-												<span className="text-muted-foreground">Perusahaan:</span>
-												<span className="font-medium text-foreground">
-													{selectedRequest.company}
-												</span>
-											</div>
-										)}
-									</div>
-								</div>
-							</div>
-
-							{/* Original Project Details */}
-							<div className="border border-border/60 rounded-xl p-4 bg-card/60 shadow-sm space-y-2">
-								<div className="flex items-center justify-between">
-									<span className="font-semibold text-xs text-foreground">
-										Rincian Kebutuhan Proyek:
-									</span>
-									<Badge variant="outline" className="text-[10px]">
-										Inquiry Awal
-									</Badge>
-								</div>
-								<div className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed bg-background/50 p-3 rounded-lg border border-border/30">
-									{selectedRequest.projectDetails}
-								</div>
-							</div>
-
-							{/* Thread Conversation History */}
-							{threadMessages.length > 0 && (
-								<div className="space-y-3 pt-2">
-									<div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-										<CornerDownRight className="h-3.5 w-3.5 text-primary" />
-										<span>Riwayat Balasan ({threadMessages.length})</span>
-									</div>
-
-									<div className="space-y-3">
-										{threadMessages.map((msg) => {
-											const isAdmin = msg.senderType === "admin";
-											return (
-												<div
-													key={msg.id}
-													className={`rounded-xl p-4 text-xs transition-all border ${
-														isAdmin
-															? "bg-primary/5 border-primary/20 ml-6 md:ml-12"
-															: "bg-muted/40 border-border/50 mr-6 md:mr-12"
-													}`}
-												>
-													<div className="flex justify-between items-center mb-1.5">
-														<div className="flex items-center gap-1.5 font-semibold">
-															<span className={isAdmin ? "text-primary" : "text-foreground"}>
-																{isAdmin ? "Wisman Nur (Admin)" : msg.senderName}
-															</span>
-															<span className="text-[10px] text-muted-foreground font-normal">
-																({msg.senderEmail})
-															</span>
-														</div>
-														<span className="text-[10px] text-muted-foreground">
-															{formatDate(msg.createdAt)}
-														</span>
-													</div>
-													<div className="whitespace-pre-wrap text-foreground/90 leading-relaxed">
-														{msg.message}
-													</div>
-												</div>
-											);
-										})}
-									</div>
-								</div>
-							)}
-
-							{/* Reply Box */}
-							<div className="border border-border/60 rounded-xl p-4 bg-muted/10 space-y-3">
-								<div className="flex justify-between items-center">
-									<label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-										<Mail className="h-3.5 w-3.5 text-primary" />
-										<span>Kirim Balasan Email ke Klien</span>
-									</label>
-									<span className="text-[11px] text-muted-foreground">
-										Dikirim dari: <strong className="text-primary">hi@wismannur.pro</strong>
-									</span>
-								</div>
-
-								<Textarea
-									placeholder={`Tulis estimasi, pertanyaan, atau tawaran kerja sama untuk ${selectedRequest.name}... (Akan dikirimkan ke ${selectedRequest.email})`}
-									value={replyMessage}
-									onChange={(e) => setReplyMessage(e.target.value)}
-									rows={4}
-									className="text-xs resize-none rounded-lg border-border/60 focus-visible:ring-primary/30"
-								/>
-
-								<div className="flex justify-between items-center">
-									<span className="text-[11px] text-muted-foreground">
-										Klien dapat langsung membalas email Anda via inbox mereka.
-									</span>
-									<Button
-										size="sm"
-										onClick={handleSendReply}
-										disabled={isSendingReply || !replyMessage.trim()}
-										className="rounded-lg text-xs"
-									>
-										{isSendingReply ? (
-											<>
-												<Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-												Mengirim...
-											</>
-										) : (
-											<>
-												<Send className="h-3.5 w-3.5 mr-1.5" />
-												Kirim Balasan Email
-											</>
-										)}
-									</Button>
-								</div>
-							</div>
-						</div>
-					)}
-
-					<DialogFooter className="px-6 py-3 border-t border-border/40 bg-muted/10 flex-col sm:flex-row gap-2 justify-between">
-						<div className="flex gap-2 w-full sm:w-auto">
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() =>
-									selectedRequest && handleUpdateStatus(selectedRequest.id, "in-progress")
-								}
-								disabled={selectedRequest?.status === "in-progress"}
-								className="flex-1 text-xs"
-							>
-								<Clock className="h-3.5 w-3.5 mr-1.5" />
-								In Progress
-							</Button>
-
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() =>
-									selectedRequest && handleUpdateStatus(selectedRequest.id, "completed")
-								}
-								disabled={selectedRequest?.status === "completed"}
-								className="flex-1 text-xs"
-							>
-								<CheckCircle className="h-3.5 w-3.5 mr-1.5" />
-								Completed
-							</Button>
-
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() =>
-									selectedRequest && handleUpdateStatus(selectedRequest.id, "cancelled")
-								}
-								disabled={selectedRequest?.status === "cancelled"}
-								className="flex-1 text-xs hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-							>
-								<XCircle className="h-3.5 w-3.5 mr-1.5" />
-								Cancel
-							</Button>
-						</div>
-
-						<Button
-							variant="ghost"
-							size="sm"
-							onClick={() => setIsDetailOpen(false)}
-							className="text-xs"
+			{/* Delete Confirmation Alert Dialog */}
+			<AlertDialog
+				open={Boolean(requestToDelete)}
+				onOpenChange={(open) => !open && setRequestToDelete(null)}
+			>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Hapus Service Request?</AlertDialogTitle>
+						<AlertDialogDescription>
+							Tindakan ini tidak dapat dibatalkan. Permintaan layanan dari{" "}
+							<strong className="text-foreground">{requestToDelete?.name}</strong> (
+							{requestToDelete?.email}) untuk layanan{" "}
+							<strong className="text-foreground">{requestToDelete?.serviceType}</strong>{" "}
+							beserta seluruh riwayat balasan email akan dihapus secara permanen.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+						<AlertDialogAction
+							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+							onClick={handleDeleteRequest}
+							disabled={isDeleting}
 						>
-							Tutup
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
+							{isDeleting ? (
+								<>
+									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+									Menghapus...
+								</>
+							) : (
+								"Hapus"
+							)}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 }
