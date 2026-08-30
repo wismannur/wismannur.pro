@@ -14,7 +14,7 @@ import {
 
 interface AdminInboundAlertProps {
 	inquiryId: string;
-	inquiryType: "contact" | "service_request";
+	inquiryType: "contact" | "service_request" | "hire_request";
 	clientName: string;
 	clientEmail: string;
 	subject: string;
@@ -33,9 +33,11 @@ export const AdminInboundAlertEmail = ({
 }: AdminInboundAlertProps) => {
 	const previewText = `[Inbound Reply] ${clientName} membalas: ${subject}`;
 	const cmsUrl =
-		inquiryType === "service_request"
-			? "https://wismannur.pro/cms/services"
-			: "https://wismannur.pro/cms/contacts";
+		inquiryType === "hire_request"
+			? "https://wismannur.pro/cms/hire-requests"
+			: inquiryType === "service_request"
+				? "https://wismannur.pro/cms/services"
+				: "https://wismannur.pro/cms/contacts";
 
 	return (
 		<Html>

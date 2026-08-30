@@ -6,7 +6,7 @@ import { Webhook } from "svix";
 import { getDb, schema } from "@/db";
 import { sendInboundAlertToAdmin } from "@/services/core/resend";
 
-const { contacts, serviceRequests, inquiryMessages } = schema;
+const { contacts, serviceRequests, hireRequests, inquiryMessages } = schema;
 
 function extractCleanEmail(rawFrom: unknown): { name: string; email: string } {
 	if (!rawFrom) return { name: "Client", email: "" };
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
 
 		const db = getDb();
 		let targetInquiryId: string | null = extractInquiryId(subject);
-		let targetInquiryType: "contact" | "service_request" = "contact";
+		let targetInquiryType: "contact" | "service_request" | "hire_request" = "contact";
 		let targetSubject = subject;
 
 		// 5. Match by explicit reference ID if found
@@ -218,14 +218,25 @@ export async function POST(req: NextRequest) {
 					targetInquiryType = "service_request";
 					targetSubject = serviceRow.serviceType;
 				} else {
-					targetInquiryId = null;
+					const [hireRow] = await db
+						.select()
+						.from(hireRequests)
+						.where(eq(hireRequests.id, targetInquiryId))
+						.limit(1);
+
+					if (hireRow) {
+						targetInquiryType = "hire_request";
+						targetSubject = `${hireRow.roleTitle} @ ${hireRow.company}`;
+					} else {
+						targetInquiryId = null;
+					}
 				}
 			}
 		}
 
 		// 6. Fallback: match by sender email with most recent inquiry (case-insensitive)
 		if (!targetInquiryId && senderEmail) {
-			const [latestContactRows, latestServiceRows] = await Promise.all([
+			const [latestContactRows, latestServiceRows, latestHireRows] = await Promise.all([
 				db
 					.select()
 					.from(contacts)
@@ -238,29 +249,51 @@ export async function POST(req: NextRequest) {
 					.where(sql`lower(${serviceRequests.email}) = ${senderEmail.toLowerCase()}`)
 					.orderBy(desc(serviceRequests.createdAt))
 					.limit(1),
+				db
+					.select()
+					.from(hireRequests)
+					.where(sql`lower(${hireRequests.email}) = ${senderEmail.toLowerCase()}`)
+					.orderBy(desc(hireRequests.createdAt))
+					.limit(1),
 			]);
 
-			const contactMatch = latestContactRows[0];
-			const serviceMatch = latestServiceRows[0];
+			const matches = [
+				latestContactRows[0]
+					? {
+							id: latestContactRows[0].id,
+							type: "contact" as const,
+							subject: latestContactRows[0].subject,
+							createdAt: new Date(latestContactRows[0].createdAt).getTime(),
+						}
+					: null,
+				latestServiceRows[0]
+					? {
+							id: latestServiceRows[0].id,
+							type: "service_request" as const,
+							subject: latestServiceRows[0].serviceType,
+							createdAt: new Date(latestServiceRows[0].createdAt).getTime(),
+						}
+					: null,
+				latestHireRows[0]
+					? {
+							id: latestHireRows[0].id,
+							type: "hire_request" as const,
+							subject: `${latestHireRows[0].roleTitle} @ ${latestHireRows[0].company}`,
+							createdAt: new Date(latestHireRows[0].createdAt).getTime(),
+						}
+					: null,
+			].filter(Boolean) as Array<{
+				id: string;
+				type: "contact" | "service_request" | "hire_request";
+				subject: string;
+				createdAt: number;
+			}>;
 
-			if (contactMatch && serviceMatch) {
-				if (new Date(contactMatch.createdAt).getTime() >= new Date(serviceMatch.createdAt).getTime()) {
-					targetInquiryId = contactMatch.id;
-					targetInquiryType = "contact";
-					targetSubject = contactMatch.subject;
-				} else {
-					targetInquiryId = serviceMatch.id;
-					targetInquiryType = "service_request";
-					targetSubject = serviceMatch.serviceType;
-				}
-			} else if (contactMatch) {
-				targetInquiryId = contactMatch.id;
-				targetInquiryType = "contact";
-				targetSubject = contactMatch.subject;
-			} else if (serviceMatch) {
-				targetInquiryId = serviceMatch.id;
-				targetInquiryType = "service_request";
-				targetSubject = serviceMatch.serviceType;
+			if (matches.length > 0) {
+				matches.sort((a, b) => b.createdAt - a.createdAt);
+				targetInquiryId = matches[0].id;
+				targetInquiryType = matches[0].type;
+				targetSubject = matches[0].subject;
 			}
 		}
 
@@ -303,11 +336,16 @@ export async function POST(req: NextRequest) {
 				.update(contacts)
 				.set({ status: "new" })
 				.where(eq(contacts.id, targetInquiryId));
-		} else {
+		} else if (targetInquiryType === "service_request") {
 			await db
 				.update(serviceRequests)
 				.set({ status: "new" })
 				.where(eq(serviceRequests.id, targetInquiryId));
+		} else if (targetInquiryType === "hire_request") {
+			await db
+				.update(hireRequests)
+				.set({ status: "new", updatedAt: new Date() })
+				.where(eq(hireRequests.id, targetInquiryId));
 		}
 
 		// 10. Send email alert to Admin

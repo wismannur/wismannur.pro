@@ -2,10 +2,12 @@ import "server-only";
 
 import { Resend } from "resend";
 import AdminContactNotificationEmail from "@/components/emails/admin-contact-notification";
+import AdminHireRequestNotificationEmail from "@/components/emails/admin-hire-request-notification";
 import AdminInboundAlertEmail from "@/components/emails/admin-inbound-alert";
 import AdminReplyToClientEmail from "@/components/emails/admin-reply-to-client";
 import AdminServiceRequestNotificationEmail from "@/components/emails/admin-service-request-notification";
 import ClientContactAutoReplyEmail from "@/components/emails/client-contact-auto-reply";
+import ClientHireRequestAutoReplyEmail from "@/components/emails/client-hire-request-auto-reply";
 import ClientServiceRequestAutoReplyEmail from "@/components/emails/client-service-request-auto-reply";
 
 function getResendClient(): Resend | null {
@@ -45,6 +47,19 @@ interface ServiceRequestEmailPayload {
 	projectDetails: string;
 }
 
+interface HireRequestEmailPayload {
+	id?: string;
+	name: string;
+	email: string;
+	company: string;
+	roleTitle: string;
+	employmentType: string;
+	workplaceType: string;
+	location?: string;
+	salaryRange?: string;
+	message: string;
+}
+
 interface AdminReplyPayload {
 	inquiryId: string;
 	toEmail: string;
@@ -56,7 +71,7 @@ interface AdminReplyPayload {
 
 interface InboundAlertPayload {
 	inquiryId: string;
-	inquiryType: "contact" | "service_request";
+	inquiryType: "contact" | "service_request" | "hire_request";
 	clientName: string;
 	clientEmail: string;
 	subject: string;
@@ -163,6 +178,63 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 		]);
 	} catch (error) {
 		console.error("Failed to send service request emails via Resend:", error);
+	}
+}
+
+/**
+ * Sends both Admin notification and Client auto-reply for Hire-Me career/job inquiries.
+ * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
+ */
+export async function sendHireRequestEmails(payload: HireRequestEmailPayload): Promise<void> {
+	const resend = getResendClient();
+	if (!resend) {
+		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
+		return;
+	}
+
+	try {
+		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
+		const refTag = payload.id ? `[Ref: #${payload.id}]` : `[Ref: #${payload.roleTitle}]`;
+
+		await Promise.allSettled([
+			// 1. Notification to Admin
+			resend.emails.send({
+				from: SENDER_NOTIFICATIONS,
+				to: ADMIN_EMAIL,
+				replyTo: payload.email,
+				subject: `[Hire Inquiry] ${payload.roleTitle} @ ${payload.company} - ${payload.name}`,
+				react: AdminHireRequestNotificationEmail({
+					name: payload.name,
+					email: payload.email,
+					company: payload.company,
+					roleTitle: payload.roleTitle,
+					employmentType: payload.employmentType,
+					workplaceType: payload.workplaceType,
+					location: payload.location,
+					salaryRange: payload.salaryRange,
+					message: payload.message,
+					sentAt,
+				}),
+			}),
+
+			// 2. Auto-reply confirmation to Recruiter / Client
+			resend.emails.send({
+				from: SENDER_HI,
+				to: payload.email,
+				replyTo: "hi@wismannur.pro",
+				subject: `${refTag} Pesan penawaran posisi ${payload.roleTitle} diterima - Wisman Nur`,
+				react: ClientHireRequestAutoReplyEmail({
+					name: payload.name,
+					company: payload.company,
+					roleTitle: payload.roleTitle,
+					employmentType: payload.employmentType,
+					workplaceType: payload.workplaceType,
+					message: payload.message,
+				}),
+			}),
+		]);
+	} catch (error) {
+		console.error("Failed to send hire request emails via Resend:", error);
 	}
 }
 
