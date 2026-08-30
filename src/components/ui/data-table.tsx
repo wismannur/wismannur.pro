@@ -36,6 +36,7 @@ export type DataTableProps<T> = {
     onPageChange: (page: number) => void
   }
   rowClassName?: (item: T, index: number) => string
+  onRowClick?: (item: T) => void
   keyField: keyof T
 }
 
@@ -50,6 +51,7 @@ export function DataTable<T>({
   },
   pagination,
   rowClassName,
+  onRowClick,
   keyField,
 }: DataTableProps<T>) {
   return (
@@ -78,7 +80,11 @@ export function DataTable<T>({
               ))
             ) : data.length > 0 ? (
               data.map((item, index) => (
-                <TableRow key={String(item[keyField])} className={rowClassName ? rowClassName(item, index) : undefined}>
+                <TableRow
+                  key={String(item[keyField])}
+                  className={rowClassName ? rowClassName(item, index) : undefined}
+                  onClick={() => onRowClick?.(item)}
+                >
                   {columns.map((column, cellIndex) => (
                     <TableCell key={`${String(item[keyField])}-${cellIndex}`} className={column.className}>
                       {column.cell

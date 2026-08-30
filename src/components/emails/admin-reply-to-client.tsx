@@ -33,11 +33,6 @@ export const AdminReplyToClientEmail = ({
 			<Preview>{previewSnippet}</Preview>
 			<Body style={main}>
 				<Container style={container}>
-					<Section style={headerSection}>
-						<Text style={brand}>Wisman Nur</Text>
-						<Heading style={headerTitle}>Balasan untuk Anda</Heading>
-					</Section>
-
 					<Section style={bodySection}>
 						<Text style={greeting}>Halo {clientName},</Text>
 						<Text style={replyMessageBox}>{replyMessage}</Text>
