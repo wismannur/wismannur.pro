@@ -1,3 +1,4 @@
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import type { SiteSettings } from "./types";
 
 // Mirror of the seeded row — the fallback if the row is missing (fresh DB
@@ -23,7 +24,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
 	ogTitle: "Frontend Software Engineer",
 	ogTagline:
 		"High-performance web applications, seamless API integrations, and intuitive user experiences.",
-	publicEmail: "hi@wismannur.pro",
+	publicEmail: PUBLIC_SUPPORT_EMAIL,
 	location: "Bandung, West Java, Indonesia",
 	timezoneLabel: "Western Indonesian Time, UTC+07:00",
 	social: {
