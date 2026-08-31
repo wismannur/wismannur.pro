@@ -1,6 +1,6 @@
 {
   "name": "wismannur.pro",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "private": true,
   "packageManager": "pnpm@11.5.1",
   "engines": {
@@ -12,6 +12,7 @@
     "build": "drizzle-kit migrate && next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
