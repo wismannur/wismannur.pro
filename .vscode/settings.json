@@ -1,0 +1,26 @@
+{
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/.turbo/**": true,
+    "**/dist/**": true,
+    "**/.drizzle/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.turbo": true,
+    "**/dist": true,
+    "**/.drizzle": true
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/.next": true,
+    "**/.turbo": true
+  },
+  "typescript.tsserver.maxTsServerMemory": 3072,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false
+}
