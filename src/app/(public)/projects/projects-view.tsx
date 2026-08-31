@@ -140,14 +140,16 @@ export const ProjectsView = ({ copy }: { copy: ListHeaderCopy | null }) => {
 
 				{/* Featured Projects Section */}
 				{featuredProjects.length > 0 || isFeaturedLoading ? (
-					<section className="flex flex-col mb-16">
-						<h2 className="text-center text-3xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-blue-500 text-transparent bg-clip-text inline-block mx-auto">
-							Featured Projects
-						</h2>
-						<p className="text-center text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-							A curated selection of my most impactful projects showcasing technical expertise,
-							problem-solving abilities, and attention to detail.
-						</p>
+					<section className="flex flex-col mb-20">
+						<div className="text-center max-w-2xl mx-auto mb-10">
+							<h2 className="text-3xl font-bold tracking-tight mb-3 bg-gradient-to-r from-primary via-indigo-500 to-purple-500 text-transparent bg-clip-text inline-block">
+								Featured Projects
+							</h2>
+							<p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+								A curated selection of production systems showcasing technical architecture,
+								problem-solving depth, and measurable user impact.
+							</p>
+						</div>
 
 						{isFeaturedLoading ? (
 							<FeaturedProjectsSkeleton />
@@ -161,15 +163,13 @@ export const ProjectsView = ({ copy }: { copy: ListHeaderCopy | null }) => {
 					</section>
 				) : null}
 
-				<br />
-				<br />
-
 				<section className="mb-16">
-					<h2 className="text-center text-2xl font-bold mb-4">Other Projects</h2>
-					<p className="text-center text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-						Each project represents a unique challenge solved through innovative approaches and
-						modern development practices.
-					</p>
+					<div className="text-center max-w-2xl mx-auto mb-8">
+						<h2 className="text-2xl font-bold tracking-tight mb-2">All Projects & Exploration</h2>
+						<p className="text-muted-foreground text-sm leading-relaxed">
+							Explore all applications, open-source utilities, and experiments built with modern toolchains.
+						</p>
+					</div>
 
 					<ProjectFilters {...filterProps} />
 

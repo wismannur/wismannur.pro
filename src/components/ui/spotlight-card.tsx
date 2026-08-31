@@ -85,7 +85,7 @@ export function SpotlightCard({
 					WebkitMaskImage: `radial-gradient(${spotlightSize * 0.8}px circle at ${position.x}px ${position.y}px, black, transparent 70%)`,
 				}}
 			/>
-			<div className="relative z-10 h-full">{children}</div>
+			{children}
 		</div>
 	);
 }
