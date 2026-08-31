@@ -106,7 +106,7 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const dynamicReplyTo = payload.id ? `hi+contact-${payload.id}@wismannur.pro` : "hi@wismannur.pro";
+		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -158,7 +158,7 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const dynamicReplyTo = payload.id ? `hi+service-${payload.id}@wismannur.pro` : "hi@wismannur.pro";
+		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -215,7 +215,7 @@ export async function sendHireRequestEmails(payload: HireRequestEmailPayload): P
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const dynamicReplyTo = payload.id ? `hi+hire-${payload.id}@wismannur.pro` : "hi@wismannur.pro";
+		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
 		await Promise.allSettled([
 			// 1. Notification to Admin
@@ -281,7 +281,7 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 		await resend.emails.send({
 			from: SENDER_HI,
 			to: payload.toEmail,
-			replyTo: `hi+inquiry-${payload.inquiryId}@wismannur.pro`,
+			replyTo: payload.inquiryId ? `${payload.inquiryId}@wismannur.pro` : "hi@wismannur.pro",
 			subject: formattedSubject,
 			headers: {
 				"X-Entity-Ref-ID": payload.inquiryId,
@@ -356,7 +356,7 @@ export async function sendJobOutreachEmail(payload: JobOutreachSendPayload): Pro
 		await resend.emails.send({
 			from: SENDER_HI,
 			to: payload.toEmail,
-			replyTo: `hi+outreach-${payload.outreachId}@wismannur.pro`,
+			replyTo: payload.outreachId ? `${payload.outreachId}@wismannur.pro` : "hi@wismannur.pro",
 			subject: formattedSubject,
 			attachments: resendAttachments,
 			headers: {
