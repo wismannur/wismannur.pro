@@ -71,6 +71,41 @@
       "when": 1788157269295,
       "tag": "0009_gifted_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788200000000,
+      "tag": "0010_update_services_pillars",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788200000001,
+      "tag": "0011_update_page_copy_services",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788200000002,
+      "tag": "0012_update_page_copy_projects_blog_cta",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788200000003,
+      "tag": "0013_update_about_page_copy",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788200000004,
+      "tag": "0014_update_experience_and_skills",
+      "breakpoints": true
     }
   ]
 }
