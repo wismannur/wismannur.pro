@@ -102,7 +102,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 								>
 									<Link href="/hire-me" data-umami-event="about-hero-hire-me-click" className="inline-flex items-center gap-2">
 										<Sparkles size={15} className="animate-pulse" />
-										<span>Hire Me</span>
+										<span>Start a Project</span>
 										<ChevronRight
 											size={15}
 											className="group-hover:translate-x-1 transition-transform duration-200"
@@ -116,7 +116,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 									className="rounded-full px-7 h-12 text-xs md:text-sm font-semibold border-border/60 bg-card/70 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/40 hover:text-primary shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group"
 								>
 									<Link href="/projects" data-umami-event="about-hero-view-work-click" className="inline-flex items-center gap-2">
-										<span>View My Work</span>
+										<span>Explore Case Studies</span>
 										<ChevronRight
 											size={15}
 											className="group-hover:translate-x-1 transition-transform duration-200 text-primary"
@@ -133,8 +133,8 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 			<section className="py-8 relative overflow-hidden">
 				<div className="container px-4 max-w-6xl mx-auto">
 					<SectionHeader
-						title={copy?.skillsSection.title || "Skills & Expertise"}
-						subtitle={copy?.skillsSection.subtitle || "Tech Arsenal"}
+						title={copy?.skillsSection.title || "Skills & Core Ecosystem"}
+						subtitle={copy?.skillsSection.subtitle || "Tech Stack"}
 						className="mb-12 text-center"
 					/>
 
@@ -161,8 +161,8 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 			<section className="py-8 relative overflow-hidden">
 				<div className="container max-w-6xl px-4 mx-auto">
 					<SectionHeader
-						title={copy?.whySection.title || "Why Collaborate?"}
-						subtitle={copy?.whySection.subtitle || "The Value I Bring"}
+						title={copy?.whySection.title || "Engineering Values & Principles"}
+						subtitle={copy?.whySection.subtitle || "How I Build"}
 						description={copy?.whySection.description}
 						className="text-center mb-14"
 					/>
@@ -199,7 +199,7 @@ export function AboutView({ experiences, education, skills, copy }: AboutViewPro
 							className="rounded-full px-7 h-11 text-xs md:text-sm font-semibold border-border/60 bg-card/70 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all duration-300 shadow-sm hover:shadow-md group"
 						>
 							<Link href="/services" data-umami-event="about-services-cta-click" className="inline-flex items-center gap-2">
-								<span>Explore My Services</span>
+								<span>Explore Solutions & Services</span>
 								<ArrowRight
 									size={15}
 									className="group-hover:translate-x-1 transition-transform duration-200 text-primary"
