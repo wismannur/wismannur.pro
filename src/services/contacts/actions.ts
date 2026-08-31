@@ -76,7 +76,13 @@ export async function submit(formData: ContactForm, recaptchaToken?: string): Pr
 		.insert(contacts)
 		.values({ ...clean, status: "new" })
 		.returning({ id: contacts.id });
-	await sendContactEmails({ ...clean, id });
+	const { clientEmailId } = await sendContactEmails({ ...clean, id });
+	if (clientEmailId) {
+		await getDb()
+			.update(contacts)
+			.set({ messageId: clientEmailId })
+			.where(eq(contacts.id, id));
+	}
 
 	return id;
 }

@@ -70,6 +70,7 @@ const toJobOutreachMessage = (row: JobOutreachMessageRow): JobOutreachMessage =>
 	senderName: row.senderName,
 	senderEmail: row.senderEmail,
 	message: row.message,
+	messageId: row.messageId ?? undefined,
 	createdAt: row.createdAt,
 });
 
@@ -93,6 +94,7 @@ const toJobOutreach = (
 	body: row.body,
 	notes: row.notes ?? undefined,
 	attachments: (row.attachments as JobOutreachAttachment[] | null) ?? undefined,
+	initialMessageId: row.initialMessageId ?? undefined,
 	sentAt: row.sentAt ?? undefined,
 	followUpDueDate: row.followUpDueDate ?? undefined,
 	lastRepliedAt: row.lastRepliedAt ?? undefined,
@@ -260,19 +262,12 @@ export async function createJobOutreach(
 
 	// Insert initial message into thread
 	if (inserted) {
-		await db.insert(jobOutreachMessages).values({
-			outreachId: inserted.id,
-			senderType: "admin",
-			senderName: "Wisman Nur",
-			senderEmail: "hi@wismannur.pro",
-			message: inserted.body,
-			createdAt: isSending ? now : inserted.createdAt,
-		});
+		let resendId: string | undefined;
 
 		// Send email via Resend if requested
 		if (isSending) {
 			try {
-				await sendJobOutreachEmail({
+				const sendRes = await sendJobOutreachEmail({
 					outreachId: inserted.id,
 					toEmail: inserted.contactEmail,
 					toName: inserted.contactName,
@@ -282,9 +277,27 @@ export async function createJobOutreach(
 					jobTitle: inserted.jobTitle,
 					attachments: (inserted.attachments as JobOutreachAttachment[] | null) ?? undefined,
 				});
+				resendId = sendRes.id;
 			} catch (err) {
 				console.error("[Job Outreach] Failed to send email on create:", err);
 			}
+		}
+
+		await db.insert(jobOutreachMessages).values({
+			outreachId: inserted.id,
+			senderType: "admin",
+			senderName: "Wisman Nur",
+			senderEmail: "hi@wismannur.pro",
+			message: inserted.body,
+			messageId: resendId || null,
+			createdAt: isSending ? now : inserted.createdAt,
+		});
+
+		if (resendId) {
+			await db
+				.update(jobOutreaches)
+				.set({ initialMessageId: resendId })
+				.where(eq(jobOutreaches.id, inserted.id));
 		}
 	}
 
@@ -352,7 +365,7 @@ export async function sendOutreachEmail(id: string): Promise<JobOutreach> {
 	const now = new Date();
 	const followUpDate = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
-	await sendJobOutreachEmail({
+	const sendRes = await sendJobOutreachEmail({
 		outreachId: row.id,
 		toEmail: row.contactEmail,
 		toName: row.contactName,
@@ -363,17 +376,33 @@ export async function sendOutreachEmail(id: string): Promise<JobOutreach> {
 		attachments: (row.attachments as JobOutreachAttachment[] | null) ?? undefined,
 	});
 
-
 	const [updated] = await db
 		.update(jobOutreaches)
 		.set({
 			status: "sent",
 			sentAt: now,
+			initialMessageId: sendRes.id || row.initialMessageId || null,
 			followUpDueDate: followUpDate,
 			updatedAt: now,
 		})
 		.where(eq(jobOutreaches.id, id))
 		.returning();
+
+	if (sendRes.id) {
+		const [firstMsg] = await db
+			.select()
+			.from(jobOutreachMessages)
+			.where(eq(jobOutreachMessages.outreachId, id))
+			.orderBy(asc(jobOutreachMessages.createdAt))
+			.limit(1);
+
+		if (firstMsg) {
+			await db
+				.update(jobOutreachMessages)
+				.set({ messageId: sendRes.id })
+				.where(eq(jobOutreachMessages.id, firstMsg.id));
+		}
+	}
 
 	revalidateOutreachPaths(id);
 	return toJobOutreach(updated);
@@ -398,21 +427,29 @@ export async function sendFollowUpMessage(
 
 	if (!outreach) throw new Error("Outreach not found");
 
-	// 1. Insert message into thread
-	const [newMessage] = await db
-		.insert(jobOutreachMessages)
-		.values({
-			outreachId,
-			senderType: "admin",
-			senderName: "Wisman Nur",
-			senderEmail: "hi@wismannur.pro",
-			message: followUpText.trim(),
-		})
-		.returning();
+	// 1. Fetch previous thread messages to extract inReplyToId and references
+	const previousMessages = await db
+		.select()
+		.from(jobOutreachMessages)
+		.where(eq(jobOutreachMessages.outreachId, outreachId))
+		.orderBy(asc(jobOutreachMessages.createdAt));
 
-	// 2. Send via Resend
+	const referencesIds: string[] = [];
+	if (outreach.initialMessageId) {
+		referencesIds.push(outreach.initialMessageId);
+	}
+	for (const msg of previousMessages) {
+		if (msg.messageId) {
+			referencesIds.push(msg.messageId);
+		}
+	}
+
+	const inReplyToId =
+		referencesIds.length > 0 ? referencesIds[referencesIds.length - 1] : null;
+
+	// 2. Send via Resend with In-Reply-To and References headers
 	const finalSubject = subject || outreach.subject;
-	await sendJobOutreachEmail({
+	const sendRes = await sendJobOutreachEmail({
 		outreachId,
 		toEmail: outreach.contactEmail,
 		toName: outreach.contactName,
@@ -421,9 +458,24 @@ export async function sendFollowUpMessage(
 		companyName: outreach.companyName,
 		jobTitle: outreach.jobTitle,
 		isFollowUp: true,
+		inReplyToId,
+		referencesIds,
 	});
 
-	// 3. Update outreach status & next follow-up due in 4 days
+	// 3. Insert message into thread with messageId
+	const [newMessage] = await db
+		.insert(jobOutreachMessages)
+		.values({
+			outreachId,
+			senderType: "admin",
+			senderName: "Wisman Nur",
+			senderEmail: "hi@wismannur.pro",
+			message: followUpText.trim(),
+			messageId: sendRes.id || null,
+		})
+		.returning();
+
+	// 4. Update outreach status & next follow-up due in 4 days
 	const now = new Date();
 	await db
 		.update(jobOutreaches)
