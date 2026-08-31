@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { Webhook } from "svix";
 
@@ -53,25 +53,27 @@ function extractIdFromToAddress(toRaw: unknown): {
 					? String((item as Record<string, unknown>).email || (item as Record<string, unknown>).address || "")
 					: "";
 
-		const outreachMatch = str.match(/(?:^|\+)(?:outreach|job)[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		const outreachMatch = str.match(/(?:^|\+)?(outreach[-_][0-9]{10}-[a-z0-9]{3,})/i);
 		if (outreachMatch && outreachMatch[1]) {
-			return { id: outreachMatch[1], type: "job_outreach" };
+			return { id: outreachMatch[1].replace("_", "-").toLowerCase(), type: "job_outreach" };
 		}
-		const contactMatch = str.match(/(?:^|\+)contact[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		const contactMatch = str.match(/(?:^|\+)?(contact[-_][0-9]{10}-[a-z0-9]{3,})/i);
 		if (contactMatch && contactMatch[1]) {
-			return { id: contactMatch[1], type: "contact" };
+			return { id: contactMatch[1].replace("_", "-").toLowerCase(), type: "contact" };
 		}
-		const serviceMatch = str.match(/(?:^|\+)service[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		const serviceMatch = str.match(/(?:^|\+)?(service(?:[-_]requests?)?[-_][0-9]{10}-[a-z0-9]{3,})/i);
 		if (serviceMatch && serviceMatch[1]) {
-			return { id: serviceMatch[1], type: "service_request" };
+			const normalized = serviceMatch[1].replace(/^service[-_]requests?[-_]/i, "service-").replace("_", "-").toLowerCase();
+			return { id: normalized, type: "service_request" };
 		}
-		const hireMatch = str.match(/(?:^|\+)hire[-_]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
+		const hireMatch = str.match(/(?:^|\+)?(hire(?:[-_]inquir(?:y|ies))?[-_][0-9]{10}-[a-z0-9]{3,})/i);
 		if (hireMatch && hireMatch[1]) {
-			return { id: hireMatch[1], type: "hire_request" };
+			const normalized = hireMatch[1].replace(/^hire[-_]inquir(?:y|ies)[-_]/i, "hire-").replace("_", "-").toLowerCase();
+			return { id: normalized, type: "hire_request" };
 		}
-		const anyUuidMatch = str.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
-		if (anyUuidMatch && anyUuidMatch[1]) {
-			return { id: anyUuidMatch[1] };
+		const generalMatch = str.match(/((?:outreach|contact|service|hire)[-_][0-9]{10}-[a-z0-9]{3,})/i);
+		if (generalMatch && generalMatch[1]) {
+			return { id: generalMatch[1].replace("_", "-").toLowerCase() };
 		}
 	}
 	return { id: null };
@@ -80,26 +82,25 @@ function extractIdFromToAddress(toRaw: unknown): {
 function extractInquiryId(subject: string, rawBody?: string): string | null {
 	// 1. Look for explicit pattern [Ref: #ID] or (Ref: ID) or Ref: ID in subject
 	if (subject) {
-		const refMatch = subject.match(/(?:\[|\()?\bRef:\s*#?([a-zA-Z0-9_-]+)(?:\]|\))?/i);
+		const refMatch = subject.match(/(?:\[|\()?\bRef:\s*#?((?:outreach|contact|service|hire)[-_][0-9]{10}-[a-z0-9]{3,}|[a-zA-Z0-9_-]+)(?:\]|\))?/i);
 		if (refMatch && refMatch[1]) {
 			return refMatch[1].trim();
 		}
-		// Fallback: match standard UUID pattern anywhere in subject
-		const uuidMatch = subject.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
-		if (uuidMatch && uuidMatch[1]) {
-			return uuidMatch[1].trim();
+		const generalMatch = subject.match(/((?:outreach|contact|service|hire)[-_][0-9]{10}-[a-z0-9]{3,})/i);
+		if (generalMatch && generalMatch[1]) {
+			return generalMatch[1].trim();
 		}
 	}
 
 	// 2. Check quoted reply headers in email body
 	if (rawBody) {
-		const refMatchBody = rawBody.match(/(?:\[|\()?\bRef:\s*#?([a-zA-Z0-9_-]+)(?:\]|\))?/i);
+		const refMatchBody = rawBody.match(/(?:\[|\()?\bRef:\s*#?((?:outreach|contact|service|hire)[-_][0-9]{10}-[a-z0-9]{3,}|[a-zA-Z0-9_-]+)(?:\]|\))?/i);
 		if (refMatchBody && refMatchBody[1]) {
 			return refMatchBody[1].trim();
 		}
-		const uuidMatchBody = rawBody.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i);
-		if (uuidMatchBody && uuidMatchBody[1]) {
-			return uuidMatchBody[1].trim();
+		const generalMatchBody = rawBody.match(/((?:outreach|contact|service|hire)[-_][0-9]{10}-[a-z0-9]{3,})/i);
+		if (generalMatchBody && generalMatchBody[1]) {
+			return generalMatchBody[1].trim();
 		}
 	}
 
@@ -256,14 +257,17 @@ export async function POST(req: NextRequest) {
 					? (emailHeaders["X-Entity-Ref-ID"] as string)
 					: null;
 
-		let targetInquiryId: string | null =
+		const rawExplicitRefId =
 			toInfo.id ||
 			headerRefId ||
 			extractInquiryId(subject, rawText || rawHtml);
+
+		const hasExplicitRefId = Boolean(rawExplicitRefId);
+		let targetInquiryId: string | null = rawExplicitRefId;
 		let targetInquiryType: "contact" | "service_request" | "hire_request" =
 			(toInfo.type && toInfo.type !== "job_outreach" ? toInfo.type : undefined) || "contact";
 		let targetSubject = subject;
-
+		let foundEntity = false;
 
 		// 5. Match by explicit reference ID if found
 		if (targetInquiryId) {
@@ -274,8 +278,31 @@ export async function POST(req: NextRequest) {
 				.where(eq(jobOutreaches.id, targetInquiryId))
 				.limit(1);
 
-
 			if (outreachRow) {
+				foundEntity = true;
+
+				// Deduplication check: ignore duplicate deliveries within 15 seconds
+				const fifteenSecondsAgo = new Date(Date.now() - 15000);
+				const [recentDuplicate] = await db
+					.select()
+					.from(jobOutreachMessages)
+					.where(
+						and(
+							eq(jobOutreachMessages.outreachId, outreachRow.id),
+							eq(jobOutreachMessages.senderEmail, senderEmail),
+							eq(jobOutreachMessages.message, textContent),
+							gte(jobOutreachMessages.createdAt, fifteenSecondsAgo),
+						),
+					)
+					.limit(1);
+
+				if (recentDuplicate) {
+					console.log(
+						`[Resend Inbound] Ignored duplicate job outreach reply within 15s for ${outreachRow.id}`
+					);
+					return NextResponse.json({ success: true, duplicate: true });
+				}
+
 				await db.insert(jobOutreachMessages).values({
 					outreachId: outreachRow.id,
 					senderType: "client",
@@ -321,6 +348,7 @@ export async function POST(req: NextRequest) {
 				.limit(1);
 
 			if (contactRow) {
+				foundEntity = true;
 				targetInquiryType = "contact";
 				targetSubject = contactRow.subject;
 			} else {
@@ -331,6 +359,7 @@ export async function POST(req: NextRequest) {
 					.limit(1);
 
 				if (serviceRow) {
+					foundEntity = true;
 					targetInquiryType = "service_request";
 					targetSubject = serviceRow.serviceType;
 				} else {
@@ -341,6 +370,7 @@ export async function POST(req: NextRequest) {
 						.limit(1);
 
 					if (hireRow) {
+						foundEntity = true;
 						targetInquiryType = "hire_request";
 						targetSubject = `${hireRow.roleTitle} @ ${hireRow.company}`;
 					} else {
@@ -350,7 +380,25 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
-		// 6. Fallback: match by sender email with most recent entity (outreach or inquiry)
+		// Self-healing / Cross-environment safety guard:
+		// If the inbound email carried an explicit Ref ID (e.g. contact-YYMMDDHHMM-xxx)
+		// but was NOT found in this database environment, do NOT create a fake duplicate
+		// contact inquiry or misattribute it to a different inquiry by email.
+		if (hasExplicitRefId && !foundEntity) {
+			console.warn(
+				`[Resend Inbound] Explicit Ref ID "${rawExplicitRefId}" was not found in this environment. Skipping fallback creation to prevent cross-env pollution.`
+			);
+			return NextResponse.json(
+				{
+					success: true,
+					message: `Explicit Ref ID "${rawExplicitRefId}" not found in current environment. Ignored safely.`,
+					skipped: true,
+				},
+				{ status: 200 },
+			);
+		}
+
+		// 6. Fallback: match by sender email with most recent entity (outreach or inquiry) only if no explicit Ref ID was present
 		if (!targetInquiryId && senderEmail) {
 			const [latestOutreachRows, latestContactRows, latestServiceRows, latestHireRows] = await Promise.all([
 				db
@@ -429,6 +477,28 @@ export async function POST(req: NextRequest) {
 				const bestMatch = allMatches[0];
 
 				if (bestMatch.type === "job_outreach") {
+					// Deduplication check
+					const fifteenSecondsAgo = new Date(Date.now() - 15000);
+					const [recentDuplicate] = await db
+						.select()
+						.from(jobOutreachMessages)
+						.where(
+							and(
+								eq(jobOutreachMessages.outreachId, bestMatch.id),
+								eq(jobOutreachMessages.senderEmail, senderEmail),
+								eq(jobOutreachMessages.message, textContent),
+								gte(jobOutreachMessages.createdAt, fifteenSecondsAgo),
+							),
+						)
+						.limit(1);
+
+					if (recentDuplicate) {
+						console.log(
+							`[Resend Inbound] Ignored duplicate job outreach reply within 15s for ${bestMatch.id}`
+						);
+						return NextResponse.json({ success: true, duplicate: true });
+					}
+
 					await db.insert(jobOutreachMessages).values({
 						outreachId: bestMatch.id,
 						senderType: "client",
@@ -473,8 +543,6 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
-
-
 		// 7. If still not matched, create a new contact inquiry so the email is NEVER lost and visible in CMS
 		if (!targetInquiryId) {
 			const cleanSubject = subject.replace(/^(Re:\s*)+/i, "").trim() || "Inbound Email";
@@ -496,6 +564,28 @@ export async function POST(req: NextRequest) {
 			console.log(
 				`[Resend Inbound] No existing inquiry found. Created new contact ${targetInquiryId} for ${senderEmail}`
 			);
+		}
+
+		// Deduplication check for inquiryMessages
+		const fifteenSecondsAgo = new Date(Date.now() - 15000);
+		const [recentDuplicateInquiry] = await db
+			.select()
+			.from(inquiryMessages)
+			.where(
+				and(
+					eq(inquiryMessages.inquiryId, targetInquiryId),
+					eq(inquiryMessages.senderEmail, senderEmail),
+					eq(inquiryMessages.message, textContent),
+					gte(inquiryMessages.createdAt, fifteenSecondsAgo),
+				),
+			)
+			.limit(1);
+
+		if (recentDuplicateInquiry) {
+			console.log(
+				`[Resend Inbound] Ignored duplicate inquiry reply within 15s for ${targetInquiryId}`
+			);
+			return NextResponse.json({ success: true, duplicate: true });
 		}
 
 		// 8. Insert inbound message into inquiryMessages thread
