@@ -134,13 +134,13 @@ export default function JobOutreachDetailPage() {
 		setIsSendingDraft(true);
 		try {
 			await jobOutreachService.sendEmail(outreach.id);
-			toast.success(`Email berhasil dikirim ke ${outreach.contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`);
+			toast.success(`Email successfully sent to ${outreach.contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`);
 			refetch();
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
 		} catch (err) {
 			console.error("Send draft error:", err);
-			toast.error("Gagal mengirim email draf.");
+			toast.error("Failed to send draft email.");
 		} finally {
 			setIsSendingDraft(false);
 		}
@@ -158,13 +158,13 @@ export default function JobOutreachDetailPage() {
 		if (!outreach) return;
 		try {
 			await jobOutreachService.update(outreach.id, { status: newStatus });
-			toast.success(`Status diubah menjadi ${STATUS_CONFIG[newStatus]?.label || newStatus}`);
+			toast.success(`Status changed to ${STATUS_CONFIG[newStatus]?.label || newStatus}`);
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachDetail", outreachId] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
 		} catch (err) {
 			console.error("Status update error:", err);
-			toast.error("Gagal mengubah status.");
+			toast.error("Failed to update status.");
 		}
 	};
 
@@ -182,10 +182,10 @@ export default function JobOutreachDetailPage() {
 			});
 
 			setFollowUpMessage(res.body);
-			toast.success("Draf follow-up berhasil dibuat oleh AI!");
+			toast.success("AI follow-up draft generated successfully!");
 		} catch (err) {
 			console.error("AI Follow-up error:", err);
-			toast.error("Gagal men-generate follow up AI.");
+			toast.error("Failed to generate AI follow-up.");
 		} finally {
 			setIsGeneratingAiFollowUp(false);
 		}
@@ -196,14 +196,14 @@ export default function JobOutreachDetailPage() {
 		setIsSendingFollowUp(true);
 		try {
 			await jobOutreachService.sendFollowUp(outreach.id, followUpMessage.trim());
-			toast.success(`Follow-up berhasil dikirim ke ${outreach.contactEmail}!`);
+			toast.success(`Follow-up successfully sent to ${outreach.contactEmail}!`);
 			setFollowUpMessage("");
 			refetch();
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
 		} catch (err) {
 			console.error("Send follow-up error:", err);
-			toast.error("Gagal mengirim email follow-up.");
+			toast.error("Failed to send follow-up email.");
 		} finally {
 			setIsSendingFollowUp(false);
 		}
@@ -214,14 +214,14 @@ export default function JobOutreachDetailPage() {
 		setIsConverting(true);
 		try {
 			const result = await jobOutreachService.convertToJobApplication(outreach.id);
-			toast.success("Berhasil dihubungkan ke Job Tracker!");
+			toast.success("Successfully connected to Job Tracker!");
 			refetch();
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobTrackerApplications"] });
 			router.push(`/cms/job-tracker/${result.applicationId}`);
 		} catch (err) {
 			console.error("Convert to job tracker error:", err);
-			toast.error("Gagal mengonversi ke Job Tracker.");
+			toast.error("Failed to convert to Job Tracker.");
 		} finally {
 			setIsConverting(false);
 		}
@@ -232,13 +232,13 @@ export default function JobOutreachDetailPage() {
 		setIsDeleting(true);
 		try {
 			await jobOutreachService.delete(outreach.id);
-			toast.success("Outreach berhasil dihapus.");
+			toast.success("Outreach successfully deleted.");
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
 			router.push("/cms/job-outreaches");
 		} catch (err) {
 			console.error("Delete error:", err);
-			toast.error("Gagal menghapus outreach.");
+			toast.error("Failed to delete outreach.");
 		} finally {
 			setIsDeleting(false);
 		}
@@ -269,9 +269,9 @@ export default function JobOutreachDetailPage() {
 		return (
 			<div className="text-center py-16 space-y-4">
 				<AlertCircle className="h-12 w-12 text-muted-foreground mx-auto" />
-				<h2 className="text-xl font-bold">Outreach tidak ditemukan</h2>
+				<h2 className="text-xl font-bold">Outreach Not Found</h2>
 				<Button asChild variant="outline">
-					<Link href="/cms/job-outreaches">Kembali ke Daftar Outreach</Link>
+					<Link href="/cms/job-outreaches">Back to Outreach List</Link>
 				</Button>
 			</div>
 		);
@@ -290,7 +290,7 @@ export default function JobOutreachDetailPage() {
 					className="gap-2 -ml-2 text-muted-foreground hover:text-foreground text-xs font-medium"
 				>
 					<Link href="/cms/job-outreaches">
-						<ArrowLeft className="h-4 w-4" /> Kembali ke Job Outreaches
+						<ArrowLeft className="h-4 w-4" /> Back to Job Outreaches
 					</Link>
 				</Button>
 			</div>
@@ -353,7 +353,7 @@ export default function JobOutreachDetailPage() {
 						size="icon"
 						onClick={() => setIsDeleteDialogOpen(true)}
 						className="h-9 w-9 rounded-lg"
-						title="Hapus Outreach"
+						title="Delete Outreach"
 					>
 						<Trash2 className="h-4 w-4" />
 					</Button>
@@ -373,10 +373,10 @@ export default function JobOutreachDetailPage() {
 								</div>
 								<div className="space-y-0.5">
 									<div className="text-sm font-bold text-foreground">
-										Outreach ini masih berstatus Draf
+										This outreach is still a draft
 									</div>
 									<p className="text-xs text-muted-foreground">
-										Email belum dikirimkan ke <strong className="text-foreground">{outreach.contactName}</strong> ({outreach.contactEmail}). Klik tombol di samping untuk mengirimkannya langsung via <strong className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</strong>.
+										Email has not been sent to <strong className="text-foreground">{outreach.contactName}</strong> ({outreach.contactEmail}) yet. Click the button to send it directly via <strong className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</strong>.
 									</p>
 								</div>
 							</div>
@@ -387,11 +387,11 @@ export default function JobOutreachDetailPage() {
 							>
 								{isSendingDraft ? (
 									<>
-										<Loader2 className="h-4 w-4 animate-spin" /> Mengirim...
+										<Loader2 className="h-4 w-4 animate-spin" /> Sending...
 									</>
 								) : (
 									<>
-										<Send className="h-4 w-4" /> Kirim Email Sekarang
+										<Send className="h-4 w-4" /> Send Email Now
 									</>
 								)}
 							</Button>
@@ -409,7 +409,7 @@ export default function JobOutreachDetailPage() {
 									</CardTitle>
 
 									<CardDescription className="text-xs">
-										Ref ID: <span className="font-mono text-foreground font-semibold">#{outreach.id}</span> · Pengiriman dari <span className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</span>
+										Ref ID: <span className="font-mono text-foreground font-semibold">#{outreach.id}</span> · Sent from <span className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</span>
 									</CardDescription>
 								</div>
 								<Badge variant="outline" className={cn("text-xs font-semibold", statusInfo.className)}>
@@ -430,7 +430,7 @@ export default function JobOutreachDetailPage() {
 													WN
 												</AvatarFallback>
 											</Avatar>
-											<span>Wisman Nur (Anda)</span>
+											<span>Wisman Nur (You)</span>
 										</div>
 										<span>{outreach.sentAt ? format(new Date(outreach.sentAt), "dd MMM yyyy, HH:mm") : "Draft"}</span>
 									</div>
@@ -523,7 +523,7 @@ export default function JobOutreachDetailPage() {
 
 								<Textarea
 									rows={5}
-									placeholder={`Tulis pesan balasan atau follow-up untuk ${outreach.contactName}...`}
+									placeholder={`Write a reply or follow-up message for ${outreach.contactName}...`}
 									value={followUpMessage}
 									onChange={(e) => setFollowUpMessage(e.target.value)}
 									className="text-sm leading-relaxed"
@@ -531,7 +531,7 @@ export default function JobOutreachDetailPage() {
 
 								<div className="flex items-center justify-between pt-1">
 									<span className="text-xs text-muted-foreground">
-										Mengirim dari <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>
+										Sending from <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>
 									</span>
 									<Button
 										onClick={handleSendFollowUp}
@@ -540,11 +540,11 @@ export default function JobOutreachDetailPage() {
 									>
 										{isSendingFollowUp ? (
 											<>
-												<Loader2 className="h-4 w-4 animate-spin" /> Mengirim...
+												<Loader2 className="h-4 w-4 animate-spin" /> Sending...
 											</>
 										) : (
 											<>
-												<Send className="h-4 w-4" /> Kirim via Resend
+												<Send className="h-4 w-4" /> Send via Resend
 											</>
 										)}
 									</Button>
@@ -656,14 +656,14 @@ export default function JobOutreachDetailPage() {
 										className="w-full text-xs h-8 gap-1.5 mt-2"
 									>
 										<Link href={`/cms/job-tracker/${outreach.jobApplication.id}`}>
-											<Briefcase className="h-3.5 w-3.5" /> Buka di Job Tracker
+											<Briefcase className="h-3.5 w-3.5" /> Open in Job Tracker
 										</Link>
 									</Button>
 								</div>
 							) : (
 								<div className="space-y-3 text-xs text-muted-foreground">
 									<p>
-										Outreach ini belum terhubung dengan data di Job Tracker. Jika recruiter membalas positif, Anda dapat langsung mengonversinya menjadi aplikasi/interview aktif.
+										This outreach is not linked to Job Tracker yet. If the recruiter responds positively, you can convert it directly to an active job application or interview.
 									</p>
 									<Button
 										onClick={handleConvertToJobTracker}
@@ -688,7 +688,7 @@ export default function JobOutreachDetailPage() {
 							<CardHeader className="p-4 pb-3">
 								<CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
 									<Paperclip className="h-4 w-4 text-primary" />
-									Lampiran File ({outreach.attachments.length})
+									Attachments ({outreach.attachments.length})
 								</CardTitle>
 							</CardHeader>
 							<CardContent className="p-4 pt-0 space-y-2 text-xs">
@@ -721,14 +721,14 @@ export default function JobOutreachDetailPage() {
 						</CardHeader>
 						<CardContent className="p-4 pt-0 space-y-2.5 text-xs text-muted-foreground">
 							<div className="flex justify-between py-1 border-b border-border/40">
-								<span>Tanggal Dibuat:</span>
+								<span>Created Date:</span>
 								<span className="font-medium text-foreground">
 									{format(new Date(outreach.createdAt), "dd MMM yyyy")}
 								</span>
 							</div>
 
 							<div className="flex justify-between py-1 border-b border-border/40">
-								<span>Email Pertama Dikirim:</span>
+								<span>Initial Email Sent:</span>
 								<span className="font-medium text-foreground">
 									{outreach.sentAt ? format(new Date(outreach.sentAt), "dd MMM yyyy, HH:mm") : "-"}
 								</span>
@@ -747,9 +747,9 @@ export default function JobOutreachDetailPage() {
 							</div>
 
 							<div className="flex justify-between py-1">
-								<span>Balasan Terakhir:</span>
+								<span>Last Reply:</span>
 								<span className="font-medium text-emerald-500">
-									{outreach.lastRepliedAt ? format(new Date(outreach.lastRepliedAt), "dd MMM yyyy, HH:mm") : "Belum ada balasan"}
+									{outreach.lastRepliedAt ? format(new Date(outreach.lastRepliedAt), "dd MMM yyyy, HH:mm") : "No replies yet"}
 								</span>
 							</div>
 						</CardContent>
@@ -765,19 +765,19 @@ export default function JobOutreachDetailPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Hapus Outreach Ini?</AlertDialogTitle>
+						<AlertDialogTitle>Delete This Outreach?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Tindakan ini permanen dan akan menghapus seluruh rekaman draf email beserta balasan yang terkait.
+							This action is permanent and will delete the entire email draft along with all associated replies.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={handleDelete}
 							disabled={isDeleting}
 							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 						>
-							{isDeleting ? "Menghapus..." : "Hapus Outreach"}
+							{isDeleting ? "Deleting..." : "Delete Outreach"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

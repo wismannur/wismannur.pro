@@ -170,13 +170,13 @@ export default function JobOutreachesPage() {
 		setIsDeleting(true);
 		try {
 			await jobOutreachService.delete(deleteTargetId);
-			toast.success("Outreach berhasil dihapus.");
+			toast.success("Outreach successfully deleted.");
 			setDeleteTargetId(null);
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
 		} catch (err) {
 			console.error("Delete outreach error:", err);
-			toast.error("Gagal menghapus outreach.");
+			toast.error("Failed to delete outreach.");
 		} finally {
 			setIsDeleting(false);
 		}
@@ -185,18 +185,18 @@ export default function JobOutreachesPage() {
 	const handleSendDraft = async (id: string, contactEmail: string) => {
 		try {
 			await jobOutreachService.sendEmail(id);
-			toast.success(`Email berhasil dikirim ke ${contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`);
+			toast.success(`Email successfully sent to ${contactEmail}!`);
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
 		} catch (err) {
-			console.error("Send draft error:", err);
-			toast.error("Gagal mengirim email draf.");
+			console.error("Send email error:", err);
+			toast.error("Failed to send email.");
 		}
 	};
 
 	return (
 		<div className="space-y-6 pb-12">
-			{/* Header */}
+			{/* Page Header */}
 			<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 				<div>
 					<h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -204,7 +204,7 @@ export default function JobOutreachesPage() {
 						Job Outreaches & Cold Emails
 					</h1>
 					<p className="text-sm text-muted-foreground mt-1">
-						Kelola cold outreach, direct application via email, dan pantau balasan dari recruiter secara terintegrasi melalui{" "}
+						Manage cold outreach, direct email applications, and track recruiter replies seamlessly through{" "}
 						<strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
 					</p>
 				</div>
@@ -325,7 +325,7 @@ export default function JobOutreachesPage() {
 					<div className="relative flex-1 sm:w-64">
 						<Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
 						<Input
-							placeholder="Cari perusahaan, posisi, nama kontak..."
+							placeholder="Search company, job title, contact name..."
 							className="pl-9 h-9 text-xs"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
@@ -363,13 +363,13 @@ export default function JobOutreachesPage() {
 					<div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary mb-4">
 						<SendHorizontal className="h-7 w-7" />
 					</div>
-					<h3 className="text-lg font-semibold mb-1">Belum ada Job Outreach</h3>
+					<h3 className="text-lg font-semibold mb-1">No Job Outreaches Yet</h3>
 					<p className="text-sm text-muted-foreground max-w-md mx-auto mb-5">
-						Mulai inisiasi cold email atau kirim direct job application ke recruiter target Anda menggunakan AI generator.
+						Start initiating cold emails or send direct job applications to your target recruiters using the AI generator.
 					</p>
 					<Button asChild className="gap-2 font-medium">
 						<Link href="/cms/job-outreaches/new">
-							<Plus className="h-4 w-4" /> Mulai Outreach Pertama
+							<Plus className="h-4 w-4" /> Start First Outreach
 						</Link>
 					</Button>
 				</Card>
@@ -433,20 +433,20 @@ export default function JobOutreachesPage() {
 											<DropdownMenuContent align="end">
 												<DropdownMenuItem asChild>
 													<Link href={`/cms/job-outreaches/${item.id}`}>
-														<Eye className="h-4 w-4 mr-2" /> Buka Thread Percakapan
+														<Eye className="h-4 w-4 mr-2" /> Open Conversation Thread
 													</Link>
 												</DropdownMenuItem>
 												{item.status === "draft" && (
 													<DropdownMenuItem
 														onClick={() => handleSendDraft(item.id, item.contactEmail)}
 													>
-														<Send className="h-4 w-4 mr-2 text-primary" /> Kirim Sekarang (Resend)
+														<Send className="h-4 w-4 mr-2 text-primary" /> Send Now (Resend)
 													</DropdownMenuItem>
 												)}
 												{item.jobApplicationId && (
 													<DropdownMenuItem asChild>
 														<Link href={`/cms/job-tracker/${item.jobApplicationId}`}>
-															<Briefcase className="h-4 w-4 mr-2" /> Lihat di Job Tracker
+															<Briefcase className="h-4 w-4 mr-2" /> View in Job Tracker
 														</Link>
 													</DropdownMenuItem>
 												)}
@@ -455,7 +455,7 @@ export default function JobOutreachesPage() {
 													onClick={() => setDeleteTargetId(item.id)}
 													className="text-destructive focus:text-destructive"
 												>
-													<Trash2 className="h-4 w-4 mr-2" /> Hapus Outreach
+													<Trash2 className="h-4 w-4 mr-2" /> Delete Outreach
 												</DropdownMenuItem>
 											</DropdownMenuContent>
 										</DropdownMenu>
@@ -526,10 +526,10 @@ export default function JobOutreachesPage() {
 											<Calendar className="h-3 w-3" />
 											{item.sentAt ? (
 												<span>
-													Dikirim {formatDistanceToNow(new Date(item.sentAt), { addSuffix: true })}
+													Sent {formatDistanceToNow(new Date(item.sentAt), { addSuffix: true })}
 												</span>
 											) : (
-												<span>Draf dibuat {format(new Date(item.createdAt), "dd MMM yyyy")}</span>
+												<span>Draft created {format(new Date(item.createdAt), "dd MMM yyyy")}</span>
 											)}
 										</div>
 
@@ -554,11 +554,11 @@ export default function JobOutreachesPage() {
 											<Link href={`/cms/job-outreaches/${item.id}`}>
 												{item.status === "replied" ? (
 													<>
-														<MessageSquare className="h-3.5 w-3.5" /> Lihat Balasan Recruiter
+														<MessageSquare className="h-3.5 w-3.5" /> View Recruiter Reply
 													</>
 												) : (
 													<>
-														<Eye className="h-3.5 w-3.5" /> Detail & Follow-up
+														<Eye className="h-3.5 w-3.5" /> Details & Follow-up
 													</>
 												)}
 											</Link>
@@ -578,19 +578,19 @@ export default function JobOutreachesPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Hapus Outreach Ini?</AlertDialogTitle>
+						<AlertDialogTitle>Delete This Outreach?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Tindakan ini akan menghapus data outreach serta riwayat percakapan thread email yang terkait.
+							This action will delete the outreach data along with all associated email thread conversations.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							onClick={handleDelete}
 							disabled={isDeleting}
 							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 						>
-							{isDeleting ? "Menghapus..." : "Hapus Outreach"}
+							{isDeleting ? "Deleting..." : "Delete Outreach"}
 						</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>

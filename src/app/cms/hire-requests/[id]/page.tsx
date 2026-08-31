@@ -155,19 +155,19 @@ export default function HireRequestDetailPage() {
 				inquiryType: "hire_request",
 				toEmail: request.email,
 				toName: request.name,
-				subject: `Tanggapan Penawaran: ${request.roleTitle} @ ${request.company}`,
+				subject: `Response: ${request.roleTitle} @ ${request.company}`,
 				message: replyMessage.trim(),
 				originalMessageSnippet: request.message,
 			});
 
-			toast.success("Balasan email berhasil dikirim ke recruiter!");
+			toast.success("Email reply successfully sent to recruiter!");
 			setReplyMessage("");
 			refetchThread();
 			refetchRequest();
 			queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
 		} catch (error) {
 			console.error("Error sending reply:", error);
-			const msg = error instanceof Error ? error.message : "Gagal mengirim balasan email";
+			const msg = error instanceof Error ? error.message : "Failed to send email reply";
 			toast.error(msg);
 		} finally {
 			setIsSendingReply(false);
@@ -192,12 +192,12 @@ export default function HireRequestDetailPage() {
 		setIsDeleting(true);
 		try {
 			await hireRequestService.delete(request.id);
-			toast.success("Hire inquiry berhasil dihapus");
+			toast.success("Hire inquiry successfully deleted");
 			queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
 			router.push("/cms/hire-requests");
 		} catch (error) {
 			console.error("Error deleting hire request:", error);
-			toast.error("Gagal menghapus hire inquiry");
+			toast.error("Failed to delete hire inquiry");
 		} finally {
 			setIsDeleting(false);
 		}
@@ -432,8 +432,7 @@ export default function HireRequestDetailPage() {
 								</div>
 							) : threadMessages.length === 0 ? (
 								<div className="p-6 text-center rounded-xl bg-background/40 border border-dashed border-border/60 text-xs text-muted-foreground">
-									Belum ada balasan email yang dikirim. Kirim balasan pertama di bawah untuk memulai
-									percakapan dengan recruiter.
+									No email replies sent yet. Send the first reply below to start the conversation with the recruiter.
 								</div>
 							) : (
 								<div className="space-y-4">
