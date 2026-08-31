@@ -22,7 +22,11 @@ function createDb() {
 	const isProd =
 		process.env.DB_ENV === "prod" ||
 		process.env.DB_ENV === "production" ||
-		process.env.NEXT_PUBLIC_DB_ENV === "prod";
+		process.env.NEXT_PUBLIC_DB_ENV === "prod" ||
+		process.env.VERCEL_ENV === "production" ||
+		(process.env.NODE_ENV === "production" &&
+			process.env.DB_ENV !== "dev" &&
+			process.env.DB_ENV !== "development");
 
 	const url = isProd
 		? (process.env.DATABASE_URL_PROD ||
