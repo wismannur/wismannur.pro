@@ -205,12 +205,12 @@ export default function CmsServicesPage() {
 		setIsDeleting(true);
 		try {
 			await serviceRequestService.delete(requestToDelete.id);
-			toast.success("Service request berhasil dihapus");
+			toast.success("Service request successfully deleted");
 			setRequestToDelete(null);
 			refetch();
 		} catch (error) {
 			console.error("Error deleting service request:", error);
-			toast.error("Gagal menghapus service request");
+			toast.error("Failed to delete service request");
 		} finally {
 			setIsDeleting(false);
 		}
@@ -675,17 +675,16 @@ export default function CmsServicesPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Hapus Service Request?</AlertDialogTitle>
+						<AlertDialogTitle>Delete Service Request?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Tindakan ini tidak dapat dibatalkan. Permintaan layanan dari{" "}
+							This action cannot be undone. The service request from{" "}
 							<strong className="text-foreground">{requestToDelete?.name}</strong> (
-							{requestToDelete?.email}) untuk layanan{" "}
-							<strong className="text-foreground">{requestToDelete?.serviceType}</strong>{" "}
-							beserta seluruh riwayat balasan email akan dihapus secara permanen.
+							{requestToDelete?.email}) for service{" "}
+							<strong className="text-foreground">{requestToDelete?.serviceType}</strong> and all related email thread history will be permanently deleted.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 							onClick={handleDeleteRequest}
@@ -694,10 +693,10 @@ export default function CmsServicesPage() {
 							{isDeleting ? (
 								<>
 									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									Menghapus...
+									Deleting...
 								</>
 							) : (
-								"Hapus"
+								"Delete"
 							)}
 						</AlertDialogAction>
 					</AlertDialogFooter>

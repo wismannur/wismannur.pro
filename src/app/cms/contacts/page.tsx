@@ -130,12 +130,12 @@ export default function CmsContactsPage() {
 		setIsDeleting(true);
 		try {
 			await contactService.delete(contactToDelete.id);
-			toast.success("Pesan kontak berhasil dihapus");
+			toast.success("Contact message successfully deleted");
 			setContactToDelete(null);
 			refetch();
 		} catch (error) {
 			console.error("Error deleting contact:", error);
-			toast.error("Gagal menghapus pesan kontak");
+			toast.error("Failed to delete contact message");
 		} finally {
 			setIsDeleting(false);
 		}
@@ -528,15 +528,15 @@ export default function CmsContactsPage() {
 			>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Hapus Pesan Kontak?</AlertDialogTitle>
+						<AlertDialogTitle>Delete Contact Message?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Tindakan ini tidak dapat dibatalkan. Pesan kontak dari{" "}
+							This action cannot be undone. The contact message from{" "}
 							<strong className="text-foreground">{contactToDelete?.name}</strong> (
-							{contactToDelete?.email}) beserta seluruh riwayat balasan email akan dihapus secara permanen.
+							{contactToDelete?.email}) and all related email thread history will be permanently deleted.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 							onClick={handleDeleteContact}
@@ -545,10 +545,10 @@ export default function CmsContactsPage() {
 							{isDeleting ? (
 								<>
 									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									Menghapus...
+									Deleting...
 								</>
 							) : (
-								"Hapus"
+								"Delete"
 							)}
 						</AlertDialogAction>
 					</AlertDialogFooter>

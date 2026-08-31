@@ -4,7 +4,8 @@ import { Resend } from "resend";
 import { Webhook } from "svix";
 
 import { getDb, schema } from "@/db";
-import { RESEND_EMAIL_DOMAIN, sendInboundAlertToAdmin } from "@/services/core/resend";
+import { cleanReplyBody } from "@/lib/email-cleaner";
+import { sendInboundAlertToAdmin } from "@/services/core/resend";
 
 const { contacts, serviceRequests, hireRequests, inquiryMessages, jobOutreaches, jobOutreachMessages } = schema;
 
@@ -168,23 +169,6 @@ function htmlToPlainText(html: string): string {
 		.trim();
 }
 
-function cleanReplyBody(text: string): string {
-	if (!text) return "";
-	const lines = text.split("\n");
-	const cleanedLines: string[] = [];
-
-	for (const line of lines) {
-		// Stop at common email quote headers
-		if (line.match(/^On\s.+wrote:$/i)) break;
-		if (line.match(/^Pada\s.+menulis:$/i)) break;
-		if (line.match(/^---+\s*Original Message\s*---+/i)) break;
-		if (line.match(/^_{5,}/)) break;
-		cleanedLines.push(line);
-	}
-
-	const result = cleanedLines.join("\n").trim();
-	return result || text.trim();
-}
 
 export async function POST(req: NextRequest) {
 	try {
@@ -279,7 +263,7 @@ export async function POST(req: NextRequest) {
 			textContent = cleanReplyBody(htmlToPlainText(rawHtml));
 		}
 		if (!textContent) {
-			textContent = rawText.trim() || htmlToPlainText(rawHtml) || subject || "(Pesan masuk tanpa teks)";
+			textContent = rawText.trim() || htmlToPlainText(rawHtml) || subject || "(Inbound message without body)";
 		}
 
 		const { name: senderName, email: senderEmail } = extractCleanEmail(fromRaw);

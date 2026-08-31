@@ -43,13 +43,13 @@ export const JobOutreachEmail = ({
 			<Body style={main}>
 				<Container style={container}>
 					<Section style={bodySection}>
-						<Text style={greeting}>Halo {contactName || "Team"},</Text>
+						<Text style={greeting}>Hi {contactName || "Team"},</Text>
 						<Text style={messageContent}>{bodyMessage}</Text>
 					</Section>
 
 					{attachments.length > 0 && (
 						<Section style={attachmentSection}>
-							<Text style={attachmentHeading}>📎 Lampiran Dokumen:</Text>
+							<Text style={attachmentHeading}>📎 Attachments:</Text>
 							{attachments.map((att, idx) => (
 								<Text key={idx} style={attachmentItem}>
 									•{" "}

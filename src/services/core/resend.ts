@@ -191,7 +191,7 @@ export async function sendContactEmails(
 				from: SENDER_HI,
 				to: payload.email,
 				replyTo: dynamicReplyTo,
-				subject: "Pesan Anda telah diterima - Wisman Nur",
+				subject: "Message received - Wisman Nur",
 				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: ClientContactAutoReplyEmail({
 					name: payload.name,
@@ -256,7 +256,7 @@ export async function sendServiceRequestEmails(
 				from: SENDER_HI,
 				to: payload.email,
 				replyTo: dynamicReplyTo,
-				subject: "Permintaan proyek diterima - Wisman Nur",
+				subject: "Project request received - Wisman Nur",
 				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: ClientServiceRequestAutoReplyEmail({
 					name: payload.name,
@@ -325,7 +325,7 @@ export async function sendHireRequestEmails(
 				from: SENDER_HI,
 				to: payload.email,
 				replyTo: dynamicReplyTo,
-				subject: `Pesan penawaran posisi ${payload.roleTitle} diterima - Wisman Nur`,
+				subject: `Opportunity received: ${payload.roleTitle} - Wisman Nur`,
 				headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
 				react: ClientHireRequestAutoReplyEmail({
 					name: payload.name,
@@ -413,7 +413,7 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
 	try {
 		const alertSubject = payload.isNewConversation
 			? `[New Direct Email] ${payload.clientName}: ${payload.subject}`
-			: `[Inbound Reply] ${payload.clientName} membalas: ${payload.subject}`;
+			: `[Inbound Reply] ${payload.clientName} replied: ${payload.subject}`;
 
 		const alertReact = payload.isNewConversation
 			? AdminDirectEmailAlertEmail({

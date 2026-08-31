@@ -139,10 +139,10 @@ export default function NewOutreachPage() {
 
 			const uploaded = await jobOutreachService.uploadAttachment(formData);
 			setAttachments((prev) => [...prev, uploaded]);
-			toast.success(`File "${file.name}" berhasil diunggah!`);
+			toast.success(`File "${file.name}" uploaded successfully!`);
 		} catch (err) {
 			console.error("Upload error:", err);
-			toast.error("Gagal mengunggah file attachment.");
+			toast.error("Failed to upload attachment file.");
 		} finally {
 			setIsUploading(false);
 			if (fileInputRef.current) fileInputRef.current.value = "";
@@ -155,7 +155,7 @@ export default function NewOutreachPage() {
 
 	const handleGenerateAi = async () => {
 		if (!companyName.trim() || !jobTitle.trim()) {
-			toast.error("Mohon isi Company Name dan Job Title terlebih dahulu.");
+			toast.error("Please fill in Company Name and Job Title first.");
 			return;
 		}
 
@@ -179,10 +179,10 @@ export default function NewOutreachPage() {
 
 			setSubject(result.subject);
 			setBody(result.body);
-			toast.success("Draf email berhasil dibuat oleh AI!");
+			toast.success("AI email draft generated successfully!");
 		} catch (err) {
 			console.error("AI Generation Error:", err);
-			toast.error("Gagal membuat draf AI. Silakan coba lagi.");
+			toast.error("Failed to generate AI draft. Please try again.");
 		} finally {
 			setIsGeneratingAi(false);
 		}
@@ -190,12 +190,12 @@ export default function NewOutreachPage() {
 
 	const handleSubmit = async (sendImmediately: boolean) => {
 		if (!companyName.trim() || !jobTitle.trim() || !contactName.trim() || !contactEmail.trim()) {
-			toast.error("Nama Perusahaan, Posisi, Nama Kontak, dan Email Kontak wajib diisi.");
+			toast.error("Company Name, Job Title, Contact Name, and Contact Email are required.");
 			return;
 		}
 
 		if (!subject.trim() || !body.trim()) {
-			toast.error("Subjek dan isi email wajib diisi.");
+			toast.error("Subject line and email body are required.");
 			return;
 		}
 
@@ -222,8 +222,8 @@ export default function NewOutreachPage() {
 
 			toast.success(
 				sendImmediately
-					? `Email berhasil dikirim ke ${contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`
-					: "Draf outreach berhasil disimpan.",
+					? `Email successfully sent to ${contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`
+					: "Outreach draft saved successfully.",
 			);
 
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
@@ -233,7 +233,7 @@ export default function NewOutreachPage() {
 
 		} catch (err) {
 			console.error("Submit outreach error:", err);
-			toast.error("Gagal menyimpan / mengirim outreach.");
+			toast.error("Failed to save or send outreach.");
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -250,7 +250,7 @@ export default function NewOutreachPage() {
 					className="gap-2 -ml-2 text-muted-foreground hover:text-foreground text-xs font-medium"
 				>
 					<Link href="/cms/job-outreaches">
-						<ArrowLeft className="h-4 w-4" /> Kembali ke Job Outreaches
+						<ArrowLeft className="h-4 w-4" /> Back to Job Outreaches
 					</Link>
 				</Button>
 			</div>
@@ -263,7 +263,7 @@ export default function NewOutreachPage() {
 						New Job Outreach & Cold Pitch
 					</h1>
 					<p className="text-xs sm:text-sm text-muted-foreground mt-1">
-						Kirim pesan langsung ke recruiter / engineering lead via <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
+						Send a direct message to recruiter / engineering lead via <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
 					</p>
 				</div>
 
@@ -285,7 +285,7 @@ export default function NewOutreachPage() {
 					>
 						{isSubmitting ? (
 							<>
-								<Loader2 className="h-4 w-4 animate-spin" /> Mengirim...
+								<Loader2 className="h-4 w-4 animate-spin" /> Sending...
 							</>
 						) : (
 							<>
@@ -306,16 +306,16 @@ export default function NewOutreachPage() {
 						<CardHeader className="p-4 pb-3">
 							<CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
 								<Briefcase className="h-4 w-4 text-primary" />
-								Hubungkan ke Job Tracker
+								Link to Job Tracker
 							</CardTitle>
 							<CardDescription className="text-xs">
-								Pilih lowongan yang sudah Anda catat di Job Tracker untuk auto-fill informasi.
+								Select an application tracked in Job Tracker to auto-fill information.
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="p-4 pt-0">
 							<Select value={selectedJobAppId} onValueChange={handleSelectJobApp}>
 								<SelectTrigger className="w-full bg-background text-xs h-9">
-									<SelectValue placeholder="Pilih aplikasi..." />
+									<SelectValue placeholder="Select application..." />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value="none">-- Standalone Outreach --</SelectItem>
@@ -334,7 +334,7 @@ export default function NewOutreachPage() {
 						<CardHeader className="p-4 pb-3">
 							<CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
 								<Building2 className="h-4 w-4 text-primary" />
-								Perusahaan & Posisi Target
+								Target Company & Role
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-4 pt-0 space-y-3.5">
@@ -489,14 +489,14 @@ export default function NewOutreachPage() {
 							<div className="flex items-center justify-between">
 								<CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
 									<Paperclip className="h-4 w-4 text-primary" />
-									Lampiran File (CV / Portfolio)
+									Attachments (CV / Portfolio)
 								</CardTitle>
 								<span className="text-[11px] text-muted-foreground">
-									{attachments.length} Terlampir
+									{attachments.length} Attached
 								</span>
 							</div>
 							<CardDescription className="text-xs">
-								Unggah file PDF CV, Portfolio, atau dokumen pendukung yang akan otomatis dikirimkan sebagai attachment di Resend.
+								Upload PDF CV, Portfolio, or supporting documents to automatically attach and send via Resend.
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="p-4 pt-0 space-y-3">
@@ -520,17 +520,17 @@ export default function NewOutreachPage() {
 								{isUploading ? (
 									<>
 										<Loader2 className="h-6 w-6 text-primary animate-spin" />
-										<span className="text-xs font-medium">Mengunggah file ke Vercel Blob...</span>
+										<span className="text-xs font-medium">Uploading file to Vercel Blob...</span>
 									</>
 								) : (
 									<>
 										<UploadCloud className="h-6 w-6 text-muted-foreground" />
 										<div className="space-y-0.5">
 											<div className="text-xs font-semibold text-foreground">
-												Klik untuk Upload File (PDF, DOCX, ZIP)
+												Click to Upload File (PDF, DOCX, ZIP)
 											</div>
 											<div className="text-[11px] text-muted-foreground">
-												Maksimal 10MB per file
+												Maximum 10MB per file
 											</div>
 										</div>
 									</>
@@ -604,7 +604,7 @@ export default function NewOutreachPage() {
 							</div>
 
 							<Input
-								placeholder="Optional: Tambahkan instruksi spesifik (misal: 'Sebutkan bahwa saya terbiasa membangun AI Agent Next.js')..."
+								placeholder="Optional: Add specific instructions (e.g. 'Mention my experience building AI Agents with Next.js')..."
 								className="bg-background/90 text-xs h-9"
 								value={customPrompt}
 								onChange={(e) => setCustomPrompt(e.target.value)}
@@ -646,7 +646,7 @@ export default function NewOutreachPage() {
 								<Textarea
 									id="body"
 									rows={14}
-									placeholder="Tulis pesan Anda di sini atau gunakan AI Auto-Draft di atas..."
+									placeholder="Write your message here or use AI Auto-Draft above..."
 									className="font-sans text-sm leading-relaxed"
 									value={body}
 									onChange={(e) => setBody(e.target.value)}
@@ -655,11 +655,11 @@ export default function NewOutreachPage() {
 
 							<div className="space-y-1.5">
 								<Label htmlFor="notes" className="text-xs text-muted-foreground">
-									Private Internal Notes (Hanya terlihat di dashboard Anda)
+									Private Internal Notes (Only visible in your dashboard)
 								</Label>
 								<Input
 									id="notes"
-									placeholder="e.g. Di-refer oleh John Doe / Dilamar setelah melihat tweet founder..."
+									placeholder="e.g. Referred by John Doe / Applied after seeing founder's tweet..."
 									className="text-xs h-8"
 									value={notes}
 									onChange={(e) => setNotes(e.target.value)}
@@ -671,7 +671,7 @@ export default function NewOutreachPage() {
 							<div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
 								<div className="text-xs text-muted-foreground flex items-center gap-1.5">
 									<Check className="h-3.5 w-3.5 text-emerald-500" />
-									<span>Balasan dari recruiter otomatis masuk ke timeline CMS ini.</span>
+									<span>Replies from recruiter will automatically sync to this CMS timeline.</span>
 								</div>
 
 								<div className="flex items-center gap-2 w-full sm:w-auto">
@@ -692,7 +692,7 @@ export default function NewOutreachPage() {
 									>
 										{isSubmitting ? (
 											<>
-												<Loader2 className="h-4 w-4 animate-spin" /> Mengirim...
+												<Loader2 className="h-4 w-4 animate-spin" /> Sending...
 											</>
 										) : (
 											<>

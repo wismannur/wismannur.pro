@@ -190,14 +190,14 @@ export default function ServiceRequestDetailPage() {
 				originalMessageSnippet: request.projectDetails,
 			});
 
-			toast.success("Balasan email berhasil dikirim ke klien!");
+			toast.success("Email reply successfully sent to client!");
 			setReplyMessage("");
 			refetchThread();
 			refetchRequest();
 			queryClient.invalidateQueries({ queryKey: ["serviceRequests"] });
 		} catch (error) {
 			console.error("Error sending reply:", error);
-			const msg = error instanceof Error ? error.message : "Gagal mengirim balasan email";
+			const msg = error instanceof Error ? error.message : "Failed to send email reply";
 			toast.error(msg);
 		} finally {
 			setIsSendingReply(false);
@@ -222,12 +222,12 @@ export default function ServiceRequestDetailPage() {
 		setIsDeleting(true);
 		try {
 			await serviceRequestService.delete(request.id);
-			toast.success("Service request berhasil dihapus");
+			toast.success("Service request successfully deleted");
 			queryClient.invalidateQueries({ queryKey: ["serviceRequests"] });
 			router.push("/cms/services");
 		} catch (error) {
 			console.error("Error deleting service request:", error);
-			toast.error("Gagal menghapus service request");
+			toast.error("Failed to delete service request");
 		} finally {
 			setIsDeleting(false);
 		}
@@ -323,10 +323,10 @@ export default function ServiceRequestDetailPage() {
 				<Inbox className="w-12 h-12 text-muted-foreground mx-auto" />
 				<h2 className="text-xl font-semibold">Service Request Not Found</h2>
 				<p className="text-sm text-muted-foreground">
-					Permintaan layanan yang Anda cari tidak ditemukan atau telah dihapus.
+					The service request you are looking for was not found or has been deleted.
 				</p>
 				<Button asChild variant="outline">
-					<Link href="/cms/services">Kembali ke Daftar</Link>
+					<Link href="/cms/services">Back to List</Link>
 				</Button>
 			</div>
 		);
@@ -353,7 +353,7 @@ export default function ServiceRequestDetailPage() {
 				<Button asChild variant="ghost" size="sm" className="gap-2 -ml-2 text-muted-foreground hover:text-foreground">
 					<Link href="/cms/services">
 						<ArrowLeft className="w-4 h-4" />
-						<span>Kembali ke Service Requests</span>
+						<span>Back to Service Requests</span>
 					</Link>
 				</Button>
 
@@ -408,11 +408,11 @@ export default function ServiceRequestDetailPage() {
 						{getStatusBadge(request.status)}
 					</div>
 					<p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-1.5 sm:gap-2">
-						<span>Permintaan layanan</span>
+						<span>Service Request</span>
 						<span>•</span>
 						<span className="font-medium text-foreground">{serviceConfig.label}</span>
 						<span>•</span>
-						<span>Diajukan {format(new Date(request.createdAt), "dd MMM yyyy, HH:mm")}</span>
+						<span>Submitted {format(new Date(request.createdAt), "dd MMM yyyy, HH:mm")}</span>
 					</p>
 				</div>
 			</div>
@@ -427,10 +427,10 @@ export default function ServiceRequestDetailPage() {
 							<div className="flex items-center justify-between">
 								<CardTitle className="text-sm font-semibold flex items-center gap-2">
 									<Briefcase className="w-4 h-4 text-primary" />
-									<span>Rincian Kebutuhan Proyek</span>
+									<span>Project Requirements</span>
 								</CardTitle>
 								<Badge variant="outline" className="text-[10px]">
-									Inquiry Awal
+									Original Inquiry
 								</Badge>
 							</div>
 						</CardHeader>
@@ -447,7 +447,7 @@ export default function ServiceRequestDetailPage() {
 							<div className="flex items-center justify-between">
 								<CardTitle className="text-sm font-semibold flex items-center gap-2">
 									<MessageSquare className="w-4 h-4 text-primary" />
-									<span>Riwayat Percakapan ({threadMessages.length})</span>
+									<span>Conversation Thread ({threadMessages.length})</span>
 								</CardTitle>
 								<Button
 									variant="ghost"
@@ -463,7 +463,7 @@ export default function ServiceRequestDetailPage() {
 						<CardContent className="p-4 sm:p-6 pt-0 space-y-4">
 							{threadMessages.length === 0 ? (
 								<div className="text-center py-8 text-muted-foreground text-xs bg-muted/10 rounded-xl border border-dashed border-border/60">
-									Belum ada balasan email terkirim. Tulis pesan di bawah untuk memulai komunikasi.
+									No email replies sent yet. Write a message below to start communicating.
 								</div>
 							) : (
 								<div className="space-y-3">
@@ -506,15 +506,15 @@ export default function ServiceRequestDetailPage() {
 								<div className="flex flex-wrap justify-between items-center gap-1">
 									<label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
 										<Mail className="h-4 w-4 text-primary" />
-										<span>Kirim Balasan Email ke Klien</span>
+										<span>Send Email Reply to Client</span>
 									</label>
 									<span className="text-[11px] text-muted-foreground">
-										Pengirim: <strong className="text-primary font-medium">{PUBLIC_SUPPORT_EMAIL}</strong>
+										Sender: <strong className="text-primary font-medium">{PUBLIC_SUPPORT_EMAIL}</strong>
 									</span>
 								</div>
 
 								<Textarea
-									placeholder={`Tulis estimasi, penawaran harga, atau pertanyaan detail untuk ${request.name}... (Akan langsung dikirimkan ke ${request.email})`}
+									placeholder={`Write an estimate, quote, or detailed questions for ${request.name}... (Will be sent directly to ${request.email})`}
 									value={replyMessage}
 									onChange={(e) => setReplyMessage(e.target.value)}
 									rows={5}
@@ -523,7 +523,7 @@ export default function ServiceRequestDetailPage() {
 
 								<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
 									<span className="text-[11px] text-muted-foreground">
-										Klien dapat langsung membalas email Anda via inbox email mereka.
+										Client can reply directly to your email from their inbox.
 									</span>
 									<Button
 										size="sm"
@@ -534,12 +534,12 @@ export default function ServiceRequestDetailPage() {
 										{isSendingReply ? (
 											<>
 												<Loader2 className="h-3.5 w-3.5 animate-spin" />
-												<span>Mengirim...</span>
+												<span>Sending...</span>
 											</>
 										) : (
 											<>
 												<Send className="h-3.5 w-3.5" />
-												<span>Kirim Balasan Email</span>
+												<span>Send Email Reply</span>
 											</>
 										)}
 									</Button>
@@ -556,7 +556,7 @@ export default function ServiceRequestDetailPage() {
 						<CardHeader className="p-4 sm:p-5 pb-3">
 							<CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
 								<User className="h-3.5 w-3.5 text-primary" />
-								<span>Informasi Klien</span>
+								<span>Client Information</span>
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-4 sm:p-5 pt-0 space-y-4">
@@ -602,7 +602,7 @@ export default function ServiceRequestDetailPage() {
 
 								{request.company && (
 									<div>
-										<div className="text-muted-foreground mb-0.5">Perusahaan / Brand:</div>
+										<div className="text-muted-foreground mb-0.5">Company / Brand:</div>
 										<div className="flex items-center gap-1.5 font-medium text-foreground bg-muted/30 p-2 rounded-lg border border-border/40 truncate">
 											<Building2 className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
 											<span className="truncate">{request.company}</span>
@@ -618,12 +618,12 @@ export default function ServiceRequestDetailPage() {
 						<CardHeader className="p-4 sm:p-5 pb-3">
 							<CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
 								<Briefcase className="h-3.5 w-3.5 text-primary" />
-								<span>Parameter Layanan</span>
+								<span>Service Parameters</span>
 							</CardTitle>
 						</CardHeader>
 						<CardContent className="p-4 sm:p-5 pt-0 space-y-3 text-xs">
 							<div className="flex justify-between items-center py-1 border-b border-border/40 gap-2">
-								<span className="text-muted-foreground shrink-0">Tipe Layanan:</span>
+								<span className="text-muted-foreground shrink-0">Service Type:</span>
 								<Badge variant="outline" className={cn("gap-1.5 text-xs font-medium truncate", serviceConfig.className)}>
 									<ServiceIcon className="h-3 w-3 shrink-0" />
 									<span className="truncate max-w-[140px] sm:max-w-none">{serviceConfig.label}</span>
@@ -631,7 +631,7 @@ export default function ServiceRequestDetailPage() {
 							</div>
 
 							<div className="flex justify-between items-center py-1 border-b border-border/40 gap-2">
-								<span className="text-muted-foreground shrink-0">Estimasi Budget:</span>
+								<span className="text-muted-foreground shrink-0">Estimated Budget:</span>
 								<div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-muted/40 border border-border/50 font-semibold tabular-nums text-foreground">
 									<DollarSign className="h-3.5 w-3.5 text-emerald-500 shrink-0 -mr-0.5" />
 									<span>{getBudgetLabel(request.budget)}</span>
@@ -639,7 +639,7 @@ export default function ServiceRequestDetailPage() {
 							</div>
 
 							<div className="flex justify-between items-center py-1 gap-2">
-								<span className="text-muted-foreground shrink-0">Target Waktu:</span>
+								<span className="text-muted-foreground shrink-0">Timeframe:</span>
 								<Badge variant="outline" className={cn("gap-1 text-xs font-medium truncate", timeframeConfig.className)}>
 									<TimeframeIcon className="h-3 w-3 shrink-0" />
 									<span className="truncate max-w-[140px] sm:max-w-none">{timeframeConfig.label}</span>
@@ -656,7 +656,7 @@ export default function ServiceRequestDetailPage() {
 								<span className="font-mono text-foreground/80 truncate max-w-[160px]">{request.id}</span>
 							</div>
 							<div className="flex justify-between gap-2">
-								<span>Tanggal Pengajuan:</span>
+								<span>Submitted Date:</span>
 								<span className="text-foreground/80 whitespace-nowrap">
 									{format(new Date(request.createdAt), "dd MMM yyyy HH:mm")}
 								</span>
@@ -670,15 +670,15 @@ export default function ServiceRequestDetailPage() {
 			<AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
 				<AlertDialogContent>
 					<AlertDialogHeader>
-						<AlertDialogTitle>Hapus Service Request?</AlertDialogTitle>
+						<AlertDialogTitle>Delete Service Request?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Tindakan ini tidak dapat dibatalkan. Permintaan layanan dari{" "}
-							<strong className="text-foreground">{request.name}</strong> ({request.email}) beserta
-							seluruh riwayat percakapan email akan dihapus secara permanen.
+							This action cannot be undone. The service request from{" "}
+							<strong className="text-foreground">{request.name}</strong> ({request.email}) and its
+							entire email conversation history will be permanently deleted.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
-						<AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+						<AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
 						<AlertDialogAction
 							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
 							onClick={handleDelete}
@@ -687,10 +687,10 @@ export default function ServiceRequestDetailPage() {
 							{isDeleting ? (
 								<>
 									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-									Menghapus...
+									Deleting...
 								</>
 							) : (
-								"Hapus Permanen"
+								"Delete Permanently"
 							)}
 						</AlertDialogAction>
 					</AlertDialogFooter>

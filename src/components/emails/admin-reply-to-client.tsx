@@ -36,13 +36,13 @@ export const AdminReplyToClientEmail = ({
 			<Body style={main}>
 				<Container style={container}>
 					<Section style={bodySection}>
-						<Text style={greeting}>Halo {clientName},</Text>
+						<Text style={greeting}>Hi {clientName},</Text>
 						<Text style={replyMessageBox}>{replyMessage}</Text>
 					</Section>
 
 					{originalMessageSnippet && (
 						<Section style={quoteCard}>
-							<Text style={quoteLabel}>Menanggapi pesan sebelumnya ({originalSubject}):</Text>
+							<Text style={quoteLabel}>In response to previous message ({originalSubject}):</Text>
 							<Text style={quoteText}>{originalMessageSnippet}</Text>
 						</Section>
 					)}
@@ -71,7 +71,7 @@ export const AdminReplyToClientEmail = ({
 
 					<Section style={footerSection}>
 						<Text style={footerText}>
-							Anda dapat langsung membalas (reply) email ini jika ada pertanyaan atau diskusi lanjutan.
+							You can reply directly to this email for any questions or follow-up discussion.
 						</Text>
 						{inquiryId && (
 							<Text style={refFooterText}>

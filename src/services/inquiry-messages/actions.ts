@@ -61,29 +61,33 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 		.orderBy(asc(inquiryMessages.createdAt));
 
 	const referencesIds: string[] = [];
+	let initialEntityMessage: string | undefined = undefined;
 
-	// Check initial messageId from parent table
+	// Check initial messageId and message content from parent table
 	if (clean.inquiryType === "contact") {
 		const [parent] = await db
-			.select({ messageId: contacts.messageId })
+			.select({ messageId: contacts.messageId, message: contacts.message })
 			.from(contacts)
 			.where(eq(contacts.id, clean.inquiryId))
 			.limit(1);
 		if (parent?.messageId) referencesIds.push(parent.messageId);
+		if (parent?.message) initialEntityMessage = parent.message;
 	} else if (clean.inquiryType === "service_request") {
 		const [parent] = await db
-			.select({ messageId: serviceRequests.messageId })
+			.select({ messageId: serviceRequests.messageId, projectDetails: serviceRequests.projectDetails })
 			.from(serviceRequests)
 			.where(eq(serviceRequests.id, clean.inquiryId))
 			.limit(1);
 		if (parent?.messageId) referencesIds.push(parent.messageId);
+		if (parent?.projectDetails) initialEntityMessage = parent.projectDetails;
 	} else if (clean.inquiryType === "hire_request") {
 		const [parent] = await db
-			.select({ messageId: hireRequests.messageId })
+			.select({ messageId: hireRequests.messageId, message: hireRequests.message })
 			.from(hireRequests)
 			.where(eq(hireRequests.id, clean.inquiryId))
 			.limit(1);
 		if (parent?.messageId) referencesIds.push(parent.messageId);
+		if (parent?.message) initialEntityMessage = parent.message;
 	}
 
 	for (const msg of previousMessages) {
@@ -95,6 +99,17 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 	const inReplyToId =
 		referencesIds.length > 0 ? referencesIds[referencesIds.length - 1] : null;
 
+	// Find the most recent message from the client to quote dynamically in the email
+	const latestClientMessage = [...previousMessages]
+		.reverse()
+		.find((msg) => msg.senderType === "client");
+
+	const originalSnippetToQuote =
+		latestClientMessage?.message ||
+		clean.originalMessageSnippet ||
+		initialEntityMessage ||
+		undefined;
+
 	// 2. Send email to client via Resend with RFC 5322 In-Reply-To and References
 	const sendRes = await sendAdminReplyToClient({
 		inquiryId: clean.inquiryId,
@@ -102,7 +117,7 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 		toName: clean.toName,
 		subject: clean.subject,
 		message: clean.message,
-		originalMessageSnippet: clean.originalMessageSnippet,
+		originalMessageSnippet: originalSnippetToQuote,
 		inReplyToId,
 		referencesIds,
 	});
