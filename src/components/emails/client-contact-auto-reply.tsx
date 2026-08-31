@@ -35,29 +35,29 @@ export const ClientContactAutoReplyEmail = ({
 				<Container style={container}>
 					<Section style={headerSection}>
 						<Text style={brand}>Wisman Nur</Text>
-						<Heading style={headerTitle}>Pesan Anda telah diterima ✨</Heading>
-						<Text style={headerSubtitle}>Terima kasih telah menghubungi saya.</Text>
+						<Heading style={headerTitle}>Your message has been received ✨</Heading>
+						<Text style={headerSubtitle}>Thank you for reaching out.</Text>
 					</Section>
 
 					<Section style={bodySection}>
-						<Text style={greeting}>Halo {name},</Text>
+						<Text style={greeting}>Hi {name},</Text>
 						<Text style={paragraph}>
-							Terima kasih telah mengirimkan pesan melalui situs{" "}
+							Thank you for getting in touch through{" "}
 							<Link href="https://wismannur.pro" style={linkStyle}>
 								wismannur.pro
 							</Link>
-							. Pesan Anda sudah masuk ke sistem dan akan saya pelajari.
+							. Your message has been received and I will review it shortly.
 						</Text>
 						<Text style={paragraph}>
-							Saya akan membalas pesan Anda sesegera mungkin, maksimal dalam waktu{" "}
-							<strong>1x24 jam</strong> kerja.
+							I will respond to your message as soon as possible, usually within{" "}
+							<strong>24 business hours</strong>.
 						</Text>
 					</Section>
 
 					<Section style={summaryCard}>
-						<Text style={summaryLabel}>Ringkasan Pesan Anda:</Text>
+						<Text style={summaryLabel}>Message Summary:</Text>
 						<Text style={summarySubject}>
-							<strong>Subjek:</strong> {subject}
+							<strong>Subject:</strong> {subject}
 						</Text>
 						<Text style={summaryMessage}>{message}</Text>
 					</Section>
@@ -86,8 +86,8 @@ export const ClientContactAutoReplyEmail = ({
 
 					<Section style={footerSection}>
 						<Text style={footerText}>
-							Email ini dikirim secara otomatis sebagai konfirmasi bahwa pesan Anda telah berhasil
-							diterima.
+							This email was sent automatically to confirm that your message was successfully
+							received.
 						</Text>
 						{refId && (
 							<Text style={refFooterText}>
