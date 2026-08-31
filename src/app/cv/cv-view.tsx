@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { formatResumePeriod } from "@/lib/resume";
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
 import type { ResumeEntry } from "@/services/resume/types";
@@ -121,7 +122,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
 	const { isDark, setTheme } = useTheme();
 
 	const name = user?.displayName || settings.siteName || "Wisman Nur";
-	const email = user?.email || settings.publicEmail || "hi@wismannur.pro";
+	const email = user?.email || settings.publicEmail || PUBLIC_SUPPORT_EMAIL;
 	const location = user?.location || settings.location || "Indonesia";
 	const website = user?.website || "https://wismannur.pro";
 	const github = user?.social?.github || settings.social?.github;

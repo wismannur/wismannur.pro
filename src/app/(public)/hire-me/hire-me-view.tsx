@@ -33,6 +33,7 @@ import { HighlightedText } from "@/components/ui/highlighted-text";
 import { toast } from "@/components/ui/use-toast";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { getContentIcon } from "@/lib/icon-registry";
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
 import { hireRequestService } from "@/services";
@@ -176,7 +177,7 @@ export function HireMeView({
 		onError: () => {
 			toast({
 				title: "Error",
-				description: "Failed to send your inquiry. Please try again or email hi@wismannur.pro directly.",
+				description: `Failed to send your inquiry. Please try again or email ${PUBLIC_SUPPORT_EMAIL} directly.`,
 				variant: "destructive",
 			});
 			trackEvent("hire-me-form-submit-error");

@@ -28,6 +28,8 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+
 
 
 import {
@@ -183,7 +185,7 @@ export default function JobOutreachesPage() {
 	const handleSendDraft = async (id: string, contactEmail: string) => {
 		try {
 			await jobOutreachService.sendEmail(id);
-			toast.success(`Email berhasil dikirim ke ${contactEmail} via hi@wismannur.pro!`);
+			toast.success(`Email berhasil dikirim ke ${contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`);
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
 		} catch (err) {
@@ -203,7 +205,7 @@ export default function JobOutreachesPage() {
 					</h1>
 					<p className="text-sm text-muted-foreground mt-1">
 						Kelola cold outreach, direct application via email, dan pantau balasan dari recruiter secara terintegrasi melalui{" "}
-						<strong className="text-foreground">hi@wismannur.pro</strong>.
+						<strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
 					</p>
 				</div>
 

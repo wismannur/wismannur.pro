@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1180,7 +1181,7 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
 									Outreach & Cold Email Communications
 								</CardTitle>
 								<CardDescription className="text-xs">
-									Lacak direct applications, cold pitches, dan percakapan balasan dari recruiter untuk <strong>{currentApp.companyName}</strong> via <strong className="text-foreground">hi@wismannur.pro</strong>.
+									Lacak direct applications, cold pitches, dan percakapan balasan dari recruiter untuk <strong>{currentApp.companyName}</strong> via <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
 								</CardDescription>
 							</div>
 
