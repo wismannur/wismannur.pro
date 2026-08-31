@@ -31,7 +31,7 @@ export const AdminInboundAlertEmail = ({
 	message,
 	receivedAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
 }: AdminInboundAlertProps) => {
-	const previewText = `[Inbound Reply] ${clientName} membalas: ${subject}`;
+	const previewText = `[Inbound Reply] ${clientName} replied: ${subject}`;
 	const cmsUrl =
 		inquiryType === "job_outreach"
 			? `https://wismannur.pro/cms/job-outreaches/${inquiryId}`
@@ -49,37 +49,37 @@ export const AdminInboundAlertEmail = ({
 			<Body style={main}>
 				<Container style={container}>
 					<Section style={headerSection}>
-						<Heading style={headerTitle}>💬 Balasan Baru dari Klien</Heading>
-						<Text style={headerSubtitle}>Klien membalas email percakapan via Resend Inbound</Text>
+						<Heading style={headerTitle}>💬 New Inbound Reply</Heading>
+						<Text style={headerSubtitle}>Client replied to email thread via Resend Inbound</Text>
 					</Section>
 
 					<Section style={card}>
-						<Text style={label}>Dari Klien</Text>
+						<Text style={label}>From Client</Text>
 						<Text style={value}>
 							<strong>{clientName}</strong> ({clientEmail})
 						</Text>
 
-						<Text style={label}>Subjek</Text>
+						<Text style={label}>Subject</Text>
 						<Text style={value}>{subject}</Text>
 
-						<Text style={label}>ID Tiket / Ref</Text>
+						<Text style={label}>Ticket ID / Ref</Text>
 						<Text style={value}>#{inquiryId}</Text>
 
-						<Text style={label}>Waktu Terima (WIB)</Text>
+						<Text style={label}>Received At (WIB)</Text>
 						<Text style={value}>{receivedAt}</Text>
 
 						<Hr style={divider} />
 
-						<Text style={label}>Isi Balasan Klien</Text>
+						<Text style={label}>Client Reply Message</Text>
 						<Text style={messageBox}>{message}</Text>
 					</Section>
 
 					<Section style={footerSection}>
 						<Link href={cmsUrl} style={buttonStyle}>
-							Buka Thread di CMS
+							Open Thread in CMS
 						</Link>
 						<Text style={footerText}>
-							Pesan ini otomatis tercatat di timeline percakapan CMS Anda.
+							This message is automatically recorded in your CMS conversation thread.
 						</Text>
 					</Section>
 				</Container>

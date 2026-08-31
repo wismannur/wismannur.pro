@@ -31,7 +31,7 @@ export const ClientHireRequestAutoReplyEmail = ({
 	message,
 	refId,
 }: ClientHireRequestAutoReplyProps) => {
-	const previewText = `Terima kasih atas penawaran posisi ${roleTitle} di ${company}, ${name}! - Wisman Nur`;
+	const previewText = `Thank you for the opportunity for the ${roleTitle} role at ${company}, ${name}! - Wisman Nur`;
 
 	const formatEmployment = (type: string) => {
 		switch (type) {
@@ -67,39 +67,37 @@ export const ClientHireRequestAutoReplyEmail = ({
 				<Container style={container}>
 					<Section style={headerSection}>
 						<Text style={brand}>Wisman Nur · Career Opportunity</Text>
-						<Heading style={headerTitle}>Pesan Penawaran / Lowongan Diterima 🎯</Heading>
-						<Text style={headerSubtitle}>Terima kasih atas ketertarikan Anda untuk bekerja sama.</Text>
+						<Heading style={headerTitle}>Opportunity / Hire Request Received 🎯</Heading>
+						<Text style={headerSubtitle}>Thank you for your interest in working together.</Text>
 					</Section>
 
 					<Section style={bodySection}>
-						<Text style={greeting}>Halo {name},</Text>
+						<Text style={greeting}>Hi {name},</Text>
 						<Text style={paragraph}>
-							Terima kasih telah menghubungi saya mengenai peluang posisi{" "}
-							<strong>{roleTitle}</strong> di <strong>{company}</strong> via{" "}
+							Thank you for reaching out regarding the opportunity for{" "}
+							<strong>{roleTitle}</strong> at <strong>{company}</strong> via{" "}
 							<Link href="https://wismannur.pro/hire-me" style={linkStyle}>
 								wismannur.pro/hire-me
 							</Link>
 							.
 						</Text>
 						<Text style={paragraph}>
-							Saya sangat mengapresiasi penawaran ini. Saya akan mempelajari profil perusahaan,
-							detail peran, dan kesesuaian teknis secara mendalam, lalu akan segera membalas email Anda
-							maksimal dalam waktu <strong>1x24 jam</strong> kerja.
+							I appreciate this opportunity. I will review the company profile, role details, and technical fit thoroughly, and get back to you within <strong>24 business hours</strong>.
 						</Text>
 					</Section>
 
 					<Section style={summaryCard}>
-						<Text style={summaryLabel}>Ringkasan Informasi:</Text>
+						<Text style={summaryLabel}>Summary of Details:</Text>
 						<Text style={summaryItem}>
-							<strong>Perusahaan:</strong> {company}
+							<strong>Company:</strong> {company}
 						</Text>
 						<Text style={summaryItem}>
-							<strong>Posisi:</strong> {roleTitle}
+							<strong>Position:</strong> {roleTitle}
 						</Text>
 						<Text style={summaryItem}>
-							<strong>Skema Kerja:</strong> {formatEmployment(employmentType)} · {formatWorkplace(workplaceType)}
+							<strong>Employment & Workplace:</strong> {formatEmployment(employmentType)} · {formatWorkplace(workplaceType)}
 						</Text>
-						<Text style={summaryItemLabel}>Pesan / Gambaran Peran:</Text>
+						<Text style={summaryItemLabel}>Message / Role Overview:</Text>
 						<Text style={summaryMessage}>{message}</Text>
 					</Section>
 
@@ -127,7 +125,7 @@ export const ClientHireRequestAutoReplyEmail = ({
 
 					<Section style={footerSection}>
 						<Text style={footerText}>
-							Email ini dikirim secara otomatis sebagai tanda terima pesan penawaran kerja sama/rekrutmen.
+							This is an automated confirmation that your opportunity / hire request has been received.
 						</Text>
 						{refId && (
 							<Text style={refFooterText}>

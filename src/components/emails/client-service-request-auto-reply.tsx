@@ -29,7 +29,7 @@ export const ClientServiceRequestAutoReplyEmail = ({
 	projectDetails,
 	refId,
 }: ClientServiceRequestAutoReplyProps) => {
-	const previewText = `Terima kasih atas permintaan proyek Anda, ${name}! - Wisman Nur`;
+	const previewText = `Thank you for your project request, ${name}! - Wisman Nur`;
 
 	return (
 		<Html>
@@ -39,39 +39,39 @@ export const ClientServiceRequestAutoReplyEmail = ({
 				<Container style={container}>
 					<Section style={headerSection}>
 						<Text style={brand}>Wisman Nur · Project Inquiry</Text>
-						<Heading style={headerTitle}>Permintaan Proyek Anda Diterima 🚀</Heading>
-						<Text style={headerSubtitle}>Terima kasih telah mempercayakan kebutuhan Anda.</Text>
+						<Heading style={headerTitle}>Project Request Received 🚀</Heading>
+						<Text style={headerSubtitle}>Thank you for reaching out.</Text>
 					</Section>
 
 					<Section style={bodySection}>
-						<Text style={greeting}>Halo {name},</Text>
+						<Text style={greeting}>Hi {name},</Text>
 						<Text style={paragraph}>
-							Terima kasih telah mengajukan permintaan kerja sama untuk layanan{" "}
-							<strong>{serviceType}</strong> melalui{" "}
+							Thank you for submitting a project request for{" "}
+							<strong>{serviceType}</strong> services via{" "}
 							<Link href="https://wismannur.pro/hire-me" style={linkStyle}>
 								wismannur.pro/hire-me
 							</Link>
 							.
 						</Text>
 						<Text style={paragraph}>
-							Saya akan meninjau detail proyek serta ketersediaan jadwal, dan akan segera membalas
-							dengan estimasi atau langkah selanjutnya maksimal dalam waktu{" "}
-							<strong>1x24 jam</strong> kerja.
+							I will review the project details and schedule availability, and will get back to you
+							with an estimate and next steps within{" "}
+							<strong>24 business hours</strong>.
 						</Text>
 					</Section>
 
 					<Section style={summaryCard}>
-						<Text style={summaryLabel}>Ringkasan Permintaan Proyek:</Text>
+						<Text style={summaryLabel}>Project Request Summary:</Text>
 						<Text style={summaryItem}>
-							<strong>Layanan:</strong> {serviceType}
+							<strong>Service:</strong> {serviceType}
 						</Text>
 						<Text style={summaryItem}>
-							<strong>Estimasi Budget:</strong> {budget}
+							<strong>Estimated Budget:</strong> {budget}
 						</Text>
 						<Text style={summaryItem}>
-							<strong>Target Waktu:</strong> {timeframe}
+							<strong>Target Timeframe:</strong> {timeframe}
 						</Text>
-						<Text style={summaryItemLabel}>Detail Kebutuhan:</Text>
+						<Text style={summaryItemLabel}>Project Details:</Text>
 						<Text style={summaryMessage}>{projectDetails}</Text>
 					</Section>
 
@@ -99,7 +99,7 @@ export const ClientServiceRequestAutoReplyEmail = ({
 
 					<Section style={footerSection}>
 						<Text style={footerText}>
-							Email ini dikirim secara otomatis sebagai tanda terima resmi permohonan layanan.
+							This is an automated confirmation that your project request has been received.
 						</Text>
 						{refId && (
 							<Text style={refFooterText}>

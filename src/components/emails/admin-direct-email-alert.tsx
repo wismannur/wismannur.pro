@@ -33,7 +33,7 @@ export const AdminDirectEmailAlertEmail = ({
 	toAddress = PUBLIC_SUPPORT_EMAIL,
 	receivedAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
 }: AdminDirectEmailAlertProps) => {
-	const previewText = `[New Direct Email] ${subject} dari ${clientName}`;
+	const previewText = `[New Direct Email] ${subject} from ${clientName}`;
 	const cmsUrl = `https://wismannur.pro/cms/contacts/${inquiryId}`;
 
 	return (
@@ -43,42 +43,42 @@ export const AdminDirectEmailAlertEmail = ({
 			<Body style={main}>
 				<Container style={container}>
 					<Section style={headerSection}>
-						<Heading style={headerTitle}>✉️ Direct Email Masuk</Heading>
+						<Heading style={headerTitle}>✉️ Direct Inbound Email</Heading>
 						<Text style={headerSubtitle}>
-							Email langsung diterima di <strong>{toAddress}</strong> via Resend Inbound
+							Direct email received at <strong>{toAddress}</strong> via Resend Inbound
 						</Text>
 					</Section>
 
 					<Section style={card}>
-						<Text style={label}>Dari Pengirim</Text>
+						<Text style={label}>From Sender</Text>
 						<Text style={value}>
 							<strong>{clientName}</strong> ({clientEmail})
 						</Text>
 
-						<Text style={label}>Subjek</Text>
+						<Text style={label}>Subject</Text>
 						<Text style={value}>{subject}</Text>
 
-						<Text style={label}>Ditujukan Ke</Text>
+						<Text style={label}>Delivered To</Text>
 						<Text style={value}>{toAddress}</Text>
 
-						<Text style={label}>ID Kontak CMS</Text>
+						<Text style={label}>CMS Contact ID</Text>
 						<Text style={value}>#{inquiryId}</Text>
 
-						<Text style={label}>Waktu Terima (WIB)</Text>
+						<Text style={label}>Received At (WIB)</Text>
 						<Text style={value}>{receivedAt}</Text>
 
 						<Hr style={divider} />
 
-						<Text style={label}>Isi Pesan</Text>
+						<Text style={label}>Message Content</Text>
 						<Text style={messageBox}>{message}</Text>
 					</Section>
 
 					<Section style={footerSection}>
 						<Link href={cmsUrl} style={buttonStyle}>
-							Buka Kontak di CMS
+							Open Contact in CMS
 						</Link>
 						<Text style={footerText}>
-							Pesan ini otomatis dicatat sebagai kontak baru di inbox CMS Anda. Anda dapat membalas via CMS atau langsung me-reply email notifikasi ini.
+							This message is automatically recorded as a new contact in your CMS inbox. You can reply via CMS or directly reply to this notification email.
 						</Text>
 					</Section>
 				</Container>
