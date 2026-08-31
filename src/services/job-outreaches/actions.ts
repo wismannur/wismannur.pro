@@ -11,7 +11,7 @@ import type {
 	JobOutreachRow,
 } from "@/db/schema";
 import { assertAdmin } from "../core/auth-guard";
-import { sendJobOutreachEmail } from "../core/resend";
+import { RESEND_EMAIL_DOMAIN, sendJobOutreachEmail } from "../core/resend";
 import { generateOutreachDraftWithGemini } from "./gemini-ai";
 import type {
 	AiOutreachDraftParams,
@@ -287,7 +287,7 @@ export async function createJobOutreach(
 			outreachId: inserted.id,
 			senderType: "admin",
 			senderName: "Wisman Nur",
-			senderEmail: "hi@wismannur.pro",
+			senderEmail: `hi@${RESEND_EMAIL_DOMAIN}`,
 			message: inserted.body,
 			messageId: resendId || null,
 			createdAt: isSending ? now : inserted.createdAt,
@@ -469,7 +469,7 @@ export async function sendFollowUpMessage(
 			outreachId,
 			senderType: "admin",
 			senderName: "Wisman Nur",
-			senderEmail: "hi@wismannur.pro",
+			senderEmail: `hi@${RESEND_EMAIL_DOMAIN}`,
 			message: followUpText.trim(),
 			messageId: sendRes.id || null,
 		})

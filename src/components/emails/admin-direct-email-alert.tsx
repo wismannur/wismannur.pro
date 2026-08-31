@@ -12,6 +12,8 @@ import {
 	Text,
 } from "@react-email/components";
 
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+
 export interface AdminDirectEmailAlertProps {
 	inquiryId: string;
 	clientName: string;
@@ -28,7 +30,7 @@ export const AdminDirectEmailAlertEmail = ({
 	clientEmail,
 	subject,
 	message,
-	toAddress = "hi@wismannur.pro",
+	toAddress = PUBLIC_SUPPORT_EMAIL,
 	receivedAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
 }: AdminDirectEmailAlertProps) => {
 	const previewText = `[New Direct Email] ${subject} dari ${clientName}`;

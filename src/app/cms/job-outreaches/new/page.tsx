@@ -23,6 +23,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -220,7 +222,7 @@ export default function NewOutreachPage() {
 
 			toast.success(
 				sendImmediately
-					? `Email berhasil dikirim ke ${contactEmail} via hi@wismannur.pro!`
+					? `Email berhasil dikirim ke ${contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`
 					: "Draf outreach berhasil disimpan.",
 			);
 
@@ -261,7 +263,7 @@ export default function NewOutreachPage() {
 						New Job Outreach & Cold Pitch
 					</h1>
 					<p className="text-xs sm:text-sm text-muted-foreground mt-1">
-						Kirim pesan langsung ke recruiter / engineering lead via <strong className="text-foreground">hi@wismannur.pro</strong>.
+						Kirim pesan langsung ke recruiter / engineering lead via <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
 					</p>
 				</div>
 
@@ -619,7 +621,7 @@ export default function NewOutreachPage() {
 									Email Composer
 								</CardTitle>
 								<span className="text-[11px] text-muted-foreground font-mono">
-									From: <span className="text-primary font-semibold">Wisman Nur &lt;hi@wismannur.pro&gt;</span>
+									From: <span className="text-primary font-semibold">Wisman Nur &lt;{PUBLIC_SUPPORT_EMAIL}&gt;</span>
 								</span>
 							</div>
 						</CardHeader>

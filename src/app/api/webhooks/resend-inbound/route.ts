@@ -4,9 +4,51 @@ import { Resend } from "resend";
 import { Webhook } from "svix";
 
 import { getDb, schema } from "@/db";
-import { sendInboundAlertToAdmin } from "@/services/core/resend";
+import { RESEND_EMAIL_DOMAIN, sendInboundAlertToAdmin } from "@/services/core/resend";
 
 const { contacts, serviceRequests, hireRequests, inquiryMessages, jobOutreaches, jobOutreachMessages } = schema;
+
+function extractRecipientEmails(rawTo: unknown): string[] {
+	if (!rawTo) return [];
+	const toList = Array.isArray(rawTo) ? rawTo : [rawTo];
+	const emails: string[] = [];
+	for (const item of toList) {
+		if (typeof item === "string") {
+			const match = item.match(/<([^>]+)>/);
+			const clean = (match ? match[1] : item).trim().toLowerCase();
+			if (clean) emails.push(clean);
+		} else if (typeof item === "object" && item !== null) {
+			const obj = item as Record<string, unknown>;
+			const email = String(obj.email || obj.address || "").trim().toLowerCase();
+			if (email) emails.push(email);
+		}
+	}
+	return emails;
+}
+
+function isRecipientMatchingDomain(recipients: string[], targetDomain: string): boolean {
+	if (recipients.length === 0) return true;
+	const normalizedTarget = targetDomain.trim().toLowerCase();
+
+	return recipients.some((email) => {
+		const atIndex = email.lastIndexOf("@");
+		if (atIndex === -1) return false;
+		const domainPart = email.slice(atIndex + 1).trim().toLowerCase();
+		if (!domainPart) return false;
+
+		// Exact match
+		if (domainPart === normalizedTarget) return true;
+
+		// If current environment is Prod ("wismannur.pro"):
+		// Must strictly be wismannur.pro or www.wismannur.pro, and NOT a development subdomain like dev.wismannur.pro
+		if (normalizedTarget === "wismannur.pro") {
+			return domainPart === "wismannur.pro" || domainPart === "www.wismannur.pro";
+		}
+
+		// If current environment is Dev ("dev.wismannur.pro"):
+		return domainPart === normalizedTarget || domainPart.endsWith(`.${normalizedTarget}`);
+	});
+}
 
 
 function extractCleanEmail(rawFrom: unknown): { name: string; email: string } {
@@ -247,8 +289,29 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ message: "Sender email missing, skipped" }, { status: 200 });
 		}
 
+		// 5. Defense-in-Depth: Filter out emails intended for another environment (e.g. Dev receiving Prod or Prod receiving Dev)
+		const rawTo = data.to || fullEmail?.to || data.recipient || body.to;
+		const recipientEmails = extractRecipientEmails(rawTo);
+		const currentEnvDomain = (process.env.RESEND_EMAIL_DOMAIN || "wismannur.pro").trim().toLowerCase();
+
+		if (recipientEmails.length > 0 && !isRecipientMatchingDomain(recipientEmails, currentEnvDomain)) {
+			console.log(
+				`[Resend Inbound] Recipient(s) [${recipientEmails.join(", ")}] do not belong to current environment domain (${currentEnvDomain}). Safely ignoring event.`
+			);
+			return NextResponse.json(
+				{
+					success: true,
+					skipped: true,
+					reason: "environment_domain_mismatch",
+					recipients: recipientEmails,
+					expectedDomain: currentEnvDomain,
+				},
+				{ status: 200 },
+			);
+		}
+
 		const db = getDb();
-		const toInfo = extractIdFromToAddress(data.to || fullEmail?.to || data.recipient || body.to);
+		const toInfo = extractIdFromToAddress(rawTo);
 		const emailHeaders = (fullEmail?.headers || {}) as Record<string, unknown>;
 		const headerRefId =
 			typeof emailHeaders["x-entity-ref-id"] === "string"
@@ -677,7 +740,6 @@ export async function POST(req: NextRequest) {
 				.where(eq(hireRequests.id, targetInquiryId));
 		}
 
-		const rawTo = data.to || fullEmail?.to || data.recipient || body.to;
 		const recipientTo = Array.isArray(rawTo)
 			? rawTo
 					.map((item) =>
@@ -691,7 +753,7 @@ export async function POST(req: NextRequest) {
 					.join(", ")
 			: typeof rawTo === "string"
 				? rawTo
-				: "hi@wismannur.pro";
+				: `hi@${currentEnvDomain}`;
 
 		// 10. Send email alert to Admin
 		await sendInboundAlertToAdmin({
@@ -701,7 +763,7 @@ export async function POST(req: NextRequest) {
 			clientEmail: senderEmail,
 			subject: targetSubject,
 			message: textContent,
-			toAddress: recipientTo || "hi@wismannur.pro",
+			toAddress: recipientTo || `hi@${currentEnvDomain}`,
 			isNewConversation: isNewInquiry,
 		});
 

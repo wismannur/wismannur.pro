@@ -6,7 +6,7 @@ import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { assertAdmin } from "../core/auth-guard";
 import { ServiceError } from "../core/base-service";
-import { sendAdminReplyToClient } from "../core/resend";
+import { RESEND_EMAIL_DOMAIN, sendAdminReplyToClient } from "../core/resend";
 import type { InquiryMessage, SendAdminReplyInput } from "./types";
 
 const { inquiryMessages, contacts, serviceRequests, hireRequests } = schema;
@@ -115,7 +115,7 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 			inquiryType: clean.inquiryType,
 			senderType: "admin",
 			senderName: "Wisman Nur",
-			senderEmail: "hi@wismannur.pro",
+			senderEmail: `hi@${RESEND_EMAIL_DOMAIN}`,
 			message: clean.message,
 			messageId: sendRes.id || null,
 		})

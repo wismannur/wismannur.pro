@@ -10,6 +10,7 @@ import {
 	Section,
 	Text,
 } from "@react-email/components";
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 
 interface JobOutreachEmailProps {
 	contactName: string;
@@ -83,8 +84,8 @@ export const JobOutreachEmail = ({
 					<Section style={footerSection}>
 						<Text style={footerText}>
 							Sent directly from Wisman Nur (
-							<Link href="mailto:hi@wismannur.pro" style={linkStyle}>
-								hi@wismannur.pro
+							<Link href={`mailto:${PUBLIC_SUPPORT_EMAIL}`} style={linkStyle}>
+								{PUBLIC_SUPPORT_EMAIL}
 							</Link>
 							). Feel free to reply directly to this email.
 						</Text>

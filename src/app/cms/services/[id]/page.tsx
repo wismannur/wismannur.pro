@@ -37,6 +37,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -507,7 +509,7 @@ export default function ServiceRequestDetailPage() {
 										<span>Kirim Balasan Email ke Klien</span>
 									</label>
 									<span className="text-[11px] text-muted-foreground">
-										Pengirim: <strong className="text-primary font-medium">hi@wismannur.pro</strong>
+										Pengirim: <strong className="text-primary font-medium">{PUBLIC_SUPPORT_EMAIL}</strong>
 									</span>
 								</div>
 

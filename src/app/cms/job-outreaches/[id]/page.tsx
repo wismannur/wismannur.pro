@@ -29,6 +29,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -132,7 +134,7 @@ export default function JobOutreachDetailPage() {
 		setIsSendingDraft(true);
 		try {
 			await jobOutreachService.sendEmail(outreach.id);
-			toast.success(`Email berhasil dikirim ke ${outreach.contactEmail} via hi@wismannur.pro!`);
+			toast.success(`Email berhasil dikirim ke ${outreach.contactEmail} via ${PUBLIC_SUPPORT_EMAIL}!`);
 			refetch();
 			queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
 			queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
@@ -374,7 +376,7 @@ export default function JobOutreachDetailPage() {
 										Outreach ini masih berstatus Draf
 									</div>
 									<p className="text-xs text-muted-foreground">
-										Email belum dikirimkan ke <strong className="text-foreground">{outreach.contactName}</strong> ({outreach.contactEmail}). Klik tombol di samping untuk mengirimkannya langsung via <strong className="text-primary font-mono">hi@wismannur.pro</strong>.
+										Email belum dikirimkan ke <strong className="text-foreground">{outreach.contactName}</strong> ({outreach.contactEmail}). Klik tombol di samping untuk mengirimkannya langsung via <strong className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</strong>.
 									</p>
 								</div>
 							</div>
@@ -407,7 +409,7 @@ export default function JobOutreachDetailPage() {
 									</CardTitle>
 
 									<CardDescription className="text-xs">
-										Ref ID: <span className="font-mono text-foreground font-semibold">#{outreach.id}</span> · Pengiriman dari <span className="text-primary font-mono">hi@wismannur.pro</span>
+										Ref ID: <span className="font-mono text-foreground font-semibold">#{outreach.id}</span> · Pengiriman dari <span className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</span>
 									</CardDescription>
 								</div>
 								<Badge variant="outline" className={cn("text-xs font-semibold", statusInfo.className)}>
@@ -529,7 +531,7 @@ export default function JobOutreachDetailPage() {
 
 								<div className="flex items-center justify-between pt-1">
 									<span className="text-xs text-muted-foreground">
-										Mengirim dari <strong className="text-foreground">hi@wismannur.pro</strong>
+										Mengirim dari <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>
 									</span>
 									<Button
 										onClick={handleSendFollowUp}
