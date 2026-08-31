@@ -121,7 +121,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
 	const { isDark, setTheme } = useTheme();
 
 	const name = user?.displayName || settings.siteName || "Wisman Nur";
-	const email = user?.email || settings.publicEmail || "wismannur.pro@gmail.com";
+	const email = user?.email || settings.publicEmail || "hi@wismannur.pro";
 	const location = user?.location || settings.location || "Indonesia";
 	const website = user?.website || "https://wismannur.pro";
 	const github = user?.social?.github || settings.social?.github;
