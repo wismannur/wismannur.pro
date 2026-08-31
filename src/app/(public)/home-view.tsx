@@ -99,7 +99,7 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 								>
 									<Link href="/hire-me" data-umami-event="home-hero-hire-me-click" className="inline-flex items-center gap-2">
 										<Sparkles size={15} className="animate-pulse" />
-										<span>Hire Me</span>
+										<span>Start a Project</span>
 										<ChevronRight
 											size={15}
 											className="group-hover:translate-x-1 transition-transform duration-200"
@@ -113,9 +113,12 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 									size="lg"
 									className="rounded-full px-7 h-11 md:h-12 text-xs md:text-sm font-semibold border-border/60 bg-card/70 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/40 hover:text-primary shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group"
 								>
-									<Link href="/contact" data-umami-event="home-hero-contact-click" className="inline-flex items-center gap-2">
-										<MessageSquare size={15} className="text-primary" />
-										<span>Contact Me</span>
+									<Link href="/projects" data-umami-event="home-hero-projects-click" className="inline-flex items-center gap-2">
+										<span>Explore Work</span>
+										<ArrowRight
+											size={15}
+											className="group-hover:translate-x-1 transition-transform duration-200 text-primary"
+										/>
 									</Link>
 								</Button>
 							</div>
@@ -148,40 +151,40 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 											<Zap size={18} />
 										</div>
 										<div>
-											<h3 className="font-bold text-base md:text-lg text-foreground">Engineering Philosophy</h3>
-											<p className="text-xs text-muted-foreground">High performance, clean code, scalable architecture</p>
+											<h3 className="font-bold text-base md:text-lg text-foreground">Engineering Standards</h3>
+											<p className="text-xs text-muted-foreground">Reliability, strict type contracts, and sub-second latency</p>
 										</div>
 									</div>
 
 									<div className="grid grid-cols-2 gap-3 mt-4">
 										<div className="p-3.5 rounded-xl bg-background/50 border border-border/40">
-											<div className="text-2xl font-extrabold text-primary mb-0.5">5+</div>
-											<div className="text-xs text-muted-foreground font-medium">Years Building Web</div>
+											<div className="text-2xl font-extrabold text-primary mb-0.5">7+ Yrs</div>
+											<div className="text-xs text-muted-foreground font-medium">Production Experience</div>
 										</div>
 										<div className="p-3.5 rounded-xl bg-background/50 border border-border/40">
-											<div className="text-2xl font-extrabold text-emerald-500 mb-0.5">20+</div>
-											<div className="text-xs text-muted-foreground font-medium">Shipped Projects</div>
+											<div className="text-2xl font-extrabold text-emerald-500 mb-0.5">Strict</div>
+											<div className="text-xs text-muted-foreground font-medium">End-to-End Type Safety</div>
 										</div>
 										<div className="p-3.5 rounded-xl bg-background/50 border border-border/40">
-											<div className="text-2xl font-extrabold text-indigo-500 mb-0.5">100%</div>
-											<div className="text-xs text-muted-foreground font-medium">Type-Safe Code</div>
+											<div className="text-2xl font-extrabold text-indigo-500 mb-0.5">&lt;85ms</div>
+											<div className="text-xs text-muted-foreground font-medium">P95 Edge Latency</div>
 										</div>
 										<div className="p-3.5 rounded-xl bg-background/50 border border-border/40">
-											<div className="text-2xl font-extrabold text-amber-500 mb-0.5">&lt;100ms</div>
-											<div className="text-xs text-muted-foreground font-medium">Edge Optimized</div>
+											<div className="text-2xl font-extrabold text-amber-500 mb-0.5">Automated</div>
+											<div className="text-xs text-muted-foreground font-medium">CI/CD & Lint Pipelines</div>
 										</div>
 									</div>
 								</div>
 
 								<div className="mt-5 pt-3.5 border-t border-border/40 flex items-center justify-between">
-									<span className="text-xs text-muted-foreground">Ready to collaborate?</span>
+									<span className="text-xs text-muted-foreground">Proven technical execution</span>
 									<Button asChild variant="ghost" size="sm" className="text-xs text-primary font-semibold p-0 hover:bg-transparent">
 										<Link
-											href="/hire-me"
-											data-umami-event="home-engineering-book-slot-click"
+											href="/projects"
+											data-umami-event="home-engineering-view-projects-click"
 											className="flex items-center gap-1"
 										>
-											Book a slot <ArrowRight size={13} />
+											View case studies <ArrowRight size={13} />
 										</Link>
 									</Button>
 								</div>
@@ -192,13 +195,16 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 			</section>
 
 			{/* Services Section */}
-			<section className="relative overflow-hidden">
+			<section className="relative overflow-hidden py-6 md:py-10 lg:py-12">
 				<div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 pointer-events-none" />
 				<div className="container px-4 max-w-6xl mx-auto">
 					<SectionHeader
-						title={copy?.sections.services.title || "Specialized Engineering"}
-						subtitle={copy?.sections.services.subtitle || "Services"}
-						description={copy?.sections.services.description}
+						title={copy?.sections.services.title || "Solutions & Specialized Engineering"}
+						subtitle={copy?.sections.services.subtitle || "What I Do"}
+						description={
+							copy?.sections.services.description ||
+							"High-impact web architectures and autonomous AI systems engineered for speed, scalability, and measurable business outcomes."
+						}
 						className="text-center mb-10 md:mb-12"
 					/>
 
@@ -276,8 +282,12 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 			<section className="relative overflow-hidden">
 				<div className="container px-4 max-w-6xl mx-auto">
 					<SectionHeader
-						title={copy?.sections.projects.title || "Featured Works"}
-						subtitle={copy?.sections.projects.subtitle || "Portfolio"}
+						title={copy?.sections.projects.title || "Featured Case Studies"}
+						subtitle={copy?.sections.projects.subtitle || "Selected Works"}
+						description={
+							copy?.sections.projects.description ||
+							"Real-world web architectures, AI workflows, and products delivered with measurable impact."
+						}
 						className="text-center mb-10 md:mb-12"
 					/>
 
@@ -304,7 +314,7 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 							className="rounded-full px-7 h-11 text-xs md:text-sm font-semibold border-border/60 bg-card/70 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/40 hover:text-primary transition-all duration-300 shadow-sm hover:shadow-md group"
 						>
 							<Link href="/projects" data-umami-event="home-projects-cta-click" className="inline-flex items-center gap-2">
-								<span>View All Projects</span>
+								<span>Explore All Case Studies</span>
 								<ArrowRight
 									size={15}
 									className="group-hover:translate-x-1 transition-transform duration-200 text-primary"
@@ -320,8 +330,12 @@ export function HomeView({ copy, services, enableBlog = true }: HomeViewProps) {
 				<section className="relative">
 					<div className="container px-4 max-w-6xl mx-auto">
 						<SectionHeader
-							title={copy?.sections.blog.title || "Latest Articles & Notes"}
-							subtitle={copy?.sections.blog.subtitle || "Insights"}
+							title={copy?.sections.blog.title || "Technical Notes & Architecture"}
+							subtitle={copy?.sections.blog.subtitle || "Engineering Blog"}
+							description={
+								copy?.sections.blog.description ||
+								"Insights on Next.js 16, agentic AI systems, PostgreSQL performance, and modern frontend patterns."
+							}
 							className="text-center mb-10 md:mb-12"
 						/>
 

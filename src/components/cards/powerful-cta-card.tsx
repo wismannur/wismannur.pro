@@ -20,13 +20,13 @@ interface PowerfulCTACardProps {
 
 const PowerfulCTACard = ({
 	className,
-	title = "Transform your ideas into exceptional digital experiences",
-	description = "Let's craft something amazing together. Whether you need a custom website, a complex web application, or help with an existing project, I'm here to help you achieve your goals.",
-	primaryButtonText = "Hire Me Now",
+	title = "Have an ambitious project or engineering challenge?",
+	description = "From architecture design to production rollout, let's build scalable web applications and intelligent AI systems that drive measurable results.",
+	primaryButtonText = "Start a Project",
 	primaryButtonLink = "/hire-me",
 	secondaryButtonText = "Get in Touch",
 	secondaryButtonLink = "/contact",
-	badge = "Ready to collaborate?",
+	badge = "Open for Collaborations",
 	responseTime = "Within 24 hours",
 	primaryButtonScrollTo = undefined,
 }: PowerfulCTACardProps) => {
