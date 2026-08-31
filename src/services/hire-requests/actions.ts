@@ -103,7 +103,13 @@ export async function submit(data: NewHireRequest, recaptchaToken?: string): Pro
 		})
 		.returning({ id: hireRequests.id });
 
-	await sendHireRequestEmails({ ...clean, id });
+	const { clientEmailId } = await sendHireRequestEmails({ ...clean, id });
+	if (clientEmailId) {
+		await getDb()
+			.update(hireRequests)
+			.set({ messageId: clientEmailId })
+			.where(eq(hireRequests.id, id));
+	}
 
 	return id;
 }

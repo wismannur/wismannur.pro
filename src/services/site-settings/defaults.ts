@@ -23,7 +23,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
 	ogTitle: "Frontend Software Engineer",
 	ogTagline:
 		"High-performance web applications, seamless API integrations, and intuitive user experiences.",
-	publicEmail: "wismannur.pro@gmail.com",
+	publicEmail: "hi@wismannur.pro",
 	location: "Bandung, West Java, Indonesia",
 	timezoneLabel: "Western Indonesian Time, UTC+07:00",
 	social: {

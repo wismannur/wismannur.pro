@@ -61,13 +61,15 @@ interface HireRequestEmailPayload {
 	message: string;
 }
 
-interface AdminReplyPayload {
+export interface AdminReplyPayload {
 	inquiryId: string;
 	toEmail: string;
 	toName: string;
 	subject: string;
 	message: string;
 	originalMessageSnippet?: string;
+	inReplyToId?: string | null;
+	referencesIds?: (string | null | undefined)[];
 }
 
 interface InboundAlertPayload {
@@ -77,6 +79,7 @@ interface InboundAlertPayload {
 	clientEmail: string;
 	subject: string;
 	message: string;
+	isNewConversation?: boolean;
 }
 
 export interface JobOutreachSendPayload {
@@ -89,26 +92,77 @@ export interface JobOutreachSendPayload {
 	jobTitle?: string;
 	isFollowUp?: boolean;
 	attachments?: Array<{ name: string; url: string }>;
+	inReplyToId?: string | null;
+	referencesIds?: (string | null | undefined)[];
 }
 
+/**
+ * Formats a message ID for RFC 5322 In-Reply-To and References headers.
+ * Standard RFC headers require angle brackets `<...>`, e.g. `<id@domain.com>` or `<resend-uuid@resend.dev>`.
+ */
+export function formatMessageIdHeader(id: string | null | undefined): string | null {
+	if (!id) return null;
+	const trimmed = id.trim();
+	if (!trimmed) return null;
+	if (trimmed.startsWith("<") && trimmed.endsWith(">")) {
+		return trimmed;
+	}
+	if (trimmed.includes("@")) {
+		return `<${trimmed}>`;
+	}
+	// For Resend IDs (which are UUIDs/alphanumerics), Resend sets the Message-ID as <id@resend.dev>
+	return `<${trimmed}@resend.dev>`;
+}
 
+/**
+ * Constructs email headers containing X-Entity-Ref-ID, In-Reply-To, and References for proper email client threading.
+ */
+export function buildThreadingHeaders(params: {
+	entityRefId?: string;
+	inReplyToId?: string | null;
+	referencesIds?: (string | null | undefined)[];
+}): Record<string, string> {
+	const headers: Record<string, string> = {};
+
+	if (params.entityRefId) {
+		headers["X-Entity-Ref-ID"] = params.entityRefId;
+	}
+
+	const formattedInReplyTo = formatMessageIdHeader(params.inReplyToId);
+	if (formattedInReplyTo) {
+		headers["In-Reply-To"] = formattedInReplyTo;
+	}
+
+	const validRefs = (params.referencesIds || [])
+		.map(formatMessageIdHeader)
+		.filter((id): id is string => Boolean(id));
+
+	const uniqueRefs = Array.from(new Set(validRefs));
+	if (uniqueRefs.length > 0) {
+		headers["References"] = uniqueRefs.join(" ");
+	}
+
+	return headers;
+}
 
 /**
  * Sends both Admin notification and Client auto-reply for contact inquiries.
  * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
  */
-export async function sendContactEmails(payload: ContactEmailPayload): Promise<void> {
+export async function sendContactEmails(
+	payload: ContactEmailPayload,
+): Promise<{ clientEmailId?: string; adminEmailId?: string }> {
 	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
-		return;
+		return {};
 	}
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
-		await Promise.allSettled([
+		const [adminRes, clientRes] = await Promise.allSettled([
 			// 1. Notification to Admin
 			resend.emails.send({
 				from: SENDER_NOTIFICATIONS,
@@ -140,8 +194,16 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
 				}),
 			}),
 		]);
+
+		const adminEmailId =
+			adminRes.status === "fulfilled" && adminRes.value.data?.id ? adminRes.value.data.id : undefined;
+		const clientEmailId =
+			clientRes.status === "fulfilled" && clientRes.value.data?.id ? clientRes.value.data.id : undefined;
+
+		return { adminEmailId, clientEmailId };
 	} catch (error) {
 		console.error("Failed to send contact emails via Resend:", error);
+		return {};
 	}
 }
 
@@ -149,18 +211,20 @@ export async function sendContactEmails(payload: ContactEmailPayload): Promise<v
  * Sends both Admin notification and Client auto-reply for Hire-Me service requests.
  * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
  */
-export async function sendServiceRequestEmails(payload: ServiceRequestEmailPayload): Promise<void> {
+export async function sendServiceRequestEmails(
+	payload: ServiceRequestEmailPayload,
+): Promise<{ clientEmailId?: string; adminEmailId?: string }> {
 	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
-		return;
+		return {};
 	}
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
-		await Promise.allSettled([
+		const [adminRes, clientRes] = await Promise.allSettled([
 			// 1. Notification to Admin
 			resend.emails.send({
 				from: SENDER_NOTIFICATIONS,
@@ -197,8 +261,16 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
 				}),
 			}),
 		]);
+
+		const adminEmailId =
+			adminRes.status === "fulfilled" && adminRes.value.data?.id ? adminRes.value.data.id : undefined;
+		const clientEmailId =
+			clientRes.status === "fulfilled" && clientRes.value.data?.id ? clientRes.value.data.id : undefined;
+
+		return { adminEmailId, clientEmailId };
 	} catch (error) {
 		console.error("Failed to send service request emails via Resend:", error);
+		return {};
 	}
 }
 
@@ -206,18 +278,20 @@ export async function sendServiceRequestEmails(payload: ServiceRequestEmailPaylo
  * Sends both Admin notification and Client auto-reply for Hire-Me career/job inquiries.
  * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
  */
-export async function sendHireRequestEmails(payload: HireRequestEmailPayload): Promise<void> {
+export async function sendHireRequestEmails(
+	payload: HireRequestEmailPayload,
+): Promise<{ clientEmailId?: string; adminEmailId?: string }> {
 	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
-		return;
+		return {};
 	}
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
 		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
 
-		await Promise.allSettled([
+		const [adminRes, clientRes] = await Promise.allSettled([
 			// 1. Notification to Admin
 			resend.emails.send({
 				from: SENDER_NOTIFICATIONS,
@@ -257,19 +331,27 @@ export async function sendHireRequestEmails(payload: HireRequestEmailPayload): P
 				}),
 			}),
 		]);
+
+		const adminEmailId =
+			adminRes.status === "fulfilled" && adminRes.value.data?.id ? adminRes.value.data.id : undefined;
+		const clientEmailId =
+			clientRes.status === "fulfilled" && clientRes.value.data?.id ? clientRes.value.data.id : undefined;
+
+		return { adminEmailId, clientEmailId };
 	} catch (error) {
 		console.error("Failed to send hire request emails via Resend:", error);
+		return {};
 	}
 }
 
 /**
  * Sends an email response from the Admin directly to the Client.
  */
-export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promise<void> {
+export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promise<{ id?: string }> {
 	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping reply email.");
-		return;
+		return {};
 	}
 
 	try {
@@ -278,14 +360,18 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 			formattedSubject = `Re: ${formattedSubject}`;
 		}
 
-		await resend.emails.send({
+		const headers = buildThreadingHeaders({
+			entityRefId: payload.inquiryId,
+			inReplyToId: payload.inReplyToId,
+			referencesIds: payload.referencesIds,
+		});
+
+		const { data, error } = await resend.emails.send({
 			from: SENDER_HI,
 			to: payload.toEmail,
 			replyTo: payload.inquiryId ? `${payload.inquiryId}@wismannur.pro` : "hi@wismannur.pro",
 			subject: formattedSubject,
-			headers: {
-				"X-Entity-Ref-ID": payload.inquiryId,
-			},
+			headers,
 			react: AdminReplyToClientEmail({
 				clientName: payload.toName,
 				replyMessage: payload.message,
@@ -294,6 +380,13 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 				inquiryId: payload.inquiryId,
 			}),
 		});
+
+		if (error) {
+			console.error("[Resend] Error sending admin reply to client:", error);
+			throw error;
+		}
+
+		return { id: data?.id };
 	} catch (error) {
 		console.error("Failed to send admin reply email via Resend:", error);
 		throw error;
@@ -311,10 +404,14 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
 	}
 
 	try {
+		const alertSubject = payload.isNewConversation
+			? `[New Direct Email] ${payload.clientName}: ${payload.subject}`
+			: `[Inbound Reply] ${payload.clientName} membalas: ${payload.subject}`;
+
 		await resend.emails.send({
 			from: SENDER_NOTIFICATIONS,
 			to: ADMIN_EMAIL,
-			subject: `[Inbound Reply] ${payload.clientName} membalas di CMS: ${payload.subject}`,
+			subject: alertSubject,
 			react: AdminInboundAlertEmail({
 				inquiryId: payload.inquiryId,
 				inquiryType: payload.inquiryType,
@@ -332,11 +429,11 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
 /**
  * Sends an outbound job application / cold outreach / follow-up email to a recruiter or company contact.
  */
-export async function sendJobOutreachEmail(payload: JobOutreachSendPayload): Promise<void> {
+export async function sendJobOutreachEmail(payload: JobOutreachSendPayload): Promise<{ id?: string }> {
 	const resend = getResendClient();
 	if (!resend) {
 		console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping job outreach email.");
-		return;
+		return {};
 	}
 
 	try {
@@ -353,15 +450,19 @@ export async function sendJobOutreachEmail(payload: JobOutreachSendPayload): Pro
 					}))
 				: undefined;
 
-		await resend.emails.send({
+		const headers = buildThreadingHeaders({
+			entityRefId: payload.outreachId,
+			inReplyToId: payload.inReplyToId,
+			referencesIds: payload.referencesIds,
+		});
+
+		const { data, error } = await resend.emails.send({
 			from: SENDER_HI,
 			to: payload.toEmail,
 			replyTo: payload.outreachId ? `${payload.outreachId}@wismannur.pro` : "hi@wismannur.pro",
 			subject: formattedSubject,
 			attachments: resendAttachments,
-			headers: {
-				"X-Entity-Ref-ID": payload.outreachId,
-			},
+			headers,
 			react: JobOutreachEmail({
 				contactName: payload.toName,
 				bodyMessage: payload.message,
@@ -373,6 +474,12 @@ export async function sendJobOutreachEmail(payload: JobOutreachSendPayload): Pro
 			}),
 		});
 
+		if (error) {
+			console.error("[Resend] Error sending job outreach email:", error);
+			throw error;
+		}
+
+		return { id: data?.id };
 	} catch (error) {
 		console.error("Failed to send job outreach email via Resend:", error);
 		throw error;

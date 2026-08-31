@@ -85,7 +85,13 @@ export async function submit(data: NewServiceRequest, recaptchaToken?: string): 
 		.values({ ...clean, status: "new" })
 		.returning({ id: serviceRequests.id });
 
-	await sendServiceRequestEmails({ ...clean, id });
+	const { clientEmailId } = await sendServiceRequestEmails({ ...clean, id });
+	if (clientEmailId) {
+		await getDb()
+			.update(serviceRequests)
+			.set({ messageId: clientEmailId })
+			.where(eq(serviceRequests.id, id));
+	}
 
 	return id;
 }

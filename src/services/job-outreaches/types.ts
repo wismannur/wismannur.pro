@@ -21,6 +21,7 @@ export interface JobOutreachMessage {
 	senderName: string;
 	senderEmail: string;
 	message: string;
+	messageId?: string;
 	createdAt: Date;
 }
 
@@ -40,6 +41,7 @@ export interface JobOutreach {
 	body: string;
 	notes?: string;
 	attachments?: JobOutreachAttachment[];
+	initialMessageId?: string;
 	sentAt?: Date;
 	followUpDueDate?: Date;
 	lastRepliedAt?: Date;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { and, desc, eq, gte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, or, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { Webhook } from "svix";
 
@@ -257,6 +257,13 @@ export async function POST(req: NextRequest) {
 					? (emailHeaders["X-Entity-Ref-ID"] as string)
 					: null;
 
+		const inboundMessageId =
+			(typeof emailHeaders["message-id"] === "string" ? (emailHeaders["message-id"] as string) : undefined) ||
+			(typeof emailHeaders["Message-ID"] === "string" ? (emailHeaders["Message-ID"] as string) : undefined) ||
+			(typeof fullEmail?.message_id === "string" ? (fullEmail.message_id as string) : undefined) ||
+			(typeof data.message_id === "string" ? (data.message_id as string) : undefined) ||
+			(emailId ? emailId : undefined);
+
 		const rawExplicitRefId =
 			toInfo.id ||
 			headerRefId ||
@@ -268,6 +275,24 @@ export async function POST(req: NextRequest) {
 			(toInfo.type && toInfo.type !== "job_outreach" ? toInfo.type : undefined) || "contact";
 		let targetSubject = subject;
 		let foundEntity = false;
+
+		const referencedMessageIds = (function() {
+			const inReplyTo = String(emailHeaders["in-reply-to"] || emailHeaders["In-Reply-To"] || fullEmail?.in_reply_to || "");
+			const refs = String(emailHeaders["references"] || emailHeaders["References"] || fullEmail?.references || "");
+			const combined = `${inReplyTo} ${refs}`.trim();
+			if (!combined) return [];
+			const bracketMatches = combined.match(/<([^>]+)>/g);
+			if (bracketMatches && bracketMatches.length > 0) {
+				return bracketMatches.map(b => b.replace(/[<>]/g, "").trim().toLowerCase()).filter(Boolean);
+			}
+			return combined.split(/\s+/).map(s => s.replace(/[<>]/g, "").trim().toLowerCase()).filter(Boolean);
+		})();
+
+		// Helper to normalize subject strings for comparison
+		const normalizeSubject = (str: string) =>
+			str.replace(/^(?:re|fwd|fw):\s*/gi, "").replace(/\s+/g, " ").trim().toLowerCase();
+
+		const isReplyOrFwd = /^(?:re|fwd|fw):/i.test(subject.trim());
 
 		// 5. Match by explicit reference ID if found
 		if (targetInquiryId) {
@@ -309,6 +334,7 @@ export async function POST(req: NextRequest) {
 					senderName: senderName || outreachRow.contactName || "Recruiter",
 					senderEmail,
 					message: textContent,
+					messageId: inboundMessageId || null,
 				});
 
 				await db
@@ -327,6 +353,7 @@ export async function POST(req: NextRequest) {
 					clientEmail: senderEmail,
 					subject: outreachRow.subject,
 					message: textContent,
+					isNewConversation: false,
 				});
 
 				console.log(
@@ -398,154 +425,186 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		// 6. Fallback: match by sender email with most recent entity (outreach or inquiry) only if no explicit Ref ID was present
-		if (!targetInquiryId && senderEmail) {
+		// 6. Match by threading headers (In-Reply-To / References) if no explicit Ref ID was present
+		if (!targetInquiryId && referencedMessageIds.length > 0) {
+			// Check if any referenced ID matches a known job outreach
+			for (const refId of referencedMessageIds) {
+				// Strip domain for Resend ID matching if needed
+				const cleanRef = refId.split("@")[0];
+				const [matchedOutreachMsg] = await db
+					.select({ outreachId: jobOutreachMessages.outreachId })
+					.from(jobOutreachMessages)
+					.where(
+						or(
+							eq(sql`lower(${jobOutreachMessages.messageId})`, refId),
+							eq(sql`lower(${jobOutreachMessages.messageId})`, cleanRef),
+						),
+					)
+					.limit(1);
+
+				if (matchedOutreachMsg) {
+					targetInquiryId = matchedOutreachMsg.outreachId;
+					targetInquiryType = "job_outreach" as unknown as typeof targetInquiryType;
+					break;
+				}
+
+				const [matchedInquiryMsg] = await db
+					.select({ inquiryId: inquiryMessages.inquiryId, inquiryType: inquiryMessages.inquiryType })
+					.from(inquiryMessages)
+					.where(
+						or(
+							eq(sql`lower(${inquiryMessages.messageId})`, refId),
+							eq(sql`lower(${inquiryMessages.messageId})`, cleanRef),
+						),
+					)
+					.limit(1);
+
+				if (matchedInquiryMsg) {
+					targetInquiryId = matchedInquiryMsg.inquiryId;
+					targetInquiryType = matchedInquiryMsg.inquiryType;
+					break;
+				}
+			}
+		}
+
+		// 7. Match by Subject + Sender Email ONLY if the subject is explicitly a reply (starts with Re:) and matches previous entity subject
+		if (!targetInquiryId && senderEmail && isReplyOrFwd) {
+			const normIncomingSubject = normalizeSubject(subject);
+
 			const [latestOutreachRows, latestContactRows, latestServiceRows, latestHireRows] = await Promise.all([
 				db
 					.select()
 					.from(jobOutreaches)
 					.where(sql`lower(${jobOutreaches.contactEmail}) = ${senderEmail.toLowerCase()}`)
 					.orderBy(desc(jobOutreaches.createdAt))
-					.limit(1),
+					.limit(3),
 				db
 					.select()
 					.from(contacts)
 					.where(sql`lower(${contacts.email}) = ${senderEmail.toLowerCase()}`)
 					.orderBy(desc(contacts.createdAt))
-					.limit(1),
+					.limit(3),
 				db
 					.select()
 					.from(serviceRequests)
 					.where(sql`lower(${serviceRequests.email}) = ${senderEmail.toLowerCase()}`)
 					.orderBy(desc(serviceRequests.createdAt))
-					.limit(1),
+					.limit(3),
 				db
 					.select()
 					.from(hireRequests)
 					.where(sql`lower(${hireRequests.email}) = ${senderEmail.toLowerCase()}`)
 					.orderBy(desc(hireRequests.createdAt))
-					.limit(1),
+					.limit(3),
 			]);
 
-			const allMatches = [
-				latestOutreachRows[0]
-					? {
-							id: latestOutreachRows[0].id,
-							type: "job_outreach" as const,
-							subject: latestOutreachRows[0].subject,
-							contactName: latestOutreachRows[0].contactName,
-							createdAt: new Date(latestOutreachRows[0].sentAt || latestOutreachRows[0].createdAt).getTime(),
-						}
-					: null,
-				latestContactRows[0]
-					? {
-							id: latestContactRows[0].id,
-							type: "contact" as const,
-							subject: latestContactRows[0].subject,
-							contactName: latestContactRows[0].name,
-							createdAt: new Date(latestContactRows[0].createdAt).getTime(),
-						}
-					: null,
-				latestServiceRows[0]
-					? {
-							id: latestServiceRows[0].id,
-							type: "service_request" as const,
-							subject: latestServiceRows[0].serviceType,
-							contactName: latestServiceRows[0].name,
-							createdAt: new Date(latestServiceRows[0].createdAt).getTime(),
-						}
-					: null,
-				latestHireRows[0]
-					? {
-							id: latestHireRows[0].id,
-							type: "hire_request" as const,
-							subject: `${latestHireRows[0].roleTitle} @ ${latestHireRows[0].company}`,
-							contactName: latestHireRows[0].name,
-							createdAt: new Date(latestHireRows[0].createdAt).getTime(),
-						}
-					: null,
-			].filter(Boolean) as Array<{
-				id: string;
-				type: "job_outreach" | "contact" | "service_request" | "hire_request";
-				subject: string;
-				contactName: string;
-				createdAt: number;
-			}>;
-
-			if (allMatches.length > 0) {
-				allMatches.sort((a, b) => b.createdAt - a.createdAt);
-				const bestMatch = allMatches[0];
-
-				if (bestMatch.type === "job_outreach") {
-					// Deduplication check
-					const fifteenSecondsAgo = new Date(Date.now() - 15000);
-					const [recentDuplicate] = await db
-						.select()
-						.from(jobOutreachMessages)
-						.where(
-							and(
-								eq(jobOutreachMessages.outreachId, bestMatch.id),
-								eq(jobOutreachMessages.senderEmail, senderEmail),
-								eq(jobOutreachMessages.message, textContent),
-								gte(jobOutreachMessages.createdAt, fifteenSecondsAgo),
-							),
-						)
-						.limit(1);
-
-					if (recentDuplicate) {
-						console.log(
-							`[Resend Inbound] Ignored duplicate job outreach reply within 15s for ${bestMatch.id}`
-						);
-						return NextResponse.json({ success: true, duplicate: true });
-					}
-
-					await db.insert(jobOutreachMessages).values({
-						outreachId: bestMatch.id,
-						senderType: "client",
-						senderName: senderName || bestMatch.contactName || "Recruiter",
-						senderEmail,
-						message: textContent,
-					});
-
-					await db
-						.update(jobOutreaches)
-						.set({
-							status: "replied",
-							lastRepliedAt: new Date(),
-							updatedAt: new Date(),
-						})
-						.where(eq(jobOutreaches.id, bestMatch.id));
-
-					await sendInboundAlertToAdmin({
-						inquiryId: bestMatch.id,
-						inquiryType: "job_outreach",
-						clientName: senderName || bestMatch.contactName || "Recruiter",
-						clientEmail: senderEmail,
-						subject: bestMatch.subject,
-						message: textContent,
-					});
-
-					console.log(
-						`[Resend Inbound] Fallback matched email to Job Outreach ${bestMatch.id} from ${senderEmail}`
+			// Match by normalized subject
+			const matchingOutreach = latestOutreachRows.find(
+				r => normalizeSubject(r.subject) === normIncomingSubject,
+			);
+			if (matchingOutreach) {
+				targetInquiryId = matchingOutreach.id;
+				targetInquiryType = "job_outreach" as unknown as typeof targetInquiryType;
+				targetSubject = matchingOutreach.subject;
+			} else {
+				const matchingContact = latestContactRows.find(
+					r => normalizeSubject(r.subject) === normIncomingSubject,
+				);
+				if (matchingContact) {
+					targetInquiryId = matchingContact.id;
+					targetInquiryType = "contact";
+					targetSubject = matchingContact.subject;
+				} else {
+					const matchingService = latestServiceRows.find(
+						r => normalizeSubject(r.serviceType) === normIncomingSubject,
 					);
-
-					return NextResponse.json({
-						success: true,
-						outreachId: bestMatch.id,
-						matched: true,
-						type: "job_outreach",
-					});
+					if (matchingService) {
+						targetInquiryId = matchingService.id;
+						targetInquiryType = "service_request";
+						targetSubject = matchingService.serviceType;
+					} else {
+						const matchingHire = latestHireRows.find(
+							r => normalizeSubject(`${r.roleTitle} @ ${r.company}`) === normIncomingSubject,
+						);
+						if (matchingHire) {
+							targetInquiryId = matchingHire.id;
+							targetInquiryType = "hire_request";
+							targetSubject = `${matchingHire.roleTitle} @ ${matchingHire.company}`;
+						}
+					}
 				}
-
-				targetInquiryId = bestMatch.id;
-				targetInquiryType = bestMatch.type;
-				targetSubject = bestMatch.subject;
 			}
 		}
 
-		// 7. If still not matched, create a new contact inquiry so the email is NEVER lost and visible in CMS
+		// Handle matched Job Outreach if resolved via threading headers or subject
+		if (targetInquiryId && (targetInquiryType as string) === "job_outreach") {
+			const [outreachRow] = await db
+				.select()
+				.from(jobOutreaches)
+				.where(eq(jobOutreaches.id, targetInquiryId))
+				.limit(1);
+
+			if (outreachRow) {
+				const fifteenSecondsAgo = new Date(Date.now() - 15000);
+				const [recentDuplicate] = await db
+					.select()
+					.from(jobOutreachMessages)
+					.where(
+						and(
+							eq(jobOutreachMessages.outreachId, outreachRow.id),
+							eq(jobOutreachMessages.senderEmail, senderEmail),
+							eq(jobOutreachMessages.message, textContent),
+							gte(jobOutreachMessages.createdAt, fifteenSecondsAgo),
+						),
+					)
+					.limit(1);
+
+				if (recentDuplicate) {
+					return NextResponse.json({ success: true, duplicate: true });
+				}
+
+				await db.insert(jobOutreachMessages).values({
+					outreachId: outreachRow.id,
+					senderType: "client",
+					senderName: senderName || outreachRow.contactName || "Recruiter",
+					senderEmail,
+					message: textContent,
+					messageId: inboundMessageId || null,
+				});
+
+				await db
+					.update(jobOutreaches)
+					.set({
+						status: "replied",
+						lastRepliedAt: new Date(),
+						updatedAt: new Date(),
+					})
+					.where(eq(jobOutreaches.id, outreachRow.id));
+
+				await sendInboundAlertToAdmin({
+					inquiryId: outreachRow.id,
+					inquiryType: "job_outreach",
+					clientName: senderName || outreachRow.contactName || "Recruiter",
+					clientEmail: senderEmail,
+					subject: outreachRow.subject,
+					message: textContent,
+					isNewConversation: false,
+				});
+
+				return NextResponse.json({
+					success: true,
+					outreachId: outreachRow.id,
+					matched: true,
+					type: "job_outreach",
+				});
+			}
+		}
+
+		// 8. If still not matched, this is a BRAND NEW DIRECT EMAIL -> Create a new contact inquiry so it is visible in CMS Contacts!
+		let isNewInquiry = false;
 		if (!targetInquiryId) {
-			const cleanSubject = subject.replace(/^(Re:\s*)+/i, "").trim() || "Inbound Email";
+			isNewInquiry = true;
+			const cleanSubject = subject.replace(/^(?:re|fwd|fw):\s*/gi, "").trim() || "Inbound Email";
 			const [newContact] = await db
 				.insert(contacts)
 				.values({
@@ -554,6 +613,7 @@ export async function POST(req: NextRequest) {
 					subject: cleanSubject,
 					message: textContent,
 					status: "new",
+					messageId: inboundMessageId || null,
 				})
 				.returning({ id: contacts.id });
 
@@ -562,7 +622,7 @@ export async function POST(req: NextRequest) {
 			targetSubject = cleanSubject;
 
 			console.log(
-				`[Resend Inbound] No existing inquiry found. Created new contact ${targetInquiryId} for ${senderEmail}`
+				`[Resend Inbound] Direct email received. Created new contact ${targetInquiryId} (${cleanSubject}) for ${senderEmail}`
 			);
 		}
 
@@ -596,6 +656,7 @@ export async function POST(req: NextRequest) {
 			senderName: senderName || "Client",
 			senderEmail,
 			message: textContent,
+			messageId: inboundMessageId || null,
 		});
 
 		// 9. Update inquiry status to "new" to highlight it in CMS
@@ -624,6 +685,7 @@ export async function POST(req: NextRequest) {
 			clientEmail: senderEmail,
 			subject: targetSubject,
 			message: textContent,
+			isNewConversation: isNewInquiry,
 		});
 
 		console.log(

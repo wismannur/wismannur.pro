@@ -38,6 +38,7 @@ export async function getThreadMessages(inquiryId: string): Promise<InquiryMessa
 		senderName: row.senderName,
 		senderEmail: row.senderEmail,
 		message: row.message,
+		messageId: row.messageId ?? undefined,
 		createdAt: row.createdAt,
 	}));
 }
@@ -52,7 +53,61 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 
 	const db = getDb();
 
-	// 1. Insert admin reply to database
+	// 1. Fetch previous thread messages and initial entity messageId to construct threading references
+	const previousMessages = await db
+		.select()
+		.from(inquiryMessages)
+		.where(eq(inquiryMessages.inquiryId, clean.inquiryId))
+		.orderBy(asc(inquiryMessages.createdAt));
+
+	const referencesIds: string[] = [];
+
+	// Check initial messageId from parent table
+	if (clean.inquiryType === "contact") {
+		const [parent] = await db
+			.select({ messageId: contacts.messageId })
+			.from(contacts)
+			.where(eq(contacts.id, clean.inquiryId))
+			.limit(1);
+		if (parent?.messageId) referencesIds.push(parent.messageId);
+	} else if (clean.inquiryType === "service_request") {
+		const [parent] = await db
+			.select({ messageId: serviceRequests.messageId })
+			.from(serviceRequests)
+			.where(eq(serviceRequests.id, clean.inquiryId))
+			.limit(1);
+		if (parent?.messageId) referencesIds.push(parent.messageId);
+	} else if (clean.inquiryType === "hire_request") {
+		const [parent] = await db
+			.select({ messageId: hireRequests.messageId })
+			.from(hireRequests)
+			.where(eq(hireRequests.id, clean.inquiryId))
+			.limit(1);
+		if (parent?.messageId) referencesIds.push(parent.messageId);
+	}
+
+	for (const msg of previousMessages) {
+		if (msg.messageId) {
+			referencesIds.push(msg.messageId);
+		}
+	}
+
+	const inReplyToId =
+		referencesIds.length > 0 ? referencesIds[referencesIds.length - 1] : null;
+
+	// 2. Send email to client via Resend with RFC 5322 In-Reply-To and References
+	const sendRes = await sendAdminReplyToClient({
+		inquiryId: clean.inquiryId,
+		toEmail: clean.toEmail,
+		toName: clean.toName,
+		subject: clean.subject,
+		message: clean.message,
+		originalMessageSnippet: clean.originalMessageSnippet,
+		inReplyToId,
+		referencesIds,
+	});
+
+	// 3. Insert admin reply to database with messageId
 	const [inserted] = await db
 		.insert(inquiryMessages)
 		.values({
@@ -62,10 +117,11 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 			senderName: "Wisman Nur",
 			senderEmail: "hi@wismannur.pro",
 			message: clean.message,
+			messageId: sendRes.id || null,
 		})
 		.returning();
 
-	// 2. Update status of the inquiry
+	// 4. Update status of the inquiry
 	if (clean.inquiryType === "contact") {
 		await db
 			.update(contacts)
@@ -83,16 +139,6 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 			.where(eq(hireRequests.id, clean.inquiryId));
 	}
 
-	// 3. Send email to client via Resend
-	await sendAdminReplyToClient({
-		inquiryId: clean.inquiryId,
-		toEmail: clean.toEmail,
-		toName: clean.toName,
-		subject: clean.subject,
-		message: clean.message,
-		originalMessageSnippet: clean.originalMessageSnippet,
-	});
-
 	return {
 		id: inserted.id,
 		inquiryId: inserted.inquiryId,
@@ -101,6 +147,7 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
 		senderName: inserted.senderName,
 		senderEmail: inserted.senderEmail,
 		message: inserted.message,
+		messageId: inserted.messageId ?? undefined,
 		createdAt: inserted.createdAt,
 	};
 }

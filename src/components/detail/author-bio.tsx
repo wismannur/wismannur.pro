@@ -40,7 +40,7 @@ const AuthorBio = () => {
 			url: authorData?.social.github || "https://github.com/wismannur",
 			icon: <Github size={15} />,
 		},
-		{ name: "Email", url: `mailto:${authorData?.email || "wismannur.pro@gmail.com"}`, icon: <Mail size={15} /> },
+		{ name: "Email", url: `mailto:${authorData?.email || "hi@wismannur.pro"}`, icon: <Mail size={15} /> },
 	];
 
 	return (
