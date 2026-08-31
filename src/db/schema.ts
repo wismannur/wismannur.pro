@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import type { PageCopyContent } from "@/services/page-copy/types";
+import { generateEntityId } from "@/lib/id-generator";
 
 // Mirrors the service contracts in `src/services/*/types.ts` 1:1 — those
 // interfaces stay the source of truth for what pages/components consume.
@@ -206,7 +207,7 @@ export const resumeEntries = pgTable("resume_entries", {
 export const contacts = pgTable("contacts", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
+		.$defaultFn(() => generateEntityId("contact")),
 	name: text("name").notNull(),
 	email: text("email").notNull(),
 	subject: text("subject").notNull(),
@@ -220,7 +221,7 @@ export const contacts = pgTable("contacts", {
 export const serviceRequests = pgTable("service_requests", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
+		.$defaultFn(() => generateEntityId("service")),
 	name: text("name").notNull(),
 	email: text("email").notNull(),
 	company: text("company"),
@@ -237,7 +238,7 @@ export const serviceRequests = pgTable("service_requests", {
 export const hireRequests = pgTable("hire_requests", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
+		.$defaultFn(() => generateEntityId("hire")),
 	name: text("name").notNull(),
 	email: text("email").notNull(),
 	company: text("company").notNull(),
@@ -677,7 +678,7 @@ export const outreachStatus = pgEnum("outreach_status", [
 export const jobOutreaches = pgTable("job_outreaches", {
 	id: text("id")
 		.primaryKey()
-		.$defaultFn(() => crypto.randomUUID()),
+		.$defaultFn(() => generateEntityId("outreach")),
 	jobApplicationId: text("job_application_id").references(
 		() => jobApplications.id,
 		{ onDelete: "set null" },
