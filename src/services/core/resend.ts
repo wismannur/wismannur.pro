@@ -17,18 +17,23 @@ function getResendClient(): Resend | null {
 	return resendApiKey ? new Resend(resendApiKey) : null;
 }
 
+export const RESEND_EMAIL_DOMAIN =
+	process.env.RESEND_EMAIL_DOMAIN?.trim() ||
+	process.env.NEXT_PUBLIC_RESEND_EMAIL_DOMAIN?.trim() ||
+	"wismannur.pro";
+
 const ADMIN_EMAIL =
 	process.env.ADMIN_NOTIFICATION_EMAIL ||
 	process.env.ADMIN_EMAIL ||
 	"wismannur.pro@gmail.com";
 
 const SENDER_NOTIFICATIONS =
-	process.env.RESEND_FROM_NOTIFICATIONS || "Wisman Nur <notifications@wismannur.pro>";
+	process.env.RESEND_FROM_NOTIFICATIONS || `Wisman Nur <notifications@${RESEND_EMAIL_DOMAIN}>`;
 
 const SENDER_HI =
 	process.env.RESEND_FROM_HI ||
 	process.env.RESEND_FROM_HELLO ||
-	"Wisman Nur <hi@wismannur.pro>";
+	`Wisman Nur <hi@${RESEND_EMAIL_DOMAIN}>`;
 
 interface ContactEmailPayload {
 	id?: string;
@@ -162,7 +167,7 @@ export async function sendContactEmails(
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
+		const dynamicReplyTo = payload.id ? `${payload.id}@${RESEND_EMAIL_DOMAIN}` : `hi@${RESEND_EMAIL_DOMAIN}`;
 
 		const [adminRes, clientRes] = await Promise.allSettled([
 			// 1. Notification to Admin
@@ -224,7 +229,7 @@ export async function sendServiceRequestEmails(
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
+		const dynamicReplyTo = payload.id ? `${payload.id}@${RESEND_EMAIL_DOMAIN}` : `hi@${RESEND_EMAIL_DOMAIN}`;
 
 		const [adminRes, clientRes] = await Promise.allSettled([
 			// 1. Notification to Admin
@@ -291,7 +296,7 @@ export async function sendHireRequestEmails(
 
 	try {
 		const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
-		const dynamicReplyTo = payload.id ? `${payload.id}@wismannur.pro` : "hi@wismannur.pro";
+		const dynamicReplyTo = payload.id ? `${payload.id}@${RESEND_EMAIL_DOMAIN}` : `hi@${RESEND_EMAIL_DOMAIN}`;
 
 		const [adminRes, clientRes] = await Promise.allSettled([
 			// 1. Notification to Admin
@@ -371,7 +376,7 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 		const { data, error } = await resend.emails.send({
 			from: SENDER_HI,
 			to: payload.toEmail,
-			replyTo: payload.inquiryId ? `${payload.inquiryId}@wismannur.pro` : "hi@wismannur.pro",
+			replyTo: payload.inquiryId ? `${payload.inquiryId}@${RESEND_EMAIL_DOMAIN}` : `hi@${RESEND_EMAIL_DOMAIN}`,
 			subject: formattedSubject,
 			headers,
 			react: AdminReplyToClientEmail({
@@ -473,7 +478,7 @@ export async function sendJobOutreachEmail(payload: JobOutreachSendPayload): Pro
 		const { data, error } = await resend.emails.send({
 			from: SENDER_HI,
 			to: payload.toEmail,
-			replyTo: payload.outreachId ? `${payload.outreachId}@wismannur.pro` : "hi@wismannur.pro",
+			replyTo: payload.outreachId ? `${payload.outreachId}@${RESEND_EMAIL_DOMAIN}` : `hi@${RESEND_EMAIL_DOMAIN}`,
 			subject: formattedSubject,
 			attachments: resendAttachments,
 			headers,
