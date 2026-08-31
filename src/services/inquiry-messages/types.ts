@@ -9,6 +9,7 @@ export interface InquiryMessage {
 	senderName: string;
 	senderEmail: string;
 	message: string;
+	messageId?: string;
 	createdAt: Date;
 }
 
