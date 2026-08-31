@@ -213,6 +213,7 @@ export const contacts = pgTable("contacts", {
 	subject: text("subject").notNull(),
 	message: text("message").notNull(),
 	status: contactStatus("status").notNull().default("new"),
+	messageId: text("message_id"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
@@ -230,6 +231,7 @@ export const serviceRequests = pgTable("service_requests", {
 	timeframe: text("timeframe").notNull(),
 	projectDetails: text("project_details").notNull(),
 	status: serviceRequestStatus("status").notNull().default("new"),
+	messageId: text("message_id"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
@@ -249,6 +251,7 @@ export const hireRequests = pgTable("hire_requests", {
 	salaryRange: text("salary_range"),
 	message: text("message").notNull(),
 	status: hireRequestStatus("status").notNull().default("new"),
+	messageId: text("message_id"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
@@ -696,6 +699,7 @@ export const jobOutreaches = pgTable("job_outreaches", {
 	body: text("body").notNull(),
 	notes: text("notes"),
 	attachments: jsonb("attachments"),
+	initialMessageId: text("initial_message_id"),
 	sentAt: timestamp("sent_at", { withTimezone: true }),
 	followUpDueDate: timestamp("follow_up_due_date", { withTimezone: true }),
 	lastRepliedAt: timestamp("last_replied_at", { withTimezone: true }),
@@ -719,6 +723,7 @@ export const jobOutreachMessages = pgTable("job_outreach_messages", {
 	senderName: text("sender_name").notNull(),
 	senderEmail: text("sender_email").notNull(),
 	message: text("message").notNull(),
+	messageId: text("message_id"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),
@@ -734,6 +739,7 @@ export const inquiryMessages = pgTable("inquiry_messages", {
 	senderName: text("sender_name").notNull(),
 	senderEmail: text("sender_email").notNull(),
 	message: text("message").notNull(),
+	messageId: text("message_id"),
 	createdAt: timestamp("created_at", { withTimezone: true })
 		.notNull()
 		.defaultNow(),

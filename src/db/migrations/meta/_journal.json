@@ -64,6 +64,13 @@
       "when": 1788110017753,
       "tag": "0008_curious_nebula",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788157269295,
+      "tag": "0009_gifted_mercury",
+      "breakpoints": true
     }
   ]
 }
