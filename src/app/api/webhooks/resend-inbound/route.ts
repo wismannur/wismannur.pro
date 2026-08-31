@@ -677,6 +677,22 @@ export async function POST(req: NextRequest) {
 				.where(eq(hireRequests.id, targetInquiryId));
 		}
 
+		const rawTo = data.to || fullEmail?.to || data.recipient || body.to;
+		const recipientTo = Array.isArray(rawTo)
+			? rawTo
+					.map((item) =>
+						typeof item === "string"
+							? item
+							: (item as { email?: string; address?: string })?.email ||
+								(item as { address?: string })?.address ||
+								"",
+					)
+					.filter(Boolean)
+					.join(", ")
+			: typeof rawTo === "string"
+				? rawTo
+				: "hi@wismannur.pro";
+
 		// 10. Send email alert to Admin
 		await sendInboundAlertToAdmin({
 			inquiryId: targetInquiryId,
@@ -685,6 +701,7 @@ export async function POST(req: NextRequest) {
 			clientEmail: senderEmail,
 			subject: targetSubject,
 			message: textContent,
+			toAddress: recipientTo || "hi@wismannur.pro",
 			isNewConversation: isNewInquiry,
 		});
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { Resend } from "resend";
 import AdminContactNotificationEmail from "@/components/emails/admin-contact-notification";
+import AdminDirectEmailAlertEmail from "@/components/emails/admin-direct-email-alert";
 import AdminHireRequestNotificationEmail from "@/components/emails/admin-hire-request-notification";
 import AdminInboundAlertEmail from "@/components/emails/admin-inbound-alert";
 import AdminReplyToClientEmail from "@/components/emails/admin-reply-to-client";
@@ -79,6 +80,7 @@ interface InboundAlertPayload {
 	clientEmail: string;
 	subject: string;
 	message: string;
+	toAddress?: string;
 	isNewConversation?: boolean;
 }
 
@@ -394,7 +396,7 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 }
 
 /**
- * Sends an alert to Admin when a Client or Recruiter sends an inbound reply via email.
+ * Sends an alert to Admin when a Client or Recruiter sends an inbound email or reply.
  */
 export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Promise<void> {
 	const resend = getResendClient();
@@ -408,18 +410,30 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
 			? `[New Direct Email] ${payload.clientName}: ${payload.subject}`
 			: `[Inbound Reply] ${payload.clientName} membalas: ${payload.subject}`;
 
+		const alertReact = payload.isNewConversation
+			? AdminDirectEmailAlertEmail({
+					inquiryId: payload.inquiryId,
+					clientName: payload.clientName,
+					clientEmail: payload.clientEmail,
+					subject: payload.subject,
+					message: payload.message,
+					toAddress: payload.toAddress,
+				})
+			: AdminInboundAlertEmail({
+					inquiryId: payload.inquiryId,
+					inquiryType: payload.inquiryType,
+					clientName: payload.clientName,
+					clientEmail: payload.clientEmail,
+					subject: payload.subject,
+					message: payload.message,
+				});
+
 		await resend.emails.send({
 			from: SENDER_NOTIFICATIONS,
 			to: ADMIN_EMAIL,
+			replyTo: payload.clientEmail,
 			subject: alertSubject,
-			react: AdminInboundAlertEmail({
-				inquiryId: payload.inquiryId,
-				inquiryType: payload.inquiryType,
-				clientName: payload.clientName,
-				clientEmail: payload.clientEmail,
-				subject: payload.subject,
-				message: payload.message,
-			}),
+			react: alertReact,
 		});
 	} catch (error) {
 		console.error("Failed to send inbound alert email via Resend:", error);
