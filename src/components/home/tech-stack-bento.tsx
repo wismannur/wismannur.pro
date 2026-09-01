@@ -67,7 +67,7 @@ export function TechStackBento() {
 						</div>
 						<div>
 							<h3 className="font-bold text-lg text-foreground">Core Technologies</h3>
-							<p className="text-xs text-muted-foreground">Battle-tested tools & modern ecosystem</p>
+							<p className="text-xs text-muted-foreground">Production-proven frameworks & AI toolchains</p>
 						</div>
 					</div>
 				</div>
@@ -119,7 +119,7 @@ export function TechStackBento() {
 			</div>
 
 			<div className="mt-6 pt-4 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
-				<span>Continuous Learning & Experimentation</span>
+				<span>Architecture Designed for Reliability</span>
 				<span className="font-mono text-[11px] text-primary">v2026.x</span>
 			</div>
 		</SpotlightCard>

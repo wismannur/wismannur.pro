@@ -26,13 +26,13 @@ const ProjectCard = React.memo(
 			return (
 				<SpotlightCard
 					className={cn(
-						"group flex flex-col md:flex-row md:items-stretch rounded-3xl border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40",
+						"group flex flex-col lg:flex-row lg:items-stretch rounded-3xl border border-border/50 bg-card/70 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/40",
 						className
 					)}
 					style={style}
 				>
 					{/* Image */}
-					<div className="relative md:w-1/2 aspect-video md:aspect-auto md:min-h-[300px] overflow-hidden bg-muted/40">
+					<div className="relative w-full lg:w-1/2 aspect-[16/10] lg:aspect-auto lg:min-h-[340px] overflow-hidden bg-muted/40 flex-shrink-0">
 						<Link
 							href={`/projects/${project.slug}`}
 							data-umami-event="project-card-image-click"
@@ -47,7 +47,7 @@ const ProjectCard = React.memo(
 							<div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 						</Link>
 
-						<div className="absolute top-3 left-3 z-10">
+						<div className="absolute top-4 left-4 z-10">
 							<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground shadow-md backdrop-blur-md">
 								<Sparkles size={12} className="animate-pulse" />
 								Featured Project
@@ -56,7 +56,7 @@ const ProjectCard = React.memo(
 					</div>
 
 					{/* Content */}
-					<div className="flex flex-col p-6 md:p-8 md:w-1/2 flex-1 justify-between gap-5">
+					<div className="flex flex-col p-6 sm:p-8 lg:p-10 w-full lg:w-1/2 flex-1 justify-between gap-6 relative z-10">
 						<div>
 							{/* Metadata */}
 							<div className="flex flex-wrap items-center text-xs text-muted-foreground mb-3 gap-x-3 gap-y-1">
@@ -85,28 +85,28 @@ const ProjectCard = React.memo(
 								data-umami-event-project={project.slug}
 								className="block group/title"
 							>
-								<h3 className="text-2xl font-bold tracking-tight text-foreground mb-2.5 transition-colors duration-200 group-hover/title:text-primary">
+								<h3 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground mb-3 transition-colors duration-200 group-hover/title:text-primary">
 									{project.title}
 								</h3>
 							</Link>
 
 							{/* Summary */}
-							<p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-5">
+							<p className="text-sm md:text-base text-muted-foreground leading-relaxed line-clamp-3 mb-6">
 								{project.summary}
 							</p>
 
 							{/* Tech Stack */}
-							<div className="flex flex-wrap gap-1.5 mb-2">
+							<div className="flex flex-wrap gap-2 mb-2">
 								{project.technologies.slice(0, 5).map((tech) => (
 									<Chip
 										key={tech}
-										className="text-xs px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+										className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors font-medium"
 									>
 										{tech}
 									</Chip>
 								))}
 								{project.technologies.length > 5 && (
-									<span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">
+									<span className="text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border/50">
 										+{project.technologies.length - 5}
 									</span>
 								)}
@@ -114,7 +114,7 @@ const ProjectCard = React.memo(
 						</div>
 
 						{/* Actions */}
-						<div className="flex items-center justify-between pt-4 border-t border-border/40 mt-auto">
+						<div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-border/40 mt-auto">
 							<div className="flex items-center gap-2.5">
 								{project.demoUrl && (
 									<a
@@ -123,7 +123,7 @@ const ProjectCard = React.memo(
 										rel="noopener noreferrer"
 										data-umami-event="project-card-demo-click"
 										data-umami-event-project={project.slug}
-										className="text-xs font-semibold text-foreground/90 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/70 hover:bg-primary hover:text-primary-foreground border border-border/50 transition-all duration-200"
+										className="text-xs font-semibold text-foreground/90 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-muted/70 hover:bg-primary hover:text-primary-foreground border border-border/50 transition-all duration-200 shadow-sm"
 										onClick={(e) => e.stopPropagation()}
 										aria-label={`Live demo for ${project.title}`}
 									>
@@ -138,7 +138,7 @@ const ProjectCard = React.memo(
 										rel="noopener noreferrer"
 										data-umami-event="project-card-repo-click"
 										data-umami-event-project={project.slug}
-										className="text-xs font-semibold text-foreground/90 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted/70 hover:bg-primary hover:text-primary-foreground border border-border/50 transition-all duration-200"
+										className="text-xs font-semibold text-foreground/90 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-muted/70 hover:bg-primary hover:text-primary-foreground border border-border/50 transition-all duration-200 shadow-sm"
 										onClick={(e) => e.stopPropagation()}
 										aria-label={`Source code for ${project.title}`}
 									>
@@ -151,16 +151,17 @@ const ProjectCard = React.memo(
 							<Button
 								variant="ghost"
 								size="sm"
-								className="text-xs text-primary font-bold p-0 hover:bg-transparent hover:text-primary/80 group-hover:translate-x-1 transition-transform"
+								className="text-xs md:text-sm text-primary font-bold p-0 hover:bg-transparent hover:text-primary/80 group-hover:translate-x-1 transition-transform"
 								asChild
 							>
 								<Link
 									href={`/projects/${project.slug}`}
 									data-umami-event="project-card-view-click"
 									data-umami-event-project={project.slug}
+									className="inline-flex items-center gap-1.5"
 								>
-									Case Study
-									<ArrowRight size={13} className="ml-1" />
+									<span>Explore Case Study</span>
+									<ArrowRight size={15} />
 								</Link>
 							</Button>
 						</div>
