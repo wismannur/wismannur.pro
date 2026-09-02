@@ -39,6 +39,7 @@ export interface SiteSettings {
 	requestTimeframes: SelectOption[];
 	requestBudgetRanges: SelectOption[];
 	enableBlog: boolean;
+	enableAiChat: boolean;
 	updatedAt: Date;
 }
 

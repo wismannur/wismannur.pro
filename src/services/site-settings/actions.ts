@@ -49,6 +49,7 @@ const settingsUpdateSchema = z.object({
 	requestTimeframes: z.array(selectOptionSchema).optional(),
 	requestBudgetRanges: z.array(selectOptionSchema).optional(),
 	enableBlog: z.boolean().optional(),
+	enableAiChat: z.boolean().optional(),
 });
 
 export async function getSiteSettings(): Promise<SiteSettings> {

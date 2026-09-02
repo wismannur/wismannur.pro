@@ -365,6 +365,7 @@ export const siteSettings = pgTable("site_settings", {
 		.notNull()
 		.default(sql`'[]'::jsonb`),
 	enableBlog: boolean("enable_blog").notNull().default(true),
+	enableAiChat: boolean("enable_ai_chat").notNull().default(false),
 	updatedAt: timestamp("updated_at", { withTimezone: true })
 		.notNull()
 		.defaultNow()

@@ -38,7 +38,7 @@ export const Layout = ({
 			<main className="flex-1 pt-20">{children}</main>
 			{!hideFooter && <Footer settings={settings} />}
 			<ScrollToTop />
-			<FloatingChatWidget />
+			{settings.enableAiChat && <FloatingChatWidget />}
 			<CommandPalette
 				publicEmail={settings.publicEmail}
 				enableBlog={settings.enableBlog}

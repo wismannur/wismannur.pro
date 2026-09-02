@@ -16,6 +16,8 @@ import {
 	Inbox,
 	Sparkles,
 	Loader2,
+	Eye,
+	EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,12 +34,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
 	getAiChatSessions,
 	getAiChatSessionDetails,
 	deleteAiChatSession,
 } from "@/services/ai-chat/actions";
+import { getSiteSettings, updateSiteSettings } from "@/services/site-settings/actions";
 import type { AiChatSessionRow, AiChatMessageRow } from "@/db/schema";
 
 export default function CmsAiChatLogsPage() {
@@ -45,6 +49,7 @@ export default function CmsAiChatLogsPage() {
 	const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
 	const [sessionToDelete, setSessionToDelete] = useState<AiChatSessionRow | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [isToggling, setIsToggling] = useState(false);
 
 	// Fetch all chat sessions
 	const {
@@ -55,6 +60,16 @@ export default function CmsAiChatLogsPage() {
 	} = useQuery({
 		queryKey: ["cms-ai-chat-sessions", searchQuery],
 		queryFn: () => getAiChatSessions(searchQuery || undefined),
+	});
+
+	// Fetch Site Settings for public visibility toggle
+	const {
+		data: settings,
+		isLoading: isSettingsLoading,
+		refetch: refetchSettings,
+	} = useQuery({
+		queryKey: ["cms-site-settings"],
+		queryFn: () => getSiteSettings(),
 	});
 
 	// Derive the active selected session ID
@@ -71,6 +86,24 @@ export default function CmsAiChatLogsPage() {
 			activeSessionId ? getAiChatSessionDetails(activeSessionId) : null,
 		enabled: Boolean(activeSessionId),
 	});
+
+	const handleToggleAiChat = async (enabled: boolean) => {
+		setIsToggling(true);
+		try {
+			await updateSiteSettings({ enableAiChat: enabled });
+			toast.success(
+				enabled
+					? "AI Assistant widget is now visible on public pages."
+					: "AI Assistant widget is now hidden from public pages.",
+			);
+			refetchSettings();
+		} catch (error) {
+			console.error("Failed to toggle AI chat visibility:", error);
+			toast.error("Failed to update AI chat visibility.");
+		} finally {
+			setIsToggling(false);
+		}
+	};
 
 	const handleDeleteSession = async () => {
 		if (!sessionToDelete) return;
@@ -115,19 +148,47 @@ export default function CmsAiChatLogsPage() {
 					</p>
 				</div>
 
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={() => {
-						refetchSessions();
-						if (activeSessionId) refetchDetails();
-					}}
-					disabled={isSessionsRefetching}
-					className="rounded-lg gap-1.5 text-xs"
-				>
-					<RefreshCw className={cn("h-3.5 w-3.5", isSessionsRefetching && "animate-spin")} />
-					Refresh Logs
-				</Button>
+				<div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+					{/* Public Visibility Toggle Card */}
+					<div className="flex items-center gap-3 px-3.5 py-1.5 rounded-xl border border-border/70 bg-card/60 shadow-xs">
+						<div className="flex items-center gap-1.5">
+							{settings?.enableAiChat ? (
+								<Eye className="w-4 h-4 text-emerald-500" />
+							) : (
+								<EyeOff className="w-4 h-4 text-muted-foreground" />
+							)}
+							<div className="flex flex-col">
+								<span className="text-xs font-semibold text-foreground leading-tight">
+									Public Widget
+								</span>
+								<span className="text-[10px] text-muted-foreground leading-none">
+									{settings?.enableAiChat ? "Visible to Visitors" : "Hidden (Testing Mode)"}
+								</span>
+							</div>
+						</div>
+						<Switch
+							checked={settings?.enableAiChat ?? false}
+							onCheckedChange={handleToggleAiChat}
+							disabled={isSettingsLoading || isToggling}
+							aria-label="Toggle AI Assistant on public pages"
+						/>
+					</div>
+
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => {
+							refetchSessions();
+							refetchSettings();
+							if (activeSessionId) refetchDetails();
+						}}
+						disabled={isSessionsRefetching}
+						className="rounded-lg gap-1.5 text-xs h-9"
+					>
+						<RefreshCw className={cn("h-3.5 w-3.5", isSessionsRefetching && "animate-spin")} />
+						Refresh
+					</Button>
+				</div>
 			</div>
 
 			{/* Metrics */}
@@ -152,11 +213,23 @@ export default function CmsAiChatLogsPage() {
 
 				<div className="rounded-xl border border-border/60 bg-card/50 p-3.5">
 					<div className="flex items-center justify-between">
-						<span className="text-xs font-medium text-muted-foreground">Assistant Status</span>
-						<span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+						<span className="text-xs font-medium text-muted-foreground">Public Status</span>
+						<span
+							className={cn(
+								"h-2 w-2 rounded-full",
+								settings?.enableAiChat ? "bg-emerald-500 animate-pulse" : "bg-amber-500",
+							)}
+						/>
 					</div>
-					<div className="text-sm font-semibold mt-2.5 text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-						<Bot className="h-4 w-4" /> Online 24/7
+					<div
+						className={cn(
+							"text-sm font-semibold mt-2.5 flex items-center gap-1.5",
+							settings?.enableAiChat
+								? "text-emerald-600 dark:text-emerald-400"
+								: "text-amber-600 dark:text-amber-400",
+						)}
+					>
+						<Bot className="h-4 w-4" /> {settings?.enableAiChat ? "Live (Public)" : "Hidden (Testing)"}
 					</div>
 				</div>
 
