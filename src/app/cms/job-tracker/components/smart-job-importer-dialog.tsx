@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2, Link2, FileText, Check, ArrowRight } from "lucide-react";
+import { Sparkles, Loader2, Link2, FileText, Check, ArrowRight, Bookmark, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +27,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { jobTrackerService } from "@/services";
 import type {
+	JobApplicationStatus,
 	JobEmploymentType,
 	JobPlatform,
 	NewJobApplication,
@@ -39,13 +40,15 @@ interface SmartJobImporterDialogProps {
 	onSuccess?: () => void;
 }
 
+const BOOKMARKLET_CODE = `javascript:(function(){const t=document.title||'',u=window.location.href,s=window.getSelection().toString().trim(),c=s||document.body.innerText.slice(0,15000);const p=JSON.stringify({url:u,title:t,content:c});navigator.clipboard.writeText(p).then(()=>{alert('✅ Job extracted to clipboard!\\n\\nOpen Career Hub and paste into Smart AI Importer.')}).catch(()=>{prompt('Copy this job data for Career Hub:',p)})})();`;
+
 export function SmartJobImporterDialog({
 	open,
 	onOpenChange,
 	onSuccess,
 }: SmartJobImporterDialogProps) {
 	const router = useRouter();
-	const [activeTab, setActiveTab] = useState<"ai_import" | "manual">("ai_import");
+	const [activeTab, setActiveTab] = useState<"ai_import" | "manual" | "bookmarklet">("ai_import");
 	const [isExtracting, setIsExtracting] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 
@@ -175,15 +178,19 @@ export function SmartJobImporterDialog({
 					</div>
 				</DialogHeader>
 
-				<Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mt-2">
-					<TabsList className="grid grid-cols-2 w-full">
-						<TabsTrigger value="ai_import" className="flex items-center gap-2">
+				<Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "ai_import" | "manual" | "bookmarklet")} className="mt-2">
+					<TabsList className="grid grid-cols-3 w-full">
+						<TabsTrigger value="ai_import" className="flex items-center gap-1.5 text-xs">
 							<Sparkles className="w-4 h-4 text-primary" />
 							Smart AI Importer
 						</TabsTrigger>
-						<TabsTrigger value="manual" className="flex items-center gap-2">
+						<TabsTrigger value="manual" className="flex items-center gap-1.5 text-xs">
 							<FileText className="w-4 h-4" />
 							Job Form Details
+						</TabsTrigger>
+						<TabsTrigger value="bookmarklet" className="flex items-center gap-1.5 text-xs">
+							<Bookmark className="w-4 h-4 text-purple-500" />
+							1-Click Bookmarklet
 						</TabsTrigger>
 					</TabsList>
 
@@ -215,10 +222,25 @@ export function SmartJobImporterDialog({
 							<Label htmlFor="rawContent">Job Description Text / Vacancy Content</Label>
 							<Textarea
 								id="rawContent"
-								placeholder="Paste the full job description text, requirements, responsibilities, and company details here..."
+								placeholder="Paste the full job description text, requirements, responsibilities, and company details here (or paste bookmarklet output)..."
 								rows={8}
 								value={rawContent}
-								onChange={(e) => setRawContent(e.target.value)}
+								onChange={(e) => {
+									const text = e.target.value;
+									setRawContent(text);
+									if (text.trim().startsWith("{") && text.includes('"url"') && text.includes('"content"')) {
+										try {
+											const parsed = JSON.parse(text);
+											if (parsed.url && !jobUrl) setJobUrl(parsed.url);
+											if (parsed.content) {
+												setRawContent(parsed.content);
+												toast.success("Bookmarklet JSON detected! Autofilled URL and content.");
+											}
+										} catch {
+											// Keep original text if parse fails
+										}
+									}
+								}}
 								className="resize-none text-xs font-mono"
 							/>
 						</div>
@@ -249,6 +271,63 @@ export function SmartJobImporterDialog({
 									</>
 								)}
 							</Button>
+						</div>
+					</TabsContent>
+
+					{/* TAB 3: BROWSER BOOKMARKLET */}
+					<TabsContent value="bookmarklet" className="space-y-4 pt-3 text-xs">
+						<div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 space-y-2">
+							<div className="font-semibold text-sm text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+								<Bookmark className="w-4 h-4" />
+								1-Click Job Scraping Bookmarklet
+							</div>
+							<p className="text-muted-foreground leading-relaxed">
+								Drag this button to your browser’s Bookmarks Bar. When browsing any job vacancy on LinkedIn, Jobstreet, Glints, Greenhouse, or Lever, click the bookmark to grab the vacancy text and URL in 1 click!
+							</p>
+						</div>
+
+						<div className="p-6 rounded-xl border border-border/80 bg-card flex flex-col items-center justify-center text-center space-y-4">
+							<div className="text-xs text-muted-foreground font-medium">
+								👇 Drag this button to your Bookmarks Bar (Ctrl/Cmd + Shift + B)
+							</div>
+
+							<a
+								href={BOOKMARKLET_CODE}
+								onClick={(e) => {
+									e.preventDefault();
+									toast.info("Drag this button up to your browser's Bookmarks Bar to install!");
+								}}
+								className="px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow-md flex items-center gap-2 cursor-grab select-none active:scale-95 transition-all"
+								title="Drag me to your Bookmarks Bar"
+							>
+								<Bookmark className="w-4 h-4" />
+								📌 Import to Career Hub
+							</a>
+
+							<div className="pt-2 flex items-center gap-2">
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => {
+										navigator.clipboard.writeText(BOOKMARKLET_CODE);
+										toast.success("Bookmarklet code copied to clipboard!");
+									}}
+									className="gap-1.5 text-xs h-8"
+								>
+									<Copy className="w-3.5 h-3.5" />
+									Copy Bookmarklet JavaScript
+								</Button>
+							</div>
+						</div>
+
+						<div className="p-4 rounded-xl border border-border/60 bg-muted/30 space-y-2">
+							<div className="font-bold text-foreground">💡 How to use:</div>
+							<ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+								<li>Open any job posting on <strong>LinkedIn, Jobstreet, Glints, Indeed, or Greenhouse</strong>.</li>
+								<li>Click the <strong>📌 Import to Career Hub</strong> bookmark in your browser bar.</li>
+								<li>It copies the job title, URL, and full vacancy description to your clipboard.</li>
+								<li>Come back here, paste it into the <strong>Smart AI Importer</strong>, and click <strong>Extract & Autofill</strong>!</li>
+							</ol>
 						</div>
 					</TabsContent>
 
@@ -350,7 +429,7 @@ export function SmartJobImporterDialog({
 								<Label htmlFor="status">Initial Status</Label>
 								<Select
 									value={formData.status}
-									onValueChange={(v) => setFormData({ ...formData, status: v as any })}
+									onValueChange={(v) => setFormData({ ...formData, status: v as JobApplicationStatus })}
 								>
 									<SelectTrigger id="status">
 										<SelectValue />

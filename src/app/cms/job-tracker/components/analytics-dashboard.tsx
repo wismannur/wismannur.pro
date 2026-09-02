@@ -3,15 +3,11 @@
 import { useMemo } from "react";
 import {
 	BarChart3,
-	Briefcase,
-	Calendar,
 	CheckCircle2,
 	Clock,
 	Gift,
 	LineChart,
-	PieChart,
 	Send,
-	Sparkles,
 	Target,
 	TrendingUp,
 	Users,
@@ -52,9 +48,8 @@ const PLATFORM_COLORS = [
 ];
 
 export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboardProps) {
-	if (!analytics) return null;
-
 	const platformChartData = useMemo(() => {
+		if (!analytics) return [];
 		return Object.entries(analytics.platformCounts)
 			.map(([key, count]) => {
 				const cfg = JOB_PLATFORM_CONFIG[key as keyof typeof JOB_PLATFORM_CONFIG] || {
@@ -66,9 +61,10 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
 				};
 			})
 			.filter((p) => p.count > 0);
-	}, [analytics.platformCounts]);
+	}, [analytics]);
 
 	const activityData = useMemo(() => {
+		if (!analytics) return [];
 		return (analytics.recentActivity || []).map((item) => {
 			const date = new Date(item.date);
 			const label = date.toLocaleDateString("en-US", {
@@ -80,7 +76,7 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
 				applications: item.count,
 			};
 		});
-	}, [analytics.recentActivity]);
+	}, [analytics]);
 
 	const pendingFollowUps = useMemo(() => {
 		const sevenDaysAgo = new Date();
@@ -92,6 +88,8 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
 			return new Date(app.appliedAt) <= sevenDaysAgo;
 		});
 	}, [applications]);
+
+	if (!analytics) return null;
 
 	return (
 		<div className="space-y-6">
