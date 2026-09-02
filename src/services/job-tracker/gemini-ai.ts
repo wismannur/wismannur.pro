@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient, getGeminiModel } from "@/lib/gemini";
 import type {
 	AtsAnalysis,
 	InterviewPrepResult,
@@ -7,22 +7,15 @@ import type {
 	TailoredBullet,
 } from "./types";
 
-function getGeminiClient(): GoogleGenAI {
-	const apiKey =
-		process.env.GEMINI_API_KEY ||
-		process.env.GOOGLE_GENAI_API_KEY ||
-		process.env.GOOGLE_API_KEY;
+const DEFAULT_MODEL = getGeminiModel();
 
-	if (!apiKey) {
-		throw new Error(
-			"GEMINI_API_KEY / GOOGLE_GENAI_API_KEY is not set. Please provide a Gemini API key in your environment variables.",
-		);
+function cleanJsonText(rawText: string): string {
+	let clean = rawText.trim();
+	if (clean.startsWith("```")) {
+		clean = clean.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
 	}
-
-	return new GoogleGenAI({ apiKey });
+	return clean.trim();
 }
-
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-3.7-flash";
 
 /**
  * Parses raw text or scraped content from a job vacancy URL into structured job details.
@@ -105,16 +98,21 @@ Return a JSON object conforming strictly to this format:
 		throw new Error("No response received from Gemini AI model.");
 	}
 
-	const parsed = JSON.parse(responseText) as ParsedJobPosting;
-	return {
-		...parsed,
-		platform: parsed.platform || "linkedin",
-		workplaceType: parsed.workplaceType || "remote",
-		jobType: parsed.jobType || "full_time",
-		salaryCurrency: parsed.salaryCurrency || "IDR",
-		salaryPeriod: parsed.salaryPeriod || "monthly",
-		requirements: Array.isArray(parsed.requirements) ? parsed.requirements : [],
-	};
+	try {
+		const parsed = JSON.parse(cleanJsonText(responseText)) as ParsedJobPosting;
+		return {
+			...parsed,
+			platform: parsed.platform || "linkedin",
+			workplaceType: parsed.workplaceType || "remote",
+			jobType: parsed.jobType || "full_time",
+			salaryCurrency: parsed.salaryCurrency || "IDR",
+			salaryPeriod: parsed.salaryPeriod || "monthly",
+			requirements: Array.isArray(parsed.requirements) ? parsed.requirements : [],
+		};
+	} catch (err) {
+		console.error("Failed to parse Gemini job posting JSON:", responseText, err);
+		throw new Error("Failed to parse job vacancy details from AI response.");
+	}
 }
 
 /**
@@ -200,7 +198,12 @@ Return a JSON object conforming strictly to this format:
 		throw new Error("Failed to generate resume analysis from Gemini AI.");
 	}
 
-	return JSON.parse(responseText);
+	try {
+		return JSON.parse(cleanJsonText(responseText));
+	} catch (err) {
+		console.error("Failed to parse Gemini resume analysis JSON:", responseText, err);
+		throw new Error("Failed to parse resume match analysis from AI response.");
+	}
 }
 
 /**
@@ -243,13 +246,18 @@ Return a JSON object conforming strictly to this format:
 		throw new Error("Failed to parse interview invitation.");
 	}
 
-	const parsed = JSON.parse(responseText);
-	return {
-		...parsed,
-		stageType: parsed.stageType || "hr_screening",
-		title: parsed.title || "Interview Session",
-		keyFocusAreas: Array.isArray(parsed.keyFocusAreas) ? parsed.keyFocusAreas : [],
-	};
+	try {
+		const parsed = JSON.parse(cleanJsonText(responseText));
+		return {
+			...parsed,
+			stageType: parsed.stageType || "hr_screening",
+			title: parsed.title || "Interview Session",
+			keyFocusAreas: Array.isArray(parsed.keyFocusAreas) ? parsed.keyFocusAreas : [],
+		};
+	} catch (err) {
+		console.error("Failed to parse Gemini interview invite JSON:", responseText, err);
+		throw new Error("Failed to parse interview invitation details from AI response.");
+	}
 }
 
 /**
@@ -317,5 +325,11 @@ Return a JSON object conforming strictly to this format:
 		throw new Error("Failed to generate interview preparation.");
 	}
 
-	return JSON.parse(responseText);
+	try {
+		return JSON.parse(cleanJsonText(responseText));
+	} catch (err) {
+		console.error("Failed to parse Gemini interview prep JSON:", responseText, err);
+		throw new Error("Failed to generate interview preparation questions.");
+	}
 }
+
