@@ -511,56 +511,60 @@ export async function convertOutreachToJobApplication(
 	await assertAdmin();
 	const db = getDb();
 
-	const [outreach] = await db
-		.select()
-		.from(jobOutreaches)
-		.where(eq(jobOutreaches.id, outreachId))
-		.limit(1);
+	const result = await db.transaction(async (tx) => {
+		const [outreach] = await tx
+			.select()
+			.from(jobOutreaches)
+			.where(eq(jobOutreaches.id, outreachId))
+			.limit(1);
 
-	if (!outreach) throw new Error("Outreach not found");
+		if (!outreach) throw new Error("Outreach not found");
 
-	let targetAppId = existingApplicationId;
+		let targetAppId = existingApplicationId;
 
-	// If no existing application ID provided, create a new Job Application record!
-	if (!targetAppId) {
-		const [newApp] = await db
-			.insert(jobApplications)
-			.values({
-				companyName: outreach.companyName,
-				companyWebsite: outreach.companyWebsite || null,
-				jobTitle: outreach.jobTitle,
-				platform: "other",
-				workplaceType: "remote",
-				jobType: "full_time",
-				requirements: [],
-				status: "applied",
-				appliedAt: outreach.sentAt || new Date(),
-				contactName: outreach.contactName,
-				contactEmail: outreach.contactEmail,
-				notes: `Created from Job Outreach: "${outreach.subject}".\nNotes: ${outreach.notes || "-"}`,
-				sortOrder: 0,
+		// If no existing application ID provided, create a new Job Application record!
+		if (!targetAppId) {
+			const [newApp] = await tx
+				.insert(jobApplications)
+				.values({
+					companyName: outreach.companyName,
+					companyWebsite: outreach.companyWebsite || null,
+					jobTitle: outreach.jobTitle,
+					platform: "other",
+					workplaceType: "remote",
+					jobType: "full_time",
+					requirements: [],
+					status: "applied",
+					appliedAt: outreach.sentAt || new Date(),
+					contactName: outreach.contactName,
+					contactEmail: outreach.contactEmail,
+					notes: `Created from Job Outreach: "${outreach.subject}".\nNotes: ${outreach.notes || "-"}`,
+					sortOrder: 0,
+				})
+				.returning({ id: jobApplications.id });
+
+			targetAppId = newApp.id;
+		}
+
+		// Link outreach to job application and update status to 'converted'
+		const [updatedOutreach] = await tx
+			.update(jobOutreaches)
+			.set({
+				jobApplicationId: targetAppId,
+				status: "converted",
+				updatedAt: new Date(),
 			})
-			.returning({ id: jobApplications.id });
+			.where(eq(jobOutreaches.id, outreachId))
+			.returning();
 
-		targetAppId = newApp.id;
-	}
-
-	// Link outreach to job application and update status to 'converted'
-	const [updatedOutreach] = await db
-		.update(jobOutreaches)
-		.set({
-			jobApplicationId: targetAppId,
-			status: "converted",
-			updatedAt: new Date(),
-		})
-		.where(eq(jobOutreaches.id, outreachId))
-		.returning();
+		return {
+			outreach: toJobOutreach(updatedOutreach),
+			applicationId: targetAppId,
+		};
+	});
 
 	revalidateOutreachPaths(outreachId);
-	return {
-		outreach: toJobOutreach(updatedOutreach),
-		applicationId: targetAppId,
-	};
+	return result;
 }
 
 /**

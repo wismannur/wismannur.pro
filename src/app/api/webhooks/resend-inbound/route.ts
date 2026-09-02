@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { and, desc, eq, gte, or, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { Webhook } from "svix";
@@ -403,6 +404,10 @@ export async function POST(req: NextRequest) {
 					isNewConversation: false,
 				});
 
+				revalidatePath("/cms/job-outreaches");
+				revalidatePath(`/cms/job-outreaches/${outreachRow.id}`);
+				revalidatePath("/cms/job-tracker");
+
 				console.log(
 					`[Resend Inbound] Recorded reply for Job Outreach ${outreachRow.id} (${outreachRow.companyName}) from ${senderEmail}`
 				);
@@ -637,6 +642,10 @@ export async function POST(req: NextRequest) {
 					message: textContent,
 					isNewConversation: false,
 				});
+
+				revalidatePath("/cms/job-outreaches");
+				revalidatePath(`/cms/job-outreaches/${outreachRow.id}`);
+				revalidatePath("/cms/job-tracker");
 
 				return NextResponse.json({
 					success: true,

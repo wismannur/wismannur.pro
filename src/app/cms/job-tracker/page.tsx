@@ -6,10 +6,7 @@ import {
 	Briefcase,
 	Filter,
 	Kanban,
-	LayoutGrid,
 	List,
-	Loader2,
-	Plus,
 	RefreshCw,
 	Search,
 	Sparkles,
@@ -168,7 +165,7 @@ export default function JobTrackerPage() {
 			<div className="flex flex-col sm:flex-row justify-between gap-4 items-stretch sm:items-center">
 				<Tabs
 					value={viewMode}
-					onValueChange={(v) => setViewMode(v as any)}
+					onValueChange={(v) => setViewMode(v as "kanban" | "table" | "analytics")}
 					className="w-full sm:w-auto"
 				>
 					<TabsList className="grid grid-cols-3 w-full sm:w-auto">

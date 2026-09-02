@@ -1,22 +1,15 @@
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient, getGeminiModel } from "@/lib/gemini";
 import type { AiOutreachDraftParams, AiOutreachDraftResult } from "./types";
 
-function getGeminiClient(): GoogleGenAI {
-	const apiKey =
-		process.env.GEMINI_API_KEY ||
-		process.env.GOOGLE_GENAI_API_KEY ||
-		process.env.GOOGLE_API_KEY;
+const DEFAULT_MODEL = getGeminiModel("gemini-2.5-flash");
 
-	if (!apiKey) {
-		throw new Error(
-			"GEMINI_API_KEY / GOOGLE_GENAI_API_KEY is not set. Please provide a Gemini API key in your environment variables.",
-		);
+function cleanJsonText(rawText: string): string {
+	let clean = rawText.trim();
+	if (clean.startsWith("```")) {
+		clean = clean.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
 	}
-
-	return new GoogleGenAI({ apiKey });
+	return clean.trim();
 }
-
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 /**
  * Generates an impactful, personalized email draft (Subject + Body) for job outreach.
@@ -87,7 +80,7 @@ Return a JSON object conforming strictly to this format:
 	}
 
 	try {
-		return JSON.parse(responseText) as AiOutreachDraftResult;
+		return JSON.parse(cleanJsonText(responseText)) as AiOutreachDraftResult;
 	} catch (err) {
 		console.error("Failed to parse Gemini outreach draft JSON:", responseText, err);
 		throw new Error("Failed to generate a valid outreach draft JSON.");

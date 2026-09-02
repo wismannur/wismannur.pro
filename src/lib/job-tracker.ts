@@ -192,3 +192,114 @@ export function getAtsScoreColor(score?: number): {
 		label: "Low Match / Needs Tailoring",
 	};
 }
+
+export interface CalendarEventParams {
+	title: string;
+	companyName: string;
+	jobTitle: string;
+	scheduledAt: Date | string;
+	durationMinutes?: number;
+	meetingLink?: string;
+	interviewers?: string;
+	aiSummary?: string;
+}
+
+function formatUtcForCalendar(date: Date): string {
+	return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
+
+/**
+ * Generates a direct 1-click Google Calendar Event creation URL.
+ */
+export function generateGoogleCalendarUrl(params: CalendarEventParams): string {
+	const start = new Date(params.scheduledAt);
+	const end = new Date(start.getTime() + (params.durationMinutes || 60) * 60 * 1000);
+
+	const eventTitle = `${params.title} - ${params.companyName} (${params.jobTitle})`;
+	const dates = `${formatUtcForCalendar(start)}/${formatUtcForCalendar(end)}`;
+
+	const details = [
+		`Role: ${params.jobTitle}`,
+		`Company: ${params.companyName}`,
+		params.interviewers ? `Interviewers: ${params.interviewers}` : null,
+		params.meetingLink ? `Meeting Link: ${params.meetingLink}` : null,
+		params.aiSummary ? `\nAI Prep Strategy:\n${params.aiSummary}` : null,
+	]
+		.filter(Boolean)
+		.join("\n");
+
+	const location = params.meetingLink || "Online Meeting";
+
+	const url = new URL("https://calendar.google.com/calendar/render");
+	url.searchParams.set("action", "TEMPLATE");
+	url.searchParams.set("text", eventTitle);
+	url.searchParams.set("dates", dates);
+	url.searchParams.set("details", details);
+	url.searchParams.set("location", location);
+
+	return url.toString();
+}
+
+/**
+ * Generates an iCalendar (.ics) format string.
+ */
+export function generateIcsContent(params: CalendarEventParams): string {
+	const start = new Date(params.scheduledAt);
+	const end = new Date(start.getTime() + (params.durationMinutes || 60) * 60 * 1000);
+	const now = new Date();
+
+	const uid = `interview-${start.getTime()}-${Math.random().toString(36).substring(2, 9)}@wismannur.pro`;
+	const title = `${params.title} - ${params.companyName}`;
+	const description = [
+		`Role: ${params.jobTitle}`,
+		`Company: ${params.companyName}`,
+		params.interviewers ? `Interviewers: ${params.interviewers}` : "",
+		params.meetingLink ? `Meeting: ${params.meetingLink}` : "",
+		params.aiSummary ? `Strategy: ${params.aiSummary}` : "",
+	]
+		.filter(Boolean)
+		.join("\\n");
+
+	const location = params.meetingLink || "Online";
+
+	return [
+		"BEGIN:VCALENDAR",
+		"VERSION:2.0",
+		"PRODID:-//Wisman Nur//Career Hub//EN",
+		"CALSCALE:GREGORIAN",
+		"METHOD:PUBLISH",
+		"BEGIN:VEVENT",
+		`UID:${uid}`,
+		`DTSTAMP:${formatUtcForCalendar(now)}`,
+		`DTSTART:${formatUtcForCalendar(start)}`,
+		`DTEND:${formatUtcForCalendar(end)}`,
+		`SUMMARY:${title}`,
+		`DESCRIPTION:${description}`,
+		`LOCATION:${location}`,
+		params.meetingLink ? `URL:${params.meetingLink}` : "",
+		"STATUS:CONFIRMED",
+		"END:VEVENT",
+		"END:VCALENDAR",
+	]
+		.filter(Boolean)
+		.join("\r\n");
+}
+
+/**
+ * Triggers a browser download of an .ics file.
+ */
+export function downloadIcsFile(params: CalendarEventParams): void {
+	const content = generateIcsContent(params);
+	const blob = new Blob([content], { type: "text/calendar;charset=utf-8" });
+	const url = URL.createObjectURL(blob);
+	const safeFilename = `${params.companyName.toLowerCase().replace(/[^a-z0-9]/g, "_")}_interview.ics`;
+
+	const link = document.createElement("a");
+	link.href = url;
+	link.setAttribute("download", safeFilename);
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	URL.revokeObjectURL(url);
+}
+
