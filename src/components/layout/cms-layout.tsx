@@ -173,6 +173,11 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 					icon: <Building2 className="h-4 w-4" />,
 					path: "/cms/hire-requests",
 				},
+				{
+					label: "AI Chat Logs",
+					icon: <MessagesSquare className="h-4 w-4" />,
+					path: "/cms/ai-chat-logs",
+				},
 			],
 		},
 		{
