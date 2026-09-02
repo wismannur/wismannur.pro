@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { format } from "date-fns";
 import { asc, desc, eq } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
@@ -388,7 +389,7 @@ export async function getAnalytics(): Promise<JobTrackerAnalytics> {
 
 		const appDate = app.appliedAt || app.createdAt;
 		if (appDate) {
-			const dateKey = appDate.toISOString().split("T")[0];
+			const dateKey = format(appDate, "yyyy-MM-dd");
 			activityMap.set(dateKey, (activityMap.get(dateKey) ?? 0) + 1);
 
 			if (appDate >= startOfToday) appliedToday++;
@@ -412,7 +413,7 @@ export async function getAnalytics(): Promise<JobTrackerAnalytics> {
 	for (let i = 13; i >= 0; i--) {
 		const d = new Date();
 		d.setDate(d.getDate() - i);
-		const dateStr = d.toISOString().split("T")[0];
+		const dateStr = format(d, "yyyy-MM-dd");
 		recentActivity.push({
 			date: dateStr,
 			count: activityMap.get(dateStr) ?? 0,
