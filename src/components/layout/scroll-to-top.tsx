@@ -37,7 +37,7 @@ export const ScrollToTop = () => {
 			onClick={scrollToTop}
 			data-umami-event="scroll-to-top-click"
 			className={cn(
-				"fixed bottom-6 right-6 p-2 rounded-full shadow-lg bg-primary/80 backdrop-blur-sm hover:bg-primary transition-all duration-300 z-40",
+				"fixed bottom-24 right-6 p-2 rounded-full shadow-lg bg-primary/80 backdrop-blur-sm hover:bg-primary transition-all duration-300 z-40",
 				isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none",
 			)}
 			size="icon"

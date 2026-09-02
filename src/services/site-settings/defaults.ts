@@ -53,5 +53,6 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
 		{ id: "hourly", label: "Hourly rate" },
 	],
 	enableBlog: true,
+	enableAiChat: false,
 	updatedAt: new Date(0),
 };

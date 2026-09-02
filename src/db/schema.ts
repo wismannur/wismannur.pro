@@ -365,6 +365,7 @@ export const siteSettings = pgTable("site_settings", {
 		.notNull()
 		.default(sql`'[]'::jsonb`),
 	enableBlog: boolean("enable_blog").notNull().default(true),
+	enableAiChat: boolean("enable_ai_chat").notNull().default(false),
 	updatedAt: timestamp("updated_at", { withTimezone: true })
 		.notNull()
 		.defaultNow()
@@ -745,6 +746,64 @@ export const inquiryMessages = pgTable("inquiry_messages", {
 		.defaultNow(),
 });
 
+export const aiKnowledgeItems = pgTable("ai_knowledge_items", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	category: text("category").notNull().default("general"),
+	title: text("title").notNull(),
+	content: text("content").notNull(),
+	tags: text("tags")
+		.array()
+		.notNull()
+		.default(sql`'{}'::text[]`),
+	isPublished: boolean("is_published").notNull().default(true),
+	sortOrder: integer("sort_order").notNull().default(0),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
+
+export const aiChatSessions = pgTable("ai_chat_sessions", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	visitorId: text("visitor_id").notNull(),
+	ipAddress: text("ip_address"),
+	userAgent: text("user_agent"),
+	title: text("title").notNull().default("New Conversation"),
+	messageCount: integer("message_count").notNull().default(0),
+	lastMessage: text("last_message"),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+	updatedAt: timestamp("updated_at", { withTimezone: true })
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date()),
+});
+
+export const aiChatMessages = pgTable("ai_chat_messages", {
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
+	sessionId: text("session_id")
+		.notNull()
+		.references(() => aiChatSessions.id, { onDelete: "cascade" }),
+	role: text("role").notNull(),
+	content: text("content").notNull(),
+	toolCallName: text("tool_call_name"),
+	toolCallArgs: jsonb("tool_call_args"),
+	toolCallResult: jsonb("tool_call_result"),
+	createdAt: timestamp("created_at", { withTimezone: true })
+		.notNull()
+		.defaultNow(),
+});
+
 export type BlogRow = typeof blogs.$inferSelect;
 export type ProjectRow = typeof projects.$inferSelect;
 export type ResumeEntryRow = typeof resumeEntries.$inferSelect;
@@ -769,5 +828,8 @@ export type JobInterviewRow = typeof jobInterviews.$inferSelect;
 export type InquiryMessageRow = typeof inquiryMessages.$inferSelect;
 export type JobOutreachRow = typeof jobOutreaches.$inferSelect;
 export type JobOutreachMessageRow = typeof jobOutreachMessages.$inferSelect;
+export type AiKnowledgeItemRow = typeof aiKnowledgeItems.$inferSelect;
+export type AiChatSessionRow = typeof aiChatSessions.$inferSelect;
+export type AiChatMessageRow = typeof aiChatMessages.$inferSelect;
 
 
