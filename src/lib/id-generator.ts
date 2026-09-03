@@ -2,12 +2,12 @@ export type EntityIdPrefix = "outreach" | "contact" | "service" | "hire";
 
 /**
  * Generates a timestamp-based human-friendly ID in Asia/Jakarta (WIB) timezone.
- * Format: <prefix>-<YYMMDDHHMM>-<3char random>
+ * Format: <prefix>-<YYMMDDHHMM>-<5char alphabetical random>
  * Example:
- *  - outreach-2608312230-zfo
- *  - contact-2608312230-abc
- *  - service-2608312230-def
- *  - hire-2608312230-ghi
+ *  - outreach-2608312230-zfoxq
+ *  - contact-2608312230-abcde
+ *  - service-2608312230-defgh
+ *  - hire-2608312230-ghijk
  */
 export function generateEntityId(prefix?: EntityIdPrefix | string): string {
   const now = new Date();
@@ -30,11 +30,12 @@ export function generateEntityId(prefix?: EntityIdPrefix | string): string {
   const hh = getPart("hour");
   const min = getPart("minute");
 
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  // Pure alphabetical characters (a-z) with 5-character length
+  const chars = "abcdefghijklmnopqrstuvwxyz";
   let randomPart = "";
-  const randomValues = new Uint8Array(3);
+  const randomValues = new Uint8Array(5);
   crypto.getRandomValues(randomValues);
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 5; i++) {
     randomPart += chars[randomValues[i] % chars.length];
   }
 
