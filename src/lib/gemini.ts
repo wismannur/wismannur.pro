@@ -63,11 +63,13 @@ export function getGeminiClient(): GoogleGenAI {
     return cachedClient;
   }
 
+  const credentials = loadServiceAccountCredentials();
   const useVertex =
-    process.env.USE_VERTEX_AI === "true" || process.env.NEXT_PUBLIC_USE_VERTEX_AI === "true";
+    process.env.USE_VERTEX_AI === "true" ||
+    process.env.NEXT_PUBLIC_USE_VERTEX_AI === "true" ||
+    (credentials !== null && process.env.USE_VERTEX_AI !== "false");
 
   if (useVertex) {
-    const credentials = loadServiceAccountCredentials();
     const projectId =
       process.env.GOOGLE_CLOUD_PROJECT ||
       process.env.GCP_PROJECT_ID ||
