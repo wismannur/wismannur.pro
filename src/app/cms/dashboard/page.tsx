@@ -1,10 +1,36 @@
 "use client";
 
+import React from "react";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  BarChart3,
+  BookOpen,
+  Briefcase,
+  Building2,
+  CheckCircle2,
+  Eye,
+  FolderPlus,
+  Heart,
+  Inbox,
+  Info,
+  Layers,
+  MessageSquare,
+  PenLine,
+  Plus,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/auth-context";
 import { formatDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { dashboardService } from "@/services";
 import type {
   DashboardAlert,
@@ -12,23 +38,6 @@ import type {
   InboxEntry,
   TopContentEntry,
 } from "@/services/dashboard/types";
-import { useQuery } from "@tanstack/react-query";
-import {
-  AlertTriangle,
-  ArrowUpRight,
-  Briefcase,
-  Building2,
-  Eye,
-  FileText,
-  Folder,
-  Heart,
-  Inbox,
-  Info,
-  MessageSquare,
-  PenLine,
-  TrendingUp,
-} from "lucide-react";
-import Link from "next/link";
 
 const timeAgo = (date: Date) => {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
@@ -54,68 +63,134 @@ const Dashboard = () => {
   const counts = data?.counts;
 
   return (
-    <div className="space-y-8">
-      {/* Header with welcome message */}
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user?.displayName || "User"}
-        </h1>
-        <p className="text-muted-foreground">
-          Here's an overview of your content and recent activity.
-        </p>
+    <div className="space-y-8 animate-fade-in pb-12">
+      {/* Welcome & Command Banner */}
+      <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0C0E18] via-[#090A10] to-[#08090C] p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        {/* Glow orb */}
+        <div className="absolute top-0 right-0 w-[450px] h-[250px] bg-primary/10 rounded-full blur-[100px] pointer-events-none -z-0" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
+                <Sparkles size={12} className="animate-pulse" />
+                <span>WORKSPACE COMMAND CENTER</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                <span>Neon Cloud Active</span>
+              </span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+              Welcome back,{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-primary">
+                {user?.displayName || "Wisman"}
+              </span>
+            </h1>
+
+            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
+              Real-time monitoring of content pipelines, incoming recruiter outreach, service
+              inquiries, and live production telemetry.
+            </p>
+          </div>
+
+          {/* Quick Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <Button
+              asChild
+              size="sm"
+              className="rounded-full gap-1.5 px-4 h-9 bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              <Link href="/cms/blogs/form">
+                <Plus size={14} />
+                <span>New Post</span>
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5 px-4 h-9 border-white/[0.12] bg-white/[0.04] text-white hover:bg-white/[0.08] hover:border-primary/40 transition-all"
+            >
+              <Link href="/cms/projects/form">
+                <FolderPlus size={14} className="text-primary" />
+                <span>New Project</span>
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="rounded-full gap-1.5 px-4 h-9 border-white/[0.12] bg-white/[0.04] text-gray-300 hover:text-white hover:bg-white/[0.08] transition-all"
+            >
+              <Link href="/" target="_blank">
+                <ArrowUpRight size={14} />
+                <span>Live Site</span>
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+      {/* KPI Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <StatsCard
-          title="Blog Posts"
+          title="Articles & Posts"
           value={counts?.blogs.total ?? 0}
-          description={`${counts?.blogs.published ?? 0} published`}
-          icon={<FileText className="h-4 w-4" />}
+          subtitle={`${counts?.blogs.published ?? 0} live`}
+          icon={<BookOpen className="h-4 w-4 text-indigo-400" />}
           linkTo="/cms/blogs"
           loading={isLoading}
+          accentColor="indigo"
         />
 
         <StatsCard
-          title="Projects"
+          title="Case Studies"
           value={counts?.projects.total ?? 0}
-          description={`${counts?.projects.published ?? 0} published`}
-          icon={<Folder className="h-4 w-4" />}
+          subtitle={`${counts?.projects.published ?? 0} live`}
+          icon={<Layers className="h-4 w-4 text-purple-400" />}
           linkTo="/cms/projects"
           loading={isLoading}
+          accentColor="purple"
         />
 
         <StatsCard
-          title="Contacts"
+          title="Inbound Messages"
           value={counts?.contacts.total ?? 0}
-          description={`${counts?.contacts.unread ?? 0} new messages`}
-          icon={<MessageSquare className="h-4 w-4" />}
+          subtitle={`${counts?.contacts.unread ?? 0} unread`}
+          icon={<MessageSquare className="h-4 w-4 text-sky-400" />}
           linkTo="/cms/contacts"
           loading={isLoading}
           highlight={(counts?.contacts.unread ?? 0) > 0}
+          accentColor="sky"
         />
 
         <StatsCard
-          title="Service Requests"
+          title="Client Inquiries"
           value={counts?.serviceRequests.total ?? 0}
-          description={`${counts?.serviceRequests.pending ?? 0} pending`}
-          icon={<Briefcase className="h-4 w-4" />}
+          subtitle={`${counts?.serviceRequests.pending ?? 0} pending`}
+          icon={<Briefcase className="h-4 w-4 text-emerald-400" />}
           linkTo="/cms/services"
           loading={isLoading}
           highlight={(counts?.serviceRequests.pending ?? 0) > 0}
+          accentColor="emerald"
         />
 
         <StatsCard
-          title="Total Views"
+          title="Total Impressions"
           value={counts?.totalViews ?? 0}
-          description="Across blogs and projects"
-          icon={<Eye className="h-4 w-4" />}
+          subtitle="Total reader views"
+          icon={<BarChart3 className="h-4 w-4 text-rose-400" />}
           linkTo="/cms/blogs"
           loading={isLoading}
+          accentColor="rose"
         />
       </div>
 
-      {/* Content-freshness alerts */}
+      {/* Alerts & Operational Notices */}
       {!isLoading && (data?.alerts.length ?? 0) > 0 && (
         <div className="space-y-2">
           {data!.alerts.map((alert) => (
@@ -124,21 +199,38 @@ const Dashboard = () => {
         </div>
       )}
 
+      {/* 2-Column Activity Hub */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Inbox — latest contact messages and service requests */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Inbox</span>
-              <Inbox className="h-5 w-5 text-muted-foreground" />
-            </CardTitle>
-            <CardDescription>Latest contact messages and service requests</CardDescription>
+        {/* Inbox Stream */}
+        <Card className="border border-white/[0.08] bg-[#0C0E18]/85 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader className="border-b border-white/[0.06] p-5 sm:p-6 flex flex-row items-center justify-between space-y-0">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                  <Inbox className="h-4 w-4" />
+                </div>
+                <CardTitle className="text-base font-bold text-white">
+                  Inbound Streams & Leads
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs text-gray-400 mt-1">
+                Latest client messages, hire inquiries, and service requests
+              </CardDescription>
+            </div>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="rounded-full text-xs text-primary hover:text-white hover:bg-primary/10 h-8 px-3"
+            >
+              <Link href="/cms/contacts">View All</Link>
+            </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 sm:p-6">
             {isLoading ? (
               <ListSkeleton />
             ) : (data?.inbox.length ?? 0) === 0 ? (
-              <EmptyState message="No messages yet — new contacts and service requests land here." />
+              <EmptyState message="No incoming messages yet — new inquiries will appear here automatically." />
             ) : (
               <div className="space-y-3">
                 {data!.inbox.map((entry) => (
@@ -149,20 +241,36 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Drafts — unpublished content waiting to ship */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Drafts</span>
-              <PenLine className="h-5 w-5 text-muted-foreground" />
-            </CardTitle>
-            <CardDescription>Unpublished blog posts and projects</CardDescription>
+        {/* Draft Pipeline */}
+        <Card className="border border-white/[0.08] bg-[#0C0E18]/85 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden">
+          <CardHeader className="border-b border-white/[0.06] p-5 sm:p-6 flex flex-row items-center justify-between space-y-0">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  <PenLine className="h-4 w-4" />
+                </div>
+                <CardTitle className="text-base font-bold text-white">
+                  Draft Content Pipeline
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs text-gray-400 mt-1">
+                Unpublished articles and engineering case studies
+              </CardDescription>
+            </div>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="rounded-full text-xs text-purple-400 hover:text-white hover:bg-purple-500/10 h-8 px-3"
+            >
+              <Link href="/cms/blogs">View Content</Link>
+            </Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 sm:p-6">
             {isLoading ? (
               <ListSkeleton />
             ) : (data?.drafts.length ?? 0) === 0 ? (
-              <EmptyState message="No drafts — everything you've written is published." />
+              <EmptyState message="All drafts are published! Every article and project is live." />
             ) : (
               <div className="space-y-3">
                 {data!.drafts.map((draft) => (
@@ -174,22 +282,39 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Top content by views */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Top Content</span>
-            <TrendingUp className="h-5 w-5 text-muted-foreground" />
-          </CardTitle>
-          <CardDescription>Your most viewed published posts and projects</CardDescription>
+      {/* Top Performing Content Matrix */}
+      <Card className="border border-white/[0.08] bg-[#0C0E18]/85 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden">
+        <CardHeader className="border-b border-white/[0.06] p-5 sm:p-6 flex flex-row items-center justify-between space-y-0">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-xl bg-primary/10 text-primary border border-primary/20">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base font-bold text-white">
+                Top Performing Content
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs text-gray-400 mt-1">
+              Most visited case studies and technical articles ranked by reader engagement
+            </CardDescription>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
+            <span className="inline-flex items-center gap-1">
+              <Eye size={13} className="text-primary" /> Impressions
+            </span>
+            <span className="text-gray-600">•</span>
+            <span className="inline-flex items-center gap-1">
+              <Heart size={13} className="text-rose-400" /> Reactions
+            </span>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5 sm:p-6">
           {isLoading ? (
             <ListSkeleton />
           ) : (data?.topContent.length ?? 0) === 0 ? (
-            <EmptyState message="No published content yet." />
+            <EmptyState message="No published content data available yet." />
           ) : (
-            <div className="space-y-2">
+            <div className="divide-y divide-white/[0.04]">
               {data!.topContent.map((item, index) => (
                 <TopContentRow key={`${item.kind}-${item.id}`} item={item} rank={index + 1} />
               ))}
@@ -201,73 +326,84 @@ const Dashboard = () => {
   );
 };
 
-// Stats Card component
+// Stats Card Primitive
 interface StatsCardProps {
   title: string;
   value: number;
-  description: string;
+  subtitle: string;
   icon: React.ReactNode;
   linkTo: string;
   loading?: boolean;
   highlight?: boolean;
+  accentColor?: "indigo" | "purple" | "sky" | "emerald" | "rose";
 }
 
 function StatsCard({
   title,
   value,
-  description,
+  subtitle,
   icon,
   linkTo,
   loading = false,
   highlight = false,
 }: StatsCardProps) {
   return (
-    <Card
-      className={`transition-all hover:shadow-md ${
-        highlight ? "border-primary/20 bg-primary/5 dark:bg-primary/10" : ""
-      }`}
-    >
-      <Link href={linkTo}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
-          <div className="opacity-70">{icon}</div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <>
-              <Skeleton className="h-7 w-1/2 mb-1" />
-              <Skeleton className="h-4 w-2/3" />
-            </>
-          ) : (
-            <>
-              <div className="text-2xl font-bold">{value.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground mt-1">{description}</p>
-            </>
-          )}
-        </CardContent>
-      </Link>
-    </Card>
+    <Link href={linkTo} className="group block">
+      <Card
+        className={cn(
+          "relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl p-5 transition-all duration-300 hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/40",
+          highlight && "border-primary/30 bg-primary/[0.03]"
+        )}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-medium text-gray-400 group-hover:text-gray-200 transition-colors">
+            {title}
+          </span>
+          <div className="p-2 rounded-xl bg-white/[0.04] border border-white/[0.06] group-hover:scale-110 group-hover:border-primary/30 transition-all">
+            {icon}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="space-y-1.5">
+            <Skeleton className="h-7 w-16 bg-white/[0.06]" />
+            <Skeleton className="h-3 w-24 bg-white/[0.04]" />
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white group-hover:text-primary transition-colors font-mono">
+              {value.toLocaleString()}
+            </div>
+            <p className="text-[11px] text-gray-400 font-medium">{subtitle}</p>
+          </div>
+        )}
+
+        {/* Glow underline on hover */}
+        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      </Card>
+    </Link>
   );
 }
 
 function AlertRow({ alert }: { alert: DashboardAlert }) {
   const isWarning = alert.severity === "warning";
   return (
-    <Link href={alert.href} className="block">
+    <Link href={alert.href} className="block group">
       <div
-        className={`flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent/50 ${
+        className={cn(
+          "flex items-center gap-3 rounded-2xl border p-3.5 transition-all duration-200",
           isWarning
-            ? "border-amber-300/60 bg-amber-50 dark:border-amber-800/60 dark:bg-amber-950/20"
-            : "border-border/80 bg-muted/30"
-        }`}
+            ? "border-amber-500/30 bg-amber-500/[0.05] hover:bg-amber-500/[0.08] text-amber-200"
+            : "border-primary/30 bg-primary/[0.05] hover:bg-primary/[0.08] text-gray-200"
+        )}
       >
         {isWarning ? (
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
         ) : (
-          <Info className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <Info className="h-4 w-4 shrink-0 text-primary" />
         )}
-        <span className="text-sm flex-1">{alert.message}</span>
-        <ArrowUpRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        <span className="text-xs sm:text-sm font-medium flex-1">{alert.message}</span>
+        <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-white transition-colors shrink-0" />
       </div>
     </Link>
   );
@@ -279,32 +415,42 @@ function InboxRow({ entry }: { entry: InboxEntry }) {
   const href = isContact ? "/cms/contacts" : isHire ? "/cms/hire-requests" : "/cms/services";
 
   const icon = isContact ? (
-    <MessageSquare className="h-4 w-4" />
+    <MessageSquare className="h-3.5 w-3.5 text-sky-400" />
   ) : isHire ? (
-    <Building2 className="h-4 w-4" />
+    <Building2 className="h-3.5 w-3.5 text-emerald-400" />
   ) : (
-    <Briefcase className="h-4 w-4" />
+    <Briefcase className="h-3.5 w-3.5 text-purple-400" />
   );
 
-  const iconClass = isContact
-    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+  const containerBg = isContact
+    ? "bg-sky-500/10 border-sky-500/20"
     : isHire
-      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-      : "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
+      ? "bg-emerald-500/10 border-emerald-500/20"
+      : "bg-purple-500/10 border-purple-500/20";
 
   return (
-    <Link href={href} className="block">
-      <div className="flex items-center gap-3 border rounded-lg p-3 hover:bg-accent/50 transition-colors">
-        <div className={`p-2 rounded-full shrink-0 ${iconClass}`}>{icon}</div>
+    <Link href={href} className="block group">
+      <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3.5 hover:bg-white/[0.05] hover:border-white/[0.12] transition-all">
+        <div className={cn("p-2 rounded-xl border shrink-0", containerBg)}>{icon}</div>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{entry.name}</p>
-          <p className="text-xs text-muted-foreground truncate">{entry.subject}</p>
+          <p className="font-semibold text-xs sm:text-sm text-white group-hover:text-primary transition-colors truncate">
+            {entry.name}
+          </p>
+          <p className="text-[11px] text-gray-400 truncate mt-0.5">{entry.subject}</p>
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
-          <Badge variant={entry.status === "new" ? "default" : "secondary"} className="text-xs">
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <Badge
+            variant="outline"
+            className={cn(
+              "text-[10px] px-2 py-0.5 rounded-full font-semibold capitalize",
+              entry.status === "new" || entry.status === "pending"
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                : "bg-white/[0.04] text-gray-400 border-white/[0.08]"
+            )}
+          >
             {entry.status}
           </Badge>
-          <span className="text-xs text-muted-foreground">{timeAgo(entry.createdAt)}</span>
+          <span className="text-[10px] font-mono text-gray-400">{timeAgo(entry.createdAt)}</span>
         </div>
       </div>
     </Link>
@@ -315,22 +461,26 @@ function DraftRow({ draft }: { draft: DraftEntry }) {
   const editHref =
     draft.kind === "blog" ? `/cms/blogs/form/${draft.id}` : `/cms/projects/form/${draft.id}`;
   return (
-    <Link href={editHref} className="block">
-      <div className="flex items-center gap-3 border rounded-lg p-3 hover:bg-accent/50 transition-colors">
-        <div className="p-2 rounded-full bg-muted shrink-0 text-muted-foreground">
+    <Link href={editHref} className="block group">
+      <div className="flex items-center gap-3.5 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3.5 hover:bg-white/[0.05] hover:border-white/[0.12] transition-all">
+        <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 shrink-0 text-purple-400">
           {draft.kind === "blog" ? (
-            <FileText className="h-4 w-4" />
+            <BookOpen className="h-3.5 w-3.5" />
           ) : (
-            <Folder className="h-4 w-4" />
+            <Layers className="h-3.5 w-3.5" />
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{draft.title}</p>
-          <p className="text-xs text-muted-foreground">
-            {draft.kind === "blog" ? "Blog post" : "Project"} · edited {timeAgo(draft.updatedAt)}
+          <p className="font-semibold text-xs sm:text-sm text-white group-hover:text-purple-400 transition-colors truncate">
+            {draft.title}
+          </p>
+          <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1.5">
+            <span className="capitalize">{draft.kind === "blog" ? "Article" : "Case Study"}</span>
+            <span className="text-gray-600">•</span>
+            <span className="font-mono text-[10px]">Edited {timeAgo(draft.updatedAt)}</span>
           </p>
         </div>
-        <ArrowUpRight className="h-4 w-4 text-muted-foreground shrink-0" />
+        <ArrowUpRight className="h-4 w-4 text-gray-400 group-hover:text-purple-400 transition-colors shrink-0" />
       </div>
     </Link>
   );
@@ -339,26 +489,40 @@ function DraftRow({ draft }: { draft: DraftEntry }) {
 function TopContentRow({ item, rank }: { item: TopContentEntry; rank: number }) {
   const publicHref = item.kind === "blog" ? `/blog/${item.slug}` : `/projects/${item.slug}`;
   return (
-    <Link href={publicHref} target="_blank" className="block">
-      <div className="flex items-center gap-3 rounded-lg p-2.5 hover:bg-accent/50 transition-colors">
-        <span className="w-6 text-center text-sm font-semibold text-muted-foreground shrink-0">
+    <Link href={publicHref} target="_blank" className="block group">
+      <div className="flex items-center gap-3.5 py-3 hover:bg-white/[0.02] px-2 rounded-xl transition-colors">
+        <span
+          className={cn(
+            "w-6 h-6 flex items-center justify-center rounded-lg text-xs font-black shrink-0 font-mono",
+            rank === 1
+              ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+              : rank === 2
+                ? "bg-gray-400/15 text-gray-300 border border-gray-400/30"
+                : rank === 3
+                  ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
+                  : "text-gray-400 bg-white/[0.03]"
+          )}
+        >
           {rank}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-medium text-sm truncate">{item.title}</p>
-          <p className="text-xs text-muted-foreground">
-            {item.kind === "blog" ? "Blog post" : "Project"}
+          <p className="font-semibold text-xs sm:text-sm text-white group-hover:text-primary transition-colors truncate">
+            {item.title}
+          </p>
+          <p className="text-[10px] text-gray-400 capitalize mt-0.5">
+            {item.kind === "blog" ? "Technical Article" : "Case Study"}
           </p>
         </div>
-        <div className="flex items-center gap-4 text-sm text-muted-foreground shrink-0">
-          <span className="flex items-center gap-1">
-            <Eye className="h-3.5 w-3.5" />
-            {item.views.toLocaleString()}
+        <div className="flex items-center gap-4 text-xs text-gray-300 font-mono shrink-0">
+          <span className="flex items-center gap-1.5">
+            <Eye className="h-3.5 w-3.5 text-primary" />
+            <span>{item.views.toLocaleString()}</span>
           </span>
-          <span className="flex items-center gap-1">
-            <Heart className="h-3.5 w-3.5" />
-            {item.likes.toLocaleString()}
+          <span className="flex items-center gap-1.5">
+            <Heart className="h-3.5 w-3.5 text-rose-400" />
+            <span>{item.likes.toLocaleString()}</span>
           </span>
+          <ArrowUpRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-white transition-colors" />
         </div>
       </div>
     </Link>
@@ -368,15 +532,20 @@ function TopContentRow({ item, rank }: { item: TopContentEntry; rank: number }) 
 function ListSkeleton() {
   return (
     <div className="space-y-3">
-      <Skeleton className="h-16 w-full rounded-lg" />
-      <Skeleton className="h-16 w-full rounded-lg" />
-      <Skeleton className="h-16 w-full rounded-lg" />
+      <Skeleton className="h-16 w-full rounded-2xl bg-white/[0.04]" />
+      <Skeleton className="h-16 w-full rounded-2xl bg-white/[0.04]" />
+      <Skeleton className="h-16 w-full rounded-2xl bg-white/[0.04]" />
     </div>
   );
 }
 
 function EmptyState({ message }: { message: string }) {
-  return <p className="text-sm text-muted-foreground py-6 text-center">{message}</p>;
+  return (
+    <div className="py-8 text-center space-y-2">
+      <CheckCircle2 className="h-7 w-7 text-gray-400 mx-auto" />
+      <p className="text-xs text-gray-400 max-w-xs mx-auto">{message}</p>
+    </div>
+  );
 }
 
 export default Dashboard;
