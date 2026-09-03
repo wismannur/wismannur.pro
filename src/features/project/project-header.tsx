@@ -1,24 +1,24 @@
-import clsx from "clsx";
-import { Briefcase } from "lucide-react";
+import React from "react";
+import { SectionHeader } from "@/components/ui/section-header";
 
 type ProjectHeaderProps = {
-	eyebrow?: string;
-	title?: string;
-	description?: string;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
 };
 
 const ProjectHeader = ({ eyebrow, title, description }: ProjectHeaderProps) => {
-	return (
-		<div className="text-center mb-16 space-y-4">
-			<div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-medium">
-				<Briefcase size={16} />
-				{eyebrow}
-			</div>
-			<h1 className="text-4xl md:text-5xl font-bold">{title}</h1>
-			<p className="text-muted-foreground text-lg max-w-2xl mx-auto">{description}</p>
-			<div className={clsx("h-1 w-16 bg-primary/80 rounded-full mx-auto")} />
-		</div>
-	);
+  return (
+    <SectionHeader
+      subtitle={eyebrow || "FEATURED WORK • PRODUCTION CASE STUDIES"}
+      title={title || "Architectural **Case Studies** & Production Platforms."}
+      description={
+        description ||
+        "A curated collection of scalable web applications, autonomous AI agent workflows, and open-source infrastructure built for performance and maintainability."
+      }
+      className="text-center mb-12 md:mb-16"
+    />
+  );
 };
 
 export default ProjectHeader;
