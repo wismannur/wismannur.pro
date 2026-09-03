@@ -98,10 +98,10 @@ export function RecruiterFastTrack({ settings }: RecruiterFastTrackProps) {
                   <div className="p-3.5 rounded-2xl bg-background/50 border border-border/40">
                     <div className="flex items-center gap-2 text-xs font-semibold text-foreground mb-1">
                       <GraduationCap size={14} className="text-emerald-400" />
-                      <span>AI & Mobile Specialties</span>
+                      <span>AI & Cloud Architecture</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Gemini API Agents, MCP Protocol, Flutter / Dart
+                      Gemini 3.7 Agents, MCP Protocols, Cloud Run & Edge
                     </p>
                   </div>
                 </div>

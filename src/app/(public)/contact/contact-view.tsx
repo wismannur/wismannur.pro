@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
+import { SubmissionSuccessModal } from "@/components/common/submission-success-modal";
 import { getReCaptchaToken } from "@/services/recaptcha";
 import { contactService, type ContactForm } from "@/services";
 import type { ContactCopy } from "@/services/page-copy/types";
@@ -66,6 +67,11 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
   const [hasCopiedEmail, setHasCopiedEmail] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [submittedData, setSubmittedData] = useState<z.infer<typeof contactFormSchema> | null>(
+    null
+  );
 
   const email = settings.publicEmail || "wismannur@gmail.com";
   const locationText = settings.location
@@ -85,11 +91,9 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
   const mutation = useMutation({
     mutationFn: ({ formData, token }: { formData: ContactForm; token: string }) =>
       contactService.submit(formData, token),
-    onSuccess: () => {
-      toast({
-        title: "Message delivered successfully!",
-        description: "Thank you for reaching out. I'll get back to you shortly.",
-      });
+    onSuccess: (id: string) => {
+      setSubmissionId(id);
+      setSuccessModalOpen(true);
       trackEvent("contact-form-submit-success", { subject: form.getValues().subject });
       form.reset();
       setSelectedTopic("");
@@ -111,6 +115,7 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
   const onSubmit = async (data: z.infer<typeof contactFormSchema>) => {
     setIsSubmitting(true);
     trackEvent("contact-form-submit-attempt", { subject: data.subject });
+    setSubmittedData(data);
     const token = await getReCaptchaToken();
     mutation.mutate({ formData: data as ContactForm, token });
   };
@@ -472,6 +477,18 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
           </div>
         </div>
       </section>
+
+      <SubmissionSuccessModal
+        isOpen={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        type="contact"
+        referenceId={submissionId || undefined}
+        data={{
+          name: submittedData?.name,
+          email: submittedData?.email,
+          subject: submittedData?.subject,
+        }}
+      />
     </div>
   );
 };

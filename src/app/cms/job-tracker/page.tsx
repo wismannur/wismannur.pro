@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Briefcase,
   Filter,
+  Globe2,
   Kanban,
   List,
   RefreshCw,
@@ -44,9 +45,11 @@ import { KanbanBoard } from "./components/kanban-board";
 import { ApplicationTable } from "./components/application-table";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { SmartJobImporterDialog } from "./components/smart-job-importer-dialog";
+import { WeeklyGoalTracker } from "./components/weekly-goal-tracker";
+import { JobDiscoveryFeed } from "./components/job-discovery-feed";
 
 export default function JobTrackerPage() {
-  const [viewMode, setViewMode] = useState<"kanban" | "table" | "analytics">("kanban");
+  const [viewMode, setViewMode] = useState<"kanban" | "table" | "analytics" | "discovery">("kanban");
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -154,14 +157,20 @@ export default function JobTrackerPage() {
         </div>
       </div>
 
+      {/* Weekly Goal & Motivation Gamification Tracker */}
+      <WeeklyGoalTracker
+        applications={applications}
+        onAddJobClick={() => setIsImporterOpen(true)}
+      />
+
       {/* Top Controls & View Tabs */}
       <div className="flex flex-col sm:flex-row justify-between gap-4 items-stretch sm:items-center">
         <Tabs
           value={viewMode}
-          onValueChange={(v) => setViewMode(v as "kanban" | "table" | "analytics")}
+          onValueChange={(v) => setViewMode(v as "kanban" | "table" | "analytics" | "discovery")}
           className="w-full sm:w-auto"
         >
-          <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto">
             <TabsTrigger value="kanban" className="flex items-center gap-1.5 text-xs">
               <Kanban className="w-3.5 h-3.5" />
               Kanban Board
@@ -174,10 +183,14 @@ export default function JobTrackerPage() {
               <TrendingUp className="w-3.5 h-3.5" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="discovery" className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+              <Globe2 className="w-3.5 h-3.5" />
+              Explore Global Jobs
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        {viewMode !== "analytics" && (
+        {viewMode !== "analytics" && viewMode !== "discovery" && (
           <div className="flex flex-wrap sm:flex-nowrap gap-2.5 items-center">
             <div className="relative w-full sm:w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -288,6 +301,10 @@ export default function JobTrackerPage() {
 
       {viewMode === "analytics" && (
         <AnalyticsDashboard analytics={analytics} applications={applications} />
+      )}
+
+      {viewMode === "discovery" && (
+        <JobDiscoveryFeed onJobImported={handleRefresh} />
       )}
 
       {/* Smart Job Importer Dialog */}

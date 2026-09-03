@@ -10,7 +10,11 @@ import {
   BookOpen,
   Briefcase,
   Building2,
+  Calendar,
   CheckCircle2,
+  ChevronRight,
+  Clock,
+  ExternalLink,
   Eye,
   FolderPlus,
   Heart,
@@ -22,6 +26,8 @@ import {
   Plus,
   Sparkles,
   TrendingUp,
+  Users,
+  Video,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +43,7 @@ import type {
   DraftEntry,
   InboxEntry,
   TopContentEntry,
+  UpcomingInterviewEntry,
 } from "@/services/dashboard/types";
 
 const timeAgo = (date: Date) => {
@@ -198,6 +205,59 @@ const Dashboard = () => {
           ))}
         </div>
       )}
+
+      {/* Upcoming Job Interviews & Career Hub Widget */}
+      <Card className="border border-white/[0.08] bg-[#0C0E18]/85 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden">
+        <CardHeader className="border-b border-white/[0.06] p-5 sm:p-6 flex flex-row items-center justify-between space-y-0">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <Calendar className="h-4 w-4" />
+              </div>
+              <CardTitle className="text-base font-bold text-white">
+                Upcoming Interviews & Career Copilot
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs text-gray-400 mt-1">
+              Scheduled hiring rounds, meeting links, and AI interview prep simulators
+            </CardDescription>
+          </div>
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="rounded-full text-xs text-purple-400 hover:text-white hover:bg-purple-500/10 h-8 px-3"
+          >
+            <Link href="/cms/job-tracker">Open Job Tracker</Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="p-5 sm:p-6">
+          {isLoading ? (
+            <ListSkeleton />
+          ) : (data?.upcomingInterviews.length ?? 0) === 0 ? (
+            <div className="py-6 text-center space-y-3">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <Calendar className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-gray-300">No Upcoming Interviews Scheduled</p>
+                <p className="text-[11px] text-gray-500 max-w-sm mx-auto">
+                  Paste recruiter emails in Job Tracker to auto-schedule rounds and unlock AI question simulators.
+                </p>
+              </div>
+              <Button asChild size="sm" variant="outline" className="text-xs h-7 rounded-full border-white/10 bg-white/[0.03] text-gray-300 hover:text-white">
+                <Link href="/cms/job-tracker">View Applications Pipeline</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {data!.upcomingInterviews.map((interview) => (
+                <InterviewDashboardCard key={interview.id} interview={interview} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* 2-Column Activity Hub */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -544,6 +604,103 @@ function EmptyState({ message }: { message: string }) {
     <div className="py-8 text-center space-y-2">
       <CheckCircle2 className="h-7 w-7 text-gray-400 mx-auto" />
       <p className="text-xs text-gray-400 max-w-xs mx-auto">{message}</p>
+    </div>
+  );
+}
+
+function getStageBadge(stageType: string) {
+  switch (stageType) {
+    case "hr_screening":
+      return { label: "HR Screening", className: "bg-blue-500/15 text-blue-400 border-blue-500/30" };
+    case "technical_interview":
+    case "live_coding":
+    case "system_design":
+    case "take_home_test":
+      return { label: "Tech Interview", className: "bg-purple-500/15 text-purple-400 border-purple-500/30" };
+    case "user_interview":
+    case "final_leadership":
+      return { label: "Final Round", className: "bg-amber-500/15 text-amber-400 border-amber-500/30" };
+    case "offering_discussion":
+      return { label: "Offering Discussion", className: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" };
+    default:
+      return { label: "Interview", className: "bg-slate-500/15 text-slate-400 border-slate-500/30" };
+  }
+}
+
+function InterviewDashboardCard({ interview }: { interview: UpcomingInterviewEntry }) {
+  const dateObj = new Date(interview.scheduledAt);
+  const now = new Date();
+  const isToday = dateObj.toDateString() === now.toDateString();
+  const isTomorrow =
+    new Date(now.getTime() + 24 * 60 * 60 * 1000).toDateString() === dateObj.toDateString();
+  const timeStr = dateObj.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+
+  const stageCfg = getStageBadge(interview.stageType);
+
+  return (
+    <div className="p-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.04] transition-all flex flex-col justify-between space-y-3">
+      <div className="space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <Badge
+            variant="outline"
+            className={cn("text-[10px] font-semibold border", stageCfg.className)}
+          >
+            {stageCfg.label}
+          </Badge>
+
+          <span className="text-[11px] font-medium text-purple-400 flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {isToday
+              ? `Today at ${timeStr}`
+              : isTomorrow
+                ? `Tomorrow at ${timeStr}`
+                : `${dateObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} • ${timeStr}`}
+          </span>
+        </div>
+
+        <div>
+          <h4 className="text-sm font-bold text-white line-clamp-1">{interview.title}</h4>
+          <p className="text-xs text-gray-400 flex items-center gap-1.5 mt-0.5">
+            <span className="font-semibold text-gray-300">{interview.companyName}</span>
+            <span>•</span>
+            <span className="truncate">{interview.jobTitle}</span>
+          </p>
+        </div>
+
+        {interview.interviewers && (
+          <p className="text-[11px] text-gray-500 flex items-center gap-1">
+            <Users className="w-3 h-3 text-gray-400" />
+            <span>{interview.interviewers}</span>
+          </p>
+        )}
+      </div>
+
+      <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between gap-2">
+        {interview.meetingLink ? (
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs rounded-full gap-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+          >
+            <a href={interview.meetingLink} target="_blank" rel="noopener noreferrer">
+              <Video className="w-3 h-3" /> Join Meet
+            </a>
+          </Button>
+        ) : (
+          <span className="text-[11px] text-gray-500 italic">No link specified</span>
+        )}
+
+        <Button
+          asChild
+          size="sm"
+          className="h-7 text-xs rounded-full gap-1 bg-primary text-white hover:bg-primary/90"
+        >
+          <Link href={`/cms/job-tracker/${interview.applicationId}?tab=interview`}>
+            <Sparkles className="w-3 h-3" /> Prep Copilot
+          </Link>
+        </Button>
+      </div>
     </div>
   );
 }
