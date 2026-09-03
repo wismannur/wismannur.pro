@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { MessageSquare, Plus, SendHorizontal } from "lucide-react";
+import { MessageSquare, Plus, SendHorizontal, Sparkles, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { cn, formatDate } from "@/lib/utils";
 import type { JobOutreach } from "@/services/job-outreaches/types";
 import type { JobApplication } from "@/services/job-tracker/types";
+import { QuickFollowUpDialog } from "./quick-follow-up-dialog";
 
 interface TabOutreachThreadProps {
   application: JobApplication;
@@ -16,27 +18,42 @@ interface TabOutreachThreadProps {
 }
 
 export function TabOutreachThread({ application, linkedOutreaches }: TabOutreachThreadProps) {
-  return (
-    <Card className="border-border/80 shadow-sm">
-      <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-border/50 bg-muted/20">
-        <div>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <SendHorizontal className="w-5 h-5 text-sky-500" />
-            Outreach & Cold Email Communications
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Lacak direct applications, cold pitches, dan percakapan balasan dari recruiter untuk{" "}
-            <strong>{application.companyName}</strong> via{" "}
-            <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
-          </CardDescription>
-        </div>
+  const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
 
-        <Button asChild size="sm" className="gap-2 font-medium">
-          <Link href={`/cms/job-outreaches/new?jobAppId=${application.id}`}>
-            <Plus className="w-4 h-4" /> New Email Outreach
-          </Link>
-        </Button>
-      </CardHeader>
+  return (
+    <>
+      <Card className="border-border/80 shadow-sm">
+        <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-border/50 bg-muted/20">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <SendHorizontal className="w-5 h-5 text-sky-500" />
+              Outreach & Cold Email Communications
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Lacak direct applications, cold pitches, dan percakapan balasan dari recruiter untuk{" "}
+              <strong>{application.companyName}</strong> via{" "}
+              <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
+            </CardDescription>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFollowUpOpen(true)}
+              className="gap-1.5 text-xs font-semibold border-sky-500/30 text-sky-600 dark:text-sky-400 hover:bg-sky-500/10"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              1-Click Templates & AI Follow-Up
+            </Button>
+
+            <Button asChild size="sm" className="gap-2 font-medium text-xs">
+              <Link href={`/cms/job-outreaches/new?jobAppId=${application.id}`}>
+                <Plus className="w-4 h-4" /> New Email Outreach
+              </Link>
+            </Button>
+          </div>
+        </CardHeader>
 
       <CardContent className="p-6">
         {linkedOutreaches.length === 0 ? (
@@ -113,5 +130,13 @@ export function TabOutreachThread({ application, linkedOutreaches }: TabOutreach
         )}
       </CardContent>
     </Card>
+
+    <QuickFollowUpDialog
+      open={isFollowUpOpen}
+      onOpenChange={setIsFollowUpOpen}
+      application={application}
+      defaultScenario="thank_you"
+    />
+  </>
   );
 }

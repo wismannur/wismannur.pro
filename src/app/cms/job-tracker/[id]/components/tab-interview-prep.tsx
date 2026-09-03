@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  Bot,
   Calendar,
   CalendarPlus,
   Copy,
@@ -9,11 +10,14 @@ import {
   ExternalLink,
   HelpCircle,
   Loader2,
+  Play,
   Plus,
+  SendHorizontal,
   Sparkles,
   Trash2,
   Users,
   Video,
+  Zap,
 } from "lucide-react";
 import {
   Accordion,
@@ -53,13 +57,16 @@ import type {
   InterviewStatus,
   JobApplication,
   NewJobInterview,
+  JobInterview,
 } from "@/services/job-tracker/types";
+import { QuickFollowUpDialog } from "./quick-follow-up-dialog";
+import { MockInterviewDialog } from "./mock-interview-dialog";
 
 interface TabInterviewPrepProps {
   application: JobApplication;
   isGeneratingPrep: string | null;
   isParsingInvite: boolean;
-  onGeneratePrep: (interviewId: string) => Promise<void>;
+  onGeneratePrep: (interviewId: string) => Promise<void> | void;
   onParseInviteSubmit: (rawText: string) => Promise<void>;
   onCreateInterviewManual: (form: NewJobInterview) => Promise<void>;
   onUpdateInterviewStatus: (interviewId: string, status: InterviewStatus) => Promise<void>;
@@ -81,6 +88,8 @@ export function TabInterviewPrep({
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [rawInviteText, setRawInviteText] = useState("");
   const [isAddInterviewDialogOpen, setIsAddInterviewDialogOpen] = useState(false);
+  const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
+  const [activeMockInterview, setActiveMockInterview] = useState<JobInterview | null>(null);
 
   const [newInterviewForm, setNewInterviewForm] = useState<NewJobInterview>({
     applicationId: application.id,
@@ -116,6 +125,15 @@ export function TabInterviewPrep({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsFollowUpOpen(true)}
+            className="gap-1.5 text-xs border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            Thank You Note Draft
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -318,27 +336,38 @@ export function TabInterviewPrep({
                         Predicted Interview Questions & Answers
                       </h4>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onGeneratePrep(interview.id)}
-                        disabled={isGeneratingPrep === interview.id}
-                        className="text-xs gap-1.5 h-7"
-                      >
-                        {isGeneratingPrep === interview.id ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                            {interview.aiPredictedQuestions?.length
-                              ? "Regenerate Q&A"
-                              : "Generate Q&A"}
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => setActiveMockInterview(interview)}
+                          className="text-xs gap-1.5 h-7 bg-purple-600 hover:bg-purple-700 text-white shadow-sm font-semibold"
+                        >
+                          <Bot className="w-3.5 h-3.5" />
+                          Interactive AI Mock Simulator
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onGeneratePrep(interview.id)}
+                          disabled={isGeneratingPrep === interview.id}
+                          className="text-xs gap-1.5 h-7"
+                        >
+                          {isGeneratingPrep === interview.id ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              {interview.aiPredictedQuestions?.length
+                                ? "Regenerate Q&A"
+                                : "Generate Q&A"}
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
 
                     {interview.aiPredictedQuestions && interview.aiPredictedQuestions.length > 0 ? (
@@ -583,6 +612,24 @@ export function TabInterviewPrep({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <QuickFollowUpDialog
+        open={isFollowUpOpen}
+        onOpenChange={setIsFollowUpOpen}
+        application={application}
+        defaultScenario="thank_you"
+      />
+
+      {activeMockInterview && (
+        <MockInterviewDialog
+          open={Boolean(activeMockInterview)}
+          onOpenChange={(open) => {
+            if (!open) setActiveMockInterview(null);
+          }}
+          application={application}
+          interview={activeMockInterview}
+        />
+      )}
     </div>
   );
 }

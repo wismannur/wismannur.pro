@@ -60,6 +60,32 @@ export interface PredictedQuestion {
   sampleAnswer: string;
 }
 
+export interface MockInterviewAnswerEvaluation {
+  score: number; // 1 to 10
+  verdict: "excellent" | "good" | "needs_improvement" | "poor";
+  strengths: string[];
+  improvements: string[];
+  starBreakdown?: {
+    situation?: string;
+    task?: string;
+    action?: string;
+    result?: string;
+  };
+  refinedAnswer: string;
+  followUpQuestion?: string;
+}
+
+export interface RejectionDiagnosticResult {
+  rootCauseAnalysis: string;
+  skillGaps: string[];
+  remediationPlan: string[];
+  gracefulClosureEmail: {
+    subject: string;
+    body: string;
+  };
+  suggestedNextFocus: string;
+}
+
 export interface JobInterview {
   id: string;
   applicationId: string;
