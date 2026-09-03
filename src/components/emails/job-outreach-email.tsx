@@ -27,7 +27,7 @@ export const JobOutreachEmail = ({
   contactName,
   bodyMessage,
   subject: _subject,
-  senderTitle = "Frontend Software Engineer & AI Agent Architect",
+  senderTitle = "Senior Fullstack & Autonomous AI Systems Engineer",
   companyName: _companyName,
   jobTitle: _jobTitle,
   attachments = [],
@@ -41,25 +41,28 @@ export const JobOutreachEmail = ({
       <Preview>{previewSnippet}</Preview>
       <Body style={main}>
         <Container style={container}>
+          {/* Body Section */}
           <Section style={bodySection}>
             <Text style={greeting}>Hi {contactName || "Team"},</Text>
             <Text style={messageContent}>{bodyMessage}</Text>
           </Section>
 
+          {/* Attachments */}
           {attachments.length > 0 && (
             <Section style={attachmentSection}>
-              <Text style={attachmentHeading}>📎 Attachments:</Text>
+              <Text style={attachmentHeading}>📎 Attached Documents & Links:</Text>
               {attachments.map((att, idx) => (
                 <Text key={idx} style={attachmentItem}>
                   •{" "}
                   <Link href={att.url} style={linkStyle}>
-                    {att.name} (Download / View)
+                    {att.name}
                   </Link>
                 </Text>
               ))}
             </Section>
           )}
 
+          {/* Signature */}
           <Section style={signatureSection}>
             <Text style={signatureName}>Wisman Nur</Text>
             <Text style={signatureTitle}>{senderTitle}</Text>
@@ -80,6 +83,7 @@ export const JobOutreachEmail = ({
 
           <Hr style={divider} />
 
+          {/* Footer */}
           <Section style={footerSection}>
             <Text style={footerText}>
               Sent directly from Wisman Nur (
@@ -88,7 +92,7 @@ export const JobOutreachEmail = ({
               </Link>
               ). Feel free to reply directly to this email.
             </Text>
-            {refId && <Text style={refFooterText}>Ref: #{refId}</Text>}
+            {refId && <Text style={refFooterText}>Outreach Reference: {refId}</Text>}
           </Section>
         </Container>
       </Body>
@@ -99,15 +103,16 @@ export const JobOutreachEmail = ({
 export default JobOutreachEmail;
 
 const main: React.CSSProperties = {
-  backgroundColor: "#090d16",
+  backgroundColor: "#08090C",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
   padding: "36px 0",
 };
 
 const container: React.CSSProperties = {
-  backgroundColor: "#111827",
-  border: "1px solid #1f2937",
+  backgroundColor: "#0C0E18",
+  border: "1px solid #1E2235",
+  borderTop: "3px solid #6366F1",
   borderRadius: "16px",
   margin: "0 auto",
   padding: "32px",
@@ -115,46 +120,46 @@ const container: React.CSSProperties = {
 };
 
 const bodySection: React.CSSProperties = {
-  color: "#e5e7eb",
-  fontSize: "15px",
-  lineHeight: "1.65",
+  color: "#E2E8F0",
+  fontSize: "14.5px",
+  lineHeight: "1.7",
   marginBottom: "24px",
 };
 
 const greeting: React.CSSProperties = {
-  fontSize: "16px",
-  fontWeight: "600",
-  color: "#f3f4f6",
+  fontSize: "15.5px",
+  fontWeight: "700",
+  color: "#FFFFFF",
   margin: "0 0 16px",
 };
 
 const messageContent: React.CSSProperties = {
-  color: "#f3f4f6",
-  fontSize: "15px",
+  color: "#F8FAFC",
+  fontSize: "14.5px",
   lineHeight: "1.7",
   whiteSpace: "pre-wrap",
   margin: "0",
 };
 
 const attachmentSection: React.CSSProperties = {
-  backgroundColor: "#1f2937",
+  backgroundColor: "#131726",
   borderRadius: "10px",
   padding: "12px 16px",
   margin: "18px 0",
-  border: "1px solid #374151",
+  border: "1px solid #22283E",
 };
 
 const attachmentHeading: React.CSSProperties = {
-  color: "#e5e7eb",
-  fontSize: "13px",
-  fontWeight: "600",
+  color: "#FFFFFF",
+  fontSize: "12px",
+  fontWeight: "700",
   margin: "0 0 6px",
 };
 
 const attachmentItem: React.CSSProperties = {
   fontSize: "13px",
   margin: "3px 0",
-  color: "#9ca3af",
+  color: "#94A3B8",
 };
 
 const signatureSection: React.CSSProperties = {
@@ -162,31 +167,32 @@ const signatureSection: React.CSSProperties = {
 };
 
 const signatureName: React.CSSProperties = {
-  color: "#f9fafb",
+  color: "#FFFFFF",
   fontSize: "15px",
-  fontWeight: "700",
+  fontWeight: "800",
   margin: "0 0 2px",
 };
 
 const signatureTitle: React.CSSProperties = {
-  color: "#9ca3af",
-  fontSize: "13px",
-  margin: "0 0 6px",
+  color: "#94A3B8",
+  fontSize: "12px",
+  margin: "0 0 8px",
 };
 
 const signatureLinks: React.CSSProperties = {
-  color: "#6b7280",
+  color: "#64748B",
   fontSize: "12px",
   margin: "0",
 };
 
 const linkStyle: React.CSSProperties = {
-  color: "#818cf8",
+  color: "#818CF8",
   textDecoration: "none",
+  fontWeight: "600",
 };
 
 const divider: React.CSSProperties = {
-  borderColor: "#1f2937",
+  borderColor: "#1E2235",
   margin: "24px 0 16px",
 };
 
@@ -195,15 +201,15 @@ const footerSection: React.CSSProperties = {
 };
 
 const footerText: React.CSSProperties = {
-  color: "#6b7280",
+  color: "#64748B",
   fontSize: "11px",
   margin: "0",
-  lineHeight: "1.4",
+  lineHeight: "1.45",
 };
 
 const refFooterText: React.CSSProperties = {
   color: "#475569",
-  fontSize: "10px",
+  fontSize: "11px",
   fontFamily: "monospace",
   margin: "8px 0 0",
 };
