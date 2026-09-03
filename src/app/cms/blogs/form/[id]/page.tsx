@@ -3,5 +3,5 @@
 import { BlogForm } from "../blog-form";
 
 export default function EditBlogPage() {
-	return <BlogForm />;
+  return <BlogForm />;
 }

@@ -17,21 +17,21 @@ const BlogResultsInfo = ({
 }: BlogResultsInfoProps) => {
   if (isLoading) return null;
 
-  const startItem = Math.min(
-    filteredCount,
-    (currentPage - 1) * itemsPerPage + 1
-  );
+  const startItem = Math.min(filteredCount, (currentPage - 1) * itemsPerPage + 1);
   const endItem = Math.min(filteredCount, currentPage * itemsPerPage);
 
   return (
-    <div className="mb-8 text-muted-foreground flex justify-between items-center">
+    <div className="mb-6 text-gray-400 text-xs flex justify-between items-center px-1">
       <p>
-        Showing {filteredCount > 0 ? `${startItem}-${endItem}` : "0"} of{" "}
-        {filteredCount} articles
+        Showing{" "}
+        <span className="font-semibold text-white">
+          {filteredCount > 0 ? `${startItem}–${endItem}` : "0"}
+        </span>{" "}
+        of <span className="font-semibold text-white">{filteredCount}</span> articles
       </p>
       {totalPages > 1 && (
-        <div className="text-sm">
-          Page {currentPage} of {totalPages}
+        <div className="text-xs font-mono text-gray-400">
+          Page <span className="text-white font-semibold">{currentPage}</span> of {totalPages}
         </div>
       )}
     </div>

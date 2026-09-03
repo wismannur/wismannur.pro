@@ -8,34 +8,28 @@ import { cn } from "@/lib/utils";
 // which is all the seeded copy needs — no HTML ever comes from the database.
 
 const renderPrimary = (text: string, keyPrefix: string): React.ReactNode[] =>
-	text.split(/\*\*(.+?)\*\*/g).map((part, index) =>
-		index % 2 === 1 ? (
-			<span key={`${keyPrefix}-p${index}`} className="text-primary">
-				{part}
-			</span>
-		) : (
-			part
-		),
-	);
+  text.split(/\*\*(.+?)\*\*/g).map((part, index) =>
+    index % 2 === 1 ? (
+      <span key={`${keyPrefix}-p${index}`} className="text-primary">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
 
-export function HighlightedText({
-	text,
-	boldClassName,
-}: {
-	text: string;
-	boldClassName?: string;
-}) {
-	return (
-		<>
-			{text.split(/__(.+?)__/g).map((part, index) =>
-				index % 2 === 1 ? (
-					<span key={`b${index}`} className={cn("font-semibold", boldClassName)}>
-						{renderPrimary(part, `b${index}`)}
-					</span>
-				) : (
-					renderPrimary(part, `t${index}`)
-				),
-			)}
-		</>
-	);
+export function HighlightedText({ text, boldClassName }: { text: string; boldClassName?: string }) {
+  return (
+    <>
+      {text.split(/__(.+?)__/g).map((part, index) =>
+        index % 2 === 1 ? (
+          <span key={`b${index}`} className={cn("font-semibold", boldClassName)}>
+            {renderPrimary(part, `b${index}`)}
+          </span>
+        ) : (
+          renderPrimary(part, `t${index}`)
+        )
+      )}
+    </>
+  );
 }

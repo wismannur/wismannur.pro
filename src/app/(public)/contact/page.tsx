@@ -1,21 +1,22 @@
 import type { Metadata } from "next";
 
-import { pageCopyService, siteSettingsService } from "@/services";
+import { getCachedSiteSettings } from "@/lib/site-metadata";
+import { pageCopyService } from "@/services";
 import { ContactView } from "./contact-view";
 
 export async function generateMetadata(): Promise<Metadata> {
-	const copy = await pageCopyService.get("contact");
-	return {
-		title: copy?.meta.title ?? "Contact",
-		description: copy?.meta.description,
-	};
+  const copy = await pageCopyService.get("contact");
+  return {
+    title: copy?.meta.title ?? "Contact",
+    description: copy?.meta.description,
+  };
 }
 
 export default async function ContactPage() {
-	const [copy, settings] = await Promise.all([
-		pageCopyService.get("contact"),
-		siteSettingsService.get(),
-	]);
+  const [copy, settings] = await Promise.all([
+    pageCopyService.get("contact"),
+    getCachedSiteSettings(),
+  ]);
 
-	return <ContactView copy={copy} settings={settings} />;
+  return <ContactView copy={copy} settings={settings} />;
 }

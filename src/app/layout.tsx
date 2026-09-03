@@ -11,82 +11,79 @@ import { UmamiAnalytics } from "@/components/analytics/umami-analytics";
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 const UMAMI_WEBSITE_ID = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
 const UMAMI_SCRIPT_URL =
-	process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
+  process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
 
 const inter = Inter({
-	subsets: ["latin"],
-	variable: "--font-inter",
-	display: "swap",
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 // Identity/SEO values come from the CMS-managed site_settings row (with
 // hardcoded defaults if the read fails), so edits go live without a redeploy.
 export async function generateMetadata(): Promise<Metadata> {
-	const settings = await getCachedSiteSettings();
+  const settings = await getCachedSiteSettings();
 
-	return {
-		metadataBase: new URL(SITE_URL),
-		title: {
-			default: settings.titleDefault,
-			template: settings.titleTemplate,
-		},
-		description: settings.metaDescription,
-		applicationName: "wismannur.pro",
-		authors: [{ name: settings.siteName, url: SITE_URL }],
-		creator: settings.siteName,
-		keywords: [...settings.keywords],
-		manifest: "/favicon/site.webmanifest",
-		icons: {
-			icon: [
-				{ url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-				{ url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-			],
-			shortcut: "/favicon/favicon.ico",
-			apple: "/favicon/apple-touch-icon.png",
-		},
-		openGraph: {
-			type: "website",
-			siteName: settings.siteName,
-			title: settings.titleDefault,
-			description: settings.metaDescription,
-			url: SITE_URL,
-			// og:image comes from src/app/opengraph-image.tsx (file convention).
-		},
-		twitter: {
-			card: "summary_large_image",
-			site: settings.twitterHandle,
-			creator: settings.twitterHandle,
-		},
-	};
+  return {
+    metadataBase: new URL(SITE_URL),
+    title: {
+      default: settings.titleDefault,
+      template: settings.titleTemplate,
+    },
+    description: settings.metaDescription,
+    applicationName: "wismannur.pro",
+    authors: [{ name: settings.siteName, url: SITE_URL }],
+    creator: settings.siteName,
+    keywords: [...settings.keywords],
+    manifest: "/favicon/site.webmanifest",
+    icons: {
+      icon: [
+        { url: "/favicon/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { url: "/favicon/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      ],
+      shortcut: "/favicon/favicon.ico",
+      apple: "/favicon/apple-touch-icon.png",
+    },
+    openGraph: {
+      type: "website",
+      siteName: settings.siteName,
+      title: settings.titleDefault,
+      description: settings.metaDescription,
+      url: SITE_URL,
+      // og:image comes from src/app/opengraph-image.tsx (file convention).
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: settings.twitterHandle,
+      creator: settings.twitterHandle,
+    },
+  };
 }
 
 export async function generateViewport(): Promise<Viewport> {
-	const settings = await getCachedSiteSettings();
-	return {
-		themeColor: settings.themeColor,
-	};
+  const settings = await getCachedSiteSettings();
+  return {
+    themeColor: settings.themeColor,
+  };
 }
 
 export default function RootLayout({
-	children,
+  children,
 }: Readonly<{
-	children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-	return (
-		<html lang="en" className={inter.variable} suppressHydrationWarning>
-			<body className="font-sans antialiased">
-				<Providers>{children}</Providers>
-				<UmamiAnalytics
-					websiteId={UMAMI_WEBSITE_ID}
-					scriptUrl={UMAMI_SCRIPT_URL}
-				/>
-				{RECAPTCHA_SITE_KEY && (
-					<Script
-						src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}
-						strategy="afterInteractive"
-					/>
-				)}
-			</body>
-		</html>
-	);
+  return (
+    <html lang="en" className={`dark ${inter.variable}`} suppressHydrationWarning>
+      <body className="font-sans antialiased bg-[#08090C] text-[#E2E8F0]">
+        <Providers>{children}</Providers>
+        <UmamiAnalytics websiteId={UMAMI_WEBSITE_ID} scriptUrl={UMAMI_SCRIPT_URL} />
+        {RECAPTCHA_SITE_KEY && (
+          <Script
+            src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}
+            strategy="afterInteractive"
+          />
+        )}
+      </body>
+    </html>
+  );
 }

@@ -6,58 +6,58 @@ import { SITE_URL as BASE_URL } from "@/lib/site-url";
 import { siteSettingsService } from "@/services";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-	const now = new Date();
-	const settings = await siteSettingsService.get();
-	const enableBlog = settings.enableBlog;
+  const now = new Date();
+  const settings = await siteSettingsService.get();
+  const enableBlog = settings.enableBlog;
 
-	const staticPaths = [
-		"",
-		...(enableBlog ? ["/blog"] : []),
-		"/projects",
-		"/about",
-		"/cv",
-		"/services",
-		"/offers",
-		"/contact",
-		"/hire-me",
-		"/terms-of-service",
-		"/privacy-policy",
-	];
+  const staticPaths = [
+    "",
+    ...(enableBlog ? ["/blog"] : []),
+    "/projects",
+    "/about",
+    "/cv",
+    "/services",
+    "/offers",
+    "/contact",
+    "/hire-me",
+    "/terms-of-service",
+    "/privacy-policy",
+  ];
 
-	const staticRoutes: MetadataRoute.Sitemap = staticPaths.map((path) => ({
-		url: `${BASE_URL}${path}`,
-		lastModified: now,
-		changeFrequency: "weekly",
-		priority: path === "" ? 1 : 0.7,
-	}));
+  const staticRoutes: MetadataRoute.Sitemap = staticPaths.map((path) => ({
+    url: `${BASE_URL}${path}`,
+    lastModified: now,
+    changeFrequency: "weekly",
+    priority: path === "" ? 1 : 0.7,
+  }));
 
-	const db = getDb();
-	const [blogRows, projectRows] = await Promise.all([
-		enableBlog
-			? db
-					.select({ slug: schema.blogs.slug, updatedAt: schema.blogs.updatedAt })
-					.from(schema.blogs)
-					.where(eq(schema.blogs.isPublished, true))
-			: Promise.resolve([]),
-		db
-			.select({ slug: schema.projects.slug, updatedAt: schema.projects.updatedAt })
-			.from(schema.projects)
-			.where(eq(schema.projects.isPublished, true)),
-	]);
+  const db = getDb();
+  const [blogRows, projectRows] = await Promise.all([
+    enableBlog
+      ? db
+          .select({ slug: schema.blogs.slug, updatedAt: schema.blogs.updatedAt })
+          .from(schema.blogs)
+          .where(eq(schema.blogs.isPublished, true))
+      : Promise.resolve([]),
+    db
+      .select({ slug: schema.projects.slug, updatedAt: schema.projects.updatedAt })
+      .from(schema.projects)
+      .where(eq(schema.projects.isPublished, true)),
+  ]);
 
-	const blogRoutes: MetadataRoute.Sitemap = blogRows.map((b) => ({
-		url: `${BASE_URL}/blog/${b.slug}`,
-		lastModified: b.updatedAt,
-		changeFrequency: "monthly",
-		priority: 0.6,
-	}));
+  const blogRoutes: MetadataRoute.Sitemap = blogRows.map((b) => ({
+    url: `${BASE_URL}/blog/${b.slug}`,
+    lastModified: b.updatedAt,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
 
-	const projectRoutes: MetadataRoute.Sitemap = projectRows.map((p) => ({
-		url: `${BASE_URL}/projects/${p.slug}`,
-		lastModified: p.updatedAt,
-		changeFrequency: "monthly",
-		priority: 0.6,
-	}));
+  const projectRoutes: MetadataRoute.Sitemap = projectRows.map((p) => ({
+    url: `${BASE_URL}/projects/${p.slug}`,
+    lastModified: p.updatedAt,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
 
-	return [...staticRoutes, ...blogRoutes, ...projectRoutes];
+  return [...staticRoutes, ...blogRoutes, ...projectRoutes];
 }

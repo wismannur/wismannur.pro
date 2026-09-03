@@ -1,49 +1,26 @@
 import type { Metadata } from "next";
 
-import {
-	availabilityService,
-	faqsService,
-	pageCopyService,
-	pricingTiersService,
-	processStepsService,
-	serviceCatalogService,
-	siteSettingsService,
-	testimonialsService,
-} from "@/services";
+import { getCachedSiteSettings } from "@/lib/site-metadata";
+import { availabilityService, faqsService, pageCopyService } from "@/services";
 import { HireMeView } from "./hire-me-view";
 
 export async function generateMetadata(): Promise<Metadata> {
-	const copy = await pageCopyService.get("hire-me");
-	return {
-		title: copy?.meta.title ?? "Hire Me",
-		description: copy?.meta.description,
-	};
+  const copy = await pageCopyService.get("hire-me");
+  return {
+    title: copy?.meta.title ?? "Hire Me",
+    description: copy?.meta.description,
+  };
 }
 
 export default async function HireMePage() {
-	const [copy, pricingTiers, services, testimonials, processSteps, faqs, availabilitySlots, settings] =
-		await Promise.all([
-			pageCopyService.get("hire-me"),
-			pricingTiersService.getPublished(),
-			serviceCatalogService.getPublished(),
-			testimonialsService.getPublished(),
-			processStepsService.getPublished("hire-me"),
-			faqsService.getPublished(),
-			availabilityService.getPublished(),
-			siteSettingsService.get(),
-		]);
+  const [copy, faqs, availabilitySlots, settings] = await Promise.all([
+    pageCopyService.get("hire-me"),
+    faqsService.getPublished(),
+    availabilityService.getPublished(),
+    getCachedSiteSettings(),
+  ]);
 
-	return (
-		<HireMeView
-			copy={copy}
-			pricingTiers={pricingTiers}
-			expertiseAreas={services.filter((service) => service.showOnHireMe)}
-			testimonials={testimonials}
-			processSteps={processSteps}
-			faqs={faqs}
-			availabilitySlots={availabilitySlots}
-			timeframes={settings.requestTimeframes}
-			budgetRanges={settings.requestBudgetRanges}
-		/>
-	);
+  return (
+    <HireMeView copy={copy} faqs={faqs} availabilitySlots={availabilitySlots} settings={settings} />
+  );
 }

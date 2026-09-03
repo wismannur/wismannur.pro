@@ -1,26 +1,54 @@
 {
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/.next/**": true,
-    "**/.turbo/**": true,
-    "**/dist/**": true,
-    "**/.drizzle/**": true
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "search.exclude": {
-    "**/node_modules": true,
-    "**/.next": true,
-    "**/.turbo": true,
-    "**/dist": true,
-    "**/.drizzle": true
+  "[typescriptreact]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/.next": true,
-    "**/.turbo": true
+  "[javascript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "typescript.tsserver.maxTsServerMemory": 3072,
-  "typescript.tsserver.experimental.enableProjectDiagnostics": false
+  "[javascriptreact]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[mdx]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true
 }

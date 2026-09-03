@@ -1,4 +1,3 @@
-
 import React from "react";
 import { ExternalLink, Github } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,11 @@ const ProjectLinks = ({ demoUrl, repoUrl }: ProjectLinksProps) => {
   return (
     <div className="mb-8 flex flex-wrap gap-4 animate-fade-in">
       {demoUrl && (
-        <Button asChild size="lg" className="rounded-full group">
+        <Button
+          asChild
+          size="lg"
+          className="rounded-full px-6 shadow-lg shadow-primary/30 hover:shadow-primary/40 group"
+        >
           <a
             href={demoUrl}
             target="_blank"
@@ -22,8 +25,8 @@ const ProjectLinks = ({ demoUrl, repoUrl }: ProjectLinksProps) => {
             data-umami-event="project-detail-demo-click"
             className="flex items-center gap-2"
           >
-            <ExternalLink size={18} className="group-hover:animate-pulse" />
-            <span>Live Demo</span>
+            <ExternalLink size={16} className="group-hover:animate-pulse" />
+            <span>Live Platform</span>
           </a>
         </Button>
       )}
@@ -33,7 +36,7 @@ const ProjectLinks = ({ demoUrl, repoUrl }: ProjectLinksProps) => {
           asChild
           variant="outline"
           size="lg"
-          className="rounded-full group"
+          className="rounded-full px-6 border-white/[0.12] bg-white/[0.04] text-white hover:bg-primary/10 hover:border-primary/40 group"
         >
           <a
             href={repoUrl}
@@ -42,11 +45,8 @@ const ProjectLinks = ({ demoUrl, repoUrl }: ProjectLinksProps) => {
             data-umami-event="project-detail-repo-click"
             className="flex items-center gap-2"
           >
-            <Github
-              size={18}
-              className="group-hover:rotate-12 transition-transform"
-            />
-            <span>View Code</span>
+            <Github size={16} className="group-hover:rotate-12 transition-transform text-primary" />
+            <span>Source Repository</span>
           </a>
         </Button>
       )}

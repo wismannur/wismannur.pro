@@ -193,9 +193,7 @@
         "blogs_slug_unique": {
           "name": "blogs_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -703,12 +701,8 @@
           "name": "job_interviews_application_id_job_applications_id_fk",
           "tableFrom": "job_interviews",
           "tableTo": "job_applications",
-          "columnsFrom": [
-            "application_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -822,9 +816,7 @@
         "offers_slug_unique": {
           "name": "offers_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -955,9 +947,7 @@
         "pricing_tiers_slug_unique": {
           "name": "pricing_tiers_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1170,9 +1160,7 @@
         "projects_slug_unique": {
           "name": "projects_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1457,9 +1445,7 @@
         "services_slug_unique": {
           "name": "services_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1523,9 +1509,7 @@
         "site_pages_slug_unique": {
           "name": "site_pages_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1928,12 +1912,8 @@
           "name": "user_settings_user_id_users_uid_fk",
           "tableFrom": "user_settings",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "uid"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["uid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2013,9 +1993,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -2027,40 +2005,22 @@
     "public.availability_status": {
       "name": "availability_status",
       "schema": "public",
-      "values": [
-        "available",
-        "limited",
-        "booked"
-      ]
+      "values": ["available", "limited", "booked"]
     },
     "public.color_scheme": {
       "name": "color_scheme",
       "schema": "public",
-      "values": [
-        "blue",
-        "purple",
-        "green",
-        "orange",
-        "red"
-      ]
+      "values": ["blue", "purple", "green", "orange", "red"]
     },
     "public.contact_status": {
       "name": "contact_status",
       "schema": "public",
-      "values": [
-        "new",
-        "read",
-        "replied",
-        "archived"
-      ]
+      "values": ["new", "read", "replied", "archived"]
     },
     "public.inquiry_type": {
       "name": "inquiry_type",
       "schema": "public",
-      "values": [
-        "contact",
-        "service_request"
-      ]
+      "values": ["contact", "service_request"]
     },
     "public.interview_stage_type": {
       "name": "interview_stage_type",
@@ -2080,13 +2040,7 @@
     "public.interview_status": {
       "name": "interview_status",
       "schema": "public",
-      "values": [
-        "scheduled",
-        "completed",
-        "passed",
-        "failed",
-        "cancelled"
-      ]
+      "values": ["scheduled", "completed", "passed", "failed", "cancelled"]
     },
     "public.job_application_status": {
       "name": "job_application_status",
@@ -2108,13 +2062,7 @@
     "public.job_employment_type": {
       "name": "job_employment_type",
       "schema": "public",
-      "values": [
-        "full_time",
-        "contract",
-        "part_time",
-        "freelance",
-        "internship"
-      ]
+      "values": ["full_time", "contract", "part_time", "freelance", "internship"]
     },
     "public.job_platform": {
       "name": "job_platform",
@@ -2133,10 +2081,7 @@
     "public.message_sender_type": {
       "name": "message_sender_type",
       "schema": "public",
-      "values": [
-        "admin",
-        "client"
-      ]
+      "values": ["admin", "client"]
     },
     "public.page_key": {
       "name": "page_key",
@@ -2157,46 +2102,27 @@
     "public.process_scope": {
       "name": "process_scope",
       "schema": "public",
-      "values": [
-        "services",
-        "hire-me"
-      ]
+      "values": ["services", "hire-me"]
     },
     "public.resume_kind": {
       "name": "resume_kind",
       "schema": "public",
-      "values": [
-        "experience",
-        "education"
-      ]
+      "values": ["experience", "education"]
     },
     "public.service_request_status": {
       "name": "service_request_status",
       "schema": "public",
-      "values": [
-        "new",
-        "in-progress",
-        "completed",
-        "cancelled"
-      ]
+      "values": ["new", "in-progress", "completed", "cancelled"]
     },
     "public.theme": {
       "name": "theme",
       "schema": "public",
-      "values": [
-        "light",
-        "dark",
-        "system"
-      ]
+      "values": ["light", "dark", "system"]
     },
     "public.workplace_type": {
       "name": "workplace_type",
       "schema": "public",
-      "values": [
-        "remote",
-        "hybrid",
-        "onsite"
-      ]
+      "values": ["remote", "hybrid", "onsite"]
     }
   },
   "schemas": {},
