@@ -14,66 +14,65 @@ import { getDb, schema } from "@/db";
 // `next-auth/jwt` instead.
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-	session: { strategy: "jwt" },
-	pages: { signIn: "/login" },
-	trustHost: true,
-	providers: [
-		Credentials({
-			credentials: { email: {}, password: {} },
-			authorize: async (credentials) => {
-				const email = String(credentials?.email ?? "")
-					.trim()
-					.toLowerCase();
-				const password = String(credentials?.password ?? "");
-				const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-				if (!adminEmail) {
-					console.error("Auth is not configured: set ADMIN_EMAIL");
-					return null;
-				}
-				if (email !== adminEmail) return null;
+  session: { strategy: "jwt" },
+  pages: { signIn: "/login" },
+  trustHost: true,
+  providers: [
+    Credentials({
+      credentials: { email: {}, password: {} },
+      authorize: async (credentials) => {
+        const email = String(credentials?.email ?? "")
+          .trim()
+          .toLowerCase();
+        const password = String(credentials?.password ?? "");
+        const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+        if (!adminEmail) {
+          console.error("Auth is not configured: set ADMIN_EMAIL");
+          return null;
+        }
+        if (email !== adminEmail) return null;
 
-				const [profile] = await getDb()
-					.select()
-					.from(schema.users)
-					.where(eq(schema.users.email, adminEmail))
-					.limit(1);
+        const [profile] = await getDb()
+          .select()
+          .from(schema.users)
+          .where(eq(schema.users.email, adminEmail))
+          .limit(1);
 
-				// Priority: 1. DB password_hash, 2. ADMIN_PASSWORD_HASH_B64 env fallback
-				let targetPasswordHash = profile?.passwordHash;
-				if (!targetPasswordHash && process.env.ADMIN_PASSWORD_HASH_B64) {
-					targetPasswordHash = Buffer.from(
-						process.env.ADMIN_PASSWORD_HASH_B64,
-						"base64",
-					).toString("utf8");
-				}
+        // Priority: 1. DB password_hash, 2. ADMIN_PASSWORD_HASH_B64 env fallback
+        let targetPasswordHash = profile?.passwordHash;
+        if (!targetPasswordHash && process.env.ADMIN_PASSWORD_HASH_B64) {
+          targetPasswordHash = Buffer.from(process.env.ADMIN_PASSWORD_HASH_B64, "base64").toString(
+            "utf8"
+          );
+        }
 
-				if (!targetPasswordHash) {
-					console.error(
-						"Auth is not configured: no password hash in database or ADMIN_PASSWORD_HASH_B64",
-					);
-					return null;
-				}
+        if (!targetPasswordHash) {
+          console.error(
+            "Auth is not configured: no password hash in database or ADMIN_PASSWORD_HASH_B64"
+          );
+          return null;
+        }
 
-				const ok = await bcrypt.compare(password, targetPasswordHash);
-				if (!ok) return null;
+        const ok = await bcrypt.compare(password, targetPasswordHash);
+        if (!ok) return null;
 
-				return {
-					id: profile?.uid ?? "admin",
-					email: adminEmail,
-					name: profile?.displayName ?? "Admin",
-					image: profile?.photoURL ?? null,
-				};
-			},
-		}),
-	],
-	callbacks: {
-		jwt({ token, user }) {
-			if (user) token.uid = (user as { id?: string }).id;
-			return token;
-		},
-		session({ session, token }) {
-			(session.user as { uid?: string }).uid = token.uid as string | undefined;
-			return session;
-		},
-	},
+        return {
+          id: profile?.uid ?? "admin",
+          email: adminEmail,
+          name: profile?.displayName ?? "Admin",
+          image: profile?.photoURL ?? null,
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) token.uid = (user as { id?: string }).id;
+      return token;
+    },
+    session({ session, token }) {
+      (session.user as { uid?: string }).uid = token.uid as string | undefined;
+      return session;
+    },
+  },
 });

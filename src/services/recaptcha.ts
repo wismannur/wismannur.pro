@@ -9,16 +9,16 @@ import environment from "@/config/environment";
 // it can't be bypassed.
 
 export const getReCaptchaToken = async (): Promise<string> => {
-	const { siteKey } = environment.recaptcha;
-	if (!siteKey || typeof window === "undefined" || !window.grecaptcha) {
-		return "";
-	}
-	try {
-		await new Promise<void>((resolve) => window.grecaptcha!.ready(resolve));
-		return await window.grecaptcha!.execute(siteKey, { action: "submit" });
-	} catch (error) {
-		console.error("Failed to get reCAPTCHA token:", error);
-		// Let the server make the call — it rejects empty tokens when keys are set.
-		return "";
-	}
+  const { siteKey } = environment.recaptcha;
+  if (!siteKey || typeof window === "undefined" || !window.grecaptcha) {
+    return "";
+  }
+  try {
+    await new Promise<void>((resolve) => window.grecaptcha!.ready(resolve));
+    return await window.grecaptcha!.execute(siteKey, { action: "submit" });
+  } catch (error) {
+    console.error("Failed to get reCAPTCHA token:", error);
+    // Let the server make the call — it rejects empty tokens when keys are set.
+    return "";
+  }
 };

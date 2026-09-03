@@ -5,15 +5,15 @@ export type ProcessScope = "services" | "hire-me";
 // stored. `icon` is a lucide name (the /services set renders numbers instead
 // and leaves it empty).
 export interface ProcessStep {
-	id: string;
-	scope: ProcessScope;
-	title: string;
-	description: string;
-	icon?: string;
-	sortOrder: number;
-	isPublished: boolean;
-	createdAt: Date;
-	updatedAt: Date;
+  id: string;
+  scope: ProcessScope;
+  title: string;
+  description: string;
+  icon?: string;
+  sortOrder: number;
+  isPublished: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export type NewProcessStep = Omit<ProcessStep, "id" | "createdAt" | "updatedAt">;

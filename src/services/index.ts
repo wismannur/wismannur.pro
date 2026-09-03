@@ -46,4 +46,3 @@ export * from "./user/types";
 export * from "./job-tracker/types";
 export * from "./job-outreaches/types";
 export * from "./inquiry-messages/types";
-

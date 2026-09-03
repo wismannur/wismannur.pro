@@ -1,24 +1,24 @@
 // Dates are plain `Date` in the dummy-data phase (no Firestore Timestamp).
 export interface Project {
-	id: string;
-	title: string;
-	slug: string;
-	summary: string;
-	description: string;
-	image: string;
-	isPublished: boolean;
-	isFeatured: boolean;
-	publishedDate: Date | null;
-	createdAt: Date;
-	updatedAt: Date;
-	technologies: string[];
-	demoUrl?: string;
-	repoUrl?: string;
-	views: number;
-	likes: number;
-	readingTime: number;
-	authorId?: string;
-	authorName?: string;
+  id: string;
+  title: string;
+  slug: string;
+  summary: string;
+  description: string;
+  image: string;
+  isPublished: boolean;
+  isFeatured: boolean;
+  publishedDate: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  technologies: string[];
+  demoUrl?: string;
+  repoUrl?: string;
+  views: number;
+  likes: number;
+  readingTime: number;
+  authorId?: string;
+  authorName?: string;
 }
 
 export type NewProject = Omit<Project, "id" | "createdAt" | "updatedAt">;

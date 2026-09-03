@@ -193,9 +193,7 @@
         "blogs_slug_unique": {
           "name": "blogs_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -422,9 +420,7 @@
         "offers_slug_unique": {
           "name": "offers_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -555,9 +551,7 @@
         "pricing_tiers_slug_unique": {
           "name": "pricing_tiers_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -770,9 +764,7 @@
         "projects_slug_unique": {
           "name": "projects_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1057,9 +1049,7 @@
         "services_slug_unique": {
           "name": "services_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1123,9 +1113,7 @@
         "site_pages_slug_unique": {
           "name": "site_pages_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1521,12 +1509,8 @@
           "name": "user_settings_user_id_users_uid_fk",
           "tableFrom": "user_settings",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "uid"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["uid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1600,9 +1584,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -1614,32 +1596,17 @@
     "public.availability_status": {
       "name": "availability_status",
       "schema": "public",
-      "values": [
-        "available",
-        "limited",
-        "booked"
-      ]
+      "values": ["available", "limited", "booked"]
     },
     "public.color_scheme": {
       "name": "color_scheme",
       "schema": "public",
-      "values": [
-        "blue",
-        "purple",
-        "green",
-        "orange",
-        "red"
-      ]
+      "values": ["blue", "purple", "green", "orange", "red"]
     },
     "public.contact_status": {
       "name": "contact_status",
       "schema": "public",
-      "values": [
-        "new",
-        "read",
-        "replied",
-        "archived"
-      ]
+      "values": ["new", "read", "replied", "archived"]
     },
     "public.page_key": {
       "name": "page_key",
@@ -1660,37 +1627,22 @@
     "public.process_scope": {
       "name": "process_scope",
       "schema": "public",
-      "values": [
-        "services",
-        "hire-me"
-      ]
+      "values": ["services", "hire-me"]
     },
     "public.resume_kind": {
       "name": "resume_kind",
       "schema": "public",
-      "values": [
-        "experience",
-        "education"
-      ]
+      "values": ["experience", "education"]
     },
     "public.service_request_status": {
       "name": "service_request_status",
       "schema": "public",
-      "values": [
-        "new",
-        "in-progress",
-        "completed",
-        "cancelled"
-      ]
+      "values": ["new", "in-progress", "completed", "cancelled"]
     },
     "public.theme": {
       "name": "theme",
       "schema": "public",
-      "values": [
-        "light",
-        "dark",
-        "system"
-      ]
+      "values": ["light", "dark", "system"]
     }
   },
   "schemas": {},

@@ -119,9 +119,7 @@
         "blogs_slug_unique": {
           "name": "blogs_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -320,9 +318,7 @@
         "projects_slug_unique": {
           "name": "projects_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -592,12 +588,8 @@
           "name": "user_settings_user_id_users_uid_fk",
           "tableFrom": "user_settings",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "uid"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["uid"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -671,9 +663,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -685,50 +675,27 @@
     "public.color_scheme": {
       "name": "color_scheme",
       "schema": "public",
-      "values": [
-        "blue",
-        "purple",
-        "green",
-        "orange",
-        "red"
-      ]
+      "values": ["blue", "purple", "green", "orange", "red"]
     },
     "public.contact_status": {
       "name": "contact_status",
       "schema": "public",
-      "values": [
-        "new",
-        "read",
-        "replied",
-        "archived"
-      ]
+      "values": ["new", "read", "replied", "archived"]
     },
     "public.resume_kind": {
       "name": "resume_kind",
       "schema": "public",
-      "values": [
-        "experience",
-        "education"
-      ]
+      "values": ["experience", "education"]
     },
     "public.service_request_status": {
       "name": "service_request_status",
       "schema": "public",
-      "values": [
-        "new",
-        "in-progress",
-        "completed",
-        "cancelled"
-      ]
+      "values": ["new", "in-progress", "completed", "cancelled"]
     },
     "public.theme": {
       "name": "theme",
       "schema": "public",
-      "values": [
-        "light",
-        "dark",
-        "system"
-      ]
+      "values": ["light", "dark", "system"]
     }
   },
   "schemas": {},
