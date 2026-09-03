@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     if (!rateLimit.allowed) {
       return NextResponse.json(
         {
-          error: `Terlalu banyak pesan dalam waktu singkat. Silakan coba lagi dalam ${rateLimit.resetInSeconds} detik.`,
+          error: `Too many messages in a short period. Please try again in ${rateLimit.resetInSeconds} seconds.`,
         },
         {
           status: 429,
@@ -173,25 +173,18 @@ export async function POST(req: NextRequest) {
               }
             }
           } else {
-            // No tool call triggered in first pass; stream full response directly
-            const streamResponse = await ai.models.generateContentStream({
-              model: modelName,
-              contents,
-              config: {
-                systemInstruction,
-                tools: AI_CHAT_TOOL_DECLARATIONS,
-                temperature: 0.7,
-                maxOutputTokens: 1000,
-              },
-            });
+            // No tool call triggered: initialResponse already contains the complete text from a single pass.
+            // Stream it directly to the client to avoid 2x latency and 2x token costs.
+            const responseText = initialResponse.text || "";
+            fullAssistantText = responseText;
 
-            for await (const chunk of streamResponse) {
-              const text = chunk.text;
-              if (text) {
-                fullAssistantText += text;
+            if (responseText) {
+              const chunkSize = 48;
+              for (let i = 0; i < responseText.length; i += chunkSize) {
+                const slice = responseText.slice(i, i + chunkSize);
                 sendEvent({
                   type: "text",
-                  content: text,
+                  content: slice,
                 });
               }
             }
@@ -220,7 +213,7 @@ export async function POST(req: NextRequest) {
           const errorMessage = err instanceof Error ? err.message : "Internal streaming error";
           sendEvent({
             type: "error",
-            content: `Maaf, terjadi kendala saat memproses jawaban: ${errorMessage}`,
+            content: `Sorry, an issue occurred while processing your response: ${errorMessage}`,
           });
         } finally {
           controller.close();

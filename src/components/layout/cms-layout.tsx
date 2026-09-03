@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Award,
+  Brain,
   Briefcase,
   Building2,
   CalendarClock,
@@ -23,7 +24,6 @@ import {
   LogOut,
   MessageSquare,
   MessagesSquare,
-  Package,
   PenSquare,
   Scale,
   Search,
@@ -31,7 +31,6 @@ import {
   Settings,
   Shield,
   Sparkles,
-  Tag,
   User,
   Wrench,
 } from "lucide-react";
@@ -142,6 +141,21 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
       ],
     },
     {
+      group: "AI Assistant",
+      items: [
+        {
+          label: "AI Knowledge Hub",
+          icon: <Brain className="h-4 w-4" />,
+          path: "/cms/ai-knowledge",
+        },
+        {
+          label: "AI Chat Logs",
+          icon: <MessagesSquare className="h-4 w-4" />,
+          path: "/cms/ai-chat-logs",
+        },
+      ],
+    },
+    {
       group: "Inbox & Leads",
       items: [
         {
@@ -158,11 +172,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
           label: "Hire Inquiries",
           icon: <Building2 className="h-4 w-4" />,
           path: "/cms/hire-requests",
-        },
-        {
-          label: "AI Chat Logs",
-          icon: <MessagesSquare className="h-4 w-4" />,
-          path: "/cms/ai-chat-logs",
         },
       ],
     },
@@ -213,16 +222,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
           label: "Service Catalog",
           icon: <Wrench className="h-4 w-4" />,
           path: "/cms/service-catalog",
-        },
-        {
-          label: "Pricing",
-          icon: <Tag className="h-4 w-4" />,
-          path: "/cms/pricing",
-        },
-        {
-          label: "Offers",
-          icon: <Package className="h-4 w-4" />,
-          path: "/cms/offers",
         },
         {
           label: "FAQs",

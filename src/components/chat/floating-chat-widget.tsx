@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   Loader2,
   ArrowUpRight,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,12 +19,31 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/services/ai-chat/types";
 
-const SUGGESTED_PROMPTS = [
-  "Tell me about Wisman's Mobile & Flutter experience",
-  "What is Wisman's primary tech stack & skill set?",
-  "Is Wisman open for freelance or full-time roles?",
-  "I would like to hire Wisman / discuss an opportunity",
+const ALL_SUGGESTED_PROMPTS = [
+  // Tech Stack & Architecture
+  "What is Wisman's primary tech stack & architecture philosophy?",
+  "How does Wisman approach performance optimization & scalable systems?",
+  "What is Wisman's experience with Cloud, DevOps, and Fullstack systems?",
+  "What are Wisman's thoughts & practical experience with AI/LLM integration?",
+  "How does Wisman maintain code quality, testing, and clean architecture?",
+  // Projects & Track Record
+  "Show me some of Wisman's featured projects & career milestones",
+  "What complex engineering challenges has Wisman solved in production?",
+  "Can you summarize Wisman's career background and seniority level?",
+  "How does Wisman collaborate in cross-functional and fast-paced teams?",
+  "What technical articles or insights has Wisman published?",
+  // Hiring, Services & Collaboration
+  "Is Wisman currently open to full-time or contract/fractional roles?",
+  "What engineering consulting & development services does Wisman offer?",
+  "I would like to hire Wisman / discuss a project opportunity",
+  "What is Wisman's current availability and engagement process?",
+  "Can Wisman help build and architect an MVP from scratch?",
 ];
+
+function getRandomSuggestedPrompts(count = 3): string[] {
+  const shuffled = [...ALL_SUGGESTED_PROMPTS].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: "initial-greeting",
@@ -33,8 +53,8 @@ const INITIAL_MESSAGE: ChatMessage = {
   status: "done",
 };
 
-const STORAGE_KEY = "wismannur_ai_chat_history_v1";
-const SESSION_STORAGE_KEY = "wismannur_ai_chat_session_id_v1";
+const STORAGE_KEY = "wismannur_ai_chat_history_v2";
+const SESSION_STORAGE_KEY = "wismannur_ai_chat_session_id_v2";
 
 let msgSequence = 0;
 function createClientMessageId(): string {
@@ -83,6 +103,9 @@ export function FloatingChatWidget() {
   });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>(() =>
+    ALL_SUGGESTED_PROMPTS.slice(0, 3)
+  );
 
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,10 +132,11 @@ export function FloatingChatWidget() {
     scrollToBottom();
   }, [messages, isLoading, scrollToBottom]);
 
-  // Focus input when chat opens
+  // Focus input and refresh random suggested prompts when chat opens
   useEffect(() => {
     if (isOpen) {
       const timer = setTimeout(() => {
+        setSuggestedPrompts(getRandomSuggestedPrompts(3));
         inputRef.current?.focus();
         scrollToBottom();
       }, 150);
@@ -123,6 +147,7 @@ export function FloatingChatWidget() {
   const handleReset = () => {
     const fresh = [INITIAL_MESSAGE];
     setMessages(fresh);
+    setSuggestedPrompts(getRandomSuggestedPrompts(3));
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -329,7 +354,7 @@ export function FloatingChatWidget() {
           const formatted = parts.map((part, pIdx) => {
             if (part.startsWith("**") && part.endsWith("**")) {
               return (
-                <strong key={pIdx} className="font-semibold text-foreground">
+                <strong key={pIdx} className="font-semibold text-white">
                   {part.slice(2, -2)}
                 </strong>
               );
@@ -343,7 +368,7 @@ export function FloatingChatWidget() {
                   href={url}
                   target={url.startsWith("http") ? "_blank" : undefined}
                   rel="noreferrer"
-                  className="text-primary underline font-medium hover:opacity-80 inline-flex items-center gap-0.5"
+                  className="text-primary hover:text-indigo-400 underline underline-offset-2 font-medium transition-colors inline-flex items-center gap-0.5"
                 >
                   {text}
                   {url.startsWith("http") && <ArrowUpRight className="w-3 h-3" />}
@@ -356,13 +381,17 @@ export function FloatingChatWidget() {
           if (isBullet) {
             return (
               <div key={idx} className="flex items-start gap-2 pl-1">
-                <span className="text-primary font-bold mt-1 text-xs">•</span>
-                <span className="flex-1">{formatted}</span>
+                <span className="text-primary font-black mt-1 text-xs">•</span>
+                <span className="flex-1 text-gray-200">{formatted}</span>
               </div>
             );
           }
 
-          return <p key={idx}>{formatted}</p>;
+          return (
+            <p key={idx} className="text-gray-200">
+              {formatted}
+            </p>
+          );
         })}
       </div>
     );
@@ -377,22 +406,24 @@ export function FloatingChatWidget() {
             <Button
               onClick={() => setIsOpen(true)}
               className={cn(
-                "h-14 px-4 sm:px-5 rounded-full shadow-2xl flex items-center gap-2.5",
-                "bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:scale-105 active:scale-95 transition-all duration-300 text-primary-foreground border border-primary/20"
+                "h-13 px-4 sm:px-5 rounded-full shadow-2xl flex items-center gap-2.5",
+                "bg-[#090A0F]/90 hover:bg-[#121524] text-white border border-white/[0.12] hover:border-primary/50 shadow-black/80 hover:shadow-primary/20 backdrop-blur-xl transition-all duration-300 hover:scale-105 active:scale-95"
               )}
               aria-label="Chat with Wisman's AI Assistant"
             >
-              <div className="relative">
-                <Bot className="w-5 h-5 animate-pulse" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-background animate-ping" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-background" />
+              <div className="relative p-1.5 rounded-full bg-primary/15 border border-primary/25 text-primary">
+                <Bot className="w-4 h-4 animate-pulse" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full ring-2 ring-[#090A0F] animate-ping" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full ring-2 ring-[#090A0F]" />
               </div>
               <div className="flex flex-col items-start text-left">
-                <span className="text-xs font-bold leading-tight flex items-center gap-1">
+                <span className="text-xs font-bold leading-tight flex items-center gap-1 text-white">
                   Chat with Wisman&apos;s AI{" "}
                   <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
                 </span>
-                <span className="text-[10px] opacity-85 font-medium leading-none">Online 24/7</span>
+                <span className="text-[10px] text-gray-400 font-medium leading-none mt-0.5">
+                  Online 24/7
+                </span>
               </div>
             </Button>
           </div>
@@ -403,31 +434,31 @@ export function FloatingChatWidget() {
       {isOpen && (
         <div
           className={cn(
-            "fixed z-50 transition-all duration-300 ease-out flex flex-col shadow-2xl border border-border/70 bg-background/95 backdrop-blur-md overflow-hidden",
+            "fixed z-50 transition-all duration-300 ease-out flex flex-col shadow-2xl shadow-black/90 border border-white/[0.12] bg-[#090A0F]/95 backdrop-blur-2xl overflow-hidden",
             "inset-x-3 bottom-3 top-16 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-[420px] sm:h-[600px] sm:rounded-2xl rounded-2xl"
           )}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/40 backdrop-blur-sm">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08] bg-[#0B0D14]/80 backdrop-blur-md">
             <div className="flex items-center gap-2.5">
-              <div className="relative p-2 rounded-xl bg-primary/10 border border-primary/20 text-primary">
+              <div className="relative p-2 rounded-xl bg-primary/15 border border-primary/25 text-primary">
                 <Bot className="w-5 h-5" />
-                <span className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-emerald-500 rounded-full ring-1 ring-background" />
+                <span className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-emerald-400 rounded-full ring-1 ring-[#0B0D14]" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-semibold text-sm leading-tight text-foreground">
+                  <h3 className="font-semibold text-sm leading-tight text-white">
                     Wisman&apos;s AI Assistant
                   </h3>
                   <Badge
                     variant="secondary"
-                    className="text-[9px] px-1.5 py-0 h-4 font-semibold text-primary bg-primary/10"
+                    className="text-[9px] px-1.5 py-0 h-4 font-semibold text-primary bg-primary/15 border border-primary/25"
                   >
                     AI
                   </Badge>
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-none mt-0.5 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                <p className="text-[11px] text-gray-400 leading-none mt-0.5 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                   Active 24/7 • Represents Wisman Nur
                 </p>
               </div>
@@ -439,7 +470,7 @@ export function FloatingChatWidget() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
                     onClick={handleReset}
                     aria-label="Reset conversation"
                   >
@@ -452,7 +483,7 @@ export function FloatingChatWidget() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
                 onClick={() => setIsOpen(false)}
                 aria-label="Close chat"
               >
@@ -481,8 +512,8 @@ export function FloatingChatWidget() {
                     className={cn(
                       "w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs shadow-sm mt-0.5",
                       isUser
-                        ? "bg-primary text-primary-foreground font-semibold"
-                        : "bg-muted border border-border text-foreground"
+                        ? "bg-gradient-to-br from-primary to-indigo-600 text-white font-semibold border border-white/20"
+                        : "bg-[#121524] border border-white/[0.1] text-primary"
                     )}
                   >
                     {isUser ? (
@@ -496,16 +527,16 @@ export function FloatingChatWidget() {
                   <div className="flex flex-col space-y-1.5">
                     <div
                       className={cn(
-                        "p-3.5 rounded-2xl shadow-sm text-sm",
+                        "p-3.5 rounded-2xl text-sm shadow-sm",
                         isUser
-                          ? "bg-primary text-primary-foreground rounded-tr-xs"
-                          : "bg-muted/70 dark:bg-muted/40 border border-border/60 text-foreground rounded-tl-xs"
+                          ? "bg-gradient-to-r from-primary to-indigo-600 text-white rounded-tr-xs border border-white/10"
+                          : "bg-[#121524]/90 border border-white/[0.08] text-gray-200 rounded-tl-xs backdrop-blur-sm"
                       )}
                     >
                       {msg.content ? (
                         renderFormattedContent(msg.content)
                       ) : msg.status === "streaming" ? (
-                        <div className="flex items-center gap-1.5 py-1 text-muted-foreground">
+                        <div className="flex items-center gap-1.5 py-1 text-gray-400">
                           <Loader2 className="w-4 h-4 animate-spin text-primary" />
                           <span className="text-xs">Typing response...</span>
                         </div>
@@ -514,7 +545,7 @@ export function FloatingChatWidget() {
 
                     {/* Tool execution badge feedback */}
                     {msg.toolCallName && (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
                         <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                         <span>
                           {msg.toolCallName === "submit_hire_inquiry"
@@ -531,16 +562,27 @@ export function FloatingChatWidget() {
             {/* Quick Suggested Prompts (shown when only initial greeting is present) */}
             {messages.length === 1 && !isLoading && (
               <div className="pt-2 space-y-2">
-                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-primary" /> Suggested Questions:
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-400 flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3 text-primary" /> Suggested Questions:
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setSuggestedPrompts(getRandomSuggestedPrompts(3))}
+                    className="text-[11px] text-gray-400 hover:text-white flex items-center gap-1 transition-colors px-2 py-0.5 rounded-md hover:bg-white/[0.06] border border-transparent hover:border-white/[0.08]"
+                    title="Shuffle other questions"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Shuffle</span>
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 gap-1.5">
-                  {SUGGESTED_PROMPTS.map((prompt, pIdx) => (
+                  {suggestedPrompts.map((prompt, pIdx) => (
                     <button
                       key={pIdx}
                       type="button"
                       onClick={() => handleSendMessage(prompt)}
-                      className="text-left text-xs p-2.5 rounded-xl border border-border/70 hover:border-primary/50 bg-background/50 hover:bg-primary/5 transition-all text-muted-foreground hover:text-foreground flex items-center justify-between group"
+                      className="text-left text-xs p-3 rounded-xl border border-white/[0.08] hover:border-primary/40 bg-[#121524]/60 hover:bg-[#181D30] transition-all text-gray-300 hover:text-white flex items-center justify-between group shadow-sm"
                     >
                       <span>{prompt}</span>
                       <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-primary transition-opacity" />
@@ -552,7 +594,7 @@ export function FloatingChatWidget() {
           </div>
 
           {/* Input Footer */}
-          <div className="p-3 border-t bg-muted/20">
+          <div className="p-3 border-t border-white/[0.08] bg-[#0B0D14]/80 backdrop-blur-md">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -567,13 +609,13 @@ export function FloatingChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask anything about Wisman..."
                 disabled={isLoading}
-                className="flex-1 bg-background border border-input rounded-xl px-3.5 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+                className="flex-1 bg-[#121524]/80 border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 disabled:opacity-50 transition-all"
               />
               <Button
                 type="submit"
                 size="icon"
                 disabled={!input.trim() || isLoading}
-                className="h-10 w-10 rounded-xl shrink-0 shadow-sm"
+                className="h-10 w-10 rounded-xl shrink-0 shadow-md shadow-primary/20 bg-primary hover:bg-primary/90 text-white"
                 aria-label="Send message"
               >
                 {isLoading ? (
@@ -583,8 +625,8 @@ export function FloatingChatWidget() {
                 )}
               </Button>
             </form>
-            <p className="text-[10px] text-center text-muted-foreground mt-2 leading-none">
-              Powered by Google Gemini • Instant responses 24/7
+            <p className="text-[10px] text-center text-gray-400 mt-2 leading-none font-medium">
+              Powered by Gemini 3.7 Flash • Instant responses 24/7
             </p>
           </div>
         </div>
