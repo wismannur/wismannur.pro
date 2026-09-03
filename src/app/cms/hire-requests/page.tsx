@@ -126,6 +126,7 @@ export default function CmsHireRequestsPage() {
         const query = searchQuery.toLowerCase();
         const filtered = data.requests.filter(
           (request) =>
+            request.id.toLowerCase().includes(query) ||
             request.name.toLowerCase().includes(query) ||
             request.email.toLowerCase().includes(query) ||
             request.company.toLowerCase().includes(query) ||
@@ -254,7 +255,13 @@ export default function CmsHireRequestsPage() {
           </Avatar>
           <div className="flex flex-col min-w-0">
             <span className="font-semibold text-sm text-foreground truncate">{row.name}</span>
-            <span className="text-xs text-muted-foreground truncate">{row.email}</span>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="font-mono text-[10px] text-primary/90 bg-primary/10 px-1 py-0.2 rounded border border-primary/20 shrink-0">
+                {row.id}
+              </span>
+              <span className="text-muted-foreground/40">•</span>
+              <span className="truncate max-w-[130px]">{row.email}</span>
+            </div>
           </div>
         </div>
       ),
