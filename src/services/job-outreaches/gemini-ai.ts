@@ -55,7 +55,7 @@ async function buildCandidateContext(): Promise<string> {
 
     let context = `Candidate Profile:\n`;
     context += `- Name: ${user?.displayName || "Wisman Nur"}\n`;
-    context += `- Title/Specialty: Senior Mobile (Flutter) & Fullstack Software Engineer (Next.js, TypeScript, Cloud)\n`;
+    context += `- Title/Specialty: Senior Fullstack Software Engineer & AI Agent Architect (Next.js 16, React 19, TypeScript, Cloud, GenAI Systems)\n`;
     context += `- Location: ${user?.location || settings?.location || "Jakarta, Indonesia (Open to worldwide remote)"}\n`;
     context += `- Portfolio: https://wismannur.pro\n`;
     if (settings?.social?.github) context += `- GitHub: ${settings.social.github}\n`;
@@ -89,7 +89,7 @@ async function buildCandidateContext(): Promise<string> {
     return context;
   } catch (error) {
     console.error("Failed to build candidate context for outreach:", error);
-    return `Candidate: Wisman Nur, Senior Mobile & Fullstack Software Engineer (Flutter, React, Next.js, TypeScript, Cloud). Portfolio: https://wismannur.pro`;
+    return `Candidate: Wisman Nur, Senior Fullstack Software Engineer & AI Agent Architect (Next.js, React 19, TypeScript, Cloud & GenAI). Portfolio: https://wismannur.pro`;
   }
 }
 

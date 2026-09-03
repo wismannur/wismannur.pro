@@ -10,22 +10,22 @@ import { cn } from "@/lib/utils";
 
 export function ExpertiseBentoV2() {
   const [activeCategory, setActiveCategory] = useState<
-    "all" | "fullstack" | "ai" | "database" | "mobile"
+    "all" | "fullstack" | "frontend" | "ai" | "cloud"
   >("all");
 
   const techPills = [
     { name: "Next.js 16 (App Router)", cat: "fullstack", badge: "Primary" },
-    { name: "React 19 Server Components", cat: "fullstack", badge: "Core" },
-    { name: "TypeScript (Strict)", cat: "fullstack", badge: "Standard" },
-    { name: "Gemini 3.7 Flash", cat: "ai", badge: "AI Core" },
+    { name: "React 19 Server Components", cat: "frontend", badge: "Core" },
+    { name: "TypeScript (Strict 5.x)", cat: "fullstack", badge: "Standard" },
+    { name: "Gemini 3.7 Flash & Vertex AI", cat: "ai", badge: "AI Core" },
     { name: "Autonomous Tool Calling", cat: "ai", badge: "Agentic" },
     { name: "Model Context Protocol (MCP)", cat: "ai", badge: "Advanced" },
-    { name: "Neon Serverless Postgres", cat: "database", badge: "Relational" },
-    { name: "Drizzle ORM & Migrations", cat: "database", badge: "Type-Safe" },
-    { name: "Flutter & Dart", cat: "mobile", badge: "Mobile Lead" },
-    { name: "Tailwind CSS & Framer Motion", cat: "fullstack", badge: "UI & Motion" },
-    { name: "TanStack React Query", cat: "fullstack", badge: "Async State" },
-    { name: "Docker & Cloud Run", cat: "database", badge: "Cloud & Edge" },
+    { name: "Neon Serverless Postgres", cat: "cloud", badge: "Relational" },
+    { name: "Drizzle ORM & Migrations", cat: "fullstack", badge: "Type-Safe" },
+    { name: "Design Systems & Token Architecture", cat: "frontend", badge: "Design Tokens" },
+    { name: "Tailwind CSS & Framer Motion", cat: "frontend", badge: "UI & Motion" },
+    { name: "TanStack React Query", cat: "frontend", badge: "Async State" },
+    { name: "Docker & Cloud Run / Edge", cat: "cloud", badge: "Cloud & Edge" },
   ];
 
   const filteredPills =
@@ -180,9 +180,9 @@ export function ExpertiseBentoV2() {
                     [
                       { id: "all", label: "All Stack" },
                       { id: "fullstack", label: "Fullstack" },
+                      { id: "frontend", label: "Frontend & UI" },
                       { id: "ai", label: "AI & Agents" },
-                      { id: "database", label: "Data & Cloud" },
-                      { id: "mobile", label: "Mobile" },
+                      { id: "cloud", label: "Data & Cloud" },
                     ] as const
                   ).map((tab) => (
                     <button
