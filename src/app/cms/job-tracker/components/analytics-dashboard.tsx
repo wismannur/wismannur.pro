@@ -8,6 +8,7 @@ import {
   Gift,
   LineChart,
   Send,
+  Sparkles,
   Target,
   TrendingUp,
   Users,
@@ -87,6 +88,67 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
       if (!app.appliedAt) return false;
       return new Date(app.appliedAt) <= sevenDaysAgo;
     });
+  }, [applications]);
+
+  const conversionAnalytics = useMemo(() => {
+    const isConverted = (app: JobApplication) =>
+      ["screening", "interview_hr", "interview_tech", "interview_user", "offering", "accepted"].includes(
+        app.status
+      ) || ((app.interviews?.length ?? 0) > 0);
+
+    const isOffered = (app: JobApplication) =>
+      ["offering", "accepted"].includes(app.status);
+
+    // By Platform
+    const platformStats: Record<string, { total: number; interviews: number; offers: number }> = {};
+    // By ATS Score Band
+    const atsStats = {
+      high: { label: "High Match (≥ 80%)", total: 0, interviews: 0 },
+      mid: { label: "Medium Match (60-79%)", total: 0, interviews: 0 },
+      low: { label: "Low Match (< 60% or Untailored)", total: 0, interviews: 0 },
+    };
+    // By Workplace Type
+    const workplaceStats: Record<string, { label: string; total: number; interviews: number }> = {
+      remote: { label: "Remote", total: 0, interviews: 0 },
+      hybrid: { label: "Hybrid", total: 0, interviews: 0 },
+      onsite: { label: "Onsite", total: 0, interviews: 0 },
+    };
+
+    applications.forEach((app) => {
+      // Platform
+      const p = app.platform || "other";
+      if (!platformStats[p]) {
+        platformStats[p] = { total: 0, interviews: 0, offers: 0 };
+      }
+      platformStats[p].total += 1;
+      if (isConverted(app)) platformStats[p].interviews += 1;
+      if (isOffered(app)) platformStats[p].offers += 1;
+
+      // ATS
+      if (app.atsScore && app.atsScore >= 80) {
+        atsStats.high.total += 1;
+        if (isConverted(app)) atsStats.high.interviews += 1;
+      } else if (app.atsScore && app.atsScore >= 60) {
+        atsStats.mid.total += 1;
+        if (isConverted(app)) atsStats.mid.interviews += 1;
+      } else {
+        atsStats.low.total += 1;
+        if (isConverted(app)) atsStats.low.interviews += 1;
+      }
+
+      // Workplace
+      const w = app.workplaceType || "remote";
+      if (workplaceStats[w]) {
+        workplaceStats[w].total += 1;
+        if (isConverted(app)) workplaceStats[w].interviews += 1;
+      }
+    });
+
+    return {
+      platformStats,
+      atsStats,
+      workplaceStats,
+    };
   }, [applications]);
 
   if (!analytics) return null;
@@ -338,6 +400,117 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
           </CardContent>
         </Card>
       </div>
+
+      {/* A/B Testing & Channel Conversion Intelligence */}
+      <Card className="border-border/80 shadow-sm bg-gradient-to-br from-card via-card to-primary/5">
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Target className="w-4 h-4 text-primary" />
+                Channel & ATS Tailoring Conversion Intelligence
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Analyze how different sourcing channels and ATS tailoring scores correlate with interview invitations and offers
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="text-[11px] bg-primary/10 text-primary border-primary/20 w-fit">
+              A/B Channel Analytics
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* 1. Sourcing Channel Conversion Table */}
+            <div className="space-y-3 p-4 rounded-xl border border-border/70 bg-card">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5 text-blue-500" />
+                By Sourcing Platform
+              </div>
+              <div className="space-y-2 text-xs">
+                {Object.entries(conversionAnalytics.platformStats).length === 0 ? (
+                  <span className="text-muted-foreground italic text-xs">No platform data yet</span>
+                ) : (
+                  Object.entries(conversionAnalytics.platformStats).map(([platform, stats]) => {
+                    const cfg = JOB_PLATFORM_CONFIG[platform as keyof typeof JOB_PLATFORM_CONFIG] || {
+                      label: platform,
+                    };
+                    const convRate = stats.total > 0 ? ((stats.interviews / stats.total) * 100).toFixed(0) : "0";
+                    return (
+                      <div key={platform} className="p-2 rounded-lg bg-muted/20 border border-border/40 space-y-1">
+                        <div className="flex justify-between font-semibold">
+                          <span>{cfg.label}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{convRate}% Interview Rate</span>
+                        </div>
+                        <div className="flex justify-between text-[11px] text-muted-foreground">
+                          <span>{stats.total} applied • {stats.interviews} interviewed</span>
+                          {stats.offers > 0 && <span className="text-purple-600 font-bold">{stats.offers} offered 🚀</span>}
+                        </div>
+                        <Progress value={parseFloat(convRate)} className="h-1 bg-muted" />
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* 2. ATS Score Band Conversion Impact */}
+            <div className="space-y-3 p-4 rounded-xl border border-border/70 bg-card">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                ATS Match Score Impact
+              </div>
+              <div className="space-y-2.5 text-xs">
+                {Object.entries(conversionAnalytics.atsStats).map(([key, item]) => {
+                  const rate = item.total > 0 ? ((item.interviews / item.total) * 100).toFixed(0) : "0";
+                  return (
+                    <div key={key} className="p-2.5 rounded-lg bg-muted/20 border border-border/40 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-foreground text-xs">{item.label}</span>
+                        <Badge variant="outline" className={`text-[10px] font-bold ${key === "high" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" : key === "mid" ? "bg-blue-500/10 text-blue-600 border-blue-500/30" : "bg-zinc-500/10 text-zinc-500"}`}>
+                          {rate}% Conv.
+                        </Badge>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground flex justify-between">
+                        <span>{item.total} applications</span>
+                        <span>{item.interviews} interviews</span>
+                      </div>
+                      <Progress value={parseFloat(rate)} className="h-1 bg-muted" />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. Workplace Type Conversion */}
+            <div className="space-y-3 p-4 rounded-xl border border-border/70 bg-card">
+              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
+                Workplace Model Success
+              </div>
+              <div className="space-y-2.5 text-xs">
+                {Object.entries(conversionAnalytics.workplaceStats).map(([key, item]) => {
+                  const rate = item.total > 0 ? ((item.interviews / item.total) * 100).toFixed(0) : "0";
+                  return (
+                    <div key={key} className="p-2.5 rounded-lg bg-muted/20 border border-border/40 space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-foreground text-xs">{item.label}</span>
+                        <span className="font-bold text-primary">{rate}% Interview Rate</span>
+                      </div>
+                      <div className="text-[11px] text-muted-foreground flex justify-between">
+                        <span>{item.total} applications</span>
+                        <span>{item.interviews} interviews</span>
+                      </div>
+                      <Progress value={parseFloat(rate)} className="h-1 bg-muted" />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
