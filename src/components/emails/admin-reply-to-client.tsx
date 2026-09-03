@@ -3,7 +3,6 @@ import {
   Body,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
   Link,
@@ -35,21 +34,24 @@ export const AdminReplyToClientEmail = ({
       <Preview>{previewSnippet}</Preview>
       <Body style={main}>
         <Container style={container}>
+          {/* Body Section */}
           <Section style={bodySection}>
             <Text style={greeting}>Hi {clientName},</Text>
             <Text style={replyMessageBox}>{replyMessage}</Text>
           </Section>
 
+          {/* Quoted Previous Thread */}
           {originalMessageSnippet && (
             <Section style={quoteCard}>
-              <Text style={quoteLabel}>In response to previous message ({originalSubject}):</Text>
+              <Text style={quoteLabel}>In response to your message ({originalSubject}):</Text>
               <Text style={quoteText}>{originalMessageSnippet}</Text>
             </Section>
           )}
 
+          {/* Signature */}
           <Section style={signatureSection}>
             <Text style={signatureName}>Wisman Nur</Text>
-            <Text style={signatureTitle}>Frontend Software Engineer & AI Agent Architect</Text>
+            <Text style={signatureTitle}>Senior Fullstack & Autonomous AI Systems Engineer</Text>
             <Text style={signatureLinks}>
               <Link href="https://wismannur.pro" style={linkStyle}>
                 wismannur.pro
@@ -67,11 +69,12 @@ export const AdminReplyToClientEmail = ({
 
           <Hr style={divider} />
 
+          {/* Footer */}
           <Section style={footerSection}>
             <Text style={footerText}>
-              You can reply directly to this email for any questions or follow-up discussion.
+              You can reply directly to this email to continue our conversation.
             </Text>
-            {inquiryId && <Text style={refFooterText}>Ref: #{inquiryId}</Text>}
+            {inquiryId && <Text style={refFooterText}>Thread Reference: #{inquiryId}</Text>}
           </Section>
         </Container>
       </Body>
@@ -82,84 +85,65 @@ export const AdminReplyToClientEmail = ({
 export default AdminReplyToClientEmail;
 
 const main: React.CSSProperties = {
-  backgroundColor: "#090d16",
+  backgroundColor: "#08090C",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
-  padding: "40px 0",
+  padding: "36px 0",
 };
 
 const container: React.CSSProperties = {
-  backgroundColor: "#111827",
-  border: "1px solid #1f2937",
+  backgroundColor: "#0C0E18",
+  border: "1px solid #1E2235",
+  borderTop: "3px solid #6366F1",
   borderRadius: "16px",
   margin: "0 auto",
   padding: "36px",
   maxWidth: "580px",
 };
 
-const headerSection: React.CSSProperties = {
-  marginBottom: "24px",
-};
-
-const brand: React.CSSProperties = {
-  color: "#6366f1",
-  fontSize: "13px",
-  fontWeight: "700",
-  textTransform: "uppercase",
-  letterSpacing: "1px",
-  margin: "0 0 6px",
-};
-
-const headerTitle: React.CSSProperties = {
-  color: "#f9fafb",
-  fontSize: "22px",
-  fontWeight: "700",
-  margin: "0",
-};
-
 const bodySection: React.CSSProperties = {
-  color: "#e5e7eb",
-  fontSize: "15px",
-  lineHeight: "1.6",
+  color: "#E2E8F0",
+  fontSize: "14.5px",
+  lineHeight: "1.7",
   marginBottom: "24px",
 };
 
 const greeting: React.CSSProperties = {
-  fontSize: "16px",
-  fontWeight: "600",
-  color: "#f3f4f6",
+  fontSize: "15.5px",
+  fontWeight: "700",
+  color: "#FFFFFF",
   margin: "0 0 16px",
 };
 
 const replyMessageBox: React.CSSProperties = {
-  color: "#f3f4f6",
-  fontSize: "15px",
+  color: "#F8FAFC",
+  fontSize: "14.5px",
   lineHeight: "1.7",
   whiteSpace: "pre-wrap",
   margin: "0",
 };
 
 const quoteCard: React.CSSProperties = {
-  backgroundColor: "#1f2937",
-  borderLeft: "3px solid #6366f1",
+  backgroundColor: "#131726",
+  borderLeft: "3px solid #6366F1",
   borderRadius: "0 10px 10px 0",
   padding: "14px 18px",
   margin: "24px 0",
 };
 
 const quoteLabel: React.CSSProperties = {
-  color: "#9ca3af",
+  color: "#94A3B8",
   fontSize: "11px",
-  fontWeight: "600",
+  fontWeight: "700",
   textTransform: "uppercase",
   letterSpacing: "0.5px",
   margin: "0 0 6px",
 };
 
 const quoteText: React.CSSProperties = {
-  color: "#9ca3af",
+  color: "#94A3B8",
   fontSize: "13px",
-  lineHeight: "1.5",
+  lineHeight: "1.55",
   margin: "0",
   whiteSpace: "pre-wrap",
   fontStyle: "italic",
@@ -170,31 +154,32 @@ const signatureSection: React.CSSProperties = {
 };
 
 const signatureName: React.CSSProperties = {
-  color: "#f9fafb",
+  color: "#FFFFFF",
   fontSize: "15px",
-  fontWeight: "700",
+  fontWeight: "800",
   margin: "0 0 2px",
 };
 
 const signatureTitle: React.CSSProperties = {
-  color: "#9ca3af",
-  fontSize: "13px",
-  margin: "0 0 6px",
+  color: "#94A3B8",
+  fontSize: "12px",
+  margin: "0 0 8px",
 };
 
 const signatureLinks: React.CSSProperties = {
-  color: "#6b7280",
+  color: "#64748B",
   fontSize: "12px",
   margin: "0",
 };
 
 const linkStyle: React.CSSProperties = {
-  color: "#818cf8",
+  color: "#818CF8",
   textDecoration: "none",
+  fontWeight: "600",
 };
 
 const divider: React.CSSProperties = {
-  borderColor: "#1f2937",
+  borderColor: "#1E2235",
   margin: "24px 0 16px",
 };
 
@@ -203,15 +188,15 @@ const footerSection: React.CSSProperties = {
 };
 
 const footerText: React.CSSProperties = {
-  color: "#6b7280",
+  color: "#64748B",
   fontSize: "11px",
   margin: "0",
-  lineHeight: "1.4",
+  lineHeight: "1.45",
 };
 
 const refFooterText: React.CSSProperties = {
   color: "#475569",
-  fontSize: "10px",
+  fontSize: "11px",
   fontFamily: "monospace",
   margin: "8px 0 0",
 };

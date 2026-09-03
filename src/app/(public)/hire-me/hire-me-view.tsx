@@ -51,6 +51,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { HighlightedText } from "@/components/ui/highlighted-text";
 import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
 import { CtaV2 } from "@/components/home-v2/cta-v2";
+import { SubmissionSuccessModal } from "@/components/common/submission-success-modal";
 import { getReCaptchaToken } from "@/services/recaptcha";
 import { hireRequestService } from "@/services";
 import type { AvailabilitySlot } from "@/services/availability/types";
@@ -211,6 +212,9 @@ type HireMeViewProps = {
 export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeViewProps) {
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [submittedData, setSubmittedData] = useState<HireFormValues | null>(null);
 
   const hero = copy?.hero;
   const availabilityCopy = copy?.availabilitySection;
@@ -248,12 +252,9 @@ export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeVi
         token
       );
     },
-    onSuccess: () => {
-      toast({
-        title: "Opportunity brief submitted!",
-        description:
-          "Thank you for reaching out. I will review the role details and reply within 24 hours.",
-      });
+    onSuccess: (id: string) => {
+      setSubmissionId(id);
+      setSuccessModalOpen(true);
       trackEvent("hire-form-submit-success", { role: form.getValues().roleTitle });
       form.reset();
     },
@@ -274,6 +275,7 @@ export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeVi
   const onSubmit = async (data: HireFormValues) => {
     setIsSubmitting(true);
     trackEvent("hire-form-submit-attempt", { role: data.roleTitle });
+    setSubmittedData(data);
     const token = await getReCaptchaToken();
     mutation.mutate({ formData: data, token });
   };
@@ -958,6 +960,20 @@ export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeVi
 
       {/* 7. Bottom Conversion CTA Card */}
       <CtaV2 settings={settings} />
+
+      <SubmissionSuccessModal
+        isOpen={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        type="hire"
+        referenceId={submissionId || undefined}
+        data={{
+          name: submittedData?.name,
+          email: submittedData?.email,
+          company: submittedData?.company,
+          targetRole: submittedData?.roleTitle,
+          budget: submittedData?.salaryRange,
+        }}
+      />
     </div>
   );
 }

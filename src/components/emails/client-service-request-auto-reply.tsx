@@ -29,7 +29,32 @@ export const ClientServiceRequestAutoReplyEmail = ({
   projectDetails,
   refId,
 }: ClientServiceRequestAutoReplyProps) => {
-  const previewText = `Thank you for your project request, ${name}! - Wisman Nur`;
+  const formatBudget = (val?: string) => {
+    if (!val) return "Not Specified";
+    const map: Record<string, string> = {
+      "under-1000": "< $1,000",
+      "1000-5000": "$1,000 - $5,000",
+      "5000-10000": "$5,000 - $10,000",
+      "10000-plus": "$10,000+",
+      hourly: "Hourly rate",
+    };
+    return map[val] || val;
+  };
+
+  const formatTimeframe = (val?: string) => {
+    if (!val) return "Not Specified";
+    const map: Record<string, string> = {
+      "less-than-1-month": "< 1 Month",
+      "1-3-months": "1 - 3 Months",
+      "3-6-months": "3 - 6 Months",
+      "6-plus-months": "6+ Months",
+      flexible: "Flexible / Open",
+      urgent: "Immediate / Urgent (< 2 weeks)",
+    };
+    return map[val] || val;
+  };
+
+  const previewText = `Thank you for your project proposal, ${name}! - Wisman Nur`;
 
   return (
     <Html>
@@ -37,46 +62,53 @@ export const ClientServiceRequestAutoReplyEmail = ({
       <Preview>{previewText}</Preview>
       <Body style={main}>
         <Container style={container}>
+          {/* Header Brand */}
           <Section style={headerSection}>
-            <Text style={brand}>Wisman Nur · Project Inquiry</Text>
-            <Heading style={headerTitle}>Project Request Received 🚀</Heading>
-            <Text style={headerSubtitle}>Thank you for reaching out.</Text>
+            <Text style={brand}>WISMAN NUR · SERVICE ENGAGEMENT</Text>
+            <Heading style={headerTitle}>Project Brief Logged 🚀</Heading>
+            <Text style={headerSubtitle}>Engineering proposal received via wismannur.pro</Text>
           </Section>
 
+          {/* Body Narrative */}
           <Section style={bodySection}>
             <Text style={greeting}>Hi {name},</Text>
             <Text style={paragraph}>
-              Thank you for submitting a project request for <strong>{serviceType}</strong> services
+              Thank you for submitting your project requirements for <strong>{serviceType}</strong>{" "}
               via{" "}
-              <Link href="https://wismannur.pro/hire-me" style={linkStyle}>
-                wismannur.pro/hire-me
+              <Link href="https://wismannur.pro/services" style={linkStyle}>
+                wismannur.pro/services
               </Link>
               .
             </Text>
             <Text style={paragraph}>
-              I will review the project details and schedule availability, and will get back to you
-              with an estimate and next steps within <strong>24 business hours</strong>.
+              I will review your technical specifications, architecture feasibility, and timeline,
+              and get back to you with an actionable estimate and schedule within{" "}
+              <strong>24 business hours</strong>.
             </Text>
           </Section>
 
+          {/* Project Summary Card */}
           <Section style={summaryCard}>
-            <Text style={summaryLabel}>Project Request Summary:</Text>
+            <div style={badgeContainer}>
+              <span style={badgeText}>PROPOSAL SPECIFICATIONS</span>
+            </div>
             <Text style={summaryItem}>
-              <strong>Service:</strong> {serviceType}
+              <strong>Service Engagement:</strong> {serviceType}
             </Text>
             <Text style={summaryItem}>
-              <strong>Estimated Budget:</strong> {budget}
+              <strong>Target Budget:</strong> {formatBudget(budget)}
             </Text>
             <Text style={summaryItem}>
-              <strong>Target Timeframe:</strong> {timeframe}
+              <strong>Estimated Timeline:</strong> {formatTimeframe(timeframe)}
             </Text>
-            <Text style={summaryItemLabel}>Project Details:</Text>
+            <Text style={summaryItemLabel}>Project Scope & Details:</Text>
             <Text style={summaryMessage}>{projectDetails}</Text>
           </Section>
 
+          {/* Signature Section */}
           <Section style={signatureSection}>
             <Text style={signatureName}>Wisman Nur</Text>
-            <Text style={signatureTitle}>Frontend Software Engineer & AI Agent Architect</Text>
+            <Text style={signatureTitle}>Senior Fullstack & Autonomous AI Systems Engineer</Text>
             <Text style={signatureLinks}>
               <Link href="https://wismannur.pro" style={linkStyle}>
                 wismannur.pro
@@ -94,11 +126,13 @@ export const ClientServiceRequestAutoReplyEmail = ({
 
           <Hr style={divider} />
 
+          {/* Footer */}
           <Section style={footerSection}>
             <Text style={footerText}>
-              This is an automated confirmation that your project request has been received.
+              This is an automated confirmation sent via Resend. For urgent requirements or RFC
+              documents, reply directly to this email.
             </Text>
-            {refId && <Text style={refFooterText}>Ref: #{refId}</Text>}
+            {refId && <Text style={refFooterText}>Tracking Reference: {refId}</Text>}
           </Section>
         </Container>
       </Body>
@@ -109,15 +143,16 @@ export const ClientServiceRequestAutoReplyEmail = ({
 export default ClientServiceRequestAutoReplyEmail;
 
 const main: React.CSSProperties = {
-  backgroundColor: "#090d16",
+  backgroundColor: "#08090C",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
   padding: "40px 0",
 };
 
 const container: React.CSSProperties = {
-  backgroundColor: "#111827",
-  border: "1px solid #1f2937",
+  backgroundColor: "#0C0E18",
+  border: "1px solid #1E2235",
+  borderTop: "3px solid #8B5CF6",
   borderRadius: "16px",
   margin: "0 auto",
   padding: "36px",
@@ -129,38 +164,39 @@ const headerSection: React.CSSProperties = {
 };
 
 const brand: React.CSSProperties = {
-  color: "#6366f1",
-  fontSize: "13px",
-  fontWeight: "700",
+  color: "#8B5CF6",
+  fontSize: "11px",
+  fontWeight: "800",
   textTransform: "uppercase",
-  letterSpacing: "1px",
-  margin: "0 0 8px",
+  letterSpacing: "1.2px",
+  margin: "0 0 10px",
 };
 
 const headerTitle: React.CSSProperties = {
-  color: "#f9fafb",
+  color: "#FFFFFF",
   fontSize: "22px",
-  fontWeight: "700",
+  fontWeight: "800",
+  letterSpacing: "-0.5px",
   margin: "0 0 6px",
 };
 
 const headerSubtitle: React.CSSProperties = {
-  color: "#9ca3af",
-  fontSize: "14px",
+  color: "#94A3B8",
+  fontSize: "13px",
   margin: "0",
 };
 
 const bodySection: React.CSSProperties = {
-  color: "#e5e7eb",
-  fontSize: "15px",
-  lineHeight: "1.6",
+  color: "#E2E8F0",
+  fontSize: "14px",
+  lineHeight: "1.65",
   marginBottom: "24px",
 };
 
 const greeting: React.CSSProperties = {
-  fontSize: "16px",
-  fontWeight: "600",
-  color: "#f3f4f6",
+  fontSize: "15px",
+  fontWeight: "700",
+  color: "#FFFFFF",
   margin: "0 0 12px",
 };
 
@@ -169,39 +205,45 @@ const paragraph: React.CSSProperties = {
 };
 
 const summaryCard: React.CSSProperties = {
-  backgroundColor: "#1f2937",
-  border: "1px solid #374151",
+  backgroundColor: "#131726",
+  border: "1px solid #22283E",
   borderRadius: "12px",
   padding: "18px 20px",
   marginBottom: "28px",
 };
 
-const summaryLabel: React.CSSProperties = {
-  color: "#9ca3af",
-  fontSize: "12px",
-  fontWeight: "600",
-  textTransform: "uppercase",
-  letterSpacing: "0.5px",
-  margin: "0 0 10px",
+const badgeContainer: React.CSSProperties = {
+  marginBottom: "10px",
+};
+
+const badgeText: React.CSSProperties = {
+  backgroundColor: "rgba(139, 92, 246, 0.15)",
+  color: "#A78BFA",
+  fontSize: "10px",
+  fontWeight: "700",
+  letterSpacing: "0.8px",
+  padding: "3px 8px",
+  borderRadius: "4px",
+  border: "1px solid rgba(139, 92, 246, 0.25)",
 };
 
 const summaryItem: React.CSSProperties = {
-  color: "#f3f4f6",
-  fontSize: "14px",
+  color: "#FFFFFF",
+  fontSize: "13px",
   margin: "0 0 6px",
 };
 
 const summaryItemLabel: React.CSSProperties = {
-  color: "#9ca3af",
-  fontSize: "13px",
-  fontWeight: "600",
+  color: "#94A3B8",
+  fontSize: "12px",
+  fontWeight: "700",
   margin: "12px 0 4px",
 };
 
 const summaryMessage: React.CSSProperties = {
-  color: "#d1d5db",
+  color: "#94A3B8",
   fontSize: "13px",
-  lineHeight: "1.5",
+  lineHeight: "1.55",
   margin: "0",
   whiteSpace: "pre-wrap",
   fontStyle: "italic",
@@ -212,31 +254,32 @@ const signatureSection: React.CSSProperties = {
 };
 
 const signatureName: React.CSSProperties = {
-  color: "#f9fafb",
+  color: "#FFFFFF",
   fontSize: "15px",
-  fontWeight: "700",
+  fontWeight: "800",
   margin: "0 0 2px",
 };
 
 const signatureTitle: React.CSSProperties = {
-  color: "#9ca3af",
-  fontSize: "13px",
-  margin: "0 0 6px",
+  color: "#94A3B8",
+  fontSize: "12px",
+  margin: "0 0 8px",
 };
 
 const signatureLinks: React.CSSProperties = {
-  color: "#6b7280",
+  color: "#64748B",
   fontSize: "12px",
   margin: "0",
 };
 
 const linkStyle: React.CSSProperties = {
-  color: "#818cf8",
+  color: "#818CF8",
   textDecoration: "none",
+  fontWeight: "600",
 };
 
 const divider: React.CSSProperties = {
-  borderColor: "#1f2937",
+  borderColor: "#1E2235",
   margin: "24px 0 16px",
 };
 
@@ -245,15 +288,15 @@ const footerSection: React.CSSProperties = {
 };
 
 const footerText: React.CSSProperties = {
-  color: "#6b7280",
+  color: "#64748B",
   fontSize: "11px",
   margin: "0",
-  lineHeight: "1.4",
+  lineHeight: "1.45",
 };
 
 const refFooterText: React.CSSProperties = {
   color: "#475569",
-  fontSize: "10px",
+  fontSize: "11px",
   fontFamily: "monospace",
   margin: "8px 0 0",
 };

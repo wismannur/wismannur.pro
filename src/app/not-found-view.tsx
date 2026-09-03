@@ -1,12 +1,23 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import type { NotFoundCopy } from "@/services/page-copy/types";
-import { motion } from "framer-motion";
-import { ArrowRight, Home } from "lucide-react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  BookOpen,
+  Briefcase,
+  Compass,
+  Home,
+  Layers,
+  Sparkles,
+  UserCheck,
+} from "lucide-react";
+
+import { LayoutV2 } from "@/components/layout-v2/layout-v2";
+import { Button } from "@/components/ui/button";
+import type { NotFoundCopy } from "@/services/page-copy/types";
 
 export function NotFoundView({
   copy,
@@ -18,10 +29,9 @@ export function NotFoundView({
   const pathname = usePathname();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", pathname);
+    console.error("404 Error: Non-existent route accessed:", pathname);
   }, [pathname]);
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -43,7 +53,7 @@ export function NotFoundView({
   };
 
   const numberVariants = {
-    initial: { scale: 0.8, opacity: 0 },
+    initial: { scale: 0.85, opacity: 0 },
     animate: {
       scale: 1,
       opacity: 1,
@@ -55,159 +65,180 @@ export function NotFoundView({
     },
   };
 
+  const quickLinks = [
+    {
+      title: "Case Studies",
+      desc: "Explore production architectures & engineering blueprints",
+      path: "/projects",
+      icon: <Layers className="h-5 w-5 text-indigo-400" />,
+      color: "indigo",
+    },
+    {
+      title: "Engineering Services",
+      desc: "Fullstack web platforms & autonomous AI integrations",
+      path: "/services",
+      icon: <Briefcase className="h-5 w-5 text-purple-400" />,
+      color: "purple",
+    },
+    {
+      title: "Hire Me / Availability",
+      desc: "Contract consulting, advisory & senior founding roles",
+      path: "/hire-me",
+      icon: <UserCheck className="h-5 w-5 text-emerald-400" />,
+      color: "emerald",
+    },
+    ...(enableBlog
+      ? [
+          {
+            title: "Engineering Blog",
+            desc: "Deep-dives into systems engineering, TypeScript, and AI",
+            path: "/blog",
+            icon: <BookOpen className="h-5 w-5 text-sky-400" />,
+            color: "sky",
+          },
+        ]
+      : []),
+  ];
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background relative overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 -left-10 w-40 h-40 rounded-full bg-primary/5 blur-3xl"></div>
-        <div className="absolute bottom-1/3 -right-10 w-60 h-60 rounded-full bg-primary/10 blur-3xl"></div>
-        <div className="absolute top-2/3 left-1/4 w-20 h-20 rounded-full bg-secondary/10 blur-2xl"></div>
-      </div>
+    <LayoutV2>
+      <div className="min-h-[85vh] flex flex-col items-center justify-center py-12 px-4 relative overflow-hidden">
+        {/* Ambient background glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[450px] bg-primary/12 rounded-full blur-[150px] pointer-events-none -z-10" />
+        <div className="absolute bottom-10 right-10 w-[400px] h-[300px] bg-indigo-500/10 rounded-full blur-[130px] pointer-events-none -z-10" />
 
-      {/* Grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
-
-      <div className="relative z-10 container max-w-6xl px-4 py-16 mx-auto flex flex-col lg:flex-row items-center justify-between gap-12">
-        <motion.div
-          className="flex-1 text-center lg:text-left max-w-lg"
-          initial="hidden"
-          animate="visible"
-          variants={containerVariants}
-        >
+        <div className="container max-w-5xl mx-auto flex flex-col items-center text-center relative z-10">
+          {/* Main Hero Notification */}
           <motion.div
-            className="inline-block bg-primary/10 text-primary font-medium px-4 py-1.5 rounded-full mb-4"
-            variants={itemVariants}
+            className="flex flex-col items-center max-w-2xl mx-auto space-y-5"
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
           >
-            {copy.badge}
+            {/* Status Pill */}
+            <motion.div
+              className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs font-semibold"
+              variants={itemVariants}
+            >
+              <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+              <span>{copy.badge || "404 // ROUTE NOT FOUND"}</span>
+            </motion.div>
+
+            {/* Glowing 404 Visual */}
+            <motion.div
+              className="relative my-2 select-none"
+              initial="initial"
+              animate="animate"
+              variants={numberVariants}
+            >
+              <div className="text-[120px] sm:text-[160px] md:text-[200px] font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white/20 via-primary/20 to-transparent leading-none">
+                404
+              </div>
+
+              {/* Holographic Glowing Ring Centerpiece */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-gradient-to-tr from-primary/30 via-indigo-500/20 to-purple-600/30 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-2xl shadow-primary/30">
+                <Compass className="h-10 w-10 sm:h-12 sm:w-12 text-white animate-spin-slow" />
+              </div>
+            </motion.div>
+
+            {/* Title & Description */}
+            <motion.h1
+              className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white"
+              variants={itemVariants}
+            >
+              {copy.title || "Coordinates Uncharted"}
+            </motion.h1>
+
+            <motion.p
+              className="text-sm sm:text-base text-gray-400 max-w-lg leading-relaxed"
+              variants={itemVariants}
+            >
+              {copy.message ||
+                "The requested path does not exist or has been relocated. Let's redirect you back to active mission coordinates."}
+            </motion.p>
+
+            {/* Action Buttons */}
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-3.5 pt-2"
+              variants={itemVariants}
+            >
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full px-6 h-11 bg-primary text-white font-bold text-xs sm:text-sm shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                <Link
+                  href="/"
+                  data-umami-event="not-found-home-click"
+                  className="flex items-center gap-2"
+                >
+                  <Home size={15} />
+                  <span>{copy.primaryLabel || "Return Home"}</span>
+                </Link>
+              </Button>
+
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="rounded-full px-6 h-11 border-white/[0.12] bg-white/[0.04] text-white hover:bg-white/[0.08] hover:border-primary/40 text-xs sm:text-sm font-semibold transition-all"
+              >
+                <Link
+                  href="/contact"
+                  data-umami-event="not-found-contact-click"
+                  className="flex items-center gap-2"
+                >
+                  <span>{copy.secondaryLabel || "Contact Support"}</span>
+                  <ArrowRight size={15} />
+                </Link>
+              </Button>
+            </motion.div>
           </motion.div>
 
-          <motion.h1
-            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 tracking-tight"
-            variants={itemVariants}
-          >
-            {copy.title}
-          </motion.h1>
-
-          <motion.p className="text-muted-foreground text-lg mb-8" variants={itemVariants}>
-            {copy.message}
-          </motion.p>
-
+          {/* Quick Nav Destination Grid */}
           <motion.div
-            className="flex flex-wrap gap-3 justify-center lg:justify-start"
-            variants={itemVariants}
+            className="w-full max-w-3xl mt-16 pt-10 border-t border-white/[0.08]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
           >
-            <Button asChild size="lg" className="rounded-full">
-              <Link
-                href="/"
-                data-umami-event="not-found-home-click"
-                className="flex items-center gap-2"
-              >
-                <Home size={16} />
-                {copy.primaryLabel}
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="rounded-full">
-              <Link
-                href="/contact"
-                data-umami-event="not-found-contact-click"
-                className="flex items-center gap-2"
-              >
-                {copy.secondaryLabel}
-                <ArrowRight size={16} />
-              </Link>
-            </Button>
-          </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="flex-1 flex justify-center items-center"
-          initial="initial"
-          animate="animate"
-          variants={numberVariants}
-        >
-          <div className="relative">
-            {/* Large 404 */}
-            <div className="text-[180px] md:text-[250px] font-bold text-primary/10 dark:text-primary/30 leading-none select-none">
-              404
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Sparkles size={14} className="text-primary animate-pulse" />
+              <h2 className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                {copy.popularTitle || "Popular Destinations"}
+              </h2>
             </div>
 
-            {/* Overlay elements */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full flex items-center justify-center">
-              <motion.div
-                className="w-32 h-32 md:w-44 md:h-44 mt-2 md:mt-3 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 backdrop-blur-sm border border-white/10"
-                animate={{
-                  scale: [1, 1.05, 1],
-                  rotate: [0, 5, 0, -5, 0],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Number.POSITIVE_INFINITY,
-                  repeatType: "reverse",
-                }}
-              />
-            </div>
-
-            <motion.div
-              className="absolute -top-6 -right-6 w-12 h-12 rounded-full bg-primary/20 backdrop-blur-sm"
-              animate={{
-                y: [0, -10, 0],
-                x: [0, 5, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Number.POSITIVE_INFINITY,
-                repeatType: "reverse",
-              }}
-            />
-
-            <motion.div
-              className="absolute -bottom-4 -left-4 w-8 h-8 rounded-full bg-secondary/20 backdrop-blur-sm"
-              animate={{
-                y: [0, 10, 0],
-                x: [0, -5, 0],
-              }}
-              transition={{
-                duration: 3.5,
-                repeat: Number.POSITIVE_INFINITY,
-                repeatType: "reverse",
-              }}
-            />
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Quick links */}
-      <motion.div
-        className="relative z-10 w-full max-w-2xl mx-auto px-4 pb-16"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-      >
-        <div className="bg-background/50 backdrop-blur-sm border border-primary/30 dark:border-primary/50 rounded-xl p-6">
-          <h3 className="text-lg font-medium mb-4">{copy.popularTitle}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { title: "Blog", path: "/blog" },
-              { title: "Projects", path: "/projects" },
-              { title: "About", path: "/about" },
-              { title: "Services", path: "/services" },
-            ]
-              .filter((link) => link.path !== "/blog" || enableBlog)
-              .slice(0, 3)
-              .map((link) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {quickLinks.map((link) => (
                 <Link
                   key={link.path}
                   href={link.path}
                   data-umami-event="not-found-quick-link-click"
                   data-umami-event-label={link.title}
-                  className="px-4 py-2 rounded-lg bg-background/80 hover:bg-primary/10 border border-border text-center transition-colors"
+                  className="group flex items-start gap-4 p-4 rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 hover:bg-[#0C0E18] hover:border-primary/40 transition-all text-left backdrop-blur-xl shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5"
                 >
-                  {link.title}
+                  <div className="p-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] group-hover:border-primary/30 group-hover:scale-105 transition-all shrink-0">
+                    {link.icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-white group-hover:text-primary transition-colors">
+                        {link.title}
+                      </h3>
+                      <ArrowRight
+                        size={13}
+                        className="text-gray-500 group-hover:text-primary group-hover:translate-x-1 transition-all"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1 leading-relaxed">{link.desc}</p>
+                  </div>
                 </Link>
               ))}
-          </div>
+            </div>
+          </motion.div>
         </div>
-      </motion.div>
-    </div>
+      </div>
+    </LayoutV2>
   );
 }

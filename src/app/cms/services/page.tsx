@@ -157,6 +157,7 @@ export default function CmsServicesPage() {
         const query = searchQuery.toLowerCase();
         const filtered = data.requests.filter(
           (request) =>
+            request.id.toLowerCase().includes(query) ||
             request.name.toLowerCase().includes(query) ||
             request.email.toLowerCase().includes(query) ||
             request.serviceType.toLowerCase().includes(query) ||
@@ -318,16 +319,22 @@ export default function CmsServicesPage() {
                   </span>
                 )}
               </div>
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(`mailto:${request.email}`, "_self");
-                }}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors truncate max-w-[180px]"
-                title={request.email}
-              >
-                {request.email}
-              </span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="font-mono text-[10px] text-primary/90 bg-primary/10 px-1 py-0.2 rounded border border-primary/20 shrink-0">
+                  {request.id}
+                </span>
+                <span className="text-muted-foreground/40">•</span>
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`mailto:${request.email}`, "_self");
+                  }}
+                  className="hover:text-primary transition-colors truncate max-w-[140px]"
+                  title={request.email}
+                >
+                  {request.email}
+                </span>
+              </div>
               {request.company && (
                 <div
                   className="flex items-center gap-1 text-[11px] text-muted-foreground/80 mt-0.5 truncate max-w-[180px]"
@@ -453,7 +460,7 @@ export default function CmsServicesPage() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => handleViewRequest(request.id)}>
                 <Eye className="h-4 w-4 mr-2" />
-                View Details & Thread
+                View Details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

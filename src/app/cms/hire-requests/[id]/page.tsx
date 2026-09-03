@@ -354,11 +354,27 @@ export default function HireRequestDetailPage() {
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <Building2 className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-xs text-primary uppercase tracking-wider">
-                      {request.company}
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      <span className="font-semibold text-xs text-primary uppercase tracking-wider">
+                        {request.company}
+                      </span>
+                    </div>
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-xs font-mono">
+                      <span>{request.id}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(request.id);
+                          toast.success("Reference ID copied to clipboard!");
+                        }}
+                        className="hover:text-foreground transition-colors"
+                        title="Copy Reference ID"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                   <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">
                     {request.roleTitle}

@@ -411,6 +411,20 @@ export default function ServiceRequestDetailPage() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{request.name}</h1>
             {getStatusBadge(request.status)}
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-xs font-mono">
+              <span>{request.id}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(request.id);
+                  toast.success("Reference ID copied to clipboard!");
+                }}
+                className="hover:text-foreground transition-colors"
+                title="Copy Reference ID"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+            </div>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-1.5 sm:gap-2">
             <span>Service Request</span>

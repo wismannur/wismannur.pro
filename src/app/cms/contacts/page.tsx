@@ -83,6 +83,7 @@ export default function CmsContactsPage() {
         const query = searchQuery.toLowerCase();
         const filtered = data.contacts.filter(
           (contact) =>
+            contact.id.toLowerCase().includes(query) ||
             contact.name.toLowerCase().includes(query) ||
             contact.email.toLowerCase().includes(query) ||
             contact.subject.toLowerCase().includes(query) ||
@@ -230,16 +231,22 @@ export default function CmsContactsPage() {
                   </span>
                 )}
               </div>
-              <span
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.open(`mailto:${contact.email}`, "_self");
-                }}
-                className="text-xs text-muted-foreground hover:text-primary transition-colors truncate max-w-[180px]"
-                title={contact.email}
-              >
-                {contact.email}
-              </span>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="font-mono text-[10px] text-primary/90 bg-primary/10 px-1 py-0.2 rounded border border-primary/20 shrink-0">
+                  {contact.id}
+                </span>
+                <span className="text-muted-foreground/40">•</span>
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`mailto:${contact.email}`, "_self");
+                  }}
+                  className="hover:text-primary transition-colors truncate max-w-[140px]"
+                  title={contact.email}
+                >
+                  {contact.email}
+                </span>
+              </div>
             </div>
           </div>
         );
@@ -306,7 +313,7 @@ export default function CmsContactsPage() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => handleViewContact(contact.id)}>
                 <Eye className="h-4 w-4 mr-2" />
-                View Details & Thread
+                View Details
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

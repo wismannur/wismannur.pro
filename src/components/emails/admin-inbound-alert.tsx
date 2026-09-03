@@ -47,24 +47,33 @@ export const AdminInboundAlertEmail = ({
       <Preview>{previewText}</Preview>
       <Body style={main}>
         <Container style={container}>
+          {/* Header */}
           <Section style={headerSection}>
-            <Heading style={headerTitle}>💬 New Inbound Reply</Heading>
-            <Text style={headerSubtitle}>Client replied to email thread via Resend Inbound</Text>
+            <div style={badgeContainer}>
+              <span style={badgeText}>INBOUND EMAIL THREAD</span>
+            </div>
+            <Heading style={headerTitle}>💬 Inbound Client Reply</Heading>
+            <Text style={headerSubtitle}>Client replied to email thread via Resend Webhook</Text>
           </Section>
 
+          {/* Details Card */}
           <Section style={card}>
             <Text style={label}>From Client</Text>
             <Text style={value}>
-              <strong>{clientName}</strong> ({clientEmail})
+              <strong>{clientName}</strong> (
+              <Link href={`mailto:${clientEmail}`} style={linkStyle}>
+                {clientEmail}
+              </Link>
+              )
             </Text>
 
             <Text style={label}>Subject</Text>
             <Text style={value}>{subject}</Text>
 
-            <Text style={label}>Ticket ID / Ref</Text>
-            <Text style={value}>#{inquiryId}</Text>
+            <Text style={label}>Reference ID</Text>
+            <Text style={refValue}>{inquiryId}</Text>
 
-            <Text style={label}>Received At (WIB)</Text>
+            <Text style={label}>Timestamp (WIB)</Text>
             <Text style={value}>{receivedAt}</Text>
 
             <Hr style={divider} />
@@ -73,9 +82,10 @@ export const AdminInboundAlertEmail = ({
             <Text style={messageBox}>{message}</Text>
           </Section>
 
+          {/* Actions & Footer */}
           <Section style={footerSection}>
             <Link href={cmsUrl} style={buttonStyle}>
-              Open Thread in CMS
+              Open Thread in CMS →
             </Link>
             <Text style={footerText}>
               This message is automatically recorded in your CMS conversation thread.
@@ -90,18 +100,19 @@ export const AdminInboundAlertEmail = ({
 export default AdminInboundAlertEmail;
 
 const main: React.CSSProperties = {
-  backgroundColor: "#0f172a",
+  backgroundColor: "#08090C",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif',
   padding: "40px 0",
 };
 
 const container: React.CSSProperties = {
-  backgroundColor: "#1e293b",
-  border: "1px solid #334155",
+  backgroundColor: "#0C0E18",
+  border: "1px solid #1E2235",
+  borderTop: "3px solid #6366F1",
   borderRadius: "16px",
   margin: "0 auto",
-  padding: "32px",
+  padding: "36px",
   maxWidth: "560px",
 };
 
@@ -109,56 +120,80 @@ const headerSection: React.CSSProperties = {
   marginBottom: "24px",
 };
 
+const badgeContainer: React.CSSProperties = {
+  marginBottom: "10px",
+};
+
+const badgeText: React.CSSProperties = {
+  backgroundColor: "rgba(99, 102, 241, 0.15)",
+  color: "#818CF8",
+  fontSize: "10px",
+  fontWeight: "800",
+  letterSpacing: "1px",
+  padding: "3px 8px",
+  borderRadius: "4px",
+  border: "1px solid rgba(99, 102, 241, 0.25)",
+};
+
 const headerTitle: React.CSSProperties = {
-  color: "#f8fafc",
+  color: "#FFFFFF",
   fontSize: "22px",
-  fontWeight: "700",
+  fontWeight: "800",
+  letterSpacing: "-0.5px",
   margin: "0 0 4px",
 };
 
 const headerSubtitle: React.CSSProperties = {
-  color: "#94a3b8",
+  color: "#94A3B8",
   fontSize: "13px",
   margin: "0",
 };
 
 const card: React.CSSProperties = {
-  backgroundColor: "#0f172a",
-  border: "1px solid #334155",
+  backgroundColor: "#131726",
+  border: "1px solid #22283E",
   borderRadius: "12px",
   padding: "20px",
   marginBottom: "24px",
 };
 
 const label: React.CSSProperties = {
-  color: "#64748b",
-  fontSize: "11px",
-  fontWeight: "600",
+  color: "#64748B",
+  fontSize: "10px",
+  fontWeight: "700",
   textTransform: "uppercase",
-  letterSpacing: "0.5px",
+  letterSpacing: "0.8px",
   margin: "0 0 4px",
 };
 
 const value: React.CSSProperties = {
-  color: "#e2e8f0",
-  fontSize: "14px",
+  color: "#E2E8F0",
+  fontSize: "13.5px",
+  margin: "0 0 16px",
+};
+
+const refValue: React.CSSProperties = {
+  color: "#818CF8",
+  fontFamily: "monospace",
+  fontSize: "12.5px",
+  fontWeight: "700",
   margin: "0 0 16px",
 };
 
 const messageBox: React.CSSProperties = {
-  color: "#f1f5f9",
-  fontSize: "14px",
+  color: "#FFFFFF",
+  fontSize: "13.5px",
   lineHeight: "1.6",
   whiteSpace: "pre-wrap",
-  backgroundColor: "#1e293b",
-  border: "1px solid #334155",
+  backgroundColor: "#0C0E18",
+  border: "1px solid #1E2235",
   borderRadius: "8px",
-  padding: "12px 16px",
+  padding: "14px 16px",
   margin: "8px 0 0",
 };
 
 const divider: React.CSSProperties = {
-  borderColor: "#334155",
+  borderColor: "#22283E",
   margin: "16px 0",
 };
 
@@ -168,18 +203,25 @@ const footerSection: React.CSSProperties = {
 
 const buttonStyle: React.CSSProperties = {
   display: "inline-block",
-  backgroundColor: "#6366f1",
-  color: "#ffffff",
-  fontWeight: "600",
-  fontSize: "14px",
+  backgroundColor: "#6366F1",
+  color: "#FFFFFF",
+  fontWeight: "700",
+  fontSize: "13px",
   borderRadius: "8px",
-  padding: "10px 20px",
+  padding: "11px 22px",
   textDecoration: "none",
-  marginBottom: "12px",
+  marginBottom: "14px",
 };
 
 const footerText: React.CSSProperties = {
-  color: "#94a3b8",
-  fontSize: "12px",
+  color: "#64748B",
+  fontSize: "11.5px",
+  lineHeight: "1.45",
   margin: "0",
+};
+
+const linkStyle: React.CSSProperties = {
+  color: "#818CF8",
+  textDecoration: "none",
+  fontWeight: "600",
 };
