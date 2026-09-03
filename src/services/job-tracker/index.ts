@@ -21,4 +21,6 @@ export const jobTrackerService = {
   aiAnalyzeResumeMatch: jobTrackerActions.aiAnalyzeResumeMatch,
   aiParseInvitation: jobTrackerActions.aiParseInterviewInvitation,
   aiGenerateInterviewPrep: jobTrackerActions.aiGenerateInterviewPrep,
+  aiEvaluateMockAnswer: jobTrackerActions.aiEvaluateMockAnswer,
+  aiDiagnoseRejection: jobTrackerActions.aiDiagnoseRejection,
 };

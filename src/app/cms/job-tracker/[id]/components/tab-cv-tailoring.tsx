@@ -1,8 +1,8 @@
-"use client";
-
+import { useState } from "react";
 import {
   CheckCircle2,
   Copy,
+  Download,
   FileText,
   Lightbulb,
   Loader2,
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAtsScoreColor } from "@/lib/job-tracker";
 import type { JobApplication } from "@/services/job-tracker/types";
+import { ExportTailoredCvDialog } from "./export-tailored-cv-dialog";
 
 interface TabCvTailoringProps {
   application: JobApplication;
@@ -29,35 +30,48 @@ export function TabCvTailoring({
   onRunATSAnalysis,
   onCopyText,
 }: TabCvTailoringProps) {
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const atsColor = getAtsScoreColor(application.atsScore);
 
   return (
-    <Card className="border-primary/30 shadow-sm bg-gradient-to-b from-primary/5 via-card to-card">
-      <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-        <div>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            Gemini AI Resume Matcher & ATS Optimizer
-          </CardTitle>
-          <CardDescription className="text-xs">
-            Tailor your master experience to align with this job description
-          </CardDescription>
-        </div>
+    <>
+      <Card className="border-primary/30 shadow-sm bg-gradient-to-b from-primary/5 via-card to-card">
+        <CardHeader className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Gemini AI Resume Matcher & ATS Optimizer
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Tailor your master experience to align with this job description
+            </CardDescription>
+          </div>
 
-        <Button onClick={onRunATSAnalysis} disabled={isAnalyzingATS} className="gap-2 shadow-sm">
-          {isAnalyzingATS ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Optimizing with Gemini AI...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4" />
-              {application.atsAnalysis ? "Re-Analyze & Re-Tailor" : "Analyze & Tailor CV"}
-            </>
-          )}
-        </Button>
-      </CardHeader>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsExportOpen(true)}
+              className="gap-2 shadow-sm text-xs h-9 border-primary/30 hover:bg-primary/10"
+            >
+              <Download className="w-4 h-4 text-primary" />
+              Export Tailored CV (PDF / Markdown)
+            </Button>
+
+            <Button onClick={onRunATSAnalysis} disabled={isAnalyzingATS} className="gap-2 shadow-sm text-xs h-9">
+              {isAnalyzingATS ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Optimizing with Gemini AI...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  {application.atsAnalysis ? "Re-Analyze & Re-Tailor" : "Analyze & Tailor CV"}
+                </>
+              )}
+            </Button>
+          </div>
+        </CardHeader>
 
       {application.atsAnalysis ? (
         <CardContent className="space-y-6">
@@ -245,5 +259,12 @@ export function TabCvTailoring({
         </CardContent>
       )}
     </Card>
+
+    <ExportTailoredCvDialog
+      open={isExportOpen}
+      onOpenChange={setIsExportOpen}
+      application={application}
+    />
+  </>
   );
 }

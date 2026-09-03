@@ -2,8 +2,10 @@ import { getGeminiClient, getGeminiModel } from "@/lib/gemini";
 import type {
   AtsAnalysis,
   InterviewPrepResult,
+  MockInterviewAnswerEvaluation,
   ParsedInterviewInvitation,
   ParsedJobPosting,
+  RejectionDiagnosticResult,
   TailoredBullet,
 } from "./types";
 
@@ -332,5 +334,139 @@ Return a JSON object conforming strictly to this format:
   } catch (err) {
     console.error("Failed to parse Gemini interview prep JSON:", responseText, err);
     throw new Error("Failed to generate interview preparation questions.");
+  }
+}
+
+/**
+ * Evaluates a candidate's mock interview response in real-time.
+ * Gives a 1-10 score, constructive critique, STAR method breakdown, and an upgraded high-impact sample answer.
+ */
+export async function evaluateMockInterviewAnswerWithGemini(params: {
+  jobTitle: string;
+  companyName: string;
+  stageType: string;
+  question: string;
+  category: string;
+  userAnswer: string;
+}): Promise<MockInterviewAnswerEvaluation> {
+  const ai = getGeminiClient();
+
+  const prompt = `You are a strict, constructive Tech & Executive Hiring Director at ${params.companyName}.
+Evaluate the candidate's answer for the following interview question for the role of ${params.jobTitle} (${params.stageType} stage).
+
+Interview Question:
+"${params.question}" (Category: ${params.category})
+
+Candidate's Answer:
+"""
+${params.userAnswer}
+"""
+
+Evaluation Criteria:
+1. Score from 1 to 10 (10 = world-class, 7-8 = solid hiring bar, <6 = weak or missing specifics).
+2. Verdict: "excellent" (9-10), "good" (7-8), "needs_improvement" (5-6), or "poor" (1-4).
+3. Strengths: 2-3 specific positive aspects of their response (e.g., clear metrics, ownership, structured communication).
+4. Improvements: 2-3 specific critique points (e.g., missing business impact, vague technical trade-offs, lack of STAR format).
+5. If behavioral, analyze STAR breakdown (Situation, Task, Action, Result).
+6. Refined Answer: A polished, high-signal model response demonstrating how a senior engineer would answer this concisely.
+7. Follow-Up Question: A natural, probing follow-up question the interviewer would ask next.
+
+Return a JSON object conforming strictly to this format:
+{
+  "score": number,
+  "verdict": "excellent" | "good" | "needs_improvement" | "poor",
+  "strengths": ["string"],
+  "improvements": ["string"],
+  "starBreakdown": {
+    "situation": "string",
+    "task": "string",
+    "action": "string",
+    "result": "string"
+  },
+  "refinedAnswer": "string",
+  "followUpQuestion": "string"
+}`;
+
+  const response = await ai.models.generateContent({
+    model: DEFAULT_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  const responseText = response.text;
+  if (!responseText) {
+    throw new Error("No response received from Gemini evaluator.");
+  }
+
+  try {
+    return JSON.parse(cleanJsonText(responseText)) as MockInterviewAnswerEvaluation;
+  } catch (err) {
+    console.error("Failed to parse mock interview evaluation JSON:", responseText, err);
+    throw new Error("Failed to parse mock interview evaluation.");
+  }
+}
+
+/**
+ * Diagnoses an application rejection or failed interview stage.
+ * Generates root cause analysis, skill gap remediation checklist, and a graceful relationship-building closure email.
+ */
+export async function diagnoseRejectionWithGemini(params: {
+  jobTitle: string;
+  companyName: string;
+  stageFailedAt: string;
+  primaryReason: string;
+  recruiterFeedback?: string;
+  lessonsLearned?: string;
+}): Promise<RejectionDiagnosticResult> {
+  const ai = getGeminiClient();
+
+  const prompt = `You are a compassionate yet highly strategic Executive Career Coach.
+A candidate has experienced a rejection for the following application:
+
+Role: ${params.jobTitle} at ${params.companyName}
+Final Stage Reached: ${params.stageFailedAt}
+Primary Stated Reason: ${params.primaryReason}
+Recruiter / Interviewer Feedback: ${params.recruiterFeedback || "None provided"}
+Candidate's Own Reflection: ${params.lessonsLearned || "None provided"}
+
+Tasks:
+1. Root Cause Analysis (RCA): Provide an objective, insightful breakdown of why this outcome likely occurred without sugarcoating or demoralizing the candidate.
+2. Skill Gaps: 2-3 specific technical or behavioral concepts that were likely missing or could be sharpened.
+3. Remediation Plan: 3-4 concrete, actionable steps the candidate should take before their next interview (e.g. specific system design patterns, STAR story adjustments, or code challenge prep).
+4. Graceful Closure Email: Write a warm, memorable, and ultra-professional response to the recruiter / hiring manager expressing gratitude, asking to stay in their talent bench for future senior openings, and connecting on LinkedIn.
+5. Suggested Next Focus: A 1-sentence strategic mantra / priority for their upcoming applications.
+
+Return a JSON object conforming strictly to this format:
+{
+  "rootCauseAnalysis": "string",
+  "skillGaps": ["string"],
+  "remediationPlan": ["string"],
+  "gracefulClosureEmail": {
+    "subject": "string",
+    "body": "string"
+  },
+  "suggestedNextFocus": "string"
+}`;
+
+  const response = await ai.models.generateContent({
+    model: DEFAULT_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  const responseText = response.text;
+  if (!responseText) {
+    throw new Error("No response received from Gemini diagnostic.");
+  }
+
+  try {
+    return JSON.parse(cleanJsonText(responseText)) as RejectionDiagnosticResult;
+  } catch (err) {
+    console.error("Failed to parse rejection diagnostic JSON:", responseText, err);
+    throw new Error("Failed to parse rejection diagnostic.");
   }
 }

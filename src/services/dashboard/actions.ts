@@ -1,6 +1,6 @@
 "use server";
 
-import { desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import { countRows } from "@/db/sort";
@@ -11,6 +11,7 @@ import type {
   DraftEntry,
   InboxEntry,
   TopContentEntry,
+  UpcomingInterviewEntry,
 } from "./types";
 
 // Server action backing `dashboardService` — one aggregate read for
@@ -18,8 +19,17 @@ import type {
 // tables into the browser (the old dashboard did, and its contact counts were
 // silently capped at one pagination page).
 
-const { availabilitySlots, blogs, contacts, projects, serviceRequests, hireRequests, sitePages } =
-  schema;
+const {
+  availabilitySlots,
+  blogs,
+  contacts,
+  projects,
+  serviceRequests,
+  hireRequests,
+  sitePages,
+  jobInterviews,
+  jobApplications,
+} = schema;
 
 const INBOX_LIMIT = 6;
 const DRAFTS_LIMIT = 6;
@@ -45,6 +55,7 @@ export async function getSummary(): Promise<DashboardSummary> {
     topProjects,
     slots,
     legalPages,
+    upcomingInterviews,
   ] = await Promise.all([
     db
       .select({
@@ -154,6 +165,29 @@ export async function getSummary(): Promise<DashboardSummary> {
     db
       .select({ slug: sitePages.slug, title: sitePages.title, updatedAt: sitePages.updatedAt })
       .from(sitePages),
+    db
+      .select({
+        id: jobInterviews.id,
+        applicationId: jobInterviews.applicationId,
+        companyName: jobApplications.companyName,
+        jobTitle: jobApplications.jobTitle,
+        title: jobInterviews.title,
+        stageType: jobInterviews.stageType,
+        scheduledAt: jobInterviews.scheduledAt,
+        meetingLink: jobInterviews.meetingLink,
+        interviewers: jobInterviews.interviewers,
+      })
+      .from(jobInterviews)
+      .innerJoin(jobApplications, eq(jobInterviews.applicationId, jobApplications.id))
+      .where(
+        and(
+          eq(jobInterviews.status, "scheduled"),
+          gte(jobInterviews.scheduledAt, sql`NOW() - INTERVAL '12 hours'`)
+        )
+      )
+      .orderBy(asc(jobInterviews.scheduledAt))
+      .limit(4)
+      .catch(() => [] as UpcomingInterviewEntry[]),
   ]);
 
   const inbox: InboxEntry[] = [
@@ -234,5 +268,6 @@ export async function getSummary(): Promise<DashboardSummary> {
     drafts,
     topContent,
     alerts,
+    upcomingInterviews: upcomingInterviews || [],
   };
 }

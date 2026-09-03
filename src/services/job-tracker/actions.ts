@@ -9,6 +9,8 @@ import type { JobApplicationRow, JobInterviewRow } from "@/db/schema";
 import { assertAdmin } from "../core/auth-guard";
 import {
   analyzeResumeMatchWithGemini,
+  diagnoseRejectionWithGemini,
+  evaluateMockInterviewAnswerWithGemini,
   generateInterviewPrepWithGemini,
   parseInterviewInvitationWithGemini,
   parseJobPostingWithGemini,
@@ -21,11 +23,13 @@ import type {
   JobInterview,
   JobPlatform,
   JobTrackerAnalytics,
+  MockInterviewAnswerEvaluation,
   NewJobApplication,
   NewJobInterview,
   ParsedInterviewInvitation,
   ParsedJobPosting,
   PredictedQuestion,
+  RejectionDiagnosticResult,
   TailoredBullet,
   UpdateJobApplication,
   UpdateJobInterview,
@@ -622,4 +626,31 @@ export async function aiGenerateInterviewPrep(interviewId: string): Promise<Inte
 
   revalidateTrackerPaths(interview.applicationId);
   return prepResult;
+}
+
+export async function aiEvaluateMockAnswer(params: {
+  jobTitle: string;
+  companyName: string;
+  stageType: string;
+  question: string;
+  category: string;
+  userAnswer: string;
+}): Promise<MockInterviewAnswerEvaluation> {
+  await assertAdmin();
+  if (!params.userAnswer.trim()) {
+    throw new Error("Please provide your answer to evaluate.");
+  }
+  return evaluateMockInterviewAnswerWithGemini(params);
+}
+
+export async function aiDiagnoseRejection(params: {
+  jobTitle: string;
+  companyName: string;
+  stageFailedAt: string;
+  primaryReason: string;
+  recruiterFeedback?: string;
+  lessonsLearned?: string;
+}): Promise<RejectionDiagnosticResult> {
+  await assertAdmin();
+  return diagnoseRejectionWithGemini(params);
 }

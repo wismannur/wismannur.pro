@@ -42,10 +42,23 @@ export interface DashboardAlert {
   href: string;
 }
 
+export interface UpcomingInterviewEntry {
+  id: string;
+  applicationId: string;
+  companyName: string;
+  jobTitle: string;
+  title: string;
+  stageType: string;
+  scheduledAt: Date;
+  meetingLink: string | null;
+  interviewers: string | null;
+}
+
 export interface DashboardSummary {
   counts: DashboardCounts;
   inbox: InboxEntry[];
   drafts: DraftEntry[];
   topContent: TopContentEntry[];
   alerts: DashboardAlert[];
+  upcomingInterviews: UpcomingInterviewEntry[];
 }
