@@ -22,6 +22,7 @@ export { userService } from "./user";
 export { jobTrackerService } from "./job-tracker";
 export { jobOutreachService } from "./job-outreaches";
 export { inquiryMessagesService } from "./inquiry-messages";
+export { aiKnowledgeService } from "./ai-knowledge";
 
 // Export all domain types
 export * from "./availability/types";
@@ -46,3 +47,4 @@ export * from "./user/types";
 export * from "./job-tracker/types";
 export * from "./job-outreaches/types";
 export * from "./inquiry-messages/types";
+export * from "./ai-knowledge/types";
