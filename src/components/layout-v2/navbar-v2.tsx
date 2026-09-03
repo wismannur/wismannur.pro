@@ -37,6 +37,11 @@ export function NavbarV2({ enableBlog = true }: NavbarV2Props) {
     { title: "Contact", path: "/contact" },
   ];
 
+  const isLinkActive = (path: string) => {
+    if (path === "/") return pathname === "/";
+    return pathname === path || pathname.startsWith(`${path}/`);
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 15) {
@@ -96,7 +101,7 @@ export function NavbarV2({ enableBlog = true }: NavbarV2Props) {
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-1 bg-white/[0.03] border border-white/[0.06] rounded-full p-1 px-1.5">
           {navLinks.map((link) => {
-            const isActive = pathname === link.path;
+            const isActive = isLinkActive(link.path);
             return (
               <Link
                 key={link.path}
@@ -191,7 +196,7 @@ export function NavbarV2({ enableBlog = true }: NavbarV2Props) {
         <div className="pointer-events-auto fixed inset-0 top-0 z-40 bg-black/85 backdrop-blur-2xl flex flex-col justify-between p-6 pt-24 animate-fade-in md:hidden">
           <nav className="flex flex-col items-center justify-center space-y-3 flex-1">
             {navLinks.map((link) => {
-              const isActive = pathname === link.path;
+              const isActive = isLinkActive(link.path);
               return (
                 <Link
                   key={link.path}
