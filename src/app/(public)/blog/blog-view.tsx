@@ -1,147 +1,142 @@
 "use client";
 
+import React, { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { usePagination } from "@/hooks/use-pagination";
 import { blogService } from "@/services";
-import { Blog } from "@/services/blog/types";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import type { Blog } from "@/services/blog/types";
+import type { ListHeaderCopy } from "@/services/page-copy/types";
+import type { SiteSettings } from "@/services/site-settings/types";
 
 import Pagination from "@/components/common/pagination";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CtaV2 } from "@/components/home-v2/cta-v2";
 import BlogFilters from "@/features/blog/blog-filters";
 import BlogGrid from "@/features/blog/blog-grid";
 import BlogHeader from "@/features/blog/blog-header";
-import type { ListHeaderCopy } from "@/services/page-copy/types";
 import BlogResultsInfo from "@/features/blog/blog-results-info";
 
 const ITEMS_PER_PAGE = 9;
 
-export const BlogView = ({ copy }: { copy: ListHeaderCopy | null }) => {
-	const [searchTerm, setSearchTerm] = useState("");
-	const [selectedTag, setSelectedTag] = useState("");
-	const [currentPage, setCurrentPage] = useState(1);
+interface BlogViewProps {
+  copy: ListHeaderCopy | null;
+  settings?: SiteSettings;
+}
 
-	// Fetch paginated blogs
-	const { data: blogData, isLoading: isBlogsLoading } = useQuery<{
-		blogs: Blog[];
-		totalPages: number;
-		currentPage: number;
-	}>({
-		queryKey: ["blogs", currentPage],
-		queryFn: () => blogService.getByPage(currentPage, ITEMS_PER_PAGE),
-	});
+export const BlogView = ({ copy, settings }: BlogViewProps) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-	// Fetch tags separately
-	const { data: tagsData } = useQuery({
-		queryKey: ["blogTags"],
-		queryFn: () => blogService.getAllTags(),
-		staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-	});
+  // Fetch paginated blogs
+  const { data: blogData, isLoading: isBlogsLoading } = useQuery<{
+    blogs: Blog[];
+    totalPages: number;
+    currentPage: number;
+  }>({
+    queryKey: ["blogs", currentPage],
+    queryFn: () => blogService.getByPage(currentPage, ITEMS_PER_PAGE),
+  });
 
-	// Memoize filtered blogs to prevent unnecessary recalculations
-	const filteredBlogs = useMemo(() => {
-		const blogs = (blogData?.blogs as Blog[]) || [];
-		return blogs.filter((blog: Blog) => {
-			const matchesSearch =
-				!searchTerm ||
-				blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				blog.content.toLowerCase().includes(searchTerm.toLowerCase());
+  // Fetch tags separately
+  const { data: tagsData } = useQuery({
+    queryKey: ["blogTags"],
+    queryFn: () => blogService.getAllTags(),
+    staleTime: 5 * 60 * 1000,
+  });
 
-			const matchesTag = !selectedTag || blog.tags.includes(selectedTag);
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
 
-			return matchesSearch && matchesTag;
-		});
-	}, [blogData?.blogs, searchTerm, selectedTag]);
+  const handleTagChange = (tag: string | null) => {
+    setSelectedTag(tag);
+    setCurrentPage(1);
+  };
 
-	// Reset pagination when filters change
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [searchTerm, selectedTag]);
+  // Memoize filtered blogs to prevent unnecessary recalculations
+  const filteredBlogs = useMemo(() => {
+    const blogs = (blogData?.blogs as Blog[]) || [];
+    return blogs.filter((blog: Blog) => {
+      const matchesSearch =
+        !searchTerm ||
+        blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.content.toLowerCase().includes(searchTerm.toLowerCase());
 
-	// Clear all filters
-	const clearFilters = () => {
-		setSearchTerm("");
-		setSelectedTag("");
-		setCurrentPage(1);
-	};
+      const matchesTag = !selectedTag || (blog.tags && blog.tags.includes(selectedTag));
 
-	const totalPages = blogData?.totalPages || 1;
-	const pageNumbers = usePagination(currentPage, totalPages);
+      return matchesSearch && matchesTag;
+    });
+  }, [blogData?.blogs, searchTerm, selectedTag]);
 
-	// Skeleton loader for regular projects grid
-	const BlogGridSkeleton = () => (
-		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-			{Array.from({ length: 6 }).map((_, i) => (
-				<div key={i} className="border border-border/40 rounded-lg p-4 space-y-4">
-					<Skeleton className="h-48 w-full rounded-lg" />
-					<Skeleton className="h-6 w-3/4" />
-					<Skeleton className="h-4 w-full" />
-					<Skeleton className="h-4 w-full" />
-					<div className="flex gap-2">
-						{Array.from({ length: 3 }).map((_, j) => (
-							<Skeleton key={j} className="h-5 w-14 rounded-full" />
-						))}
-					</div>
-				</div>
-			))}
-		</div>
-	);
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedTag(null);
+    setCurrentPage(1);
+  };
 
-	return (
-		<>
-			<div className="py-12 md:py-20">
-				<div className="container px-4 max-w-6xl mx-auto">
-					<BlogHeader
-						eyebrow={copy?.header.eyebrow}
-						title={copy?.header.title}
-						description={copy?.header.description}
-					/>
+  const totalPages = blogData?.totalPages || 1;
+  const pageNumbers = usePagination(currentPage, totalPages);
 
-					{/* Blog Filters and Results Info */}
-					{isBlogsLoading ? (
-						<div className="border border-border/40 rounded-lg p-4 space-y-4 mb-6">
-							<Skeleton className="h-12 w-full" />
-							<Skeleton className="h-12 w-full" />
-						</div>
-					) : (
-						<BlogFilters
-							searchTerm={searchTerm}
-							setSearchTerm={setSearchTerm}
-							selectedTag={selectedTag}
-							setSelectedTag={setSelectedTag}
-							allTags={tagsData?.tags || []}
-						/>
-					)}
-					<BlogResultsInfo
-						currentPage={currentPage}
-						itemsPerPage={ITEMS_PER_PAGE}
-						filteredCount={filteredBlogs.length}
-						totalPages={totalPages}
-						isLoading={isBlogsLoading}
-					/>
+  return (
+    <div className="space-y-16 md:space-y-24 pb-12">
+      <section className="relative overflow-hidden pt-4 sm:pt-8 md:pt-12">
+        {/* Background ambient lighting */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-primary/15 rounded-full blur-[130px] pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/4 w-[450px] h-[250px] bg-indigo-500/10 rounded-full blur-[110px] pointer-events-none -z-10" />
 
-					{isBlogsLoading ? (
-						<BlogGridSkeleton />
-					) : (
-						<BlogGrid
-							isLoading={isBlogsLoading}
-							paginatedBlogs={filteredBlogs}
-							filteredBlogs={filteredBlogs}
-							clearFilters={clearFilters}
-						/>
-					)}
+        <div className="container px-4 max-w-6xl mx-auto relative">
+          {/* Header */}
+          <BlogHeader
+            eyebrow={copy?.header.eyebrow}
+            title={copy?.header.title}
+            description={copy?.header.description}
+          />
 
-					{totalPages > 1 && (
-						<Pagination
-							currentPage={currentPage}
-							totalPages={totalPages}
-							pageNumbers={pageNumbers}
-							setCurrentPage={setCurrentPage}
-						/>
-					)}
-				</div>
-			</div>
-		</>
-	);
+          {/* Search & Topic Filters */}
+          <BlogFilters
+            searchTerm={searchTerm}
+            setSearchTerm={handleSearchChange}
+            selectedTag={selectedTag}
+            setSelectedTag={handleTagChange}
+            allTags={tagsData || []}
+          />
+
+          {/* Results Count Info */}
+          <BlogResultsInfo
+            currentPage={currentPage}
+            itemsPerPage={ITEMS_PER_PAGE}
+            filteredCount={filteredBlogs.length}
+            totalPages={totalPages}
+            isLoading={isBlogsLoading}
+          />
+
+          {/* Blog Cards Grid */}
+          <BlogGrid
+            isLoading={isBlogsLoading}
+            paginatedBlogs={filteredBlogs}
+            filteredBlogs={filteredBlogs}
+            clearFilters={clearFilters}
+          />
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-12 flex justify-center">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageNumbers={pageNumbers}
+                setCurrentPage={setCurrentPage}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Closing Conversion CTA */}
+      <CtaV2 settings={settings} />
+    </div>
+  );
 };

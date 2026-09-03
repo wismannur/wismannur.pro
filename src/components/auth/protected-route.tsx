@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 interface ProtectedRouteProps {
-	children?: React.ReactNode;
-	requireAuth?: boolean;
-	redirectPath?: string;
+  children?: React.ReactNode;
+  requireAuth?: boolean;
+  redirectPath?: string;
 }
 
 /**
@@ -16,41 +16,41 @@ interface ProtectedRouteProps {
  * checks; during the mock phase this redirects based on the dummy auth state.
  */
 export const ProtectedRoute = ({
-	children,
-	requireAuth = true,
-	redirectPath = "/login",
+  children,
+  requireAuth = true,
+  redirectPath = "/login",
 }: ProtectedRouteProps) => {
-	const { user, loading: isLoading, error } = useAuth();
-	const router = useRouter();
+  const { user, loading: isLoading, error } = useAuth();
+  const router = useRouter();
 
-	// Perform redirects as a side-effect once auth has resolved.
-	useEffect(() => {
-		if (isLoading) return;
-		if (requireAuth && !user) {
-			router.replace(redirectPath);
-		} else if (!requireAuth && user) {
-			router.replace("/cms/dashboard");
-		}
-	}, [isLoading, requireAuth, user, redirectPath, router]);
+  // Perform redirects as a side-effect once auth has resolved.
+  useEffect(() => {
+    if (isLoading) return;
+    if (requireAuth && !user) {
+      router.replace(redirectPath);
+    } else if (!requireAuth && user) {
+      router.replace("/cms/dashboard");
+    }
+  }, [isLoading, requireAuth, user, redirectPath, router]);
 
-	// Show loading state
-	if (isLoading) {
-		return <LoadingOverlay isLoading={true} text="Checking authentication..." fullScreen={false} />;
-	}
+  // Show loading state
+  if (isLoading) {
+    return <LoadingOverlay isLoading={true} text="Checking authentication..." fullScreen={false} />;
+  }
 
-	// Handle authentication error
-	if (error) {
-		console.error("Auth error:", error);
-		return null;
-	}
+  // Handle authentication error
+  if (error) {
+    console.error("Auth error:", error);
+    return null;
+  }
 
-	// Awaiting redirect (effects above will navigate away).
-	if (requireAuth && !user) {
-		return <LoadingOverlay isLoading={true} text="Redirecting…" fullScreen={false} />;
-	}
-	if (!requireAuth && user) {
-		return <LoadingOverlay isLoading={true} text="Redirecting…" fullScreen={false} />;
-	}
+  // Awaiting redirect (effects above will navigate away).
+  if (requireAuth && !user) {
+    return <LoadingOverlay isLoading={true} text="Redirecting…" fullScreen={false} />;
+  }
+  if (!requireAuth && user) {
+    return <LoadingOverlay isLoading={true} text="Redirecting…" fullScreen={false} />;
+  }
 
-	return <>{children}</>;
+  return <>{children}</>;
 };

@@ -1,14 +1,14 @@
 import type { ZodSchema } from "zod";
 
 export class ServiceError extends Error {
-	constructor(
-		message: string,
-		public readonly code?: string,
-		public readonly originalError?: unknown,
-	) {
-		super(message);
-		this.name = "ServiceError";
-	}
+  constructor(
+    message: string,
+    public readonly code?: string,
+    public readonly originalError?: unknown
+  ) {
+    super(message);
+    this.name = "ServiceError";
+  }
 }
 
 /**
@@ -17,16 +17,16 @@ export class ServiceError extends Error {
  * handling and Zod validation surface is preserved so services stay consistent.
  */
 export abstract class BaseService {
-	protected handleError(error: unknown, customMessage: string): never {
-		console.error(`${customMessage}:`, error);
-		throw new ServiceError(customMessage, undefined, error);
-	}
+  protected handleError(error: unknown, customMessage: string): never {
+    console.error(`${customMessage}:`, error);
+    throw new ServiceError(customMessage, undefined, error);
+  }
 
-	protected validateInput<T>(data: T, schema: ZodSchema<T>): T {
-		try {
-			return schema.parse(data);
-		} catch (error) {
-			this.handleError(error, "Validation failed");
-		}
-	}
+  protected validateInput<T>(data: T, schema: ZodSchema<T>): T {
+    try {
+      return schema.parse(data);
+    } catch (error) {
+      this.handleError(error, "Validation failed");
+    }
+  }
 }

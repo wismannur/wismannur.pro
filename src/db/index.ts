@@ -19,36 +19,36 @@ import * as schema from "./schema";
 let _db: ReturnType<typeof createDb> | null = null;
 
 function createDb() {
-	const isProd =
-		process.env.DB_ENV === "prod" ||
-		process.env.DB_ENV === "production" ||
-		process.env.NEXT_PUBLIC_DB_ENV === "prod" ||
-		process.env.VERCEL_ENV === "production" ||
-		(process.env.NODE_ENV === "production" &&
-			process.env.DB_ENV !== "dev" &&
-			process.env.DB_ENV !== "development");
+  const isProd =
+    process.env.DB_ENV === "prod" ||
+    process.env.DB_ENV === "production" ||
+    process.env.NEXT_PUBLIC_DB_ENV === "prod" ||
+    process.env.VERCEL_ENV === "production" ||
+    (process.env.NODE_ENV === "production" &&
+      process.env.DB_ENV !== "dev" &&
+      process.env.DB_ENV !== "development");
 
-	const url = isProd
-		? (process.env.DATABASE_URL_PROD ||
-			process.env.POSTGRES_URL ||
-			process.env.PROD_DATABASE_URL ||
-			process.env.DATABASE_URL_PRODUCTION ||
-			process.env.DATABASE_URL)
-		: (process.env.DATABASE_URL_DEV ||
-			process.env.DEV_DATABASE_URL ||
-			process.env.DATABASE_URL_DEVELOPMENT ||
-			process.env.DATABASE_URL);
+  const url = isProd
+    ? process.env.DATABASE_URL_PROD ||
+      process.env.POSTGRES_URL ||
+      process.env.PROD_DATABASE_URL ||
+      process.env.DATABASE_URL_PRODUCTION ||
+      process.env.DATABASE_URL
+    : process.env.DATABASE_URL_DEV ||
+      process.env.DEV_DATABASE_URL ||
+      process.env.DATABASE_URL_DEVELOPMENT ||
+      process.env.DATABASE_URL;
 
-	if (!url) {
-		throw new Error(
-			"DATABASE_URL is not set. Run `vercel env pull .env.local` to fetch it from the Neon⇄Vercel integration.",
-		);
-	}
-	return drizzle(neon(url), { schema });
+  if (!url) {
+    throw new Error(
+      "DATABASE_URL is not set. Run `vercel env pull .env.local` to fetch it from the Neon⇄Vercel integration."
+    );
+  }
+  return drizzle(neon(url), { schema });
 }
 
 export function getDb() {
-	return (_db ??= createDb());
+  return (_db ??= createDb());
 }
 
 export { schema };

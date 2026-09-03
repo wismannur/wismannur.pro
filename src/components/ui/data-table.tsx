@@ -1,44 +1,51 @@
 "use client";
 
 import {
-	Pagination,
-	PaginationContent,
-	PaginationEllipsis,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Inbox } from "lucide-react"
-import type React from "react"
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Inbox } from "lucide-react";
+import type React from "react";
 
 export type ColumnDef<T> = {
-  header: string
-  accessorKey?: keyof T
-  cell?: (item: T) => React.ReactNode
-  className?: string
-}
+  header: string;
+  accessorKey?: keyof T;
+  cell?: (item: T) => React.ReactNode;
+  className?: string;
+};
 
 export type DataTableProps<T> = {
-  columns: ColumnDef<T>[]
-  data: T[]
-  isLoading?: boolean
-  loadingRows?: number
+  columns: ColumnDef<T>[];
+  data: T[];
+  isLoading?: boolean;
+  loadingRows?: number;
   emptyState?: {
-    icon?: React.ReactNode
-    title: string
-    description: string
-  }
+    icon?: React.ReactNode;
+    title: string;
+    description: string;
+  };
   pagination?: {
-    currentPage: number
-    hasMore: boolean
-    onPageChange: (page: number) => void
-  }
-  rowClassName?: (item: T, index: number) => string
-  onRowClick?: (item: T) => void
-  keyField: keyof T
-}
+    currentPage: number;
+    hasMore: boolean;
+    onPageChange: (page: number) => void;
+  };
+  rowClassName?: (item: T, index: number) => string;
+  onRowClick?: (item: T) => void;
+  keyField: keyof T;
+};
 
 export function DataTable<T>({
   columns,
@@ -86,7 +93,10 @@ export function DataTable<T>({
                   onClick={() => onRowClick?.(item)}
                 >
                   {columns.map((column, cellIndex) => (
-                    <TableCell key={`${String(item[keyField])}-${cellIndex}`} className={column.className}>
+                    <TableCell
+                      key={`${String(item[keyField])}-${cellIndex}`}
+                      className={column.className}
+                    >
                       {column.cell
                         ? column.cell(item)
                         : column.accessorKey
@@ -117,12 +127,17 @@ export function DataTable<T>({
             <PaginationItem>
               <PaginationPrevious
                 onClick={() => pagination.onPageChange(Math.max(1, pagination.currentPage - 1))}
-                className={pagination.currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                className={
+                  pagination.currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"
+                }
               />
             </PaginationItem>
 
             <PaginationItem>
-              <PaginationLink isActive={pagination.currentPage === 1} onClick={() => pagination.onPageChange(1)}>
+              <PaginationLink
+                isActive={pagination.currentPage === 1}
+                onClick={() => pagination.onPageChange(1)}
+              >
                 1
               </PaginationLink>
             </PaginationItem>
@@ -163,13 +178,17 @@ export function DataTable<T>({
 
             <PaginationItem>
               <PaginationNext
-                onClick={() => pagination.hasMore && pagination.onPageChange(pagination.currentPage + 1)}
-                className={!pagination.hasMore ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                onClick={() =>
+                  pagination.hasMore && pagination.onPageChange(pagination.currentPage + 1)
+                }
+                className={
+                  !pagination.hasMore ? "pointer-events-none opacity-50" : "cursor-pointer"
+                }
               />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
       )}
     </div>
-  )
+  );
 }

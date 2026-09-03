@@ -1,70 +1,61 @@
-import { GoogleGenAI } from "@google/genai";
+import { getGeminiClient, getGeminiModel } from "@/lib/gemini";
 import type {
-	AtsAnalysis,
-	InterviewPrepResult,
-	ParsedInterviewInvitation,
-	ParsedJobPosting,
-	TailoredBullet,
+  AtsAnalysis,
+  InterviewPrepResult,
+  ParsedInterviewInvitation,
+  ParsedJobPosting,
+  TailoredBullet,
 } from "./types";
 
-function getGeminiClient(): GoogleGenAI {
-	const apiKey =
-		process.env.GEMINI_API_KEY ||
-		process.env.GOOGLE_GENAI_API_KEY ||
-		process.env.GOOGLE_API_KEY;
+const DEFAULT_MODEL = getGeminiModel();
 
-	if (!apiKey) {
-		throw new Error(
-			"GEMINI_API_KEY / GOOGLE_GENAI_API_KEY is not set. Please provide a Gemini API key in your environment variables.",
-		);
-	}
-
-	return new GoogleGenAI({ apiKey });
+function cleanJsonText(rawText: string): string {
+  let clean = rawText.trim();
+  if (clean.startsWith("```")) {
+    clean = clean.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  }
+  return clean.trim();
 }
-
-const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-3.7-flash";
 
 /**
  * Parses raw text or scraped content from a job vacancy URL into structured job details.
  */
-export async function parseJobPostingWithGemini(
-	rawContent: string,
-): Promise<ParsedJobPosting> {
-	const ai = getGeminiClient();
+export async function parseJobPostingWithGemini(rawContent: string): Promise<ParsedJobPosting> {
+  const ai = getGeminiClient();
 
-	let contentToParse = rawContent;
+  let contentToParse = rawContent;
 
-	// If rawContent looks like pure URL and short, attempt lightweight fetch
-	const urlMatch = rawContent.match(/https?:\/\/[^\s]+/);
-	if (urlMatch && rawContent.length < 300) {
-		try {
-			const res = await fetch(urlMatch[0], {
-				headers: {
-					"User-Agent":
-						"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-					Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-				},
-				signal: AbortSignal.timeout(6000),
-			});
-			if (res.ok) {
-				const html = await res.text();
-				// Strip HTML tags roughly for token efficiency
-				const cleanText = html
-					.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
-					.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
-					.replace(/<[^>]+>/g, " ")
-					.replace(/\s+/g, " ")
-					.trim();
-				if (cleanText.length > 100) {
-					contentToParse = `Source URL: ${urlMatch[0]}\n\nExtracted Web Content:\n${cleanText.slice(0, 12000)}`;
-				}
-			}
-		} catch {
-			// Fallback to original text if fetch times out or fails (e.g. auth-wall)
-		}
-	}
+  // If rawContent looks like pure URL and short, attempt lightweight fetch
+  const urlMatch = rawContent.match(/https?:\/\/[^\s]+/);
+  if (urlMatch && rawContent.length < 300) {
+    try {
+      const res = await fetch(urlMatch[0], {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (res.ok) {
+        const html = await res.text();
+        // Strip HTML tags roughly for token efficiency
+        const cleanText = html
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
+          .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        if (cleanText.length > 100) {
+          contentToParse = `Source URL: ${urlMatch[0]}\n\nExtracted Web Content:\n${cleanText.slice(0, 12000)}`;
+        }
+      }
+    } catch {
+      // Fallback to original text if fetch times out or fails (e.g. auth-wall)
+    }
+  }
 
-	const prompt = `You are an expert tech recruiter and ATS parsing assistant.
+  const prompt = `You are an expert tech recruiter and ATS parsing assistant.
 Extract and structure the following job posting details into clean JSON.
 If a field is not explicitly mentioned, provide a reasonable inference or leave it undefined.
 
@@ -92,29 +83,34 @@ Return a JSON object conforming strictly to this format:
   "companyWebsite": "string or null"
 }`;
 
-	const response = await ai.models.generateContent({
-		model: DEFAULT_MODEL,
-		contents: prompt,
-		config: {
-			responseMimeType: "application/json",
-		},
-	});
+  const response = await ai.models.generateContent({
+    model: DEFAULT_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
 
-	const responseText = response.text;
-	if (!responseText) {
-		throw new Error("No response received from Gemini AI model.");
-	}
+  const responseText = response.text;
+  if (!responseText) {
+    throw new Error("No response received from Gemini AI model.");
+  }
 
-	const parsed = JSON.parse(responseText) as ParsedJobPosting;
-	return {
-		...parsed,
-		platform: parsed.platform || "linkedin",
-		workplaceType: parsed.workplaceType || "remote",
-		jobType: parsed.jobType || "full_time",
-		salaryCurrency: parsed.salaryCurrency || "IDR",
-		salaryPeriod: parsed.salaryPeriod || "monthly",
-		requirements: Array.isArray(parsed.requirements) ? parsed.requirements : [],
-	};
+  try {
+    const parsed = JSON.parse(cleanJsonText(responseText)) as ParsedJobPosting;
+    return {
+      ...parsed,
+      platform: parsed.platform || "linkedin",
+      workplaceType: parsed.workplaceType || "remote",
+      jobType: parsed.jobType || "full_time",
+      salaryCurrency: parsed.salaryCurrency || "IDR",
+      salaryPeriod: parsed.salaryPeriod || "monthly",
+      requirements: Array.isArray(parsed.requirements) ? parsed.requirements : [],
+    };
+  } catch (err) {
+    console.error("Failed to parse Gemini job posting JSON:", responseText, err);
+    throw new Error("Failed to parse job vacancy details from AI response.");
+  }
 }
 
 /**
@@ -122,30 +118,34 @@ Return a JSON object conforming strictly to this format:
  * Calculates ATS match score, keyword gaps, tailored summary, customized bullets (XYZ formula), and cover letter.
  */
 export async function analyzeResumeMatchWithGemini(params: {
-	jobTitle: string;
-	companyName: string;
-	jobDescription: string;
-	requirements: string[];
-	masterResume: {
-		experiences: { title: string; organization: string; description: string; period?: string }[];
-		education: { title: string; organization: string; description: string }[];
-	};
-	skills: { name: string; category?: string }[];
+  jobTitle: string;
+  companyName: string;
+  jobDescription: string;
+  requirements: string[];
+  masterResume: {
+    experiences: { title: string; organization: string; description: string; period?: string }[];
+    education: { title: string; organization: string; description: string }[];
+  };
+  skills: { name: string; category?: string }[];
 }): Promise<{
-	atsAnalysis: AtsAnalysis;
-	tailoredSummary: string;
-	tailoredBulletPoints: TailoredBullet[];
-	coverLetter: string;
+  atsAnalysis: AtsAnalysis;
+  tailoredSummary: string;
+  tailoredBulletPoints: TailoredBullet[];
+  coverLetter: string;
 }> {
-	const ai = getGeminiClient();
+  const ai = getGeminiClient();
 
-	const resumeContext = JSON.stringify({
-		experiences: params.masterResume.experiences,
-		education: params.masterResume.education,
-		skills: params.skills.map((s) => s.name),
-	}, null, 2);
+  const resumeContext = JSON.stringify(
+    {
+      experiences: params.masterResume.experiences,
+      education: params.masterResume.education,
+      skills: params.skills.map((s) => s.name),
+    },
+    null,
+    2
+  );
 
-	const prompt = `You are a senior hiring manager and ATS optimization specialist.
+  const prompt = `You are a senior hiring manager and ATS optimization specialist.
 Analyze the candidate's real profile against the target job posting.
 
 Target Job:
@@ -187,31 +187,36 @@ Return a JSON object conforming strictly to this format:
   "coverLetter": "string"
 }`;
 
-	const response = await ai.models.generateContent({
-		model: DEFAULT_MODEL,
-		contents: prompt,
-		config: {
-			responseMimeType: "application/json",
-		},
-	});
+  const response = await ai.models.generateContent({
+    model: DEFAULT_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
 
-	const responseText = response.text;
-	if (!responseText) {
-		throw new Error("Failed to generate resume analysis from Gemini AI.");
-	}
+  const responseText = response.text;
+  if (!responseText) {
+    throw new Error("Failed to generate resume analysis from Gemini AI.");
+  }
 
-	return JSON.parse(responseText);
+  try {
+    return JSON.parse(cleanJsonText(responseText));
+  } catch (err) {
+    console.error("Failed to parse Gemini resume analysis JSON:", responseText, err);
+    throw new Error("Failed to parse resume match analysis from AI response.");
+  }
 }
 
 /**
  * Extracts interview invitation details (schedule, meeting link, format, interviewers).
  */
 export async function parseInterviewInvitationWithGemini(
-	invitationText: string,
+  invitationText: string
 ): Promise<ParsedInterviewInvitation> {
-	const ai = getGeminiClient();
+  const ai = getGeminiClient();
 
-	const prompt = `You are an AI career assistant.
+  const prompt = `You are an AI career assistant.
 Parse the following recruiter email or interview invitation chat and extract all key logistical details.
 
 Invitation Text:
@@ -230,41 +235,46 @@ Return a JSON object conforming strictly to this format:
   "keyFocusAreas": ["array of key topics or competencies mentioned"]
 }`;
 
-	const response = await ai.models.generateContent({
-		model: DEFAULT_MODEL,
-		contents: prompt,
-		config: {
-			responseMimeType: "application/json",
-		},
-	});
+  const response = await ai.models.generateContent({
+    model: DEFAULT_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
 
-	const responseText = response.text;
-	if (!responseText) {
-		throw new Error("Failed to parse interview invitation.");
-	}
+  const responseText = response.text;
+  if (!responseText) {
+    throw new Error("Failed to parse interview invitation.");
+  }
 
-	const parsed = JSON.parse(responseText);
-	return {
-		...parsed,
-		stageType: parsed.stageType || "hr_screening",
-		title: parsed.title || "Interview Session",
-		keyFocusAreas: Array.isArray(parsed.keyFocusAreas) ? parsed.keyFocusAreas : [],
-	};
+  try {
+    const parsed = JSON.parse(cleanJsonText(responseText));
+    return {
+      ...parsed,
+      stageType: parsed.stageType || "hr_screening",
+      title: parsed.title || "Interview Session",
+      keyFocusAreas: Array.isArray(parsed.keyFocusAreas) ? parsed.keyFocusAreas : [],
+    };
+  } catch (err) {
+    console.error("Failed to parse Gemini interview invite JSON:", responseText, err);
+    throw new Error("Failed to parse interview invitation details from AI response.");
+  }
 }
 
 /**
  * Generates an interview cheat sheet, predicted questions with model STAR answers, and questions to ask the interviewer.
  */
 export async function generateInterviewPrepWithGemini(params: {
-	jobTitle: string;
-	companyName: string;
-	jobDescription: string;
-	stageType: string;
-	masterResume: unknown;
+  jobTitle: string;
+  companyName: string;
+  jobDescription: string;
+  stageType: string;
+  masterResume: unknown;
 }): Promise<InterviewPrepResult> {
-	const ai = getGeminiClient();
+  const ai = getGeminiClient();
 
-	const prompt = `You are an executive interview coach.
+  const prompt = `You are an executive interview coach.
 Generate a comprehensive interview preparation simulator and cheat sheet for this upcoming interview.
 
 Target Role: ${params.jobTitle} at ${params.companyName}
@@ -304,18 +314,23 @@ Return a JSON object conforming strictly to this format:
   "technicalChecklist": ["string"]
 }`;
 
-	const response = await ai.models.generateContent({
-		model: DEFAULT_MODEL,
-		contents: prompt,
-		config: {
-			responseMimeType: "application/json",
-		},
-	});
+  const response = await ai.models.generateContent({
+    model: DEFAULT_MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
 
-	const responseText = response.text;
-	if (!responseText) {
-		throw new Error("Failed to generate interview preparation.");
-	}
+  const responseText = response.text;
+  if (!responseText) {
+    throw new Error("Failed to generate interview preparation.");
+  }
 
-	return JSON.parse(responseText);
+  try {
+    return JSON.parse(cleanJsonText(responseText));
+  } catch (err) {
+    console.error("Failed to parse Gemini interview prep JSON:", responseText, err);
+    throw new Error("Failed to generate interview preparation questions.");
+  }
 }

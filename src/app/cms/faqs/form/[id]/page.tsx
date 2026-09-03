@@ -7,15 +7,15 @@ import { FaqsForm } from "../faqs-form";
 
 // Suspense boundary kept for consistency with the other CMS form pages.
 export default function EditFaqPage() {
-	return (
-		<Suspense
-			fallback={
-				<div className="flex items-center justify-center h-96">
-					<Loader2 className="h-10 w-10 animate-spin text-primary" />
-				</div>
-			}
-		>
-			<FaqsForm />
-		</Suspense>
-	);
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <FaqsForm />
+    </Suspense>
+  );
 }

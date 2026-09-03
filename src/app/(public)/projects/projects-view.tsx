@@ -1,192 +1,169 @@
 "use client";
 
-import { projectService } from "@/services";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { usePagination } from "@/hooks/use-pagination";
+import { projectService } from "@/services";
+import type { Project } from "@/services/project/types";
+import type { ListHeaderCopy } from "@/services/page-copy/types";
+import type { SiteSettings } from "@/services/site-settings/types";
 
 import { ProjectCard } from "@/components/cards/project-card";
 import Pagination from "@/components/common/pagination";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CtaV2 } from "@/components/home-v2/cta-v2";
 import ProjectFilters from "@/features/project/project-filters";
 import ProjectGrid from "@/features/project/project-grid";
 import ProjectHeader from "@/features/project/project-header";
-import type { ListHeaderCopy } from "@/services/page-copy/types";
 import ProjectResultsInfo from "@/features/project/project-results-info";
 
 const ITEMS_PER_PAGE = 6;
 
-export const ProjectsView = ({ copy }: { copy: ListHeaderCopy | null }) => {
-	const [searchTerm, setSearchTerm] = useState("");
-	const [selectedTech, setSelectedTech] = useState<string | null>(null);
-	const [currentPage, setCurrentPage] = useState(1);
+interface ProjectsViewProps {
+  copy: ListHeaderCopy | null;
+  settings?: SiteSettings;
+}
 
-	// Fetch featured projects
-	const { data: featuredProjects = [], isLoading: isFeaturedLoading } = useQuery({
-		queryKey: ["featuredProjects"],
-		queryFn: () => projectService.getFeaturedProjects(),
-	});
+export const ProjectsView = ({ copy, settings }: ProjectsViewProps) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTech, setSelectedTech] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
-	// Fetch all technologies
-	const { data: allTechnologies = [], isLoading: isTechnologiesLoading } = useQuery({
-		queryKey: ["projectTechnologies"],
-		queryFn: () => projectService.getAllTechnologies(),
-		staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-	});
+  // Fetch featured projects
+  const { data: featuredProjects = [], isLoading: isFeaturedLoading } = useQuery<Project[]>({
+    queryKey: ["featuredProjects"],
+    queryFn: () => projectService.getFeaturedProjects(),
+  });
 
-	// Fetch paginated and filtered projects - removed withLoading
-	const {
-		data: projectData = { projects: [], totalPages: 0, currentPage: 1 },
-		isLoading: isFilteredLoading,
-	} = useQuery({
-		queryKey: ["projects", currentPage, searchTerm, selectedTech],
-		queryFn: () =>
-			projectService.getByPage(currentPage, ITEMS_PER_PAGE, {
-				searchTerm,
-				technology: selectedTech,
-			}),
-	});
+  // Fetch all technologies
+  const { data: allTechnologies = [] } = useQuery<string[]>({
+    queryKey: ["projectTechnologies"],
+    queryFn: () => projectService.getAllTechnologies(),
+    staleTime: 5 * 60 * 1000,
+  });
 
-	const { projects: paginatedProjects, totalPages } = projectData;
+  // Fetch paginated and filtered projects
+  const {
+    data: projectData = { projects: [], totalPages: 0, currentPage: 1 },
+    isLoading: isFilteredLoading,
+  } = useQuery<{
+    projects: Project[];
+    totalPages: number;
+    currentPage: number;
+  }>({
+    queryKey: ["projects", currentPage, searchTerm, selectedTech],
+    queryFn: () =>
+      projectService.getByPage(currentPage, ITEMS_PER_PAGE, {
+        searchTerm,
+        technology: selectedTech,
+      }),
+  });
 
-	const clearFilters = () => {
-		setSearchTerm("");
-		setSelectedTech(null);
-		setCurrentPage(1); // Reset to first page when clearing filters
-	};
+  const handleSearchChange = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
 
-	// Props for child components
-	const filterProps = {
-		searchTerm,
-		setSearchTerm,
-		selectedTech,
-		setSelectedTech,
-		allTechnologies,
-	};
+  const handleTechChange = (tech: string | null) => {
+    setSelectedTech(tech);
+    setCurrentPage(1);
+  };
 
-	const resultsProps = {
-		filteredProjects: paginatedProjects,
-		paginatedProjects,
-		isLoading: isFilteredLoading,
-		currentPage,
-		totalPages,
-	};
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedTech(null);
+    setCurrentPage(1);
+  };
 
-	const gridProps = {
-		isLoading: isFilteredLoading,
-		projects: paginatedProjects,
-		filteredProjects: paginatedProjects,
-		clearFilters,
-	};
+  const { projects: paginatedProjects, totalPages } = projectData;
+  const pageNumbers = usePagination(currentPage, totalPages || 1);
 
-	const paginationProps = {
-		currentPage,
-		totalPages,
-		pageNumbers: Array.from({ length: totalPages }, (_, i) => i + 1),
-		setCurrentPage,
-	};
+  // Exclude featured project from general grid if it's already shown in featured section and on page 1 without filters
+  const displayProjects = useMemo(() => {
+    return paginatedProjects;
+  }, [paginatedProjects]);
 
-	// Skeleton loader for featured projects
-	const FeaturedProjectsSkeleton = () => (
-		<div className="space-y-8">
-			{Array.from({ length: 3 }).map((_, i) => (
-				<div
-					key={i}
-					className="flex flex-col md:flex-row gap-6 rounded-xl border border-border/40 p-4 overflow-hidden"
-				>
-					<Skeleton className="h-64 md:w-1/2 rounded-lg" />
-					<div className="md:w-1/2 space-y-4 py-2">
-						<Skeleton className="h-8 w-3/4" />
-						<Skeleton className="h-4 w-full" />
-						<Skeleton className="h-4 w-full" />
-						<Skeleton className="h-4 w-2/3" />
-						<div className="flex gap-2 pt-2">
-							{Array.from({ length: 4 }).map((_, j) => (
-								<Skeleton key={j} className="h-6 w-16 rounded-full" />
-							))}
-						</div>
-					</div>
-				</div>
-			))}
-		</div>
-	);
+  return (
+    <div className="space-y-16 md:space-y-24 pb-12">
+      {/* 1. Hero & Featured Showcase */}
+      <section className="relative overflow-hidden pt-4 sm:pt-8 md:pt-12">
+        {/* Background ambient lighting */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-primary/15 rounded-full blur-[130px] pointer-events-none -z-10" />
+        <div className="absolute top-1/2 left-1/4 w-[450px] h-[250px] bg-indigo-500/10 rounded-full blur-[110px] pointer-events-none -z-10" />
 
-	// Skeleton loader for regular projects grid
-	const ProjectsGridSkeleton = () => (
-		<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-			{Array.from({ length: 6 }).map((_, i) => (
-				<div key={i} className="border border-border/40 rounded-lg p-4 space-y-4">
-					<Skeleton className="h-48 w-full rounded-lg" />
-					<Skeleton className="h-6 w-3/4" />
-					<Skeleton className="h-4 w-full" />
-					<Skeleton className="h-4 w-full" />
-					<div className="flex gap-2">
-						{Array.from({ length: 3 }).map((_, j) => (
-							<Skeleton key={j} className="h-5 w-14 rounded-full" />
-						))}
-					</div>
-				</div>
-			))}
-		</div>
-	);
+        <div className="container px-4 max-w-6xl mx-auto relative">
+          {/* Header */}
+          <ProjectHeader
+            eyebrow={copy?.header?.eyebrow}
+            title={copy?.header?.title}
+            description={copy?.header?.description}
+          />
 
-	return (
-		<div className="py-12 md:py-20">
-			<div className="container px-4 max-w-6xl mx-auto">
-				<ProjectHeader
-					eyebrow={copy?.header.eyebrow}
-					title={copy?.header.title}
-					description={copy?.header.description}
-				/>
+          {/* Featured Projects Highlight */}
+          {(featuredProjects.length > 0 || isFeaturedLoading) && (
+            <div className="mb-16 md:mb-20">
+              {isFeaturedLoading ? (
+                <div className="h-[360px] rounded-3xl bg-[#0C0E18]/60 border border-white/[0.08] animate-pulse" />
+              ) : (
+                <div className="space-y-8">
+                  {featuredProjects.map((project) => (
+                    <ProjectCard key={project.id} project={project} variant="featured" />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-				{/* Featured Projects Section */}
-				{featuredProjects.length > 0 || isFeaturedLoading ? (
-					<section className="flex flex-col mb-20">
-						<div className="text-center max-w-2xl mx-auto mb-10">
-							<h2 className="text-3xl font-bold tracking-tight mb-3 bg-gradient-to-r from-primary via-indigo-500 to-purple-500 text-transparent bg-clip-text inline-block">
-								Featured Projects
-							</h2>
-							<p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-								A curated selection of production systems showcasing technical architecture,
-								problem-solving depth, and measurable user impact.
-							</p>
-						</div>
+          {/* Stack Filter Bar */}
+          <div className="pt-4 border-t border-white/[0.08]">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                All Systems & Open-Source Tools
+              </h3>
+              <p className="text-xs text-gray-400">Filter by specific technology layer</p>
+            </div>
 
-						{isFeaturedLoading ? (
-							<FeaturedProjectsSkeleton />
-						) : (
-							<div className="grid grid-cols-1 gap-8">
-								{featuredProjects.map((project) => (
-									<ProjectCard key={project.id} project={project} variant="featured" />
-								))}
-							</div>
-						)}
-					</section>
-				) : null}
+            <ProjectFilters
+              searchTerm={searchTerm}
+              setSearchTerm={handleSearchChange}
+              selectedTech={selectedTech}
+              setSelectedTech={handleTechChange}
+              allTechnologies={allTechnologies}
+            />
 
-				<section className="mb-16">
-					<div className="text-center max-w-2xl mx-auto mb-8">
-						<h2 className="text-2xl font-bold tracking-tight mb-2">All Projects & Exploration</h2>
-						<p className="text-muted-foreground text-sm leading-relaxed">
-							Explore all applications, open-source utilities, and experiments built with modern toolchains.
-						</p>
-					</div>
+            {/* Results Count Info */}
+            <ProjectResultsInfo
+              filteredProjects={displayProjects}
+              paginatedProjects={displayProjects}
+              isLoading={isFilteredLoading}
+              currentPage={currentPage}
+              totalPages={totalPages || 1}
+            />
 
-					<ProjectFilters {...filterProps} />
+            {/* Grid */}
+            <ProjectGrid
+              isLoading={isFilteredLoading}
+              paginatedProjects={displayProjects}
+              filteredProjects={displayProjects}
+              clearFilters={clearFilters}
+            />
 
-					{/* Project Results Info */}
-					<ProjectResultsInfo {...resultsProps} />
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  pageNumbers={pageNumbers}
+                  setCurrentPage={setCurrentPage}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
 
-					{/* Project Grid with Skeleton Loading */}
-					{isFilteredLoading ? (
-						<ProjectsGridSkeleton />
-					) : (
-						<ProjectGrid paginatedProjects={paginatedProjects} {...gridProps} />
-					)}
-				</section>
-
-				{/* Pagination */}
-				{totalPages > 1 && <Pagination {...paginationProps} />}
-			</div>
-		</div>
-	);
+      {/* Closing Conversion CTA */}
+      <CtaV2 settings={settings} />
+    </div>
+  );
 };

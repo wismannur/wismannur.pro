@@ -1,863 +1,963 @@
 "use client";
 
-import PowerfulCTACard from "@/components/cards/powerful-cta-card";
+import React, { useState } from "react";
+import Link from "next/link";
 import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+  ArrowRight,
+  Bot,
+  Briefcase,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
+  Code2,
+  Cpu,
+  Database,
+  Globe,
+  HelpCircle,
+  Layers,
+  MapPin,
+  ServerCog,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { HighlightedText } from "@/components/ui/highlighted-text";
 import { toast } from "@/components/ui/use-toast";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
-import { getContentIcon } from "@/lib/icon-registry";
-import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
-import { trackEvent } from "@/lib/umami";
-import { cn } from "@/lib/utils";
+import { HighlightedText } from "@/components/ui/highlighted-text";
+import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
+import { CtaV2 } from "@/components/home-v2/cta-v2";
+import { getReCaptchaToken } from "@/services/recaptcha";
 import { hireRequestService } from "@/services";
 import type { AvailabilitySlot } from "@/services/availability/types";
 import type { Faq } from "@/services/faqs/types";
 import type { HireMeCopy } from "@/services/page-copy/types";
-import type { PricingTier } from "@/services/pricing-tiers/types";
-import type { ProcessStep } from "@/services/process-steps/types";
-import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
-import { getReCaptchaToken } from "@/services/recaptcha";
-import type { ServiceItem } from "@/services/service-catalog/types";
-import type { SelectOption } from "@/services/site-settings/types";
-import type { Testimonial } from "@/services/testimonials/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import {
-	ArrowRight,
-	Briefcase,
-	Building2,
-	CheckCircle2,
-	ChevronDown,
-	Clock,
-	DollarSign,
-	MapPin,
-	MessageSquare,
-	Sparkles,
-	Star,
-} from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import Link from "next/link";
-import { z } from "zod";
+import type { SiteSettings } from "@/services/site-settings/types";
+import { trackEvent } from "@/lib/umami";
+import { cn } from "@/lib/utils";
 
 const MONTH_LABELS = [
-	"Jan",
-	"Feb",
-	"Mar",
-	"Apr",
-	"May",
-	"Jun",
-	"Jul",
-	"Aug",
-	"Sep",
-	"Oct",
-	"Nov",
-	"Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+const TARGET_ROLES = [
+  {
+    title: "Senior / Staff Fullstack Engineer",
+    tag: "Full-Time / Direct Hire",
+    description:
+      "Architecting end-to-end web applications and high-throughput SaaS platforms with Next.js 16, TypeScript, and serverless relational databases.",
+    icon: Layers,
+    skills: [
+      "Next.js 16 App Router & React 19",
+      "Strict TypeScript & Drizzle ORM",
+      "Neon PostgreSQL & Scalable DBs",
+      "REST & RPC Architecture",
+    ],
+  },
+  {
+    title: "Founding AI & Agentic Systems Engineer",
+    tag: "Venture / Core Team",
+    description:
+      "Designing and implementing autonomous multi-agent loops, Model Context Protocol (MCP) servers, structured tool-calling, and reasoning workflows.",
+    icon: Bot,
+    skills: [
+      "Gemini 3.7 & Claude Reasoning APIs",
+      "Model Context Protocol (MCP) Tooling",
+      "Multi-Agent Automation Loops",
+      "Structured Outputs & Schemas",
+    ],
+  },
+  {
+    title: "Fractional Tech Lead & Architect",
+    tag: "Advisory / Leadership",
+    description:
+      "Providing zero-to-one system blueprints, engineering best practices, RFC drafting, code review standards, and technical velocity steering.",
+    icon: Cpu,
+    skills: [
+      "Zero-to-One Architecture Roadmaps",
+      "Code Review & Quality Standards",
+      "Team Velocity & Mentorship",
+      "Sub-second CWV & Latency Audits",
+    ],
+  },
+  {
+    title: "High-Impact Sprint Retainer",
+    tag: "Dedicated Monthly Retainer",
+    description:
+      "Dedicated monthly engineering bandwidth to accelerate critical product roadmap features, resolve technical debt, or ship MVPs.",
+    icon: Zap,
+    skills: [
+      "Rapid MVP Delivery & Iteration",
+      "Edge Caching & Performance Tuning",
+      "Critical Bug Remediation",
+      "Clean Modular Refactoring",
+    ],
+  },
+];
+
+const STACK_MATRIX = [
+  {
+    category: "Frontend Architecture",
+    icon: Code2,
+    description: "High-performance, type-safe, and responsive client-side interfaces.",
+    tech: [
+      "Next.js 16 App Router",
+      "React 19 Server Components",
+      "Tailwind CSS & Radix UI",
+      "TanStack Query",
+      "Framer Motion",
+    ],
+  },
+  {
+    category: "Backend & Data Tier",
+    icon: Database,
+    description: "Scalable serverless databases, ORMs, and secure data access layers.",
+    tech: [
+      "Node.js & Strict TypeScript",
+      "Neon Serverless PostgreSQL",
+      "Drizzle ORM & Migrations",
+      "REST & RPC API Design",
+      "Redis Caching",
+    ],
+  },
+  {
+    category: "Autonomous AI & Tooling",
+    icon: Bot,
+    description: "Agentic tool calling, MCP servers, and LLM automation pipelines.",
+    tech: [
+      "Model Context Protocol (MCP)",
+      "Gemini 3.7 & Claude APIs",
+      "Structured Reasoning Loops",
+      "Vector Embeddings & RAG",
+      "Custom AI Sidecars",
+    ],
+  },
+  {
+    category: "DevOps & Reliability",
+    icon: ServerCog,
+    description: "Deterministic deployments, edge distribution, and performance rigor.",
+    tech: [
+      "Docker & Containerization",
+      "Vercel & Edge Runtime",
+      "Core Web Vitals Tuning",
+      "CI/CD & GitHub Actions",
+      "GitOps & Zero-Downtime",
+    ],
+  },
 ];
 
 const hireFormSchema = z.object({
-	name: z.string().min(1, { message: "Your name is required" }),
-	email: z.string().min(1, { message: "Work email is required" }).email("Invalid email address"),
-	company: z.string().min(1, { message: "Company / Organization name is required" }),
-	roleTitle: z.string().min(1, { message: "Position or role title is required" }),
-	employmentType: z.string().min(1, { message: "Please select employment type" }),
-	workplaceType: z.string().min(1, { message: "Please select workplace policy" }),
-	location: z.string().optional(),
-	salaryRange: z.string().optional(),
-	message: z.string().min(10, { message: "Please provide at least 10 characters about the role" }),
-	termsAccepted: z.boolean().refine((val) => val === true, {
-		message: "You must accept the terms and conditions",
-	}),
+  name: z.string().min(1, { message: "Your name is required" }),
+  email: z
+    .string()
+    .min(1, { message: "Work email is required" })
+    .email("Please enter a valid email address"),
+  company: z.string().min(1, { message: "Company / Organization name is required" }),
+  roleTitle: z.string().min(1, { message: "Position or role title is required" }),
+  employmentType: z.string().min(1, { message: "Please select employment type" }),
+  workplaceType: z.string().min(1, { message: "Please select workplace policy" }),
+  location: z.string().optional(),
+  salaryRange: z.string().optional(),
+  message: z.string().min(10, { message: "Please provide at least 10 characters about the role" }),
+  termsAccepted: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms and conditions",
+  }),
 });
 
 type HireFormValues = z.infer<typeof hireFormSchema>;
 
 type HireMeViewProps = {
-	copy: HireMeCopy | null;
-	pricingTiers: PricingTier[];
-	expertiseAreas: ServiceItem[];
-	testimonials: Testimonial[];
-	processSteps: ProcessStep[];
-	faqs: Faq[];
-	availabilitySlots: AvailabilitySlot[];
-	timeframes: SelectOption[];
-	budgetRanges: SelectOption[];
+  copy: HireMeCopy | null;
+  faqs: Faq[];
+  availabilitySlots: AvailabilitySlot[];
+  settings?: SiteSettings;
 };
 
-export function HireMeView({
-	copy,
-	pricingTiers,
-	expertiseAreas,
-	testimonials,
-	processSteps,
-	faqs,
-	availabilitySlots,
-	timeframes,
-	budgetRanges,
-}: HireMeViewProps) {
-	const ctaData = copy?.cta;
-	const [selectedService, setSelectedService] = useState<string | null>(null);
-	const [, setActiveTab] = useState("services");
-	const [isSubmitting, setIsSubmitting] = useState(false);
+export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeViewProps) {
+  const [openFaqId, setOpenFaqId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const form = useForm<HireFormValues>({
-		resolver: zodResolver(hireFormSchema),
-		defaultValues: {
-			name: "",
-			email: "",
-			company: "",
-			roleTitle: "",
-			employmentType: "full_time",
-			workplaceType: "remote",
-			location: "",
-			salaryRange: "",
-			message: "",
-			termsAccepted: false,
-		},
-	});
+  const hero = copy?.hero;
+  const availabilityCopy = copy?.availabilitySection;
 
-	const mutation = useMutation({
-		mutationFn: ({ form, token }: { form: HireFormValues; token: string }) => {
-			return hireRequestService.submit(
-				{
-					name: form.name,
-					email: form.email,
-					company: form.company,
-					roleTitle: form.roleTitle,
-					employmentType: form.employmentType,
-					workplaceType: form.workplaceType,
-					location: form.location || undefined,
-					salaryRange: form.salaryRange || undefined,
-					message: form.message,
-				},
-				token,
-			);
-		},
-		onSuccess: () => {
-			toast({
-				title: "Inquiry submitted successfully!",
-				description: "Thank you for reaching out! I will review the role details and get back to you soon.",
-			});
-			const vals = form.getValues();
-			trackEvent("hire-me-form-submit-success", {
-				roleTitle: vals.roleTitle,
-				company: vals.company,
-				employmentType: vals.employmentType,
-				workplaceType: vals.workplaceType,
-			});
-			form.reset();
-		},
-		onError: () => {
-			toast({
-				title: "Error",
-				description: `Failed to send your inquiry. Please try again or email ${PUBLIC_SUPPORT_EMAIL} directly.`,
-				variant: "destructive",
-			});
-			trackEvent("hire-me-form-submit-error");
-		},
-		onSettled: () => {
-			setIsSubmitting(false);
-		},
-	});
+  const form = useForm<HireFormValues>({
+    resolver: zodResolver(hireFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      company: "",
+      roleTitle: "",
+      employmentType: "full_time",
+      workplaceType: "remote",
+      location: "",
+      salaryRange: "",
+      message: "",
+      termsAccepted: false,
+    },
+  });
 
-	const onSubmit = async (data: HireFormValues) => {
-		setIsSubmitting(true);
-		trackEvent("hire-me-form-submit-attempt", {
-			roleTitle: data.roleTitle,
-			company: data.company,
-		});
-		const token = await getReCaptchaToken();
-		mutation.mutate({ form: data, token });
-	};
+  const mutation = useMutation({
+    mutationFn: ({ formData, token }: { formData: HireFormValues; token: string }) => {
+      return hireRequestService.submit(
+        {
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+          roleTitle: formData.roleTitle,
+          employmentType: formData.employmentType,
+          workplaceType: formData.workplaceType,
+          location: formData.location || "",
+          salaryRange: formData.salaryRange || "",
+          message: formData.message,
+        },
+        token
+      );
+    },
+    onSuccess: () => {
+      toast({
+        title: "Opportunity brief submitted!",
+        description:
+          "Thank you for reaching out. I will review the role details and reply within 24 hours.",
+      });
+      trackEvent("hire-form-submit-success", { role: form.getValues().roleTitle });
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Submission failed",
+        description: "Something went wrong. Please try again or reach out directly via email.",
+        variant: "destructive",
+      });
+      trackEvent("hire-form-submit-error");
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
+    },
+    retry: false,
+  });
 
-	const handleServiceSelect = (serviceId: string) => {
-		setSelectedService(serviceId);
-		const matchingTier = pricingTiers.find((t) => t.slug === serviceId);
-		if (matchingTier) {
-			form.setValue("roleTitle", matchingTier.name);
-		}
-		trackEvent("hire-me-service-selected", { serviceId });
+  const onSubmit = async (data: HireFormValues) => {
+    setIsSubmitting(true);
+    trackEvent("hire-form-submit-attempt", { role: data.roleTitle });
+    const token = await getReCaptchaToken();
+    mutation.mutate({ formData: data, token });
+  };
 
-		const contactForm = document.getElementById("contact-form");
-		if (contactForm) {
-			contactForm.scrollIntoView({ behavior: "smooth" });
-		}
-	};
+  const handleSelectRole = (roleTitle: string) => {
+    form.setValue("roleTitle", roleTitle, { shouldValidate: true });
+    trackEvent("hire-role-card-select", { role: roleTitle });
 
-	return (
-		<div className="space-y-20 md:space-y-28 pb-12">
-			{/* Hero Section */}
-			<section className="relative overflow-hidden pt-6 md:pt-14">
-				<div className="container px-4 max-w-6xl mx-auto">
-					<div className="flex flex-col items-center text-center max-w-3xl mx-auto">
-						<div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-semibold text-xs md:text-sm mb-6 border border-primary/20 animate-fade-in">
-							<Sparkles size={15} className="shrink-0 animate-pulse" />
-							{copy?.hero.eyebrow || "Work With Me"}
-						</div>
+    const formElement = document.getElementById("hire-me-form");
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
-						<h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight leading-[1.15] animate-fade-in">
-							<HighlightedText text={copy?.hero.title ?? ""} />
-						</h1>
+  const toggleFaq = (id: string) => {
+    setOpenFaqId(openFaqId === id ? null : id);
+    trackEvent("hire-faq-toggle", { faqId: id });
+  };
 
-						<p className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed animate-fade-in">
-							{copy?.hero.description}
-						</p>
+  return (
+    <div className="space-y-20 md:space-y-28 pb-12">
+      {/* 1. Hero / Recruitment Value Proposition */}
+      <section className="relative overflow-hidden pt-4 sm:pt-8 md:pt-12">
+        {/* Ambient lighting */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-primary/15 rounded-full blur-[130px] pointer-events-none -z-10" />
+        <div className="absolute top-1/2 right-1/4 w-[450px] h-[250px] bg-indigo-500/10 rounded-full blur-[110px] pointer-events-none -z-10" />
 
-						<div className="flex flex-wrap gap-3.5 justify-center animate-fade-in">
-							<Button
-								size="lg"
-								data-umami-event="hire-me-start-project-hero-click"
-								className="rounded-full px-7 h-12 text-xs md:text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
-								onClick={() => {
-									const contactForm = document.getElementById("contact-form");
-									if (contactForm) {
-										contactForm.scrollIntoView({ behavior: "smooth" });
-									}
-								}}
-							>
-								<span>Start a Project</span>
-								<ArrowRight size={15} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-							</Button>
+        <div className="container px-4 max-w-6xl mx-auto relative">
+          <SectionHeader
+            subtitle={hero?.eyebrow || "SENIOR FULLSTACK • AGENTIC AI ARCHITECT"}
+            title={hero?.title || "Let's Engineer Your Next **High-Performance** Platform."}
+            description={
+              hero?.description ||
+              "Senior Fullstack & AI Systems Engineer available for full-time technical roles, high-impact contract engineering, and dedicated retainers. Global remote ready from Bandung, Indonesia (UTC+7)."
+            }
+            className="text-center mb-10 md:mb-14"
+          />
 
-							<Button
-								variant="outline"
-								size="lg"
-								data-umami-event="hire-me-view-packages-click"
-								className="rounded-full px-7 h-12 text-xs md:text-sm font-semibold border-border/60 bg-card/70 backdrop-blur-sm hover:bg-primary/10 hover:border-primary/40 hover:text-primary shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group"
-								onClick={() => {
-									const servicesSection = document.getElementById("services-section");
-									if (servicesSection) {
-										servicesSection.scrollIntoView({ behavior: "smooth" });
-									}
-								}}
-							>
-								<span>View Packages</span>
-								<ChevronDown size={15} className="ml-2 group-hover:translate-y-0.5 transition-transform duration-200 text-primary" />
-							</Button>
-						</div>
-					</div>
-				</div>
-			</section>
+          {/* Direct Actions */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+            <Button
+              size="lg"
+              onClick={() => {
+                document.getElementById("hire-me-form")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="rounded-full px-8 h-12 text-xs md:text-sm font-semibold shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
+            >
+              <Sparkles size={15} className="animate-pulse mr-2 text-white" />
+              <span>Submit Opportunity Brief</span>
+              <ArrowRight
+                size={14}
+                className="ml-1.5 group-hover:translate-x-1 transition-transform"
+              />
+            </Button>
 
-			{/* Availability Section */}
-			<section className="py-6">
-				<div className="container px-4 max-w-6xl mx-auto">
-					<SpotlightCard className="p-8 md:p-10 rounded-3xl bg-card/80 border border-border/50 shadow-xl">
-						<div className="flex flex-col md:flex-row items-center justify-between gap-8">
-							<div className="md:w-3/5">
-								<h2 className="text-2xl font-bold mb-2 text-foreground">
-									{copy?.availabilitySection.title || "Project Availability"}
-								</h2>
-								<p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-									{copy?.availabilitySection.description || "Check my booking calendar for upcoming sprint slots and availability."}
-								</p>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-full px-8 h-12 text-xs md:text-sm font-semibold border-white/[0.12] bg-white/[0.04] backdrop-blur-md hover:bg-primary/10 hover:border-primary/40 hover:text-white shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group text-gray-200"
+            >
+              <Link
+                href="/services"
+                data-umami-event="hire-view-services-click"
+                className="inline-flex items-center gap-2"
+              >
+                <span>Explore Solutions & Services</span>
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-1 transition-transform text-primary"
+                />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
-								<div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-									{availabilitySlots.map((slot) => (
-										<div
-											key={slot.id}
-											className="text-center p-3.5 border border-border/50 rounded-xl bg-background/60"
-										>
-											<p className="font-semibold text-xs text-foreground">
-												{MONTH_LABELS[slot.month - 1]} {slot.year}
-											</p>
-											<Badge
-												variant={
-													slot.status === "available"
-														? "default"
-														: slot.status === "limited"
-															? "secondary"
-															: "outline"
-												}
-												className="mt-1.5 text-[10px] px-2 py-0.5"
-											>
-												{slot.label}
-											</Badge>
-										</div>
-									))}
-								</div>
-							</div>
+      {/* 2. Live Calendar & Availability Hub */}
+      {availabilitySlots && availabilitySlots.length > 0 && (
+        <section className="relative overflow-hidden py-4">
+          <div className="container px-4 max-w-5xl mx-auto">
+            <SpotlightCard className="p-6 sm:p-8 md:p-10 rounded-3xl bg-[#0C0E18]/85 border border-white/[0.09] shadow-2xl backdrop-blur-xl space-y-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.08]">
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                      <HighlightedText
+                        text={availabilityCopy?.title || "Current Engagement **Availability**."}
+                      />
+                    </h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-400 max-w-2xl leading-relaxed">
+                    {availabilityCopy?.description ||
+                      "Real-time schedule for upcoming quarters. Reserve dedicated engineering bandwidth for your upcoming launches."}
+                  </p>
+                </div>
 
-							<div className="md:w-2/5 flex flex-col items-center md:items-end text-center md:text-right">
-								<div className="flex items-center gap-2 mb-4 text-xs font-medium text-foreground">
-									<Clock size={16} className="text-primary" />
-									<span>{copy?.availabilitySection.timezoneNote || "WIB (UTC+7) • Global Remote Friendly"}</span>
-								</div>
+                <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full font-semibold flex-shrink-0 w-fit">
+                  <Clock size={13} />
+                  <span>Open for Q3/Q4</span>
+                </div>
+              </div>
 
-								<Button size="lg" className="rounded-full px-8 w-full md:w-auto shadow-md" asChild>
-									<Link href="/contact" data-umami-event="hire-me-direct-contact-click">
-										<MessageSquare size={16} className="mr-2" />
-										Direct Contact
-									</Link>
-								</Button>
+              {/* Months Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {availabilitySlots.slice(0, 4).map((slot) => {
+                  const isAvailable = slot.status === "available";
+                  const monthName = MONTH_LABELS[slot.month - 1] || `M${slot.month}`;
 
-								{copy?.availabilitySection.contactNote && (
-									<p className="text-xs text-muted-foreground mt-3">
-										{copy.availabilitySection.contactNote}
-									</p>
-								)}
-							</div>
-						</div>
-					</SpotlightCard>
-				</div>
-			</section>
+                  return (
+                    <div
+                      key={slot.id}
+                      className={cn(
+                        "p-5 rounded-2xl border text-center transition-all duration-200",
+                        isAvailable
+                          ? "bg-emerald-500/[0.06] border-emerald-500/25 text-emerald-400"
+                          : "bg-white/[0.02] border-white/[0.06] text-gray-400"
+                      )}
+                    >
+                      <p className="text-xs font-mono text-gray-400 uppercase tracking-wider">
+                        {monthName} {slot.year}
+                      </p>
+                      <p className="text-base sm:text-lg font-bold text-white mt-1.5">
+                        {slot.label || (isAvailable ? "Available" : "Booked")}
+                      </p>
+                      <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                        <span
+                          className={cn(
+                            "w-2 h-2 rounded-full",
+                            isAvailable ? "bg-emerald-400 animate-pulse" : "bg-gray-500"
+                          )}
+                        />
+                        <span className="text-[11px] font-medium text-gray-300">
+                          {isAvailable ? "Open for Sprints" : "Reserved"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-			{/* Services & Pricing Section */}
-			<section id="services-section" className="py-8 relative overflow-hidden">
-				<div className="container px-4 max-w-6xl mx-auto">
-					<SectionHeader
-						title={copy?.servicesSection.title || "Engagement Models & Rates"}
-						subtitle={copy?.servicesSection.subtitle || "Investment"}
-						description={copy?.servicesSection.description}
-						className="text-center mb-14"
-					/>
+              {/* Footer notes with generous padding and clear separation */}
+              <div className="pt-6 mt-2 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-gray-400">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary">
+                    <MapPin size={14} />
+                  </div>
+                  <span className="text-gray-300">
+                    {availabilityCopy?.timezoneNote ||
+                      "Bandung, West Java (UTC+7) • Global Remote Ready"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                    <Zap size={14} />
+                  </div>
+                  <span className="text-gray-300">
+                    {availabilityCopy?.contactNote ||
+                      "Fast response guarantee: replies typically within 2-4 hours"}
+                  </span>
+                </div>
+              </div>
+            </SpotlightCard>
+          </div>
+        </section>
+      )}
 
-					<Tabs defaultValue="services" className="w-full" onValueChange={(val) => {
-						setActiveTab(val);
-						trackEvent("hire-me-tab-change", { tab: val });
-					}}>
-						<TabsList className="grid w-full max-w-xs mx-auto grid-cols-2 mb-12 p-1 bg-muted/60 rounded-full border border-border/40">
-							<TabsTrigger
-								value="services"
-								data-umami-event="hire-me-tab-click"
-								data-umami-event-tab="services"
-								className="rounded-full text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-							>
-								Packages
-							</TabsTrigger>
-							<TabsTrigger
-								value="expertise"
-								data-umami-event="hire-me-tab-click"
-								data-umami-event-tab="expertise"
-								className="rounded-full text-xs font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-							>
-								Expertise
-							</TabsTrigger>
-						</TabsList>
+      {/* 3. Target Positions & Mutual Fit Bento */}
+      <section className="relative overflow-hidden py-4">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <SectionHeader
+            subtitle="TARGET POSITIONS"
+            title="Target Roles & **Mutual Fit**."
+            description="I partner with fast-moving teams that value clean system architecture, extreme ownership, and autonomous execution."
+            className="text-center mb-12 md:mb-16"
+          />
 
-						<TabsContent value="services" className="space-y-8 animate-fade-in">
-							<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-								{pricingTiers.map((tier) => {
-									const isSelected = selectedService === tier.slug;
-									return (
-										<SpotlightCard
-											key={tier.id}
-											className={cn(
-												"p-7 flex flex-col justify-between h-full rounded-2xl bg-card/60 border transition-all duration-300 relative",
-												isSelected
-													? "border-primary ring-2 ring-primary/30 shadow-xl"
-													: "border-border/50 hover:border-primary/40 hover:shadow-lg",
-											)}
-										>
-											{tier.isPopular && (
-												<div className="absolute top-0 right-0 bg-primary text-primary-foreground px-3.5 py-1 text-[11px] font-bold rounded-bl-xl shadow-sm">
-													Popular Choice
-												</div>
-											)}
+          {/* Role Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+            {TARGET_ROLES.map((role, rIndex) => {
+              const Icon = role.icon;
+              return (
+                <SpotlightCard
+                  key={rIndex}
+                  className="p-7 sm:p-8 rounded-3xl bg-[#0C0E18]/85 border border-white/[0.08] hover:border-primary/40 transition-all duration-300 flex flex-col justify-between h-full shadow-2xl backdrop-blur-xl group"
+                >
+                  <div className="space-y-5">
+                    <div className="flex items-center justify-between">
+                      <div className="p-3 bg-gradient-to-br from-primary/20 via-indigo-500/10 to-transparent border border-primary/30 rounded-2xl text-primary shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform duration-300">
+                        <Icon size={24} />
+                      </div>
+                      <span className="text-[11px] font-mono px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/25 font-semibold">
+                        {role.tag}
+                      </span>
+                    </div>
 
-											<div>
-												<h3 className="text-xl font-bold mb-1 text-foreground">{tier.name}</h3>
-												<div className="my-3">
-													<span className="text-3xl font-extrabold text-foreground">{tier.priceLabel}</span>
-												</div>
-												<p className="text-xs text-muted-foreground mb-6 leading-relaxed">
-													{tier.description}
-												</p>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2 tracking-tight group-hover:text-primary transition-colors">
+                        {role.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
+                        {role.description}
+                      </p>
+                    </div>
 
-												<ul className="space-y-2.5 mb-6 border-t border-border/40 pt-4">
-													{tier.features.map((feature, index) => (
-														<li key={index} className="flex items-start text-xs text-muted-foreground">
-															<CheckCircle2
-																size={15}
-																className="mr-2 mt-0.5 text-primary flex-shrink-0"
-															/>
-															<span>{feature}</span>
-														</li>
-													))}
-												</ul>
-											</div>
+                    <div className="pt-4 border-t border-white/[0.08] space-y-2.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                        Core Focus & Stack
+                      </p>
+                      <ul className="space-y-2">
+                        {role.skills.map((skill, sIndex) => (
+                          <li
+                            key={sIndex}
+                            className="flex items-start gap-2.5 text-xs text-gray-300"
+                          >
+                            <CheckCircle2 size={14} className="text-primary mt-0.5 flex-shrink-0" />
+                            <span>{skill}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
 
-											<div className="pt-4 border-t border-border/40">
-												<Button
-													variant={isSelected ? "default" : "outline"}
-													className="w-full rounded-xl text-xs font-semibold h-10"
-													onClick={() => handleServiceSelect(tier.slug)}
-													data-umami-event="hire-me-select-package-click"
-													data-umami-event-package={tier.slug}
-												>
-													{tier.ctaLabel || "Select Package"}
-												</Button>
-											</div>
-										</SpotlightCard>
-									);
-								})}
-							</div>
-						</TabsContent>
+                  <div className="pt-6 mt-6 border-t border-white/[0.08]">
+                    <Button
+                      type="button"
+                      onClick={() => handleSelectRole(role.title)}
+                      variant="outline"
+                      size="sm"
+                      className="w-full rounded-full h-11 text-xs font-semibold border-white/[0.12] bg-white/[0.04] text-white hover:bg-primary/10 hover:border-primary/40 transition-all duration-200 group/btn flex items-center justify-center gap-2"
+                    >
+                      <span>Select This Role for Inquiry</span>
+                      <ArrowRight
+                        size={14}
+                        className="group-hover/btn:translate-x-1 transition-transform"
+                      />
+                    </Button>
+                  </div>
+                </SpotlightCard>
+              );
+            })}
+          </div>
 
-						<TabsContent value="expertise" className="animate-fade-in">
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-								{expertiseAreas.map((service, index) => {
-									const Icon = getContentIcon(service.icon);
-									return (
-										<SpotlightCard
-											key={service.id}
-											className="p-7 flex flex-col justify-between h-full rounded-2xl bg-card/60 border border-border/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300"
-											style={{ animationDelay: `${(index + 1) * 0.08}s` }}
-										>
-											<div>
-												<div className="p-3.5 bg-primary/10 rounded-2xl text-primary mb-5 w-fit group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-													<Icon size={22} />
-												</div>
-												<h3 className="text-lg font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
-													{service.title}
-												</h3>
-												<p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-													{service.description}
-												</p>
-											</div>
-										</SpotlightCard>
-									);
-								})}
-							</div>
-						</TabsContent>
-					</Tabs>
-				</div>
-			</section>
+          {/* Collaboration Principles / Mutual Fit */}
+          <div className="mt-8">
+            <SpotlightCard className="p-6 sm:p-8 rounded-3xl bg-[#0C0E18]/85 border border-white/[0.08] shadow-xl backdrop-blur-xl">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                    <Zap size={16} />
+                    <span>Async-First & High Ownership</span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Proactive written documentation, clear RFCs, and self-directed execution with
+                    minimal meeting overhead.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                    <ShieldCheck size={16} />
+                    <span>Deterministic Quality</span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Strict end-to-end type safety, automated test coverage, and clean modular
+                    codebases built to scale.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                    <Globe size={16} />
+                    <span>Global Remote Alignment</span>
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    Bandung (UTC+7) location providing 3–5 hours of live overlap with US, European,
+                    and APAC teams.
+                  </p>
+                </div>
+              </div>
+            </SpotlightCard>
+          </div>
+        </div>
+      </section>
 
-			{/* Process Section */}
-			<section className="py-8">
-				<div className="container px-4 max-w-6xl mx-auto">
-					<SectionHeader
-						title={copy?.processSection.title || "Collaboration Flow"}
-						subtitle={copy?.processSection.subtitle || "The Workflow"}
-						description={copy?.processSection.description}
-						className="text-center mb-14"
-					/>
+      {/* 4. Production Stack & Architectural Matrix */}
+      <section className="relative overflow-hidden py-4">
+        <div className="container px-4 max-w-6xl mx-auto">
+          <SectionHeader
+            subtitle="TECHNICAL COMPETENCIES"
+            title="Production Stack & **Architectural Matrix**."
+            description="Battle-tested technologies and design patterns I use to deliver sub-second, highly maintainable digital platforms."
+            className="text-center mb-12 md:mb-16"
+          />
 
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-						{processSteps.map((step, index) => {
-							const Icon = getContentIcon(step.icon);
-							return (
-								<SpotlightCard
-									key={step.id}
-									className="p-6 rounded-2xl bg-card/60 border border-border/50 hover:border-primary/40 hover:shadow-lg transition-all duration-300 flex flex-col justify-between"
-								>
-									<div>
-										<div className="flex items-center justify-between mb-5">
-											<div className="p-3 bg-primary/10 rounded-xl text-primary">
-												<Icon size={20} />
-											</div>
-											<span className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-mono font-bold text-xs border border-primary/20">
-												0{index + 1}
-											</span>
-										</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {STACK_MATRIX.map((stack, index) => {
+              const Icon = stack.icon;
+              return (
+                <SpotlightCard
+                  key={index}
+                  className="p-6 sm:p-7 rounded-3xl bg-[#0C0E18]/85 border border-white/[0.08] hover:border-primary/40 transition-all duration-300 flex flex-col justify-between h-full shadow-xl backdrop-blur-xl"
+                >
+                  <div className="space-y-4">
+                    <div className="p-3 bg-gradient-to-br from-primary/20 to-transparent border border-primary/30 rounded-2xl text-primary w-fit shadow-md">
+                      <Icon size={22} />
+                    </div>
+                    <h4 className="text-lg font-bold text-white tracking-tight">
+                      {stack.category}
+                    </h4>
+                    <p className="text-xs text-gray-400 leading-relaxed">{stack.description}</p>
+                    <div className="pt-3 border-t border-white/[0.08] space-y-1.5">
+                      {stack.tech.map((item, tIndex) => (
+                        <div key={tIndex} className="flex items-center gap-2 text-xs text-gray-300">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </SpotlightCard>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-										<h3 className="text-base font-bold mb-2 text-foreground group-hover:text-primary transition-colors">
-											{step.title}
-										</h3>
+      {/* 5. Direct Opportunity Intake Form */}
+      <section id="hire-me-form" className="relative overflow-hidden py-4 scroll-mt-24">
+        <div className="container px-4 max-w-4xl mx-auto">
+          <SpotlightCard className="p-6 sm:p-8 md:p-12 rounded-3xl bg-[#0C0E18]/85 border border-white/[0.09] shadow-2xl backdrop-blur-xl">
+            <div className="space-y-8">
+              {/* Header */}
+              <div className="text-center space-y-3 pb-6 border-b border-white/[0.08]">
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/25 tracking-wide mx-auto">
+                  <Briefcase size={13} className="text-primary" />
+                  <span>{copy?.contactSection?.subtitle || "DIRECT INTAKE"}</span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight text-balance">
+                  <HighlightedText
+                    text={copy?.contactSection?.title || "Submit an **Opportunity** Brief."}
+                  />
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-400 max-w-xl mx-auto leading-relaxed text-balance">
+                  {copy?.contactSection?.description ||
+                    "Share details about your position, squad mission, tech stack, and timeline. I will review and respond within 24 hours."}
+                </p>
+              </div>
 
-										<p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
-									</div>
-								</SpotlightCard>
-							);
-						})}
-					</div>
-				</div>
-			</section>
+              {/* Form Content */}
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {/* Name */}
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold text-gray-300">
+                            Your Name <span className="text-primary">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. David Sterling"
+                              className="rounded-xl bg-black/40 border-white/[0.1] text-white placeholder:text-gray-500 focus-visible:ring-primary/40 focus-visible:border-primary/50 h-11 text-xs sm:text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
 
-			{/* Testimonials Section */}
-			{testimonials.length > 0 && (
-				<section className="py-8 relative overflow-hidden">
-					<div className="container px-4 max-w-6xl mx-auto">
-						<SectionHeader
-							title={copy?.testimonialsSection.title || "Client Endorsements"}
-							subtitle={copy?.testimonialsSection.subtitle || "Testimonials"}
-							description={copy?.testimonialsSection.description}
-							className="text-center mb-14"
-						/>
+                    {/* Email */}
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold text-gray-300">
+                            Work Email <span className="text-primary">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. david@techcorp.com"
+                              type="email"
+                              className="rounded-xl bg-black/40 border-white/[0.1] text-white placeholder:text-gray-500 focus-visible:ring-primary/40 focus-visible:border-primary/50 h-11 text-xs sm:text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-							{testimonials.map((testimonial) => (
-								<SpotlightCard
-									key={testimonial.id}
-									className="p-7 rounded-2xl bg-card/60 border border-border/50 hover:border-primary/40 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-								>
-									<div>
-										<div className="flex items-center gap-3.5 mb-5">
-											<img
-												src={testimonial.avatarUrl || "/placeholder.svg"}
-												alt={testimonial.authorName}
-												className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
-											/>
-											<div>
-												<h3 className="font-bold text-sm text-foreground">{testimonial.authorName}</h3>
-												<p className="text-xs text-muted-foreground">{testimonial.authorRole}</p>
-											</div>
-										</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {/* Company */}
+                    <FormField
+                      control={form.control}
+                      name="company"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold text-gray-300">
+                            Company / Organization <span className="text-primary">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. Acme Cloud Inc."
+                              className="rounded-xl bg-black/40 border-white/[0.1] text-white placeholder:text-gray-500 focus-visible:ring-primary/40 focus-visible:border-primary/50 h-11 text-xs sm:text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
 
-										<div className="flex mb-3.5">
-											{Array.from({ length: 5 }).map((_, i) => (
-												<Star
-													key={i}
-													size={14}
-													className={
-														i < testimonial.rating ? "text-amber-500 fill-amber-500" : "text-muted"
-													}
-												/>
-											))}
-										</div>
+                    {/* Position Title */}
+                    <FormField
+                      control={form.control}
+                      name="roleTitle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold text-gray-300">
+                            Role Title or Engagement <span className="text-primary">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. Senior Fullstack Engineer / AI Architect"
+                              className="rounded-xl bg-black/40 border-white/[0.1] text-white placeholder:text-gray-500 focus-visible:ring-primary/40 focus-visible:border-primary/50 h-11 text-xs sm:text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-										<p className="text-xs text-muted-foreground italic leading-relaxed">
-											&ldquo;{testimonial.quote}&rdquo;
-										</p>
-									</div>
-								</SpotlightCard>
-							))}
-						</div>
-					</div>
-				</section>
-			)}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    {/* Employment Type */}
+                    <FormField
+                      control={form.control}
+                      name="employmentType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold text-gray-300">
+                            Employment Type <span className="text-primary">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="rounded-xl bg-black/40 border-white/[0.1] text-white focus:ring-primary/40 focus:border-primary/50 h-11 text-xs sm:text-sm">
+                                <SelectValue placeholder="Select type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-[#0C0E18] border border-white/[0.1] text-white">
+                              <SelectItem
+                                value="full_time"
+                                className="text-xs focus:bg-primary/20 focus:text-white"
+                              >
+                                Full-Time (Direct Hire)
+                              </SelectItem>
+                              <SelectItem
+                                value="contract"
+                                className="text-xs focus:bg-primary/20 focus:text-white"
+                              >
+                                Contract / Project Sprint
+                              </SelectItem>
+                              <SelectItem
+                                value="part_time"
+                                className="text-xs focus:bg-primary/20 focus:text-white"
+                              >
+                                Part-Time / Advisory
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
 
-			{/* FAQ Section */}
-			<section className="py-8">
-				<div className="container px-4 max-w-4xl mx-auto">
-					<SectionHeader
-						title={copy?.faqSection.title || "Questions & Answers"}
-						subtitle={copy?.faqSection.subtitle || "FAQ"}
-						description={copy?.faqSection.description}
-						className="text-center mb-12"
-					/>
+                    {/* Workplace Policy */}
+                    <FormField
+                      control={form.control}
+                      name="workplaceType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold text-gray-300">
+                            Workplace Policy <span className="text-primary">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="rounded-xl bg-black/40 border-white/[0.1] text-white focus:ring-primary/40 focus:border-primary/50 h-11 text-xs sm:text-sm">
+                                <SelectValue placeholder="Select policy" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-[#0C0E18] border border-white/[0.1] text-white">
+                              <SelectItem
+                                value="remote"
+                                className="text-xs focus:bg-primary/20 focus:text-white"
+                              >
+                                100% Global Remote
+                              </SelectItem>
+                              <SelectItem
+                                value="hybrid"
+                                className="text-xs focus:bg-primary/20 focus:text-white"
+                              >
+                                Hybrid / Periodic Sync
+                              </SelectItem>
+                              <SelectItem
+                                value="on_site"
+                                className="text-xs focus:bg-primary/20 focus:text-white"
+                              >
+                                On-Site
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
 
-					<SpotlightCard className="p-6 md:p-8 rounded-3xl bg-card/80 border border-border/50 shadow-lg">
-						<Accordion type="single" collapsible className="w-full">
-							{faqs.map((item, index) => (
-								<AccordionItem
-									key={item.id}
-									value={`item-${index}`}
-									className="border-b border-border/40 py-1"
-								>
-									<AccordionTrigger className="text-left font-semibold text-sm hover:text-primary transition-colors py-3">
-										{item.question}
-									</AccordionTrigger>
-									<AccordionContent className="text-xs md:text-sm text-muted-foreground leading-relaxed pb-3">
-										{item.answer}
-									</AccordionContent>
-								</AccordionItem>
-							))}
-						</Accordion>
-					</SpotlightCard>
-				</div>
-			</section>
+                    {/* Compensation Range */}
+                    <FormField
+                      control={form.control}
+                      name="salaryRange"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs font-semibold text-gray-300">
+                            Comp / Budget Range
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. $100k-$140k / $60-$90/hr"
+                              className="rounded-xl bg-black/40 border-white/[0.1] text-white placeholder:text-gray-500 focus-visible:ring-primary/40 focus-visible:border-primary/50 h-11 text-xs sm:text-sm"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage className="text-xs" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-			{/* Recruiter / Full-time Hiring Inquiry Form Section */}
-			<section id="contact-form" className="py-8 relative overflow-hidden">
-				<div className="container px-4 max-w-4xl mx-auto">
-					<SectionHeader
-						title={copy?.contactSection.title || "Let's Explore Working Together"}
-						subtitle={copy?.contactSection.subtitle || "Full-time & Career Inquiries"}
-						description={
-							copy?.contactSection.description ||
-							"Interested in bringing me onto your team full-time, hiring for a technical lead role, or discussing a high-impact engineering position? Share the details below."
-						}
-						className="text-center mb-12"
-					/>
+                  {/* Message */}
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-semibold text-gray-300">
+                          Opportunity Brief & Technical Scope{" "}
+                          <span className="text-primary">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe the role requirements, team composition, mission, and why you think this is a great mutual fit..."
+                            rows={5}
+                            className="rounded-xl bg-black/40 border-white/[0.1] text-white placeholder:text-gray-500 focus-visible:ring-primary/40 focus-visible:border-primary/50 resize-none text-xs sm:text-sm leading-relaxed"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
 
-					<SpotlightCard className="p-8 md:p-12 rounded-3xl bg-card/80 border border-border/50 shadow-xl">
-						<Form {...form}>
-							<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<FormField
-										control={form.control}
-										name="name"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Your Name <span className="text-primary">*</span>
-												</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="e.g. Alex Johnson"
-														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+                  {/* Terms Checkbox */}
+                  <FormField
+                    control={form.control}
+                    name="termsAccepted"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl p-3 bg-white/[0.02] border border-white/[0.06]">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-0.5"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-xs text-gray-300 font-normal">
+                            I confirm that this is a genuine career or contract opportunity inquiry.
+                          </FormLabel>
+                          <FormMessage className="text-xs" />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
 
-									<FormField
-										control={form.control}
-										name="email"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Work Email <span className="text-primary">*</span>
-												</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="alex@company.com"
-														type="email"
-														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
+                  {/* Submit Action */}
+                  <div className="pt-2 text-center sm:text-left">
+                    <Button
+                      type="submit"
+                      size="lg"
+                      data-umami-event="hire-form-submit-click"
+                      className="w-full sm:w-auto px-10 h-12 rounded-full font-semibold text-xs sm:text-sm shadow-xl shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 group"
+                      disabled={mutation.isPending || isSubmitting}
+                    >
+                      {mutation.isPending || isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="animate-spin h-4 w-4 text-white" />
+                          <span>Submitting Brief...</span>
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Sparkles size={15} className="animate-pulse" />
+                          <span>Submit Opportunity Brief</span>
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                        </span>
+                      )}
+                    </Button>
+                  </div>
 
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<FormField
-										control={form.control}
-										name="company"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Company / Organization <span className="text-primary">*</span>
-												</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="e.g. Acme Tech, Series A Startup"
-														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+                  <RecaptchaDisclaimer />
+                </form>
+              </Form>
+            </div>
+          </SpotlightCard>
+        </div>
+      </section>
 
-									<FormField
-										control={form.control}
-										name="roleTitle"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Position / Role Title <span className="text-primary">*</span>
-												</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="e.g. Senior Frontend / Staff Engineer"
-														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
+      {/* 6. Frequently Asked Questions Accordion */}
+      {faqs && faqs.length > 0 && (
+        <section className="relative overflow-hidden py-4">
+          <div className="container px-4 max-w-4xl mx-auto">
+            <SectionHeader
+              subtitle={copy?.faqSection?.subtitle || "CLEAR EXPECTATIONS"}
+              title={copy?.faqSection?.title || "Frequently Asked **Questions**."}
+              description={
+                copy?.faqSection?.description ||
+                "Find clear answers regarding contract terms, working hours, code ownership, and collaboration styles."
+              }
+              className="text-center mb-10 md:mb-12"
+            />
 
-								<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-									<FormField
-										control={form.control}
-										name="employmentType"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Employment Type <span className="text-primary">*</span>
-												</FormLabel>
-												<Select
-													onValueChange={field.onChange}
-													defaultValue={field.value}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
-															<SelectValue placeholder="Select type" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														<SelectItem value="full_time">Full-time Employee</SelectItem>
-														<SelectItem value="contract">Long-term Contract</SelectItem>
-														<SelectItem value="advisory">Advisory / Fractional</SelectItem>
-														<SelectItem value="other">Other</SelectItem>
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+            <div className="space-y-4">
+              {faqs.map((faq) => {
+                const isOpen = openFaqId === faq.id;
+                return (
+                  <SpotlightCard
+                    key={faq.id}
+                    className={cn(
+                      "p-5 sm:p-6 rounded-2xl bg-[#0C0E18]/85 border transition-all duration-200 cursor-pointer shadow-md",
+                      isOpen
+                        ? "border-primary/40 bg-white/[0.04]"
+                        : "border-white/[0.08] hover:border-primary/30"
+                    )}
+                    onClick={() => toggleFaq(faq.id)}
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <h4 className="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2.5">
+                        <HelpCircle size={16} className="text-primary flex-shrink-0" />
+                        <span>{faq.question}</span>
+                      </h4>
+                      <div
+                        className={cn(
+                          "p-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-gray-400 transition-transform duration-200 flex-shrink-0",
+                          isOpen && "rotate-180 text-primary border-primary/30 bg-primary/10"
+                        )}
+                      >
+                        <ChevronDown size={14} />
+                      </div>
+                    </div>
 
-									<FormField
-										control={form.control}
-										name="workplaceType"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Workplace Policy <span className="text-primary">*</span>
-												</FormLabel>
-												<Select
-													onValueChange={field.onChange}
-													defaultValue={field.value}
-													value={field.value}
-												>
-													<FormControl>
-														<SelectTrigger className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80">
-															<SelectValue placeholder="Select policy" />
-														</SelectTrigger>
-													</FormControl>
-													<SelectContent>
-														<SelectItem value="remote">Remote (Preferred)</SelectItem>
-														<SelectItem value="hybrid">Hybrid</SelectItem>
-														<SelectItem value="onsite">On-site</SelectItem>
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
+                    {isOpen && (
+                      <div className="mt-4 pt-4 border-t border-white/[0.08] text-xs sm:text-sm text-gray-300 leading-relaxed animate-fade-in">
+                        <p>{faq.answer}</p>
+                      </div>
+                    )}
+                  </SpotlightCard>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
-									<FormField
-										control={form.control}
-										name="salaryRange"
-										render={({ field }) => (
-											<FormItem>
-												<FormLabel className="text-foreground/80 font-medium text-xs">
-													Budget / Compensation Range (Optional)
-												</FormLabel>
-												<FormControl>
-													<Input
-														placeholder="e.g. IDR 30M - 50M / Negotiable"
-														className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
-														{...field}
-													/>
-												</FormControl>
-												<FormMessage />
-											</FormItem>
-										)}
-									/>
-								</div>
-
-								<FormField
-									control={form.control}
-									name="location"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-foreground/80 font-medium text-xs">
-												Company Location / Timezone (Optional)
-											</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="e.g. Jakarta, Indonesia / Singapore / Worldwide (UTC+7)"
-													className="rounded-xl border-border/50 focus-visible:ring-primary/30 bg-background/80"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="message"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel className="text-foreground/80 font-medium text-xs">
-												Role Overview & Next Steps <span className="text-primary">*</span>
-											</FormLabel>
-											<FormControl>
-												<Textarea
-													placeholder="Tell me about the product mission, your tech stack, team structure, and how we might work together..."
-													rows={5}
-													className="rounded-xl border-border/50 focus-visible:ring-primary/30 resize-none bg-background/80"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="termsAccepted"
-									render={({ field }) => (
-										<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl p-4 bg-muted/40 border border-border/40">
-											<FormControl>
-												<Checkbox checked={field.value} onCheckedChange={field.onChange} />
-											</FormControl>
-											<div className="space-y-1 leading-none">
-												<FormLabel className="text-xs text-muted-foreground">
-													I agree to the{" "}
-													<Link href="/terms-of-service" className="text-primary hover:underline font-medium">
-														terms of service
-													</Link>{" "}
-													and{" "}
-													<Link href="/privacy-policy" className="text-primary hover:underline font-medium">
-														privacy policy
-													</Link>
-													.
-												</FormLabel>
-												<FormMessage />
-											</div>
-										</FormItem>
-									)}
-								/>
-
-								<Button
-									type="submit"
-									size="lg"
-									data-umami-event="hire-me-form-submit-click"
-									className="w-full md:w-auto px-8 rounded-full shadow-lg shadow-primary/20 group"
-									disabled={mutation.isPending || isSubmitting}
-								>
-									{mutation.isPending || isSubmitting ? (
-										<span className="flex items-center">
-											<Sparkles className="animate-spin -ml-1 mr-2 h-4 w-4" />
-											Submitting Proposal...
-										</span>
-									) : (
-										<span className="flex items-center gap-2">
-											Submit Hiring Inquiry
-											<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-										</span>
-									)}
-								</Button>
-
-								<RecaptchaDisclaimer />
-							</form>
-						</Form>
-					</SpotlightCard>
-				</div>
-			</section>
-
-			{/* Bottom CTA Section */}
-			<section className="pb-8">
-				<div className="container px-4 max-w-6xl mx-auto">
-					{ctaData && <PowerfulCTACard {...ctaData} />}
-				</div>
-			</section>
-		</div>
-	);
+      {/* 7. Bottom Conversion CTA Card */}
+      <CtaV2 settings={settings} />
+    </div>
+  );
 }

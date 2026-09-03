@@ -1,34 +1,41 @@
+import React from "react";
+
 interface ProjectResultsInfoProps {
-	filteredProjects: TAny[];
-	paginatedProjects: TAny[];
-	isLoading: boolean;
-	currentPage: number;
-	totalPages: number;
+  filteredProjects: unknown[];
+  paginatedProjects: unknown[];
+  isLoading: boolean;
+  currentPage: number;
+  totalPages: number;
 }
 
 const ProjectResultsInfo = ({
-	filteredProjects,
-	paginatedProjects,
-	isLoading,
-	currentPage,
-	totalPages,
+  filteredProjects,
+  paginatedProjects,
+  isLoading,
+  currentPage,
+  totalPages,
 }: ProjectResultsInfoProps) => {
-	if (isLoading) return null;
+  if (isLoading) return null;
 
-	return (
-		<div className="mb-8 text-muted-foreground flex justify-between items-center">
-			<p>
-				Showing {filteredProjects.length > 0 ? 1 : 0}
-				{paginatedProjects.length > 0 ? `-${paginatedProjects.length + 1}` : ""} of{" "}
-				{filteredProjects.length} projects
-			</p>
-			{totalPages > 1 && (
-				<div className="text-sm">
-					Page {currentPage} of {totalPages}
-				</div>
-			)}
-		</div>
-	);
+  const startItem = filteredProjects.length > 0 ? (currentPage - 1) * 6 + 1 : 0;
+  const endItem = Math.min(filteredProjects.length, startItem + paginatedProjects.length - 1);
+
+  return (
+    <div className="mb-6 text-gray-400 text-xs flex justify-between items-center px-1">
+      <p>
+        Showing{" "}
+        <span className="font-semibold text-white">
+          {filteredProjects.length > 0 ? `${startItem}–${endItem}` : "0"}
+        </span>{" "}
+        of <span className="font-semibold text-white">{filteredProjects.length}</span> case studies
+      </p>
+      {totalPages > 1 && (
+        <div className="text-xs font-mono text-gray-400">
+          Page <span className="text-white font-semibold">{currentPage}</span> of {totalPages}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default ProjectResultsInfo;
