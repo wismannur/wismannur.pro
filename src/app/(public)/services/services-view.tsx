@@ -32,6 +32,7 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { HighlightedText } from "@/components/ui/highlighted-text";
 import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
 import { CtaV2 } from "@/components/home-v2/cta-v2";
+import { SubmissionSuccessModal } from "@/components/common/submission-success-modal";
 import { getContentIcon } from "@/lib/icon-registry";
 import { getReCaptchaToken } from "@/services/recaptcha";
 import { serviceRequestService } from "@/services";
@@ -80,6 +81,9 @@ export function ServicesView({
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
+  const [submittedData, setSubmittedData] = useState<ServiceFormValues | null>(null);
 
   const form = useForm<ServiceFormValues>({
     resolver: zodResolver(serviceFormSchema),
@@ -110,11 +114,9 @@ export function ServicesView({
         token
       );
     },
-    onSuccess: () => {
-      toast({
-        title: "Service request submitted!",
-        description: "Thank you. I will review your project brief and reply within 24 hours.",
-      });
+    onSuccess: (id: string) => {
+      setSubmissionId(id);
+      setSuccessModalOpen(true);
       trackEvent("service-request-submit-success", { service: form.getValues().serviceType });
       form.reset();
       setSelectedService(null);
@@ -136,6 +138,7 @@ export function ServicesView({
   const onSubmit = async (data: ServiceFormValues) => {
     setIsSubmitting(true);
     trackEvent("service-request-submit-attempt", { service: data.serviceType });
+    setSubmittedData(data);
     const token = await getReCaptchaToken();
     mutation.mutate({ formData: data, token });
   };
@@ -612,6 +615,21 @@ export function ServicesView({
 
       {/* 5. Bottom Conversion CTA Card */}
       <CtaV2 settings={settings} />
+
+      <SubmissionSuccessModal
+        isOpen={successModalOpen}
+        onClose={() => setSuccessModalOpen(false)}
+        type="service"
+        referenceId={submissionId || undefined}
+        data={{
+          name: submittedData?.name,
+          email: submittedData?.email,
+          company: submittedData?.company,
+          serviceType: submittedData?.serviceType,
+          budget: submittedData?.budget,
+          timeframe: submittedData?.timeframe,
+        }}
+      />
     </div>
   );
 }
