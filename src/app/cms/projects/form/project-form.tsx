@@ -14,6 +14,7 @@ import {
   LinkIcon,
   Loader2,
   Save,
+  Sparkles,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { lazy, useEffect, useState } from "react";
@@ -189,7 +190,7 @@ export function ProjectForm() {
         toast.success("Project created successfully!");
       }
 
-      // One key per call — a composite key is a single hierarchical key, not a list.
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["project"] });
       queryClient.invalidateQueries({ queryKey: ["latestProjects"] });
@@ -207,94 +208,103 @@ export function ProjectForm() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading project...</span>
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
+        <span className="ml-2 text-lg text-slate-300">Loading project...</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0 mb-6 sm:mb-8">
-        <h1 className="text-3xl font-bold">{isEditMode ? "Edit Project" : "Add New Project"}</h1>
-        <div className="flex items-center text-muted-foreground">
-          <Clock className="h-4 w-4 mr-1.5" />
-          <span className="text-sm">Estimated reading time: {readingTime} min</span>
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-100">
+            {isEditMode ? "Edit Project" : "Add New Project"}
+          </h1>
+          <p className="text-sm text-slate-400 mt-1">
+            Craft high-impact portfolio showcases with markdown details
+          </p>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0C0E18]/80 border border-white/[0.08] text-slate-400 text-xs">
+          <Clock className="h-3.5 w-3.5 text-indigo-400" />
+          <span>Estimated reading time: <span className="text-slate-200 font-semibold">{readingTime} min</span></span>
         </div>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <Card className="border-x-0 border-b-0 sm:border-border/50 shadow-none sm:shadow-md rounded-none sm:rounded-xl overflow-hidden">
-                <CardHeader className="bg-muted/30 border-b border-border/30 px-0 py-4 sm:p-6">
-                  <CardTitle className="flex items-center">
-                    <Briefcase className="h-5 w-5 mr-2 text-primary" />
-                    Project Content
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] px-6 py-4">
+                  <CardTitle className="flex items-center text-slate-100 text-base font-semibold">
+                    <Briefcase className="h-4 w-4 mr-2 text-indigo-400" />
+                    Project Details & Story
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6 px-0 py-4 sm:p-6">
-                  {/* Publication Status Toggle */}
-                  <FormField
-                    control={form.control}
-                    name="isPublished"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Publication Status</FormLabel>
-                          <div className="text-sm text-muted-foreground">
-                            {field.value
-                              ? "Your project will be publicly visible"
-                              : "Your project will be saved as a draft"}
+                <CardContent className="space-y-6 p-6">
+                  {/* Status & Featured Row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="isPublished"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.06] bg-[#131726]/60 p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-semibold text-slate-200">
+                              Publication Status
+                            </FormLabel>
+                            <div className="text-xs text-slate-400">
+                              {field.value ? "Publicly visible" : "Draft state"}
+                            </div>
                           </div>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-                  {/* Featured Project Toggle */}
-                  <FormField
-                    control={form.control}
-                    name="isFeatured"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Featured Status</FormLabel>
-                          <div className="text-sm text-muted-foreground">
-                            {field.value
-                              ? "This project will be featured on your portfolio"
-                              : "This project will not be featured"}
+                    <FormField
+                      control={form.control}
+                      name="isFeatured"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.06] bg-[#131726]/60 p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+                              <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                              Featured
+                            </FormLabel>
+                            <div className="text-xs text-slate-400">
+                              {field.value ? "Show on hero" : "Standard list"}
+                            </div>
                           </div>
-                        </div>
-                        <FormControl>
-                          <Switch checked={field.value} onCheckedChange={field.onChange} />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">
+                        <FormLabel className="text-sm font-semibold text-slate-200">
                           Project Title
                         </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter project title"
-                            className="rounded-lg border-border/50 focus-visible:ring-primary/30"
+                            placeholder="e.g. Electric Obsidian Portfolio Platform"
+                            className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
                             {...field}
                           />
                         </FormControl>
                         <FormMessage />
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Slug: {form.watch("title") ? slugify(form.watch("title")) : ""}
+                        <div className="text-xs text-slate-500 mt-1 font-mono">
+                          Slug: {form.watch("title") ? slugify(form.watch("title")) : "—"}
                         </div>
                       </FormItem>
                     )}
@@ -305,11 +315,11 @@ export function ProjectForm() {
                     name="summary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">Summary</FormLabel>
+                        <FormLabel className="text-sm font-semibold text-slate-200">Summary</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Brief summary of your project"
-                            className="resize-none h-20 rounded-lg border-border/50 focus-visible:ring-primary/30"
+                            placeholder="A concise, compelling overview of the project and its value proposition..."
+                            className="resize-none h-24 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
                             {...field}
                           />
                         </FormControl>
@@ -323,14 +333,16 @@ export function ProjectForm() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium m-0">
+                        <FormLabel className="text-sm font-semibold text-slate-200">
                           Description (MDX)
                         </FormLabel>
                         <FormControl>
-                          <MDXEditor
-                            initialCode={descriptionValues}
-                            onChange={(code) => field.onChange(code)}
-                          />
+                          <div className="rounded-xl border border-white/[0.08] bg-[#131726]/40 p-1 overflow-hidden">
+                            <MDXEditor
+                              initialCode={descriptionValues}
+                              onChange={(code) => field.onChange(code)}
+                            />
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -340,34 +352,34 @@ export function ProjectForm() {
               </Card>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="space-y-6 sticky">
-                <Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-                  <CardHeader className="bg-muted/30 border-b border-border/30">
-                    <CardTitle className="flex items-center">
-                      <Code className="h-5 w-5 mr-2 text-primary" />
-                      Project Details
+            <div className="lg:col-span-1 space-y-6">
+              <div className="space-y-6 sticky top-6">
+                <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] px-6 py-4">
+                    <CardTitle className="flex items-center text-slate-100 text-base font-semibold">
+                      <Code className="h-4 w-4 mr-2 text-indigo-400" />
+                      Links & Metadata
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6 p-6">
+                  <CardContent className="space-y-5 p-6">
                     <FormField
                       control={form.control}
                       name="technologies"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">
+                          <FormLabel className="text-sm font-semibold text-slate-200">
                             Technologies
                           </FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="React, TypeScript, Firebase"
-                              className="rounded-lg border-border/50 focus-visible:ring-primary/30"
+                              placeholder="Next.js, TypeScript, Tailwind, Go"
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
                               {...field}
                             />
                           </FormControl>
-                          <div className="text-xs text-muted-foreground mt-2 flex items-center">
-                            <Info className="h-3.5 w-3.5 mr-1.5" />
-                            Separate technologies with commas
+                          <div className="text-[11px] text-slate-500 mt-1 flex items-center">
+                            <Info className="h-3 w-3 mr-1 text-slate-400" />
+                            Comma-separated list of tech tags
                           </div>
                           <FormMessage />
                         </FormItem>
@@ -379,20 +391,20 @@ export function ProjectForm() {
                       name="demoUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">Demo URL</FormLabel>
+                          <FormLabel className="text-sm font-semibold text-slate-200">Demo URL</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Globe className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                               <Input
-                                placeholder="https://your-project-demo.com"
-                                className="pl-10 rounded-lg border-border/50 focus-visible:ring-primary/30"
+                                placeholder="https://demo.example.com"
+                                className="pl-10 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
                                 {...field}
                               />
                             </div>
                           </FormControl>
-                          <div className="text-xs text-muted-foreground mt-2 flex items-center">
-                            <LinkIcon className="h-3.5 w-3.5 mr-1.5" />
-                            Optional: Link to live demo
+                          <div className="text-[11px] text-slate-500 mt-1 flex items-center">
+                            <LinkIcon className="h-3 w-3 mr-1 text-slate-400" />
+                            Optional live product demo
                           </div>
                           <FormMessage />
                         </FormItem>
@@ -404,22 +416,22 @@ export function ProjectForm() {
                       name="repoUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">
+                          <FormLabel className="text-sm font-semibold text-slate-200">
                             Repository URL
                           </FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <Github className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                              <Github className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                               <Input
-                                placeholder="https://github.com/yourusername/repo"
-                                className="pl-10 rounded-lg border-border/50 focus-visible:ring-primary/30"
+                                placeholder="https://github.com/org/repo"
+                                className="pl-10 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
                                 {...field}
                               />
                             </div>
                           </FormControl>
-                          <div className="text-xs text-muted-foreground mt-2 flex items-center">
-                            <Github className="h-3.5 w-3.5 mr-1.5" />
-                            Optional: Link to source code
+                          <div className="text-[11px] text-slate-500 mt-1 flex items-center">
+                            <Github className="h-3 w-3 mr-1 text-slate-400" />
+                            Optional public code link
                           </div>
                           <FormMessage />
                         </FormItem>
@@ -431,24 +443,22 @@ export function ProjectForm() {
                       name="image"
                       render={() => (
                         <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">
-                            Project Image
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Project Cover Image
                           </FormLabel>
                           <FormControl>
                             <div className="space-y-3">
-                              <div className="relative">
-                                <Input
-                                  placeholder="Enter image URL"
-                                  className="rounded-lg border-border/50 focus-visible:ring-primary/30"
-                                  value={selectedImage || ""}
-                                  onChange={(e) => {
-                                    setSelectedImage(e.target.value);
-                                    form.setValue("image", e.target.value);
-                                  }}
-                                />
-                              </div>
+                              <Input
+                                placeholder="https://cdn.example.com/cover.png"
+                                className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
+                                value={selectedImage || ""}
+                                onChange={(e) => {
+                                  setSelectedImage(e.target.value);
+                                  form.setValue("image", e.target.value);
+                                }}
+                              />
                               {selectedImage && (
-                                <div className="relative aspect-video rounded-lg overflow-hidden border border-border/50 bg-muted/30">
+                                <div className="relative aspect-video rounded-xl overflow-hidden border border-white/[0.08] bg-[#131726]/60">
                                   <img
                                     src={selectedImage || "/placeholder.svg"}
                                     alt="Preview"
@@ -461,7 +471,7 @@ export function ProjectForm() {
                                     type="button"
                                     variant="destructive"
                                     size="sm"
-                                    className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
+                                    className="absolute top-2 right-2 h-7 w-7 p-0 rounded-full bg-rose-500/80 hover:bg-rose-600 text-white"
                                     onClick={() => {
                                       setSelectedImage(null);
                                       form.setValue("image", "");
@@ -471,8 +481,8 @@ export function ProjectForm() {
                                   </Button>
                                 </div>
                               )}
-                              <p className="text-xs text-muted-foreground">
-                                Recommended: 1200 × 630 pixels
+                              <p className="text-[11px] text-slate-500">
+                                Recommended aspect ratio 16:9 (1200 × 675px)
                               </p>
                             </div>
                           </FormControl>
@@ -481,10 +491,10 @@ export function ProjectForm() {
                       )}
                     />
                   </CardContent>
-                  <CardFooter className="px-6 py-4 bg-muted/20 border-t border-border/30">
+                  <CardFooter className="px-6 py-4 bg-white/[0.02] border-t border-white/[0.06]">
                     <Button
                       type="submit"
-                      className="w-full rounded-lg group relative overflow-hidden"
+                      className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30 rounded-xl font-semibold group relative overflow-hidden h-11"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
@@ -514,36 +524,21 @@ export function ProjectForm() {
                   </CardFooter>
                 </Card>
 
-                <Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-                  <CardHeader className="bg-muted/30 border-b border-border/30 py-3">
-                    <CardTitle className="text-sm flex items-center">
-                      <Info className="h-4 w-4 mr-2 text-primary" />
-                      Project Tips
+                {/* Project Tips */}
+                <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] py-3 px-6">
+                    <CardTitle className="text-xs font-semibold flex items-center text-slate-300">
+                      <Info className="h-3.5 w-3.5 mr-2 text-indigo-400" />
+                      Showcase Tips
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="text-xs space-y-2 text-muted-foreground">
-                      <p>
-                        <span className="font-semibold">Images:</span> Include screenshots or
-                        diagrams to showcase your project
-                      </p>
-                      <p>
-                        <span className="font-semibold">Technologies:</span> List all major
-                        technologies and tools used
-                      </p>
-                      <p>
-                        <span className="font-semibold">Features:</span> Highlight key features and
-                        functionality
-                      </p>
-                      <p>
-                        <span className="font-semibold">Challenges:</span> Mention challenges faced
-                        and how you solved them
-                      </p>
-                      <p>
-                        <span className="font-semibold">Future:</span> Include potential future
-                        improvements
-                      </p>
-                    </div>
+                  <CardContent className="p-4 space-y-2 text-xs text-slate-400">
+                    <p>
+                      <span className="text-slate-200 font-medium">Architecture:</span> Detail architecture patterns, performance benchmarks, and design decisions.
+                    </p>
+                    <p>
+                      <span className="text-slate-200 font-medium">Outcomes:</span> Highlight quantitative metrics (e.g., 40% latency reduction, $12k/mo saved).
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -554,3 +549,4 @@ export function ProjectForm() {
     </div>
   );
 }
+

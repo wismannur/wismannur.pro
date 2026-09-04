@@ -26,7 +26,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "@/hooks/use-theme";
 import { userService } from "@/services";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Bell, Globe, Info, Laptop, Loader2, Moon, Palette, Save, Sun } from "lucide-react";
+import {
+  Bell,
+  Globe,
+  Info,
+  Laptop,
+  Loader2,
+  Moon,
+  Palette,
+  Save,
+  Settings,
+  Sparkles,
+  Sun,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -129,7 +141,7 @@ const CmsSettings = () => {
       setTheme(data.theme);
       setColorScheme(data.colorScheme);
       await userService.updateSettings(data);
-      toast.success("Appearance settings updated");
+      toast.success("Appearance settings updated successfully");
     } catch (error) {
       console.error("Error saving appearance settings:", error);
       toast.error("Failed to save appearance settings");
@@ -142,7 +154,7 @@ const CmsSettings = () => {
     setIsLoading(true);
     try {
       await userService.updateSettings(data);
-      toast.success("Notification settings updated");
+      toast.success("Notification settings updated successfully");
     } catch (error) {
       console.error("Error saving notification settings:", error);
       toast.error("Failed to save notification settings");
@@ -155,7 +167,7 @@ const CmsSettings = () => {
     setIsLoading(true);
     try {
       await userService.updateSettings(data);
-      toast.success("Site settings updated");
+      toast.success("Site settings updated successfully");
     } catch (error) {
       console.error("Error saving site settings:", error);
       toast.error("Failed to save site settings");
@@ -165,37 +177,66 @@ const CmsSettings = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your application settings and preferences</p>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 shadow-lg shadow-indigo-500/10">
+            <Settings className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+              Settings & Preferences
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+              Manage system configuration, theme appearance, and notification alerts
+            </p>
+          </div>
+        </div>
       </div>
 
+      {/* Tabs */}
       <Tabs defaultValue="appearance" className="space-y-6">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="appearance" className="data-[state=active]:bg-background">
-            <Palette className="h-4 w-4 mr-2" />
+        <TabsList className="bg-[#0C0E18]/80 backdrop-blur-md border border-white/[0.08] p-1.5 rounded-2xl h-auto gap-1">
+          <TabsTrigger
+            value="appearance"
+            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-indigo-500/20 text-slate-400 hover:text-slate-200 rounded-xl px-4 py-2 text-xs font-semibold transition-all gap-2"
+          >
+            <Palette className="h-4 w-4" />
             Appearance
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-background">
-            <Bell className="h-4 w-4 mr-2" />
+          <TabsTrigger
+            value="notifications"
+            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-indigo-500/20 text-slate-400 hover:text-slate-200 rounded-xl px-4 py-2 text-xs font-semibold transition-all gap-2"
+          >
+            <Bell className="h-4 w-4" />
             Notifications
           </TabsTrigger>
-          <TabsTrigger value="site" className="data-[state=active]:bg-background">
-            <Globe className="h-4 w-4 mr-2" />
+          <TabsTrigger
+            value="site"
+            className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-indigo-500/20 text-slate-400 hover:text-slate-200 rounded-xl px-4 py-2 text-xs font-semibold transition-all gap-2"
+          >
+            <Globe className="h-4 w-4" />
             Site Settings
           </TabsTrigger>
         </TabsList>
 
+        {/* Tab 1: Appearance */}
         <TabsContent value="appearance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>
-                Customize the appearance of the application. Choose between light and dark mode.
+          <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-white/[0.08] bg-[#131726]/40 p-6">
+              <div className="flex items-center gap-2.5">
+                <Palette className="h-5 w-5 text-indigo-400" />
+                <CardTitle className="text-lg font-bold text-white tracking-tight">
+                  Theme & Visual Appearance
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs sm:text-sm text-slate-400 mt-1">
+                Customize the visual interface of the dashboard. Choose your preferred color mode
+                and accent color scheme.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <Form {...appearanceForm}>
                 <form
                   onSubmit={appearanceForm.handleSubmit(onAppearanceSubmit)}
@@ -206,8 +247,14 @@ const CmsSettings = () => {
                     name="theme"
                     render={({ field }) => (
                       <FormItem className="space-y-4">
-                        <FormLabel>Theme</FormLabel>
-                        <FormDescription>Select the theme for the dashboard.</FormDescription>
+                        <div>
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Color Theme
+                          </FormLabel>
+                          <FormDescription className="text-xs text-slate-400">
+                            Select the background theme for your CMS workspace
+                          </FormDescription>
+                        </div>
                         <FormControl>
                           <RadioGroup
                             onValueChange={(value) => {
@@ -215,7 +262,7 @@ const CmsSettings = () => {
                               setTheme(value as AppearanceFormValues["theme"]);
                             }}
                             defaultValue={field.value}
-                            className="grid grid-cols-3 gap-4"
+                            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
                           >
                             <FormItem className="flex flex-col items-center space-y-2">
                               <FormControl>
@@ -227,12 +274,17 @@ const CmsSettings = () => {
                               </FormControl>
                               <label
                                 htmlFor="theme-light"
-                                className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
-                                  field.value === "light" ? "border-primary" : ""
+                                className={`w-full flex flex-col items-center justify-between rounded-xl border p-5 cursor-pointer transition-all duration-200 ${
+                                  field.value === "light"
+                                    ? "border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10 text-white"
+                                    : "border-white/[0.08] bg-[#131726]/60 hover:bg-[#131726] hover:border-white/20 text-slate-300"
                                 }`}
                               >
-                                <Sun className="h-5 w-5 mb-2" />
-                                <span className="text-sm font-medium">Light</span>
+                                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 mb-3">
+                                  <Sun className="h-6 w-6" />
+                                </div>
+                                <span className="text-sm font-semibold">Light Mode</span>
+                                <span className="text-[11px] text-slate-400 mt-1">Clean & bright</span>
                               </label>
                             </FormItem>
                             <FormItem className="flex flex-col items-center space-y-2">
@@ -241,12 +293,17 @@ const CmsSettings = () => {
                               </FormControl>
                               <label
                                 htmlFor="theme-dark"
-                                className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
-                                  field.value === "dark" ? "border-primary" : ""
+                                className={`w-full flex flex-col items-center justify-between rounded-xl border p-5 cursor-pointer transition-all duration-200 ${
+                                  field.value === "dark"
+                                    ? "border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10 text-white"
+                                    : "border-white/[0.08] bg-[#131726]/60 hover:bg-[#131726] hover:border-white/20 text-slate-300"
                                 }`}
                               >
-                                <Moon className="h-5 w-5 mb-2" />
-                                <span className="text-sm font-medium">Dark</span>
+                                <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 mb-3">
+                                  <Moon className="h-6 w-6" />
+                                </div>
+                                <span className="text-sm font-semibold">Dark Obsidian</span>
+                                <span className="text-[11px] text-slate-400 mt-1">Deep dark tones</span>
                               </label>
                             </FormItem>
                             <FormItem className="flex flex-col items-center space-y-2">
@@ -259,12 +316,17 @@ const CmsSettings = () => {
                               </FormControl>
                               <label
                                 htmlFor="theme-system"
-                                className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer ${
-                                  field.value === "system" ? "border-primary" : ""
+                                className={`w-full flex flex-col items-center justify-between rounded-xl border p-5 cursor-pointer transition-all duration-200 ${
+                                  field.value === "system"
+                                    ? "border-indigo-500 bg-indigo-500/10 shadow-lg shadow-indigo-500/10 text-white"
+                                    : "border-white/[0.08] bg-[#131726]/60 hover:bg-[#131726] hover:border-white/20 text-slate-300"
                                 }`}
                               >
-                                <Laptop className="h-5 w-5 mb-2" />
-                                <span className="text-sm font-medium">System</span>
+                                <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 mb-3">
+                                  <Laptop className="h-6 w-6" />
+                                </div>
+                                <span className="text-sm font-semibold">System Default</span>
+                                <span className="text-[11px] text-slate-400 mt-1">Auto OS sync</span>
                               </label>
                             </FormItem>
                           </RadioGroup>
@@ -278,10 +340,12 @@ const CmsSettings = () => {
                     control={appearanceForm.control}
                     name="colorScheme"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Color Scheme</FormLabel>
-                        <FormDescription>
-                          Select the color scheme for the dashboard.
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          Accent Color Scheme
+                        </FormLabel>
+                        <FormDescription className="text-xs text-slate-400">
+                          Select the primary accent highlight color for buttons and indicators
                         </FormDescription>
                         <Select
                           onValueChange={(value) => {
@@ -291,16 +355,41 @@ const CmsSettings = () => {
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-[#131726]/80 border-white/[0.08] text-slate-200 rounded-xl focus:ring-indigo-500/40 h-11">
                               <SelectValue placeholder="Select a color scheme" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="blue">Blue</SelectItem>
-                            <SelectItem value="green">Green</SelectItem>
-                            <SelectItem value="purple">Purple</SelectItem>
-                            <SelectItem value="orange">Orange</SelectItem>
-                            <SelectItem value="red">Red</SelectItem>
+                          <SelectContent className="bg-[#0C0E18]/95 backdrop-blur-xl border-white/[0.08] text-slate-200 rounded-xl">
+                            <SelectItem value="blue" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+                                <span>Electric Blue</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="green" className="hover:bg-emerald-600/20 focus:bg-emerald-600/20 text-slate-300 focus:text-white">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                <span>Emerald Green</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="purple" className="hover:bg-purple-600/20 focus:bg-purple-600/20 text-slate-300 focus:text-white">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-purple-500" />
+                                <span>Neon Purple</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="orange" className="hover:bg-orange-600/20 focus:bg-orange-600/20 text-slate-300 focus:text-white">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-orange-500" />
+                                <span>Vibrant Orange</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="red" className="hover:bg-rose-600/20 focus:bg-rose-600/20 text-slate-300 focus:text-white">
+                              <div className="flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
+                                <span>Crimson Red</span>
+                              </div>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -308,7 +397,11 @@ const CmsSettings = () => {
                     )}
                   />
 
-                  <Button type="submit" disabled={isLoading}>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-indigo-500/20 border border-indigo-400/30 rounded-xl px-5 h-11"
+                  >
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -317,7 +410,7 @@ const CmsSettings = () => {
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" />
-                        Save Changes
+                        Save Appearance
                       </>
                     )}
                   </Button>
@@ -327,26 +420,33 @@ const CmsSettings = () => {
           </Card>
         </TabsContent>
 
+        {/* Tab 2: Notifications */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
-                Configure how you receive notifications from the application.
+          <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-white/[0.08] bg-[#131726]/40 p-6">
+              <div className="flex items-center gap-2.5">
+                <Bell className="h-5 w-5 text-indigo-400" />
+                <CardTitle className="text-lg font-bold text-white tracking-tight">
+                  Notification Settings
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs sm:text-sm text-slate-400 mt-1">
+                Configure how and when you receive real-time notifications from the application.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <Form {...notificationForm}>
                 <form
                   onSubmit={notificationForm.handleSubmit(onNotificationSubmit)}
                   className="space-y-8"
                 >
-                  <Alert variant="default" className="bg-muted/50">
-                    <Info className="h-4 w-4" />
-                    <AlertTitle>Email Notifications</AlertTitle>
-                    <AlertDescription>
-                      Configure your email notification preferences. You can change these settings
-                      at any time.
+                  <Alert className="bg-[#131726]/60 border border-white/[0.08] text-slate-300 rounded-xl p-4">
+                    <Info className="h-4 w-4 text-indigo-400" />
+                    <AlertTitle className="text-slate-200 font-semibold text-sm">
+                      Email Notification Delivery
+                    </AlertTitle>
+                    <AlertDescription className="text-xs text-slate-400 mt-1">
+                      Configure your email dispatch preferences. You can update these parameters anytime.
                     </AlertDescription>
                   </Alert>
 
@@ -355,11 +455,13 @@ const CmsSettings = () => {
                       control={notificationForm.control}
                       name="emailNotifications"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.08] bg-[#131726]/60 p-4 transition-colors hover:border-white/10 hover:bg-[#131726]/80">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Email Notifications</FormLabel>
-                            <FormDescription>
-                              Receive email notifications for important updates.
+                            <FormLabel className="text-sm font-semibold text-slate-200">
+                              Direct Email Notifications
+                            </FormLabel>
+                            <FormDescription className="text-xs text-slate-400">
+                              Receive immediate email alerts for important platform activities and leads.
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -373,11 +475,13 @@ const CmsSettings = () => {
                       control={notificationForm.control}
                       name="marketingEmails"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.08] bg-[#131726]/60 p-4 transition-colors hover:border-white/10 hover:bg-[#131726]/80">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Marketing Emails</FormLabel>
-                            <FormDescription>
-                              Receive emails about new features and special offers.
+                            <FormLabel className="text-sm font-semibold text-slate-200">
+                              Marketing & Product Digest
+                            </FormLabel>
+                            <FormDescription className="text-xs text-slate-400">
+                              Receive periodic newsletters about new features and ecosystem updates.
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -388,13 +492,15 @@ const CmsSettings = () => {
                     />
                   </div>
 
-                  <Separator />
+                  <Separator className="bg-white/[0.08]" />
 
-                  <Alert variant="default" className="bg-muted/50">
-                    <Bell className="h-4 w-4" />
-                    <AlertTitle>In-App Notifications</AlertTitle>
-                    <AlertDescription>
-                      Configure your in-app notification preferences.
+                  <Alert className="bg-[#131726]/60 border border-white/[0.08] text-slate-300 rounded-xl p-4">
+                    <Sparkles className="h-4 w-4 text-cyan-400" />
+                    <AlertTitle className="text-slate-200 font-semibold text-sm">
+                      In-App Real-time Alerts
+                    </AlertTitle>
+                    <AlertDescription className="text-xs text-slate-400 mt-1">
+                      Configure badge alerts and push notifications while browsing the CMS.
                     </AlertDescription>
                   </Alert>
 
@@ -403,11 +509,13 @@ const CmsSettings = () => {
                       control={notificationForm.control}
                       name="newCommentNotifications"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.08] bg-[#131726]/60 p-4 transition-colors hover:border-white/10 hover:bg-[#131726]/80">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">New Comments</FormLabel>
-                            <FormDescription>
-                              Receive notifications when someone comments on your content.
+                            <FormLabel className="text-sm font-semibold text-slate-200">
+                              New Blog Comments
+                            </FormLabel>
+                            <FormDescription className="text-xs text-slate-400">
+                              Receive notifications when readers submit comments on published posts.
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -421,11 +529,13 @@ const CmsSettings = () => {
                       control={notificationForm.control}
                       name="mentionNotifications"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.08] bg-[#131726]/60 p-4 transition-colors hover:border-white/10 hover:bg-[#131726]/80">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Mentions</FormLabel>
-                            <FormDescription>
-                              Receive notifications when someone mentions you.
+                            <FormLabel className="text-sm font-semibold text-slate-200">
+                              Team Mentions & Activity
+                            </FormLabel>
+                            <FormDescription className="text-xs text-slate-400">
+                              Receive alert triggers when someone mentions your handle in notes or logs.
                             </FormDescription>
                           </div>
                           <FormControl>
@@ -436,7 +546,11 @@ const CmsSettings = () => {
                     />
                   </div>
 
-                  <Button type="submit" disabled={isLoading}>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-indigo-500/20 border border-indigo-400/30 rounded-xl px-5 h-11"
+                  >
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -445,7 +559,7 @@ const CmsSettings = () => {
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" />
-                        Save Changes
+                        Save Notification Settings
                       </>
                     )}
                   </Button>
@@ -455,13 +569,21 @@ const CmsSettings = () => {
           </Card>
         </TabsContent>
 
+        {/* Tab 3: Site Settings */}
         <TabsContent value="site" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Site Settings</CardTitle>
-              <CardDescription>Configure general settings for the application.</CardDescription>
+          <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-white/[0.08] bg-[#131726]/40 p-6">
+              <div className="flex items-center gap-2.5">
+                <Globe className="h-5 w-5 text-indigo-400" />
+                <CardTitle className="text-lg font-bold text-white tracking-tight">
+                  Global Site & Localization Settings
+                </CardTitle>
+              </div>
+              <CardDescription className="text-xs sm:text-sm text-slate-400 mt-1">
+                Configure internationalization, timezone offsets, and date format representations.
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               <Form {...siteSettingsForm}>
                 <form
                   onSubmit={siteSettingsForm.handleSubmit(onSiteSettingsSubmit)}
@@ -471,24 +593,39 @@ const CmsSettings = () => {
                     control={siteSettingsForm.control}
                     name="language"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Language</FormLabel>
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          Dashboard Language
+                        </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-[#131726]/80 border-white/[0.08] text-slate-200 rounded-xl focus:ring-indigo-500/40 h-11">
                               <SelectValue placeholder="Select a language" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="en">English</SelectItem>
-                            <SelectItem value="es">Spanish</SelectItem>
-                            <SelectItem value="fr">French</SelectItem>
-                            <SelectItem value="de">German</SelectItem>
-                            <SelectItem value="ja">Japanese</SelectItem>
+                          <SelectContent className="bg-[#0C0E18]/95 backdrop-blur-xl border-white/[0.08] text-slate-200 rounded-xl">
+                            <SelectItem value="en" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              English (US)
+                            </SelectItem>
+                            <SelectItem value="id" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Bahasa Indonesia
+                            </SelectItem>
+                            <SelectItem value="es" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Spanish (Español)
+                            </SelectItem>
+                            <SelectItem value="fr" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              French (Français)
+                            </SelectItem>
+                            <SelectItem value="de" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              German (Deutsch)
+                            </SelectItem>
+                            <SelectItem value="ja" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Japanese (日本語)
+                            </SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
-                          Select your preferred language for the application.
+                        <FormDescription className="text-xs text-slate-400">
+                          Select the primary language displayed in your administration dashboard.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -499,28 +636,57 @@ const CmsSettings = () => {
                     control={siteSettingsForm.control}
                     name="timezone"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Timezone</FormLabel>
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          System Timezone
+                        </FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-[#131726]/80 border-white/[0.08] text-slate-200 rounded-xl focus:ring-indigo-500/40 h-11">
                               <SelectValue placeholder="Select a timezone" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="UTC">UTC</SelectItem>
-                            <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                            <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                            <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                            <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                            <SelectItem value="Europe/London">London</SelectItem>
-                            <SelectItem value="Europe/Paris">Paris</SelectItem>
-                            <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
-                            <SelectItem value="Asia/Jakarta">Jakarta (WIB)</SelectItem>
+                          <SelectContent className="bg-[#0C0E18]/95 backdrop-blur-xl border-white/[0.08] text-slate-200 rounded-xl max-h-60">
+                            <SelectItem value="Asia/Jakarta" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Asia/Jakarta (WIB, UTC+7)
+                            </SelectItem>
+                            <SelectItem value="Asia/Makassar" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Asia/Makassar (WITA, UTC+8)
+                            </SelectItem>
+                            <SelectItem value="Asia/Jayapura" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Asia/Jayapura (WIT, UTC+9)
+                            </SelectItem>
+                            <SelectItem value="Asia/Singapore" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Asia/Singapore (SGT, UTC+8)
+                            </SelectItem>
+                            <SelectItem value="Asia/Tokyo" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Asia/Tokyo (JST, UTC+9)
+                            </SelectItem>
+                            <SelectItem value="UTC" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              UTC (Coordinated Universal Time)
+                            </SelectItem>
+                            <SelectItem value="Europe/London" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Europe/London (GMT/BST)
+                            </SelectItem>
+                            <SelectItem value="Europe/Paris" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              Europe/Paris (CET/CEST)
+                            </SelectItem>
+                            <SelectItem value="America/New_York" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              America/New_York (Eastern Time)
+                            </SelectItem>
+                            <SelectItem value="America/Chicago" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              America/Chicago (Central Time)
+                            </SelectItem>
+                            <SelectItem value="America/Denver" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              America/Denver (Mountain Time)
+                            </SelectItem>
+                            <SelectItem value="America/Los_Angeles" className="hover:bg-indigo-600/20 focus:bg-indigo-600/20 text-slate-300 focus:text-white">
+                              America/Los_Angeles (Pacific Time)
+                            </SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
-                          Select your timezone for accurate time display.
+                        <FormDescription className="text-xs text-slate-400">
+                          Timestamp offset used for job tracking, audit logs, and lead timestamps.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -532,36 +698,45 @@ const CmsSettings = () => {
                     name="dateFormat"
                     render={({ field }) => (
                       <FormItem className="space-y-4">
-                        <FormLabel>Date Format</FormLabel>
-                        <FormDescription>Select your preferred date format.</FormDescription>
+                        <div>
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Date Display Format
+                          </FormLabel>
+                          <FormDescription className="text-xs text-slate-400">
+                            Choose how dates are rendered throughout table columns and metadata
+                          </FormDescription>
+                        </div>
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
                             defaultValue={field.value}
-                            className="flex flex-col space-y-1"
+                            className="grid grid-cols-1 sm:grid-cols-3 gap-3"
                           >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border border-white/[0.08] bg-[#131726]/60 p-4 hover:bg-[#131726]/80 hover:border-white/10 cursor-pointer">
                               <FormControl>
-                                <RadioGroupItem value="MM/DD/YYYY" />
+                                <RadioGroupItem value="DD/MM/YYYY" id="df-ddmmyyyy" />
                               </FormControl>
-                              <FormLabel className="font-normal">
-                                MM/DD/YYYY (e.g., 12/31/2023)
+                              <FormLabel htmlFor="df-ddmmyyyy" className="font-normal text-slate-200 cursor-pointer">
+                                <span className="font-semibold block text-sm">DD/MM/YYYY</span>
+                                <span className="text-xs text-slate-400 block mt-0.5">31/12/2026 (Intl)</span>
                               </FormLabel>
                             </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border border-white/[0.08] bg-[#131726]/60 p-4 hover:bg-[#131726]/80 hover:border-white/10 cursor-pointer">
                               <FormControl>
-                                <RadioGroupItem value="DD/MM/YYYY" />
+                                <RadioGroupItem value="MM/DD/YYYY" id="df-mmddyyyy" />
                               </FormControl>
-                              <FormLabel className="font-normal">
-                                DD/MM/YYYY (e.g., 31/12/2023)
+                              <FormLabel htmlFor="df-mmddyyyy" className="font-normal text-slate-200 cursor-pointer">
+                                <span className="font-semibold block text-sm">MM/DD/YYYY</span>
+                                <span className="text-xs text-slate-400 block mt-0.5">12/31/2026 (US)</span>
                               </FormLabel>
                             </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormItem className="flex items-center space-x-3 space-y-0 rounded-xl border border-white/[0.08] bg-[#131726]/60 p-4 hover:bg-[#131726]/80 hover:border-white/10 cursor-pointer">
                               <FormControl>
-                                <RadioGroupItem value="YYYY-MM-DD" />
+                                <RadioGroupItem value="YYYY-MM-DD" id="df-yyyymmdd" />
                               </FormControl>
-                              <FormLabel className="font-normal">
-                                YYYY-MM-DD (e.g., 2023-12-31)
+                              <FormLabel htmlFor="df-yyyymmdd" className="font-normal text-slate-200 cursor-pointer">
+                                <span className="font-semibold block text-sm">YYYY-MM-DD</span>
+                                <span className="text-xs text-slate-400 block mt-0.5">2026-12-31 (ISO)</span>
                               </FormLabel>
                             </FormItem>
                           </RadioGroup>
@@ -571,7 +746,11 @@ const CmsSettings = () => {
                     )}
                   />
 
-                  <Button type="submit" disabled={isLoading}>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-indigo-500/20 border border-indigo-400/30 rounded-xl px-5 h-11"
+                  >
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -580,7 +759,7 @@ const CmsSettings = () => {
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" />
-                        Save Changes
+                        Save Site Settings
                       </>
                     )}
                   </Button>

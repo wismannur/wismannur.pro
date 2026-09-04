@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { animated, useSpring } from "@react-spring/web";
-import { Check, Loader2, X, ZoomIn, ZoomOut } from "lucide-react";
+import { Check, Crop, Loader2, X, ZoomIn, ZoomOut } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 interface ImageCropperProps {
@@ -20,7 +20,13 @@ interface ImageCropperProps {
   onCropComplete: (croppedBlob: Blob) => void;
 }
 
-const ImageCropper = ({ imageFile, open, onClose, onCropComplete }: ImageCropperProps) => {
+interface CropperBodyProps {
+  imageFile: File;
+  onClose: () => void;
+  onCropComplete: (croppedBlob: Blob) => void;
+}
+
+const CropperBody = ({ imageFile, onClose, onCropComplete }: CropperBodyProps) => {
   const [zoom, setZoom] = useState([1]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -37,30 +43,17 @@ const ImageCropper = ({ imageFile, open, onClose, onCropComplete }: ImageCropper
 
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const imageUrlRef = useRef<string>("");
 
-  // Create URL only once when imageFile changes
-  useEffect(() => {
-    if (imageFile) {
-      imageUrlRef.current = URL.createObjectURL(imageFile);
-    }
-    return () => {
-      if (imageUrlRef.current) {
-        URL.revokeObjectURL(imageUrlRef.current);
-        imageUrlRef.current = "";
-      }
-    };
+  // Generate object URL for imageFile
+  const imageUrl = React.useMemo(() => {
+    return URL.createObjectURL(imageFile);
   }, [imageFile]);
 
-  // Reset state when dialog opens with new image
   useEffect(() => {
-    if (open && imageFile) {
-      setZoom([1]);
-      setPosition({ x: 0, y: 0 });
-      setImageLoaded(false);
-      setNaturalDimensions({ width: 0, height: 0 });
-    }
-  }, [open, imageFile]);
+    return () => {
+      URL.revokeObjectURL(imageUrl);
+    };
+  }, [imageUrl]);
 
   const calculateBoundaries = useCallback(
     (newX: number, newY: number, scale: number) => {
@@ -252,96 +245,123 @@ const ImageCropper = ({ imageFile, open, onClose, onCropComplete }: ImageCropper
   );
 
   return (
-    <Dialog open={open} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Crop Profile Picture</DialogTitle>
-        </DialogHeader>
-
-        <div className="flex flex-col items-center my-4">
-          {/* Image cropping area */}
-          <div
-            ref={containerRef}
-            className="relative w-64 h-64 overflow-hidden rounded-full border-2 border-primary/50 mb-4"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleMouseUp}
-            style={{ cursor: isDragging ? "grabbing" : "grab" }}
-          >
-            {!imageLoaded && (
-              <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
-                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-              </div>
-            )}
-            {imageUrlRef.current && (
-              <div
-                className="absolute top-1/2 left-1/2"
+    <>
+      <div className="flex flex-col items-center my-4">
+        {/* Image cropping area */}
+        <div
+          ref={containerRef}
+          className="relative w-64 h-64 overflow-hidden rounded-full border-2 border-indigo-500/50 shadow-lg shadow-indigo-500/10 mb-6 bg-[#131726]/80"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
+          style={{ cursor: isDragging ? "grabbing" : "grab" }}
+        >
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#131726]/80">
+              <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+            </div>
+          )}
+          {imageUrl && (
+            <div
+              className="absolute top-1/2 left-1/2"
+              style={{
+                transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+              }}
+            >
+              <animated.img
+                ref={imageRef}
+                src={imageUrl}
+                alt="Crop preview"
+                onLoad={handleImageLoad}
                 style={{
-                  transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+                  transform: zoomSpring.to((s) => `scale(${s})`),
+                  transformOrigin: "center",
+                  maxWidth: "none",
+                  width: "auto",
+                  height: "auto",
                 }}
-              >
-                <animated.img
-                  ref={imageRef}
-                  src={imageUrlRef.current}
-                  alt="Crop preview"
-                  onLoad={handleImageLoad}
-                  style={{
-                    transform: zoomSpring.to((s) => `scale(${s})`),
-                    transformOrigin: "center",
-                    maxWidth: "none",
-                    width: "auto",
-                    height: "auto",
-                  }}
-                  draggable={false}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Zoom controls */}
-          <div className="w-full flex items-center gap-4 px-2">
-            <ZoomOut
-              className="h-4 w-4 text-muted-foreground cursor-pointer"
-              onClick={() => handleZoomChange([Math.max(0.1, zoom[0] - 0.1)])}
-            />
-            <Slider
-              value={zoom}
-              min={0.1}
-              max={3}
-              step={0.05}
-              onValueChange={handleZoomChange}
-              className="flex-1"
-            />
-            <ZoomIn
-              className="h-4 w-4 text-muted-foreground cursor-pointer"
-              onClick={() => handleZoomChange([Math.min(3, zoom[0] + 0.1)])}
-            />
-          </div>
+                draggable={false}
+              />
+            </div>
+          )}
         </div>
 
-        <DialogFooter className="sm:justify-between">
-          <Button variant="outline" onClick={onClose} disabled={processing}>
-            <X className="mr-2 h-4 w-4" />
-            Cancel
-          </Button>
-          <Button onClick={handleComplete} disabled={!imageLoaded || processing}>
-            {processing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Check className="mr-2 h-4 w-4" />
-                Apply
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+        {/* Zoom controls */}
+        <div className="w-full flex items-center gap-4 px-2 py-2 rounded-xl bg-[#131726]/60 border border-white/[0.06]">
+          <ZoomOut
+            className="h-4 w-4 text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer"
+            onClick={() => handleZoomChange([Math.max(0.1, zoom[0] - 0.1)])}
+          />
+          <Slider
+            value={zoom}
+            min={0.1}
+            max={3}
+            step={0.05}
+            onValueChange={handleZoomChange}
+            className="flex-1"
+          />
+          <ZoomIn
+            className="h-4 w-4 text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer"
+            onClick={() => handleZoomChange([Math.min(3, zoom[0] + 0.1)])}
+          />
+        </div>
+      </div>
+
+      <DialogFooter className="sm:justify-between gap-3">
+        <Button
+          variant="outline"
+          onClick={onClose}
+          disabled={processing}
+          className="bg-white/[0.05] border-white/[0.08] text-slate-300 hover:bg-white/[0.1] rounded-xl"
+        >
+          <X className="mr-2 h-4 w-4" />
+          Cancel
+        </Button>
+        <Button
+          onClick={handleComplete}
+          disabled={!imageLoaded || processing}
+          className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30 rounded-xl font-semibold"
+        >
+          {processing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Apply Photo
+            </>
+          )}
+        </Button>
+      </DialogFooter>
+    </>
+  );
+};
+
+const ImageCropper = ({ imageFile, open, onClose, onCropComplete }: ImageCropperProps) => {
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md bg-[#0C0E18] border border-white/[0.08] text-slate-100 shadow-2xl rounded-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center text-lg text-slate-100">
+            <Crop className="h-5 w-5 mr-2 text-indigo-400" />
+            Crop Profile Picture
+          </DialogTitle>
+        </DialogHeader>
+
+        {imageFile && (
+          <CropperBody
+            key={`${imageFile.name}-${imageFile.lastModified}`}
+            imageFile={imageFile}
+            onClose={onClose}
+            onCropComplete={onCropComplete}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

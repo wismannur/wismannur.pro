@@ -1,5 +1,21 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Contact,
+  Globe,
+  Layout,
+  ListChecks,
+  Loader2,
+  Save,
+  SlidersHorizontal,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,13 +33,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { siteSettingsService } from "@/services";
 import type { SiteSettings } from "@/services/site-settings/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Contact, Globe, Layout, ListChecks, Loader2, Save, SlidersHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 
 // List-ish fields are edited as one-entry-per-line text; "id | label" and
 // "Label | https://url" pairs use a pipe separator.
@@ -198,8 +207,8 @@ export default function CmsSitePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading settings...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+        <span className="ml-3 text-sm font-medium text-slate-300">Loading site settings...</span>
       </div>
     );
   }
@@ -219,16 +228,16 @@ export default function CmsSitePage() {
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-foreground/80 font-medium">{label}</FormLabel>
+          <FormLabel className="text-slate-200 text-xs font-semibold">{label}</FormLabel>
           <FormControl>
             <Input
               placeholder={placeholder}
-              className="rounded-lg border-border/50 focus-visible:ring-primary/30"
+              className="h-10 rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-indigo-500/40"
               {...field}
             />
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
+          {description && <FormDescription className="text-slate-400 text-[11px]">{description}</FormDescription>}
+          <FormMessage className="text-xs text-rose-400" />
         </FormItem>
       )}
     />
@@ -240,80 +249,97 @@ export default function CmsSitePage() {
       name={name}
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-foreground/80 font-medium">{label}</FormLabel>
+          <FormLabel className="text-slate-200 text-xs font-semibold">{label}</FormLabel>
           <FormControl>
             <Textarea
               rows={rows}
-              className="rounded-lg border-border/50 focus-visible:ring-primary/30"
+              className="rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs leading-relaxed focus-visible:ring-indigo-500/40"
               {...field}
             />
           </FormControl>
-          {description && <FormDescription>{description}</FormDescription>}
-          <FormMessage />
+          {description && <FormDescription className="text-slate-400 text-[11px]">{description}</FormDescription>}
+          <FormMessage className="text-xs text-rose-400" />
         </FormItem>
       )}
     />
   );
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-4xl pb-12">
       <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Site Settings</h1>
-          <p className="text-muted-foreground">
-            Global identity, SEO, contact info, and footer content — changes go live without a
-            redeploy
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+              <Globe className="w-5 h-5" />
+            </span>
+            Site Settings
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Global identity, SEO, social presence, footer details, and service form parameters.
           </p>
         </div>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Tabs defaultValue="identity">
-            {/* h-auto: the default h-10 clips the second row when the four tabs
-						    wrap on narrow screens */}
-            <TabsList className="flex-wrap h-auto">
-              <TabsTrigger value="identity">
+          <Tabs defaultValue="identity" className="w-full">
+            <TabsList className="flex-wrap h-auto p-1.5 bg-[#0C0E18]/90 border border-white/[0.08] rounded-2xl gap-1 backdrop-blur-xl">
+              <TabsTrigger
+                value="identity"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-400 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300 data-[state=active]:border data-[state=active]:border-indigo-500/30 transition-all"
+              >
                 <Globe className="mr-2 h-4 w-4" />
                 Identity & SEO
               </TabsTrigger>
-              <TabsTrigger value="features">
+              <TabsTrigger
+                value="features"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-400 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300 data-[state=active]:border data-[state=active]:border-indigo-500/30 transition-all"
+              >
                 <SlidersHorizontal className="mr-2 h-4 w-4" />
                 Features
               </TabsTrigger>
-              <TabsTrigger value="contact">
+              <TabsTrigger
+                value="contact"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-400 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300 data-[state=active]:border data-[state=active]:border-indigo-500/30 transition-all"
+              >
                 <Contact className="mr-2 h-4 w-4" />
                 Contact & Social
               </TabsTrigger>
-              <TabsTrigger value="footer">
+              <TabsTrigger
+                value="footer"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-400 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300 data-[state=active]:border data-[state=active]:border-indigo-500/30 transition-all"
+              >
                 <Layout className="mr-2 h-4 w-4" />
                 Footer
               </TabsTrigger>
-              <TabsTrigger value="forms">
+              <TabsTrigger
+                value="forms"
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-400 data-[state=active]:bg-indigo-500/20 data-[state=active]:text-indigo-300 data-[state=active]:border data-[state=active]:border-indigo-500/30 transition-all"
+              >
                 <ListChecks className="mr-2 h-4 w-4" />
                 Form Options
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="features" className="mt-6">
-              <Card className="border-border/50 shadow-md rounded-xl">
-                <CardHeader>
-                  <CardTitle>Site Features & Modules</CardTitle>
-                  <CardDescription>
-                    Control the visibility of public sections and pages without affecting CMS access
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+                  <CardTitle className="text-base font-bold text-white">Site Features & Modules</CardTitle>
+                  <CardDescription className="text-xs text-slate-400">
+                    Control the visibility of public sections and pages without affecting CMS access.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 space-y-6">
                   <FormField
                     control={form.control}
                     name="enableBlog"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border/50 p-4 shadow-sm">
-                        <div className="space-y-0.5 pr-4">
-                          <FormLabel className="text-base font-medium text-foreground">
+                      <FormItem className="flex flex-row items-center justify-between rounded-xl bg-[#131726]/70 border border-white/[0.06] p-4.5 shadow-sm">
+                        <div className="space-y-1 pr-4">
+                          <FormLabel className="text-sm font-bold text-white">
                             Enable Blog Module
                           </FormLabel>
-                          <FormDescription>
+                          <FormDescription className="text-xs text-slate-400 leading-relaxed">
                             When enabled, the /blog page, article previews on the home page,
                             navigation links, and sitemap entries will be visible to public
                             visitors. When disabled, the public pages return 404 while remaining
@@ -331,15 +357,18 @@ export default function CmsSitePage() {
             </TabsContent>
 
             <TabsContent value="identity" className="mt-6">
-              <Card className="border-border/50 shadow-md rounded-xl">
-                <CardHeader>
-                  <CardTitle>Identity & SEO</CardTitle>
-                  <CardDescription>
-                    Feeds the browser title, meta tags, and the generated social-share image
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+                  <CardTitle className="text-base font-bold text-white">Identity & SEO</CardTitle>
+                  <CardDescription className="text-xs text-slate-400">
+                    Feeds the browser title, meta tags, search indexing, and generated social-share cards.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {textInput("siteName", "Site Name", "Wisman Nur")}
+                <CardContent className="p-6 space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {textInput("siteName", "Site Name", "Wisman Nur")}
+                    {textInput("themeColor", "Theme Color", "#4F46E5", "Browser UI accent color")}
+                  </div>
                   {textInput(
                     "titleDefault",
                     "Default Title",
@@ -349,72 +378,85 @@ export default function CmsSitePage() {
                     "titleTemplate",
                     "Title Template",
                     "%s | Wisman Nur",
-                    "%s is replaced with the page title"
+                    "%s is replaced with the active page title"
                   )}
-                  {textArea("metaDescription", "Meta Description", 3)}
-                  {textArea("keywordsText", "Keywords (one per line)", 4)}
-                  {textInput("twitterHandle", "Twitter Handle", "@wismannur")}
-                  {textInput("themeColor", "Theme Color", "#4F46E5", "Browser UI accent color")}
-                  {textInput(
-                    "ogTitle",
-                    "Share Image Role Line",
-                    "Frontend Software Engineer",
-                    "Second line on the generated social-share image"
-                  )}
-                  {textArea(
-                    "ogTagline",
-                    "Share Image Tagline",
-                    2,
-                    "Bottom line on the generated social-share image"
-                  )}
+                  {textArea("metaDescription", "Meta Description", 3, "Summary snippet for search engine indexing")}
+                  {textArea("keywordsText", "Keywords (one per line)", 4, "Key SEO tags for discovery")}
+                  {textInput("twitterHandle", "Twitter / X Handle", "@wismannur")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
+                    {textInput(
+                      "ogTitle",
+                      "Share Image Role Line",
+                      "Frontend Software Engineer",
+                      "Second line on the generated social-share image"
+                    )}
+                    {textInput(
+                      "ogTagline",
+                      "Share Image Tagline",
+                      "Building resilient web apps",
+                      "Bottom line on the generated social-share image"
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="contact" className="mt-6">
-              <Card className="border-border/50 shadow-md rounded-xl">
-                <CardHeader>
-                  <CardTitle>Contact & Social</CardTitle>
-                  <CardDescription>Shown in the footer and on the contact page</CardDescription>
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+                  <CardTitle className="text-base font-bold text-white">Contact & Social Links</CardTitle>
+                  <CardDescription className="text-xs text-slate-400">
+                    Displayed in the footer, author bio card, and public contact views.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {textInput("publicEmail", "Public Email", "you@example.com")}
-                  {textInput("location", "Location", "Bandung, West Java, Indonesia")}
+                <CardContent className="p-6 space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {textInput("publicEmail", "Public Email", "you@example.com")}
+                    {textInput("location", "Location", "Bandung, West Java, Indonesia")}
+                  </div>
                   {textInput(
                     "timezoneLabel",
                     "Time Zone Label",
                     "Western Indonesian Time, UTC+07:00"
                   )}
-                  {textInput("github", "GitHub URL", "https://github.com/…")}
-                  {textInput("twitter", "Twitter / X URL", "https://x.com/…")}
-                  {textInput("linkedin", "LinkedIn URL", "https://linkedin.com/in/…")}
+                  <div className="pt-2 border-t border-white/[0.06] space-y-4">
+                    {textInput("github", "GitHub Profile URL", "https://github.com/…")}
+                    {textInput("twitter", "Twitter / X Profile URL", "https://x.com/…")}
+                    {textInput("linkedin", "LinkedIn Profile URL", "https://linkedin.com/in/…")}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="footer" className="mt-6">
-              <Card className="border-border/50 shadow-md rounded-xl">
-                <CardHeader>
-                  <CardTitle>Footer</CardTitle>
-                  <CardDescription>Copy shown in the site-wide footer</CardDescription>
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+                  <CardTitle className="text-base font-bold text-white">Footer Configuration</CardTitle>
+                  <CardDescription className="text-xs text-slate-400">
+                    Content and branding rendered in the site-wide footer component.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {textArea("footerBio", "Footer Bio", 3)}
-                  {textInput(
-                    "footerTagline",
-                    "Footer Tagline",
-                    "Made with ♥ using React & Tailwind"
-                  )}
-                  {textInput("copyrightName", "Copyright Name", "Wisman Nur")}
-                  {textInput("repoUrl", "Repository URL", "https://github.com/…")}
-                  {textInput(
-                    "repoLinkLabel",
-                    "Repository Link Label",
-                    "See the recent update on Github"
-                  )}
+                <CardContent className="p-6 space-y-5">
+                  {textArea("footerBio", "Footer Bio", 3, "Short summary beneath your name in the footer")}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {textInput(
+                      "footerTagline",
+                      "Footer Tagline",
+                      "Crafted with precision & modern web architecture"
+                    )}
+                    {textInput("copyrightName", "Copyright Name", "Wisman Nur")}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {textInput("repoUrl", "Source Code Repository URL", "https://github.com/…")}
+                    {textInput(
+                      "repoLinkLabel",
+                      "Repository Link Label",
+                      "See the recent update on Github"
+                    )}
+                  </div>
                   {textArea(
                     "footerProjectLinksText",
-                    "Project Links (one per line)",
+                    "Footer Project Links (one per line)",
                     3,
                     'Format: "Label | https://url" — leave empty to hide the PROJECTS column'
                   )}
@@ -423,19 +465,19 @@ export default function CmsSitePage() {
             </TabsContent>
 
             <TabsContent value="forms" className="mt-6">
-              <Card className="border-border/50 shadow-md rounded-xl">
-                <CardHeader>
-                  <CardTitle>Request Form Options</CardTitle>
-                  <CardDescription>
-                    Dropdown options for the service-request forms on /services and /hire-me
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+                  <CardTitle className="text-base font-bold text-white">Service Request Form Options</CardTitle>
+                  <CardDescription className="text-xs text-slate-400">
+                    Dropdown options powering the service inquiry form on /services.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="p-6 space-y-5">
                   {textArea(
                     "requestTimeframesText",
                     "Timeframes (one per line)",
                     5,
-                    'Format: "id | Label", e.g. "asap | As soon as possible". Ids are stored with submissions — avoid changing existing ids.'
+                    'Format: "id | Label", e.g. "asap | As soon as possible". IDs are stored with submissions — avoid altering existing IDs.'
                   )}
                   {textArea(
                     "requestBudgetRangesText",
@@ -448,17 +490,21 @@ export default function CmsSitePage() {
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting} className="rounded-lg">
+          <div className="flex justify-end pt-2">
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-xl px-6 h-10 text-xs font-semibold gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30"
+            >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving Settings...
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Settings
+                  <Save className="h-4 w-4" />
+                  Save Site Settings
                 </>
               )}
             </Button>

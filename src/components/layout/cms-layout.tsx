@@ -29,7 +29,6 @@ import {
   Search,
   SendHorizontal,
   Settings,
-  Shield,
   Sparkles,
   User,
   Wrench,
@@ -351,25 +350,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
                   </div>
                 </div>
               </Link>
-            </div>
-
-            {/* Admin User Card */}
-            <div className="flex items-center gap-3 p-2 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <Avatar className="h-8 w-8 border border-primary/40 shadow-sm">
-                <AvatarImage src={user?.photoURL || ""} alt={user?.displayName || "Admin"} />
-                <AvatarFallback className="bg-primary/20 text-primary font-bold text-xs">
-                  {user?.displayName?.[0] || user?.email?.[0] || "A"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col overflow-hidden min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="font-semibold text-xs text-white truncate">
-                    {user?.displayName || "Admin User"}
-                  </span>
-                  <Shield size={11} className="text-primary shrink-0" />
-                </div>
-                <span className="text-[10px] text-gray-400 truncate font-mono">{user?.email}</span>
-              </div>
             </div>
           </SidebarHeader>
 

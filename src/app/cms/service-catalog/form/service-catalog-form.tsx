@@ -159,41 +159,50 @@ export function ServiceCatalogForm() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading service...</span>
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
+        <span className="ml-2 text-lg text-slate-300">Loading service...</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0 mb-6 sm:mb-8">
-        <h1 className="text-3xl font-bold">{isEditMode ? "Edit Service" : "Add Service"}</h1>
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-100">
+            {isEditMode ? "Edit Service" : "Add Service"}
+          </h1>
+          <p className="text-sm text-slate-400 mt-1">
+            Configure client service offerings, pricing tiers, and deliverables
+          </p>
+        </div>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <Card className="border-x-0 border-b-0 sm:border-border/50 shadow-none sm:shadow-md rounded-none sm:rounded-xl overflow-hidden">
-                <CardHeader className="bg-muted/30 border-b border-border/30 px-0 py-4 sm:p-6">
-                  <CardTitle className="flex items-center">
-                    <LayoutGrid className="h-5 w-5 mr-2 text-primary" />
-                    Service Details
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] px-6 py-4">
+                  <CardTitle className="flex items-center text-slate-100 text-base font-semibold">
+                    <LayoutGrid className="h-4 w-4 mr-2 text-indigo-400" />
+                    Service Offering Details
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6 px-0 py-4 sm:p-6">
+                <CardContent className="space-y-6 p-6">
                   <FormField
                     control={form.control}
                     name="isPublished"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.06] bg-[#131726]/60 p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Publication Status</FormLabel>
-                          <div className="text-sm text-muted-foreground">
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Publication Status
+                          </FormLabel>
+                          <div className="text-xs text-slate-400">
                             {field.value
-                              ? "This service appears on the public pages"
-                              : "This service stays hidden from the public pages"}
+                              ? "Live on public pages"
+                              : "Hidden from visitors (draft)"}
                           </div>
                         </div>
                         <FormControl>
@@ -203,62 +212,61 @@ export function ServiceCatalogForm() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">Title</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Web Development"
-                            className="rounded-lg border-border/50 focus-visible:ring-primary/30"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200">Service Title</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. Full-Stack Web Architecture"
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="slug"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">Slug</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="web-development"
-                            className="rounded-lg border-border/50 focus-visible:ring-primary/30"
-                            {...field}
-                          />
-                        </FormControl>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Lowercase kebab-case identifier, e.g. "web-development".
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="slug"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200">URL Slug</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="web-architecture"
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40 font-mono"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">
-                          Description
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          Short Description
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Modern, responsive websites built with the latest technologies."
-                            className="min-h-24 rounded-lg border-border/50 focus-visible:ring-primary/30"
+                            placeholder="High-performance, scalable web systems crafted with Next.js and Go."
+                            className="min-h-20 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
                             {...field}
                           />
                         </FormControl>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Short description shown on /services and /hire-me
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          Concise summary shown on /services cards and /hire-me tabs
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -270,93 +278,95 @@ export function ServiceCatalogForm() {
                     name="longDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">
-                          Long Description
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          Extended Pitch (Home Page)
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="A longer pitch for the home page…"
-                            className="min-h-24 rounded-lg border-border/50 focus-visible:ring-primary/30"
+                            placeholder="Detailed value proposition and architecture workflow for the landing page…"
+                            className="min-h-24 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
                             {...field}
                           />
                         </FormControl>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Longer variant shown on the home page; falls back to the short description
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          Optional expanded narrative shown in the homepage feature grid
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="icon"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium flex items-center">
-                          Icon
-                          {SelectedIcon && <SelectedIcon className="h-4 w-4 ml-2 text-primary" />}
-                        </FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="rounded-lg border-border/50">
-                              <SelectValue placeholder="Select an icon" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {contentIconNames.map((name) => {
-                              const Icon = getContentIcon(name);
-                              return (
-                                <SelectItem key={name} value={name}>
-                                  <Icon className="h-4 w-4 mr-2 inline" />
-                                  {name}
-                                </SelectItem>
-                              );
-                            })}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="icon"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200 flex items-center">
+                            Service Icon
+                            {SelectedIcon && <SelectedIcon className="h-4 w-4 ml-2 text-indigo-400" />}
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-[#131726]/80 border-white/[0.08] text-slate-200 rounded-xl focus:ring-indigo-500/40">
+                                <SelectValue placeholder="Select an icon" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200 max-h-60">
+                              {contentIconNames.map((name) => {
+                                const Icon = getContentIcon(name);
+                                return (
+                                  <SelectItem key={name} value={name} className="hover:bg-white/[0.06] cursor-pointer">
+                                    <Icon className="h-4 w-4 mr-2 inline text-indigo-400" />
+                                    {name}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="priceLabel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">
-                          Price Label
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="$15/hour"
-                            className="rounded-lg border-border/50 focus-visible:ring-primary/30"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="priceLabel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Pricing Label
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. $4,000 / project or $75/hr"
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <FormField
                     control={form.control}
                     name="features"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">
-                          Features (one per line)
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          Deliverables & Features (One per line)
                         </FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder={"Responsive design\nSEO optimization\nFast performance"}
-                            className="min-h-32 rounded-lg border-border/50 focus-visible:ring-primary/30"
+                            placeholder={"Production-ready Next.js 15 App Router\nClean architecture & TypeScript\n95+ Core Web Vitals score\nCI/CD pipelines included"}
+                            className="min-h-32 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40 font-mono text-xs leading-relaxed"
                             {...field}
                           />
                         </FormControl>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Each line becomes a bullet point on the service card.
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          Each line renders as a bullet item in the feature checklist.
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -366,25 +376,25 @@ export function ServiceCatalogForm() {
               </Card>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="space-y-6 sticky top-24">
-                <Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-                  <CardHeader className="bg-muted/30 border-b border-border/30 py-4">
-                    <CardTitle className="text-base flex items-center">
-                      <Eye className="h-4 w-4 mr-2 text-primary" />
-                      Visibility & Order
+            <div className="lg:col-span-1 space-y-6">
+              <div className="space-y-6 sticky top-6">
+                <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] px-6 py-4">
+                    <CardTitle className="flex items-center text-slate-100 text-base font-semibold">
+                      <Eye className="h-4 w-4 mr-2 text-indigo-400" />
+                      Visibility & Sorting
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6 p-6">
+                  <CardContent className="space-y-5 p-6">
                     <FormField
                       control={form.control}
                       name="showOnHome"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.06] bg-[#131726]/60 p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Show on Home</FormLabel>
-                            <div className="text-sm text-muted-foreground">
-                              Appears in the "What I Do" grid
+                            <FormLabel className="text-sm font-semibold text-slate-200">Show on Home</FormLabel>
+                            <div className="text-xs text-slate-400">
+                              Landing page feature grid
                             </div>
                           </div>
                           <FormControl>
@@ -398,11 +408,11 @@ export function ServiceCatalogForm() {
                       control={form.control}
                       name="showOnHireMe"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.06] bg-[#131726]/60 p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">Show on Hire Me</FormLabel>
-                            <div className="text-sm text-muted-foreground">
-                              Appears in the /hire-me expertise tab
+                            <FormLabel className="text-sm font-semibold text-slate-200">Show on Hire Me</FormLabel>
+                            <div className="text-xs text-slate-400">
+                              /hire-me request selection
                             </div>
                           </div>
                           <FormControl>
@@ -417,29 +427,29 @@ export function ServiceCatalogForm() {
                       name="sortOrder"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">
-                            Display Order
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Display Weight
                           </FormLabel>
                           <FormControl>
                             <Input
                               type="number"
-                              className="rounded-lg border-border/50 focus-visible:ring-primary/30"
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 rounded-xl focus-visible:ring-indigo-500/40"
                               value={field.value}
                               onChange={(e) => field.onChange(Number(e.target.value) || 0)}
                             />
                           </FormControl>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            Lower numbers appear first.
+                          <div className="text-[11px] text-slate-500 mt-1">
+                            Lower numbers appear first on the service lists.
                           </div>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </CardContent>
-                  <CardFooter className="px-6 py-4 bg-muted/20 border-t border-border/30">
+                  <CardFooter className="px-6 py-4 bg-white/[0.02] border-t border-white/[0.06]">
                     <Button
                       type="submit"
-                      className="w-full rounded-lg group relative overflow-hidden"
+                      className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30 rounded-xl font-semibold group relative overflow-hidden h-11"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
@@ -469,32 +479,20 @@ export function ServiceCatalogForm() {
                   </CardFooter>
                 </Card>
 
-                <Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-                  <CardHeader className="bg-muted/30 border-b border-border/30 py-3">
-                    <CardTitle className="text-sm flex items-center">
-                      <Info className="h-4 w-4 mr-2 text-primary" />
-                      Service Tips
+                <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] py-3 px-6">
+                    <CardTitle className="text-xs font-semibold flex items-center text-slate-300">
+                      <Info className="h-3.5 w-3.5 mr-2 text-indigo-400" />
+                      Service Catalog Tips
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="text-xs space-y-2 text-muted-foreground">
-                      <p>
-                        <span className="font-semibold">Descriptions:</span> The short description
-                        is used on /services and /hire-me; the long one only on the home page
-                      </p>
-                      <p>
-                        <span className="font-semibold">Features:</span> Keep them short — one
-                        benefit per line reads best on the cards
-                      </p>
-                      <p>
-                        <span className="font-semibold">Visibility:</span> The switches control
-                        where the service appears; publication controls whether it appears at all
-                      </p>
-                      <p>
-                        <span className="font-semibold">Hidden:</span> Use the publication toggle to
-                        keep a service out of the public pages without deleting it
-                      </p>
-                    </div>
+                  <CardContent className="p-4 space-y-2 text-xs text-slate-400">
+                    <p>
+                      <span className="text-slate-200 font-medium">Pricing:</span> Provide clear scope ranges (e.g., "$3k - $8k" or "$50/hr") to qualify prospective leads.
+                    </p>
+                    <p>
+                      <span className="text-slate-200 font-medium">Features:</span> Highlight guarantees, turnaround times, and tech stack stackings.
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -505,3 +503,4 @@ export function ServiceCatalogForm() {
     </div>
   );
 }
+
