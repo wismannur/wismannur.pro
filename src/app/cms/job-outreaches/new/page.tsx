@@ -231,14 +231,14 @@ export default function NewOutreachPage() {
   };
 
   return (
-    <div className="space-y-6 pb-16 max-w-7xl mx-auto">
+    <div className="space-y-6 pb-16 max-w-7xl mx-auto text-slate-100">
       {/* Top Navigation */}
       <div className="flex items-center justify-between">
         <Button
           asChild
           variant="ghost"
           size="sm"
-          className="gap-2 -ml-2 text-muted-foreground hover:text-foreground text-xs font-medium"
+          className="gap-2 -ml-2 text-slate-400 hover:text-white hover:bg-[#131726] text-xs font-medium rounded-lg"
         >
           <Link href="/cms/job-outreaches">
             <ArrowLeft className="h-4 w-4" /> Back to Job Outreaches
@@ -246,45 +246,55 @@ export default function NewOutreachPage() {
         </Button>
       </div>
 
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-5">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Send className="h-6 w-6 text-primary" />
-            New Job Outreach & Cold Pitch
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Send a direct message to recruiter / engineering lead via{" "}
-            <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>.
-          </p>
-        </div>
+      {/* Top Header Card */}
+      <div className="relative overflow-hidden p-6 rounded-2xl bg-[#0C0E18] border border-white/[0.08] shadow-xl">
+        <div className="absolute -top-10 right-10 h-40 w-80 rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleSubmit(false)}
-            disabled={isSubmitting || isGeneratingAi}
-            className="h-9 font-medium"
-          >
-            Save as Draft
-          </Button>
-          <Button
-            type="button"
-            onClick={() => handleSubmit(true)}
-            disabled={isSubmitting || isGeneratingAi}
-            className="h-9 gap-2 font-medium"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Sending...
-              </>
-            ) : (
-              <>
-                <Send className="h-4 w-4" /> Send Email via Resend
-              </>
-            )}
-          </Button>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+                <Send className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                  New Job Outreach & Cold Pitch
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-400">
+                  Send a personalized cold email or application via{" "}
+                  <strong className="text-slate-200 font-mono">{PUBLIC_SUPPORT_EMAIL}</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleSubmit(false)}
+              disabled={isSubmitting || isGeneratingAi}
+              className="h-9 font-medium rounded-xl border-white/[0.08] bg-[#131726] hover:bg-[#1C2237] text-slate-300"
+            >
+              Save as Draft
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleSubmit(true)}
+              disabled={isSubmitting || isGeneratingAi}
+              className="h-9 gap-2 font-semibold rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" /> Send Email via Resend
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -293,22 +303,22 @@ export default function NewOutreachPage() {
         {/* Left Column: Target & Details (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Link to Job Tracker Card */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
-                <Briefcase className="h-4 w-4 text-primary" />
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+                <Briefcase className="h-4 w-4 text-indigo-400" />
                 Link to Job Tracker
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-xs text-slate-400">
                 Select an application tracked in Job Tracker to auto-fill information.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 pt-0">
+            <CardContent className="p-4">
               <Select value={selectedJobAppId} onValueChange={handleSelectJobApp}>
-                <SelectTrigger className="w-full bg-background text-xs h-9">
+                <SelectTrigger className="w-full bg-[#131726] border-white/[0.08] text-slate-200 text-xs h-9">
                   <SelectValue placeholder="Select application..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#0C0E18] border-white/[0.1] text-slate-200">
                   <SelectItem value="none">-- Standalone Outreach --</SelectItem>
                   {jobApplications.map((app) => (
                     <SelectItem key={app.id} value={app.id}>
@@ -321,24 +331,24 @@ export default function NewOutreachPage() {
           </Card>
 
           {/* Company & Role Details Card */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
-                <Building2 className="h-4 w-4 text-primary" />
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+                <Building2 className="h-4 w-4 text-indigo-400" />
                 Target Company & Role
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3.5">
+            <CardContent className="p-4 space-y-3.5">
               <div className="space-y-1.5">
-                <Label htmlFor="companyName" className="text-xs font-semibold">
+                <Label htmlFor="companyName" className="text-xs font-semibold text-slate-300">
                   Company Name *
                 </Label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     id="companyName"
                     placeholder="e.g. Tokopedia / Google / Stripe"
-                    className="pl-9 text-xs h-9"
+                    className="pl-9 text-xs h-9 bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                   />
@@ -346,15 +356,15 @@ export default function NewOutreachPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="jobTitle" className="text-xs font-semibold">
+                <Label htmlFor="jobTitle" className="text-xs font-semibold text-slate-300">
                   Job Title / Target Role *
                 </Label>
                 <div className="relative">
-                  <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     id="jobTitle"
                     placeholder="e.g. Senior Frontend Engineer"
-                    className="pl-9 text-xs h-9"
+                    className="pl-9 text-xs h-9 bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                     value={jobTitle}
                     onChange={(e) => setJobTitle(e.target.value)}
                   />
@@ -362,15 +372,15 @@ export default function NewOutreachPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="companyWebsite" className="text-xs">
+                <Label htmlFor="companyWebsite" className="text-xs text-slate-400">
                   Company Website (Optional)
                 </Label>
                 <div className="relative">
-                  <Globe className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Globe className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     id="companyWebsite"
                     placeholder="https://company.com"
-                    className="pl-9 text-xs h-9"
+                    className="pl-9 text-xs h-9 bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                     value={companyWebsite}
                     onChange={(e) => setCompanyWebsite(e.target.value)}
                   />
@@ -378,15 +388,15 @@ export default function NewOutreachPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Outreach Type</Label>
+                <Label className="text-xs font-semibold text-slate-300">Outreach Type</Label>
                 <Select
                   value={outreachType}
                   onValueChange={(val) => setOutreachType(val as OutreachType)}
                 >
-                  <SelectTrigger className="bg-background text-xs h-9">
+                  <SelectTrigger className="bg-[#131726] border-white/[0.08] text-slate-200 text-xs h-9">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#0C0E18] border-white/[0.1] text-slate-200">
                     <SelectItem value="cold_pitch">
                       🚀 Cold Pitch to Hiring Manager / Lead
                     </SelectItem>
@@ -399,36 +409,36 @@ export default function NewOutreachPage() {
           </Card>
 
           {/* Recruiter Contact Card */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
-                <User className="h-4 w-4 text-primary" />
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+                <User className="h-4 w-4 text-indigo-400" />
                 Target Recruiter / Contact Person
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3.5">
+            <CardContent className="p-4 space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="contactName" className="text-xs font-semibold">
+                  <Label htmlFor="contactName" className="text-xs font-semibold text-slate-300">
                     Contact Name *
                   </Label>
                   <Input
                     id="contactName"
                     placeholder="e.g. Sarah Jenkins"
-                    className="text-xs h-9"
+                    className="text-xs h-9 bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="contactRole" className="text-xs">
+                  <Label htmlFor="contactRole" className="text-xs text-slate-400">
                     Role / Position (Optional)
                   </Label>
                   <Input
                     id="contactRole"
                     placeholder="e.g. Head of Engineering"
-                    className="text-xs h-9"
+                    className="text-xs h-9 bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                     value={contactRole}
                     onChange={(e) => setContactRole(e.target.value)}
                   />
@@ -436,16 +446,16 @@ export default function NewOutreachPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="contactEmail" className="text-xs font-semibold">
+                <Label htmlFor="contactEmail" className="text-xs font-semibold text-slate-300">
                   Recipient Email *
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     id="contactEmail"
                     type="email"
                     placeholder="recruiter@company.com"
-                    className="pl-9 text-xs h-9"
+                    className="pl-9 text-xs h-9 bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                   />
@@ -453,15 +463,15 @@ export default function NewOutreachPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="contactLinkedin" className="text-xs">
+                <Label htmlFor="contactLinkedin" className="text-xs text-slate-400">
                   LinkedIn Profile URL (Optional)
                 </Label>
                 <div className="relative">
-                  <Linkedin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Linkedin className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     id="contactLinkedin"
                     placeholder="https://linkedin.com/in/..."
-                    className="pl-9 text-xs h-9"
+                    className="pl-9 text-xs h-9 bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                     value={contactLinkedin}
                     onChange={(e) => setContactLinkedin(e.target.value)}
                   />
@@ -471,23 +481,23 @@ export default function NewOutreachPage() {
           </Card>
 
           {/* File Attachments Card */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3">
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
-                  <Paperclip className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+                  <Paperclip className="h-4 w-4 text-indigo-400" />
                   Attachments (CV / Portfolio)
                 </CardTitle>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#131726] border border-white/[0.08] text-indigo-300">
                   {attachments.length} Attached
                 </span>
               </div>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-xs text-slate-400">
                 Upload PDF CV, Portfolio, or supporting documents to automatically attach and send
                 via Resend.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3">
+            <CardContent className="p-4 space-y-3">
               {/* Hidden input */}
               <input
                 type="file"
@@ -501,23 +511,25 @@ export default function NewOutreachPage() {
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className={cn(
-                  "border-2 border-dashed border-border/80 hover:border-primary/60 rounded-xl p-4 text-center cursor-pointer transition-all bg-muted/20 hover:bg-muted/40 flex flex-col items-center justify-center gap-2",
+                  "border-2 border-dashed border-white/[0.1] hover:border-indigo-500/50 rounded-xl p-4 text-center cursor-pointer transition-all bg-[#131726]/50 hover:bg-[#131726] flex flex-col items-center justify-center gap-2 group",
                   isUploading && "pointer-events-none opacity-60"
                 )}
               >
                 {isUploading ? (
                   <>
-                    <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                    <span className="text-xs font-medium">Uploading file to Vercel Blob...</span>
+                    <Loader2 className="h-6 w-6 text-indigo-400 animate-spin" />
+                    <span className="text-xs font-medium text-slate-300">
+                      Uploading file to Vercel Blob...
+                    </span>
                   </>
                 ) : (
                   <>
-                    <UploadCloud className="h-6 w-6 text-muted-foreground" />
+                    <UploadCloud className="h-6 w-6 text-slate-400 group-hover:text-indigo-400 transition-colors" />
                     <div className="space-y-0.5">
-                      <div className="text-xs font-semibold text-foreground">
+                      <div className="text-xs font-semibold text-slate-200">
                         Click to Upload File (PDF, DOCX, ZIP)
                       </div>
-                      <div className="text-[11px] text-muted-foreground">Maximum 10MB per file</div>
+                      <div className="text-[11px] text-slate-400">Maximum 10MB per file</div>
                     </div>
                   </>
                 )}
@@ -529,15 +541,15 @@ export default function NewOutreachPage() {
                   {attachments.map((att, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-border/60 bg-muted/30 text-xs"
+                      className="flex items-center justify-between p-2.5 rounded-xl border border-white/[0.08] bg-[#131726] text-xs"
                     >
                       <div className="flex items-center gap-2 truncate">
-                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                        <FileText className="h-4 w-4 text-indigo-400 shrink-0" />
                         <a
                           href={att.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="font-medium text-foreground hover:underline truncate"
+                          className="font-medium text-slate-200 hover:text-indigo-300 hover:underline truncate"
                         >
                           {att.name}
                         </a>
@@ -545,7 +557,7 @@ export default function NewOutreachPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        className="h-6 w-6 text-slate-400 hover:text-rose-400 hover:bg-rose-950/30"
                         onClick={() => handleRemoveAttachment(idx)}
                       >
                         <X className="h-3.5 w-3.5" />
@@ -561,21 +573,29 @@ export default function NewOutreachPage() {
         {/* Right Column: AI Assistant & Email Composer (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           {/* AI Assistant Banner */}
-          <Card className="border-primary/30 bg-gradient-to-r from-primary/10 via-indigo-500/10 to-purple-500/10 shadow-sm">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary animate-pulse" />
-                  <span className="font-bold text-sm text-foreground">
-                    AI Cold Email Assistant (Gemini)
-                  </span>
+          <Card className="border-indigo-500/30 bg-gradient-to-br from-indigo-950/40 via-[#0C0E18] to-[#131726] shadow-lg relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+            <CardContent className="p-5 space-y-3 relative z-10">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-300">
+                    <Sparkles className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-sm text-white block">
+                      AI Cold Email Assistant (Gemini)
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Tailors subject & body grounded in your tech stack & target role
+                    </span>
+                  </div>
                 </div>
                 <Button
                   type="button"
                   size="sm"
                   onClick={handleGenerateAi}
                   disabled={isGeneratingAi}
-                  className="gap-2 font-semibold h-8 bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="gap-2 font-semibold h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md border border-indigo-400/30 shrink-0"
                 >
                   {isGeneratingAi ? (
                     <>
@@ -589,9 +609,10 @@ export default function NewOutreachPage() {
                 </Button>
               </div>
 
-              <Input
-                placeholder="Optional: Add specific instructions (e.g. 'Mention my experience building AI Agents with Next.js')..."
-                className="bg-background/90 text-xs h-9"
+              <Textarea
+                rows={3}
+                placeholder="Optional custom instructions (e.g. 'Emphasize 8+ yrs React/Next.js experience, lead architecture for high-traffic apps, mention why I admire their product')..."
+                className="bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 text-xs leading-relaxed resize-none focus-visible:ring-indigo-500/30"
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
               />
@@ -599,16 +620,16 @@ export default function NewOutreachPage() {
           </Card>
 
           {/* Composer Card */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3 border-b border-border/50 bg-muted/20">
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-foreground">
-                  <Mail className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-bold flex items-center gap-2 text-white">
+                  <Mail className="h-4 w-4 text-indigo-400" />
                   Email Composer
                 </CardTitle>
-                <span className="text-[11px] text-muted-foreground font-mono">
+                <span className="text-[11px] text-slate-400 font-mono px-2.5 py-0.5 rounded-full bg-[#131726] border border-white/[0.06]">
                   From:{" "}
-                  <span className="text-primary font-semibold">
+                  <span className="text-indigo-300 font-semibold">
                     Wisman Nur &lt;{PUBLIC_SUPPORT_EMAIL}&gt;
                   </span>
                 </span>
@@ -616,50 +637,50 @@ export default function NewOutreachPage() {
             </CardHeader>
             <CardContent className="p-4 sm:p-5 space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="subject" className="text-xs font-semibold">
+                <Label htmlFor="subject" className="text-xs font-semibold text-slate-300">
                   Subject Line *
                 </Label>
                 <Input
                   id="subject"
                   placeholder="e.g. Application: Senior Frontend Engineer - Wisman Nur"
-                  className="font-medium text-sm"
+                  className="font-medium text-sm bg-[#131726] border-white/[0.08] text-white placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="body" className="text-xs font-semibold">
+                <Label htmlFor="body" className="text-xs font-semibold text-slate-300">
                   Email Body *
                 </Label>
                 <Textarea
                   id="body"
                   rows={14}
-                  placeholder="Write your message here or use AI Auto-Draft above..."
-                  className="font-sans text-sm leading-relaxed"
+                  placeholder="Write your message here or click 'Auto-Draft with AI' above..."
+                  className="font-sans text-sm leading-relaxed bg-[#131726] border-white/[0.08] text-slate-100 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="notes" className="text-xs text-muted-foreground">
-                  Private Internal Notes (Only visible in your dashboard)
+                <Label htmlFor="notes" className="text-xs text-slate-400">
+                  Private Internal Notes (Only visible in your CMS dashboard)
                 </Label>
                 <Input
                   id="notes"
-                  placeholder="e.g. Referred by John Doe / Applied after seeing founder's tweet..."
-                  className="text-xs h-8"
+                  placeholder="e.g. Referred by John Doe / Applied after seeing engineering blog post..."
+                  className="text-xs h-8 bg-[#131726] border-white/[0.08] text-slate-300 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
               </div>
 
-              <Separator />
+              <Separator className="bg-white/[0.06]" />
 
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-                <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Check className="h-3.5 w-3.5 text-emerald-500" />
+                <div className="text-xs text-slate-400 flex items-center gap-1.5">
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
                   <span>Replies from recruiter will automatically sync to this CMS timeline.</span>
                 </div>
 
@@ -669,7 +690,7 @@ export default function NewOutreachPage() {
                     variant="outline"
                     onClick={() => handleSubmit(false)}
                     disabled={isSubmitting || isGeneratingAi}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto rounded-xl border-white/[0.08] bg-[#131726] hover:bg-[#1C2237] text-slate-300"
                   >
                     Save as Draft
                   </Button>
@@ -677,7 +698,7 @@ export default function NewOutreachPage() {
                     type="button"
                     onClick={() => handleSubmit(true)}
                     disabled={isSubmitting || isGeneratingAi}
-                    className="w-full sm:w-auto gap-2"
+                    className="w-full sm:w-auto gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-md shadow-indigo-500/20 border border-indigo-400/30"
                   >
                     {isSubmitting ? (
                       <>
