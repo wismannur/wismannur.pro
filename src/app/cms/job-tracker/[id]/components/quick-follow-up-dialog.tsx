@@ -1,19 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   SendHorizontal,
   Copy,
   Sparkles,
   Check,
-  Mail,
-  Clock,
-  Briefcase,
-  ExternalLink,
-  MessageSquare,
   Loader2,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -55,10 +49,8 @@ export function QuickFollowUpDialog({
   const router = useRouter();
   const [scenario, setScenario] = useState<string>(defaultScenario);
   const [contactName, setContactName] = useState(application.contactName || "Hiring Team");
-  const [contactEmail, setContactEmail] = useState(application.contactEmail || "");
+  const contactEmail = application.contactEmail || "";
   const [customNotes, setCustomNotes] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -153,12 +145,23 @@ Wisman Nur`,
     }
   };
 
-  // Sync preset when scenario changes
-  useMemo(() => {
-    const preset = getPresetTemplate(scenario, contactName);
+  const initialPreset = getPresetTemplate(defaultScenario, application.contactName || "Hiring Team");
+  const [subject, setSubject] = useState(initialPreset.subject);
+  const [body, setBody] = useState(initialPreset.body);
+
+  const handleScenarioChange = (newScenario: string) => {
+    setScenario(newScenario);
+    const preset = getPresetTemplate(newScenario, contactName);
     setSubject(preset.subject);
     setBody(preset.body);
-  }, [scenario, contactName]);
+  };
+
+  const handleContactNameChange = (newName: string) => {
+    setContactName(newName);
+    const preset = getPresetTemplate(scenario, newName);
+    setSubject(preset.subject);
+    setBody(preset.body);
+  };
 
   const handleAiRegenerate = async () => {
     setIsGeneratingAi(true);
@@ -208,20 +211,20 @@ Wisman Nur`,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-4 border-b border-border/70 bg-muted/20">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-[#0C0E18] border border-white/[0.12] text-foreground shadow-2xl">
+        <DialogHeader className="p-6 pb-4 border-b border-white/[0.08] bg-[#131726]/60">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
             <div>
-              <DialogTitle className="text-lg flex items-center gap-2">
-                <SendHorizontal className="w-5 h-5 text-primary" />
+              <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <SendHorizontal className="w-5 h-5 text-indigo-400" />
                 One-Click Follow-Up & Email Generator
               </DialogTitle>
-              <DialogDescription className="text-xs">
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
                 Generate high-converting recruiter communication for{" "}
-                <strong>{application.companyName}</strong>.
+                <strong className="text-white">{application.companyName}</strong>.
               </DialogDescription>
             </div>
-            <Badge variant="outline" className="text-xs w-fit">
+            <Badge variant="outline" className="text-xs w-fit bg-white/[0.04] text-indigo-300 border-white/[0.1]">
               {application.jobTitle}
             </Badge>
           </div>
@@ -231,12 +234,12 @@ Wisman Nur`,
           {/* Scenario Picker */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Email Scenario</Label>
-              <Select value={scenario} onValueChange={setScenario}>
-                <SelectTrigger className="h-9 text-xs">
+              <Label className="text-xs font-semibold text-slate-300">Email Scenario</Label>
+              <Select value={scenario} onValueChange={handleScenarioChange}>
+                <SelectTrigger className="h-9 text-xs bg-[#131726] border-white/[0.08] text-white">
                   <SelectValue placeholder="Select email scenario" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#0C0E18] border-white/[0.12] text-slate-200">
                   <SelectItem value="thank_you">🤝 Post-Interview Thank You (Within 24h)</SelectItem>
                   <SelectItem value="status_check">⏳ Status Check-In / Follow-up (1 Week)</SelectItem>
                   <SelectItem value="portfolio_update">🚀 Relevant Case Study / Work Sample</SelectItem>
@@ -247,21 +250,21 @@ Wisman Nur`,
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Recipient Name / Role</Label>
+              <Label className="text-xs font-semibold text-slate-300">Recipient Name / Role</Label>
               <Input
                 value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
+                onChange={(e) => handleContactNameChange(e.target.value)}
                 placeholder="e.g. Sarah / Hiring Manager"
-                className="h-9 text-xs"
+                className="h-9 text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white"
               />
             </div>
           </div>
 
           {/* AI Customization input */}
-          <div className="p-3 rounded-xl border border-primary/20 bg-primary/5 space-y-2">
+          <div className="p-4 rounded-xl border border-indigo-500/30 bg-indigo-950/20 space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-primary flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                 Gemini AI Personalization
               </span>
               <Button
@@ -269,7 +272,7 @@ Wisman Nur`,
                 variant="outline"
                 onClick={handleAiRegenerate}
                 disabled={isGeneratingAi}
-                className="h-7 text-xs border-primary/30 hover:bg-primary/10 gap-1.5"
+                className="h-7 text-xs bg-[#0C0E18] border-indigo-500/30 text-indigo-300 hover:bg-indigo-500/10 gap-1.5"
               >
                 {isGeneratingAi ? (
                   <>
@@ -278,7 +281,7 @@ Wisman Nur`,
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-3 h-3 text-primary" />
+                    <Sparkles className="w-3 h-3 text-indigo-400" />
                     Tailor with AI
                   </>
                 )}
@@ -288,14 +291,14 @@ Wisman Nur`,
               value={customNotes}
               onChange={(e) => setCustomNotes(e.target.value)}
               placeholder="Optional: e.g., 'Mention our talk about Next.js 16 cache and our upcoming Q4 launch'"
-              className="h-8 text-xs bg-background/80"
+              className="h-8 text-xs bg-[#0C0E18] border-white/[0.08] text-slate-200"
             />
           </div>
 
           {/* Subject Line */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold">Subject Line</Label>
+              <Label className="text-xs font-semibold text-slate-300">Subject Line</Label>
               <Button
                 variant="ghost"
                 size="sm"
@@ -303,7 +306,7 @@ Wisman Nur`,
                   navigator.clipboard.writeText(subject);
                   toast.success("Subject copied!");
                 }}
-                className="h-6 text-[11px] gap-1 px-2 text-muted-foreground"
+                className="h-6 text-[11px] gap-1 px-2 text-slate-400 hover:text-white"
               >
                 <Copy className="w-3 h-3" /> Copy
               </Button>
@@ -311,14 +314,14 @@ Wisman Nur`,
             <Input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              className="h-9 text-xs font-medium"
+              className="h-9 text-xs font-medium bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white"
             />
           </div>
 
           {/* Email Body */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold">Email Body</Label>
+              <Label className="text-xs font-semibold text-slate-300">Email Body</Label>
               <Button
                 variant="ghost"
                 size="sm"
@@ -326,7 +329,7 @@ Wisman Nur`,
                   navigator.clipboard.writeText(body);
                   toast.success("Body copied!");
                 }}
-                className="h-6 text-[11px] gap-1 px-2 text-muted-foreground"
+                className="h-6 text-[11px] gap-1 px-2 text-slate-400 hover:text-white"
               >
                 <Copy className="w-3 h-3" /> Copy
               </Button>
@@ -335,20 +338,20 @@ Wisman Nur`,
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={8}
-              className="text-xs leading-relaxed font-sans"
+              className="text-xs leading-relaxed font-sans bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-slate-200"
             />
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 bg-muted/20 border-t border-border/60 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="p-4 bg-[#131726]/60 border-t border-white/[0.08] flex flex-col sm:flex-row justify-between items-center gap-3">
           <Button
             variant="outline"
             size="sm"
             onClick={handleCopyBoth}
-            className="w-full sm:w-auto text-xs gap-1.5 h-8"
+            className="w-full sm:w-auto text-xs gap-1.5 h-8 bg-[#0C0E18] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? "Copied All!" : "Copy Subject & Body"}
           </Button>
 
@@ -357,14 +360,14 @@ Wisman Nur`,
               variant="ghost"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="text-xs h-8"
+              className="text-xs h-8 text-slate-400 hover:text-white"
             >
               Close
             </Button>
             <Button
               size="sm"
               onClick={handleOpenInOutreach}
-              className="text-xs h-8 gap-1.5 bg-primary shadow-sm"
+              className="text-xs h-8 gap-1.5 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white shadow-md shadow-indigo-500/20"
             >
               <SendHorizontal className="w-3.5 h-3.5" />
               Open in Outreach CRM

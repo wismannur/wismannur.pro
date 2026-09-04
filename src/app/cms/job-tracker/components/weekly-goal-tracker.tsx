@@ -1,18 +1,11 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
-  Award,
-  CheckCircle2,
-  ChevronRight,
-  Flame,
   Plus,
-  Sparkles,
   Target,
-  TrendingUp,
   Zap,
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -26,15 +19,16 @@ interface WeeklyGoalTrackerProps {
 const STORAGE_KEY = "career_hub_weekly_target";
 
 export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTrackerProps) {
-  const [targetApplications, setTargetApplications] = useState(5);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = parseInt(saved, 10);
-      if (!isNaN(parsed) && parsed > 0) setTargetApplications(parsed);
+  const [targetApplications, setTargetApplications] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed > 0) return parsed;
+      }
     }
-  }, []);
+    return 5;
+  });
 
   const handleSetTarget = (newTarget: number) => {
     setTargetApplications(newTarget);
@@ -74,92 +68,90 @@ export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTra
   const getStatusBadge = () => {
     if (currentWeekStats.progressPercent >= 100) {
       return {
-        label: "🔥 Weekly Goal Crushed!",
-        color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+        label: "Weekly Target Crushed! 🔥",
+        color: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
       };
     }
     if (currentWeekStats.progressPercent >= 60) {
       return {
-        label: "⚡ Strong Momentum",
-        color: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+        label: "Strong Momentum ⚡",
+        color: "bg-blue-500/15 text-blue-400 border-blue-500/30",
       };
     }
     return {
-      label: `🎯 ${Math.max(0, targetApplications - currentWeekStats.submittedCount)} more to target`,
-      color: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+      label: `${Math.max(0, targetApplications - currentWeekStats.submittedCount)} more to weekly goal`,
+      color: "bg-amber-500/15 text-amber-400 border-amber-500/30",
     };
   };
 
   const status = getStatusBadge();
 
   return (
-    <Card className="border-border/80 shadow-sm bg-gradient-to-r from-card via-card to-primary/5 overflow-hidden">
-      <CardContent className="p-4 sm:p-5">
-        <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
-          {/* Left: Goal & Current Progress */}
-          <div className="space-y-2 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                <Target className="w-4 h-4 text-primary" />
-                <span>Weekly Job-Search Target:</span>
-              </div>
-              <Badge variant="outline" className={`text-xs font-bold ${status.color}`}>
-                {status.label}
-              </Badge>
-
-              <div className="flex items-center gap-1 text-[11px] text-muted-foreground ml-auto lg:ml-2">
-                <span>Target:</span>
-                {[3, 5, 8, 10].map((num) => (
-                  <button
-                    key={num}
-                    onClick={() => handleSetTarget(num)}
-                    className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${
-                      targetApplications === num
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                    }`}
-                  >
-                    {num}
-                  </button>
-                ))}
-              </div>
+    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-r from-[#0C0E18] via-[#0D101D] to-[#08090C] p-5 sm:p-6 shadow-xl backdrop-blur-xl">
+      <div className="relative z-10 flex flex-col lg:flex-row justify-between lg:items-center gap-5">
+        {/* Left: Goal & Current Progress */}
+        <div className="space-y-3 flex-1">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-white uppercase tracking-wider">
+              <Target className="w-4 h-4 text-primary" />
+              <span>Weekly Hunt Pace:</span>
             </div>
+            <Badge variant="outline" className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${status.color}`}>
+              {status.label}
+            </Badge>
 
-            {/* Progress Bar & Numeric Indicator */}
-            <div className="space-y-1.5 pt-1">
-              <div className="flex justify-between text-xs">
-                <span className="font-semibold text-foreground">
-                  {currentWeekStats.submittedCount} of {targetApplications} applications logged this week
-                </span>
-                <span className="font-mono text-muted-foreground">
-                  {currentWeekStats.progressPercent}%
-                </span>
-              </div>
-              <Progress value={currentWeekStats.progressPercent} className="h-2" />
+            <div className="flex items-center gap-1 text-[11px] text-gray-400 ml-auto lg:ml-2">
+              <span className="text-gray-400">Target:</span>
+              {[3, 5, 8, 10, 15].map((num) => (
+                <button
+                  key={num}
+                  onClick={() => handleSetTarget(num)}
+                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                    targetApplications === num
+                      ? "bg-primary text-white shadow-md shadow-primary/30"
+                      : "bg-white/[0.04] hover:bg-white/[0.08] text-gray-400 hover:text-white border border-white/[0.05]"
+                  }`}
+                >
+                  {num}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Right: Quick Pipeline Pulse */}
-          <div className="flex items-center gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-6 border-border/60 shrink-0">
-            <div className="text-left">
-              <div className="text-[11px] text-muted-foreground">Active in Funnel</div>
-              <div className="text-sm font-bold text-primary flex items-center gap-1">
-                <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                {currentWeekStats.inInterview} in Interview / Offer
-              </div>
+          {/* Progress Bar & Numeric Indicator */}
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="font-semibold text-gray-200">
+                <strong className="text-white font-bold">{currentWeekStats.submittedCount}</strong> of {targetApplications} applications logged this week
+              </span>
+              <span className="font-mono text-primary font-bold">
+                {currentWeekStats.progressPercent}%
+              </span>
             </div>
-
-            <Button
-              size="sm"
-              onClick={onAddJobClick}
-              className="gap-1.5 text-xs h-8 shadow-sm bg-primary hover:bg-primary/90"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Log Opportunity
-            </Button>
+            <Progress value={currentWeekStats.progressPercent} className="h-2 bg-white/[0.05]" />
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        {/* Right: Quick Pipeline Pulse */}
+        <div className="flex items-center gap-4 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l lg:pl-6 border-white/[0.08] shrink-0">
+          <div className="text-left">
+            <div className="text-[11px] text-gray-400">Active Funnel Pulse</div>
+            <div className="text-sm font-bold text-white flex items-center gap-1.5 mt-0.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <span><strong className="text-emerald-400">{currentWeekStats.inInterview}</strong> in Interview / Offer</span>
+            </div>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={onAddJobClick}
+            className="gap-1.5 text-xs h-9 px-4 rounded-xl bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Log Opportunity</span>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

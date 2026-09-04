@@ -26,7 +26,6 @@ import {
   AreaChart,
 } from "recharts";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { JOB_PLATFORM_CONFIG } from "@/lib/job-tracker";
@@ -157,171 +156,167 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
     <div className="space-y-6">
       {/* Top Metric KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Applied Today / Week
-            </CardTitle>
-            <Send className="w-4 h-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {analytics.appliedToday}{" "}
-              <span className="text-xs font-normal text-muted-foreground">
-                / {analytics.appliedThisWeek} this week
-              </span>
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 shadow-xl backdrop-blur-md">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500/40 to-transparent" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-400">Applied Today / Week</span>
+            <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+              <Send className="w-3.5 h-3.5 text-blue-400" />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {analytics.appliedThisMonth} applications this month
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-white mt-3">
+            {analytics.appliedToday}{" "}
+            <span className="text-xs font-normal text-gray-400">
+              / {analytics.appliedThisWeek} this week
+            </span>
+          </div>
+          <p className="text-xs text-gray-400 mt-1 font-mono">
+            {analytics.appliedThisMonth} apps this month
+          </p>
+        </div>
 
-        <Card className="border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Active Interviews
-            </CardTitle>
-            <Users className="w-4 h-4 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-              {analytics.activeInterviews}
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 shadow-xl backdrop-blur-md">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500/40 to-transparent" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-400">Active Interviews</span>
+            <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+              <Users className="w-3.5 h-3.5 text-purple-400" />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">HR, Tech, and Final stages</p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-purple-400 mt-3">
+            {analytics.activeInterviews}
+          </div>
+          <p className="text-xs text-gray-400 mt-1 font-medium">HR, Tech, and Final stages</p>
+        </div>
 
-        <Card className="border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Response Rate
-            </CardTitle>
-            <TrendingUp className="w-4 h-4 text-emerald-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-              {analytics.responseRate}%
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 shadow-xl backdrop-blur-md">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500/40 to-transparent" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-400">Response Rate</span>
+            <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
             </div>
-            <Progress value={analytics.responseRate} className="h-1.5 mt-2" />
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-3">
+            {analytics.responseRate}%
+          </div>
+          <Progress value={analytics.responseRate} className="h-1.5 mt-3 bg-white/[0.05]" />
+        </div>
 
-        <Card className="border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
-              Offering Rate
-            </CardTitle>
-            <Gift className="w-4 h-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-              {analytics.totalOffers}{" "}
-              <span className="text-xs font-normal text-muted-foreground">
-                ({analytics.offerRate}%)
-              </span>
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 shadow-xl backdrop-blur-md">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500/40 to-transparent" />
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-400">Offering Rate</span>
+            <div className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <Gift className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Offers from {analytics.totalApplications} opportunities
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-amber-400 mt-3">
+            {analytics.totalOffers}{" "}
+            <span className="text-xs font-normal text-gray-400">
+              ({analytics.offerRate}%)
+            </span>
+          </div>
+          <p className="text-xs text-gray-400 mt-1 font-medium">
+            From {analytics.totalApplications} opportunities
+          </p>
+        </div>
       </div>
 
       {/* Middle Row: Funnel Pipeline & Activity Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pipeline Funnel */}
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary" />
-              Application Pipeline Funnel
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Conversion rate progression across recruitment milestones
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3.5">
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 sm:p-6 shadow-xl backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-1">
+            <Target className="w-4 h-4 text-primary" />
+            <h3 className="font-bold text-sm text-white">Application Pipeline Funnel</h3>
+          </div>
+          <p className="text-xs text-gray-400 mb-5">
+            Conversion rate progression across recruitment milestones
+          </p>
+
+          <div className="space-y-4">
             {(analytics.funnel || []).map((step, idx) => (
               <div key={step.stage} className="space-y-1.5">
                 <div className="flex justify-between text-xs font-medium">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-bold">
+                  <span className="flex items-center gap-2 text-gray-200">
+                    <span className="w-5 h-5 rounded-full bg-primary/20 text-primary border border-primary/30 text-[10px] flex items-center justify-center font-bold font-mono">
                       {idx + 1}
                     </span>
-                    {step.stage}
+                    <span className="font-semibold">{step.stage}</span>
                   </span>
-                  <span className="text-muted-foreground">
-                    <strong className="text-foreground">{step.count}</strong> ({step.percentage}%)
+                  <span className="text-gray-400 font-mono">
+                    <strong className="text-white">{step.count}</strong> ({step.percentage}%)
                   </span>
                 </div>
-                <Progress value={step.percentage} className="h-2 bg-muted transition-all" />
+                <Progress value={step.percentage} className="h-2 bg-white/[0.05]" />
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* 14-Day Activity Trend */}
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <LineChart className="w-4 h-4 text-blue-500" />
-              Application Activity (Last 14 Days)
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Daily volume of jobs applied and submitted
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="w-full min-w-0 pt-4">
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 sm:p-6 shadow-xl backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-1">
+            <LineChart className="w-4 h-4 text-blue-400" />
+            <h3 className="font-bold text-sm text-white">Application Activity (Last 14 Days)</h3>
+          </div>
+          <p className="text-xs text-gray-400 mb-4">
+            Daily volume of jobs applied and submitted
+          </p>
+
+          <div className="w-full min-w-0 pt-2">
             <ResponsiveContainer width="100%" height={240} minWidth={0}>
               <AreaChart data={activityData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorApp" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
+                <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#94A3B8" }} stroke="rgba(255,255,255,0.08)" />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#94A3B8" }} stroke="rgba(255,255,255,0.08)" />
                 <Tooltip
                   contentStyle={{
-                    borderRadius: "8px",
-                    backgroundColor: "var(--background)",
-                    borderColor: "var(--border)",
+                    borderRadius: "12px",
+                    backgroundColor: "#0C0E18",
+                    borderColor: "rgba(255,255,255,0.12)",
                     fontSize: "12px",
+                    color: "#ffffff",
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
                   }}
+                  itemStyle={{ color: "#818CF8" }}
                 />
                 <Area
                   type="monotone"
                   dataKey="applications"
-                  stroke="#3b82f6"
+                  stroke="#6366F1"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorApp)"
                 />
               </AreaChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Row: Platforms & Actionable Follow-up List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Platform Breakdown */}
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-500" />
-              Applications by Sourcing Platform
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Distribution of where you find and submit jobs
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="w-full min-w-0">
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 sm:p-6 shadow-xl backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-1">
+            <BarChart3 className="w-4 h-4 text-emerald-400" />
+            <h3 className="font-bold text-sm text-white">Applications by Sourcing Platform</h3>
+          </div>
+          <p className="text-xs text-gray-400 mb-4">
+            Distribution of where you find and submit jobs
+          </p>
+
+          <div className="w-full min-w-0">
             {platformChartData.length === 0 ? (
-              <div className="h-[240px] flex items-center justify-center text-muted-foreground text-xs">
+              <div className="h-[240px] flex items-center justify-center text-gray-500 text-xs">
                 No platform data recorded yet
               </div>
             ) : (
@@ -331,15 +326,17 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
                   layout="vertical"
                   margin={{ top: 10, right: 20, left: 20, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.3} />
-                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.06)" />
+                  <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: "#94A3B8" }} stroke="rgba(255,255,255,0.08)" />
+                  <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11, fill: "#94A3B8" }} stroke="rgba(255,255,255,0.08)" />
                   <Tooltip
                     contentStyle={{
-                      borderRadius: "8px",
-                      backgroundColor: "var(--background)",
-                      borderColor: "var(--border)",
+                      borderRadius: "12px",
+                      backgroundColor: "#0C0E18",
+                      borderColor: "rgba(255,255,255,0.12)",
                       fontSize: "12px",
+                      color: "#ffffff",
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
                     }}
                   />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]}>
@@ -353,43 +350,42 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
                 </BarChart>
               </ResponsiveContainer>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Pending Follow-ups */}
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-500" />
-              Follow-Up Radar (&gt; 7 Days Without Reply)
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Applications submitted over a week ago that may need a gentle check-in
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 sm:p-6 shadow-xl backdrop-blur-md">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="w-4 h-4 text-amber-400" />
+            <h3 className="font-bold text-sm text-white">Follow-Up Radar (&gt; 7 Days Without Reply)</h3>
+          </div>
+          <p className="text-xs text-gray-400 mb-4">
+            Applications submitted over a week ago that may need a gentle check-in
+          </p>
+
+          <div>
             {pendingFollowUps.length === 0 ? (
-              <div className="py-12 flex flex-col items-center justify-center text-center text-muted-foreground text-xs">
-                <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2 opacity-80" />
-                <span>All active applications are up-to-date! No pending follow-ups.</span>
+              <div className="py-14 flex flex-col items-center justify-center text-center text-gray-400 text-xs">
+                <CheckCircle2 className="w-8 h-8 text-emerald-400 mb-2 opacity-80 animate-pulse" />
+                <span className="text-gray-300 font-medium">All active applications are up-to-date! No pending follow-ups.</span>
               </div>
             ) : (
-              <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-[240px] overflow-y-auto pr-1 custom-scrollbar">
                 {pendingFollowUps.slice(0, 6).map((app) => (
                   <div
                     key={app.id}
-                    className="p-2.5 rounded-lg border border-border/70 flex items-center justify-between text-xs hover:bg-muted/40 transition-colors"
+                    className="p-3 rounded-xl border border-white/[0.06] bg-[#131726] flex items-center justify-between text-xs hover:border-primary/40 transition-colors"
                   >
                     <div className="min-w-0">
-                      <div className="font-semibold truncate">{app.jobTitle}</div>
-                      <div className="text-muted-foreground text-[11px] truncate">
+                      <div className="font-bold text-white truncate">{app.jobTitle}</div>
+                      <div className="text-gray-400 text-[11px] truncate mt-0.5">
                         {app.companyName} • Applied{" "}
                         {app.appliedAt ? new Date(app.appliedAt).toLocaleDateString() : "N/A"}
                       </div>
                     </div>
                     <Badge
                       variant="outline"
-                      className="text-[10px] shrink-0 border-amber-500/30 text-amber-600 bg-amber-500/10"
+                      className="text-[10px] shrink-0 border-amber-500/30 text-amber-400 bg-amber-500/10 font-semibold"
                     >
                       Ready to Follow up
                     </Badge>
@@ -397,120 +393,116 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* A/B Testing & Channel Conversion Intelligence */}
-      <Card className="border-border/80 shadow-sm bg-gradient-to-br from-card via-card to-primary/5">
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" />
-                Channel & ATS Tailoring Conversion Intelligence
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Analyze how different sourcing channels and ATS tailoring scores correlate with interview invitations and offers
-              </CardDescription>
-            </div>
-            <Badge variant="outline" className="text-[11px] bg-primary/10 text-primary border-primary/20 w-fit">
-              A/B Channel Analytics
-            </Badge>
+      <div className="rounded-2xl border border-white/[0.08] bg-gradient-to-br from-[#0C0E18] via-[#0E1222] to-[#08090C] p-6 shadow-xl backdrop-blur-md">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-6">
+          <div>
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Target className="w-4 h-4 text-primary" />
+              Channel & ATS Tailoring Conversion Intelligence
+            </h3>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Analyze how different sourcing channels and ATS tailoring scores correlate with interview invitations and offers
+            </p>
           </div>
-        </CardHeader>
+          <Badge variant="outline" className="text-[11px] bg-primary/10 text-primary border-primary/20 w-fit font-bold">
+            A/B Channel Analytics
+          </Badge>
+        </div>
 
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* 1. Sourcing Channel Conversion Table */}
-            <div className="space-y-3 p-4 rounded-xl border border-border/70 bg-card">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <BarChart3 className="w-3.5 h-3.5 text-blue-500" />
-                By Sourcing Platform
-              </div>
-              <div className="space-y-2 text-xs">
-                {Object.entries(conversionAnalytics.platformStats).length === 0 ? (
-                  <span className="text-muted-foreground italic text-xs">No platform data yet</span>
-                ) : (
-                  Object.entries(conversionAnalytics.platformStats).map(([platform, stats]) => {
-                    const cfg = JOB_PLATFORM_CONFIG[platform as keyof typeof JOB_PLATFORM_CONFIG] || {
-                      label: platform,
-                    };
-                    const convRate = stats.total > 0 ? ((stats.interviews / stats.total) * 100).toFixed(0) : "0";
-                    return (
-                      <div key={platform} className="p-2 rounded-lg bg-muted/20 border border-border/40 space-y-1">
-                        <div className="flex justify-between font-semibold">
-                          <span>{cfg.label}</span>
-                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">{convRate}% Interview Rate</span>
-                        </div>
-                        <div className="flex justify-between text-[11px] text-muted-foreground">
-                          <span>{stats.total} applied • {stats.interviews} interviewed</span>
-                          {stats.offers > 0 && <span className="text-purple-600 font-bold">{stats.offers} offered 🚀</span>}
-                        </div>
-                        <Progress value={parseFloat(convRate)} className="h-1 bg-muted" />
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 1. Sourcing Channel Conversion Table */}
+          <div className="space-y-3 p-4 rounded-xl border border-white/[0.06] bg-[#131726]">
+            <div className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+              <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
+              <span>By Sourcing Platform</span>
             </div>
-
-            {/* 2. ATS Score Band Conversion Impact */}
-            <div className="space-y-3 p-4 rounded-xl border border-border/70 bg-card">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                ATS Match Score Impact
-              </div>
-              <div className="space-y-2.5 text-xs">
-                {Object.entries(conversionAnalytics.atsStats).map(([key, item]) => {
-                  const rate = item.total > 0 ? ((item.interviews / item.total) * 100).toFixed(0) : "0";
+            <div className="space-y-2 text-xs">
+              {Object.entries(conversionAnalytics.platformStats).length === 0 ? (
+                <span className="text-gray-500 italic text-xs">No platform data yet</span>
+              ) : (
+                Object.entries(conversionAnalytics.platformStats).map(([platform, stats]) => {
+                  const cfg = JOB_PLATFORM_CONFIG[platform as keyof typeof JOB_PLATFORM_CONFIG] || {
+                    label: platform,
+                  };
+                  const convRate = stats.total > 0 ? ((stats.interviews / stats.total) * 100).toFixed(0) : "0";
                   return (
-                    <div key={key} className="p-2.5 rounded-lg bg-muted/20 border border-border/40 space-y-1.5">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-foreground text-xs">{item.label}</span>
-                        <Badge variant="outline" className={`text-[10px] font-bold ${key === "high" ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" : key === "mid" ? "bg-blue-500/10 text-blue-600 border-blue-500/30" : "bg-zinc-500/10 text-zinc-500"}`}>
-                          {rate}% Conv.
-                        </Badge>
+                    <div key={platform} className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] space-y-1.5">
+                      <div className="flex justify-between font-semibold">
+                        <span className="text-white">{cfg.label}</span>
+                        <span className="text-emerald-400 font-bold">{convRate}% Conv.</span>
                       </div>
-                      <div className="text-[11px] text-muted-foreground flex justify-between">
-                        <span>{item.total} applications</span>
-                        <span>{item.interviews} interviews</span>
+                      <div className="flex justify-between text-[11px] text-gray-400">
+                        <span>{stats.total} applied • {stats.interviews} interviewed</span>
+                        {stats.offers > 0 && <span className="text-purple-400 font-bold">{stats.offers} offered 🚀</span>}
                       </div>
-                      <Progress value={parseFloat(rate)} className="h-1 bg-muted" />
+                      <Progress value={parseFloat(convRate)} className="h-1 bg-white/[0.05]" />
                     </div>
                   );
-                })}
-              </div>
-            </div>
-
-            {/* 3. Workplace Type Conversion */}
-            <div className="space-y-3 p-4 rounded-xl border border-border/70 bg-card">
-              <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
-                Workplace Model Success
-              </div>
-              <div className="space-y-2.5 text-xs">
-                {Object.entries(conversionAnalytics.workplaceStats).map(([key, item]) => {
-                  const rate = item.total > 0 ? ((item.interviews / item.total) * 100).toFixed(0) : "0";
-                  return (
-                    <div key={key} className="p-2.5 rounded-lg bg-muted/20 border border-border/40 space-y-1.5">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-foreground text-xs">{item.label}</span>
-                        <span className="font-bold text-primary">{rate}% Interview Rate</span>
-                      </div>
-                      <div className="text-[11px] text-muted-foreground flex justify-between">
-                        <span>{item.total} applications</span>
-                        <span>{item.interviews} interviews</span>
-                      </div>
-                      <Progress value={parseFloat(rate)} className="h-1 bg-muted" />
-                    </div>
-                  );
-                })}
-              </div>
+                })
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* 2. ATS Score Band Conversion Impact */}
+          <div className="space-y-3 p-4 rounded-xl border border-white/[0.06] bg-[#131726]">
+            <div className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>ATS Match Score Impact</span>
+            </div>
+            <div className="space-y-2.5 text-xs">
+              {Object.entries(conversionAnalytics.atsStats).map(([key, item]) => {
+                const rate = item.total > 0 ? ((item.interviews / item.total) * 100).toFixed(0) : "0";
+                return (
+                  <div key={key} className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-white text-xs">{item.label}</span>
+                      <Badge variant="outline" className={`text-[10px] font-bold ${key === "high" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : key === "mid" ? "bg-blue-500/10 text-blue-400 border-blue-500/30" : "bg-zinc-500/10 text-zinc-400 border-zinc-500/30"}`}>
+                        {rate}% Conv.
+                      </Badge>
+                    </div>
+                    <div className="text-[11px] text-gray-400 flex justify-between">
+                      <span>{item.total} applications</span>
+                      <span>{item.interviews} interviews</span>
+                    </div>
+                    <Progress value={parseFloat(rate)} className="h-1 bg-white/[0.05]" />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Workplace Type Conversion */}
+          <div className="space-y-3 p-4 rounded-xl border border-white/[0.06] bg-[#131726]">
+            <div className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+              <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
+              <span>Workplace Model Success</span>
+            </div>
+            <div className="space-y-2.5 text-xs">
+              {Object.entries(conversionAnalytics.workplaceStats).map(([key, item]) => {
+                const rate = item.total > 0 ? ((item.interviews / item.total) * 100).toFixed(0) : "0";
+                return (
+                  <div key={key} className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.05] space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-white text-xs">{item.label}</span>
+                      <span className="font-bold text-primary">{rate}% Conv.</span>
+                    </div>
+                    <div className="text-[11px] text-gray-400 flex justify-between">
+                      <span>{item.total} applications</span>
+                      <span>{item.interviews} interviews</span>
+                    </div>
+                    <Progress value={parseFloat(rate)} className="h-1 bg-white/[0.05]" />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
