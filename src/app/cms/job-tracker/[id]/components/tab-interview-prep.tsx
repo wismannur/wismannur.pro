@@ -10,9 +10,7 @@ import {
   ExternalLink,
   HelpCircle,
   Loader2,
-  Play,
   Plus,
-  SendHorizontal,
   Sparkles,
   Trash2,
   Users,
@@ -116,10 +114,13 @@ export function TabInterviewPrep({
   return (
     <div className="space-y-6">
       {/* Interview Actions Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-muted/40 p-4 rounded-xl border border-border/60">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-[#0C0E18]/80 backdrop-blur-md p-4 rounded-2xl border border-white/[0.08] shadow-lg">
         <div>
-          <h3 className="font-semibold text-sm">Interview Schedule & Preparation</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="font-bold text-sm text-white flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-violet-500 shadow-[0_0_8px_rgba(139,92,246,0.8)]" />
+            Interview Schedule & Preparation Simulator
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Parse recruiter emails, track interview stages, and generate Q&A prep simulators
           </p>
         </div>
@@ -129,24 +130,24 @@ export function TabInterviewPrep({
             variant="outline"
             size="sm"
             onClick={() => setIsFollowUpOpen(true)}
-            className="gap-1.5 text-xs border-amber-500/30 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10"
+            className="gap-1.5 text-xs bg-[#131726] border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50 shadow-sm"
           >
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <Zap className="w-3.5 h-3.5 text-amber-400" />
             Thank You Note Draft
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsInviteDialogOpen(true)}
-            className="gap-1.5 text-xs"
+            className="gap-1.5 text-xs bg-[#131726] border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50 shadow-sm"
           >
-            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
             Paste Recruiter Invitation
           </Button>
           <Button
             size="sm"
             onClick={() => setIsAddInterviewDialogOpen(true)}
-            className="gap-1.5 text-xs"
+            className="gap-1.5 text-xs bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white shadow-md shadow-indigo-500/20"
           >
             <Plus className="w-3.5 h-3.5" />
             Schedule Stage
@@ -156,22 +157,26 @@ export function TabInterviewPrep({
 
       {/* Interview List */}
       {(application.interviews?.length ?? 0) === 0 ? (
-        <Card className="border-border/60">
-          <CardContent className="py-12 flex flex-col items-center justify-center text-center space-y-3">
-            <Users className="w-10 h-10 text-muted-foreground/50" />
-            <h4 className="font-semibold text-sm">No Interview Stages Scheduled</h4>
+        <Card className="bg-[#0C0E18]/80 backdrop-blur-md border border-white/[0.08] shadow-2xl overflow-hidden">
+          <CardContent className="py-14 flex flex-col items-center justify-center text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <Users className="w-6 h-6" />
+            </div>
+            <h4 className="font-bold text-sm text-white">No Interview Stages Scheduled</h4>
             <p className="text-xs text-muted-foreground max-w-sm">
               Got an invitation email from a recruiter? Paste it and Gemini AI will automatically
               extract the date, stage, and meeting link.
             </p>
-            <Button
-              variant="outline"
-              onClick={() => setIsInviteDialogOpen(true)}
-              className="gap-2 text-xs"
-            >
-              <Sparkles className="w-4 h-4 text-purple-500" />
-              Paste Invitation Email
-            </Button>
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsInviteDialogOpen(true)}
+                className="gap-2 text-xs bg-[#131726] border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50"
+              >
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                Paste Invitation Email
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
@@ -183,22 +188,22 @@ export function TabInterviewPrep({
               INTERVIEW_STATUS_CONFIG[interview.status] || INTERVIEW_STATUS_CONFIG.scheduled;
 
             return (
-              <Card key={interview.id} className="border-border/80 shadow-sm overflow-hidden">
+              <Card key={interview.id} className="bg-[#0C0E18]/80 backdrop-blur-md border border-white/[0.08] shadow-2xl overflow-hidden">
                 {/* Interview Header */}
-                <CardHeader className="bg-muted/20 pb-4 border-b border-border/50">
+                <CardHeader className="bg-[#131726]/50 pb-4 border-b border-white/[0.06] px-6 pt-5">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-[11px] font-semibold bg-white/[0.04] text-slate-300 border-white/[0.12]">
                           {stageCfg.label}
                         </Badge>
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-md border font-medium ${statusCfg.color}`}
+                          className={`text-[11px] px-2.5 py-0.5 rounded-full border font-bold ${statusCfg.color}`}
                         >
                           {statusCfg.label}
                         </span>
                       </div>
-                      <CardTitle className="text-base mt-1.5">{interview.title}</CardTitle>
+                      <CardTitle className="text-base font-bold text-white mt-2">{interview.title}</CardTitle>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -208,10 +213,10 @@ export function TabInterviewPrep({
                           onUpdateInterviewStatus(interview.id, v as InterviewStatus)
                         }
                       >
-                        <SelectTrigger className="h-8 text-xs w-[130px]">
+                        <SelectTrigger className="h-8 text-xs w-[130px] bg-[#131726] border-white/[0.08] text-white">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-[#0C0E18] border-white/[0.12] text-slate-200">
                           <SelectItem value="scheduled">Scheduled</SelectItem>
                           <SelectItem value="completed">Completed</SelectItem>
                           <SelectItem value="passed">Passed ✅</SelectItem>
@@ -223,7 +228,7 @@ export function TabInterviewPrep({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-destructive"
+                        className="h-8 w-8 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
                         onClick={() => onDeleteInterview(interview.id)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -232,10 +237,10 @@ export function TabInterviewPrep({
                   </div>
 
                   {/* Metadata & Quick Calendar Sync row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground pt-3 border-t border-white/[0.04] mt-2">
                     <div className="flex flex-wrap items-center gap-4">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                      <div className="flex items-center gap-1.5 text-slate-300 font-mono">
+                        <Calendar className="w-3.5 h-3.5 text-blue-400" />
                         <span>
                           {new Date(interview.scheduledAt).toLocaleString("en-US", {
                             dateStyle: "medium",
@@ -245,20 +250,20 @@ export function TabInterviewPrep({
                       </div>
 
                       {interview.interviewers && (
-                        <div className="flex items-center gap-1.5">
-                          <Users className="w-3.5 h-3.5 text-purple-500" />
+                        <div className="flex items-center gap-1.5 text-slate-300">
+                          <Users className="w-3.5 h-3.5 text-purple-400" />
                           <span>{interview.interviewers}</span>
                         </div>
                       )}
 
                       {interview.meetingLink && (
                         <div className="flex items-center gap-1.5">
-                          <Video className="w-3.5 h-3.5 text-emerald-500" />
+                          <Video className="w-3.5 h-3.5 text-emerald-400" />
                           <a
                             href={interview.meetingLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-primary underline font-medium"
+                            className="text-indigo-400 hover:text-indigo-300 underline font-medium"
                           >
                             Meeting Link
                           </a>
@@ -271,7 +276,7 @@ export function TabInterviewPrep({
                         asChild
                         variant="outline"
                         size="sm"
-                        className="h-7 text-[11px] gap-1 px-2 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
+                        className="h-7 text-[11px] gap-1 px-2.5 bg-[#0C0E18] border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
                       >
                         <a
                           href={generateGoogleCalendarUrl({
@@ -286,7 +291,7 @@ export function TabInterviewPrep({
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <CalendarPlus className="w-3 h-3 text-blue-500" />
+                          <CalendarPlus className="w-3 h-3 text-blue-400" />
                           Google Calendar
                           <ExternalLink className="w-2.5 h-2.5 opacity-60" />
                         </a>
@@ -306,7 +311,7 @@ export function TabInterviewPrep({
                             aiSummary: interview.aiSummary,
                           })
                         }
-                        className="h-7 text-[11px] gap-1 px-2"
+                        className="h-7 text-[11px] gap-1 px-2 bg-[#0C0E18] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]"
                         title="Download .ics for Apple Calendar / Outlook"
                       >
                         <Download className="w-3 h-3 text-muted-foreground" />
@@ -319,12 +324,12 @@ export function TabInterviewPrep({
                 {/* Interview Body / AI Prep */}
                 <CardContent className="p-6 space-y-5">
                   {interview.aiSummary && (
-                    <div className="p-3.5 rounded-xl border border-purple-500/20 bg-purple-500/5 space-y-1 text-xs">
-                      <div className="font-semibold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        AI Stage Strategy & Focus
+                    <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/10 space-y-1 text-xs">
+                      <div className="font-bold text-purple-300 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        AI Stage Strategy & Key Focus
                       </div>
-                      <p className="text-foreground leading-relaxed">{interview.aiSummary}</p>
+                      <p className="text-slate-200 leading-relaxed font-sans">{interview.aiSummary}</p>
                     </div>
                   )}
 
@@ -332,7 +337,7 @@ export function TabInterviewPrep({
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                        <HelpCircle className="w-4 h-4 text-primary" />
+                        <HelpCircle className="w-4 h-4 text-indigo-400" />
                         Predicted Interview Questions & Answers
                       </h4>
 
@@ -340,7 +345,7 @@ export function TabInterviewPrep({
                         <Button
                           size="sm"
                           onClick={() => setActiveMockInterview(interview)}
-                          className="text-xs gap-1.5 h-7 bg-purple-600 hover:bg-purple-700 text-white shadow-sm font-semibold"
+                          className="text-xs gap-1.5 h-7 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-500/20 font-semibold"
                         >
                           <Bot className="w-3.5 h-3.5" />
                           Interactive AI Mock Simulator
@@ -351,7 +356,7 @@ export function TabInterviewPrep({
                           size="sm"
                           onClick={() => onGeneratePrep(interview.id)}
                           disabled={isGeneratingPrep === interview.id}
-                          className="text-xs gap-1.5 h-7"
+                          className="text-xs gap-1.5 h-7 bg-[#131726] border-white/[0.08] text-slate-200 hover:bg-white/[0.05]"
                         >
                           {isGeneratingPrep === interview.id ? (
                             <>
@@ -360,7 +365,7 @@ export function TabInterviewPrep({
                             </>
                           ) : (
                             <>
-                              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                               {interview.aiPredictedQuestions?.length
                                 ? "Regenerate Q&A"
                                 : "Generate Q&A"}
@@ -376,39 +381,39 @@ export function TabInterviewPrep({
                           <AccordionItem
                             key={qIdx}
                             value={`q-${qIdx}`}
-                            className="border rounded-lg px-3.5 bg-muted/20"
+                            className="border border-white/[0.08] rounded-xl px-4 bg-[#131726] overflow-hidden"
                           >
-                            <AccordionTrigger className="text-xs font-semibold text-left py-3 hover:no-underline">
+                            <AccordionTrigger className="text-xs font-semibold text-left py-3 hover:no-underline text-white">
                               <div className="flex items-center gap-2">
                                 <Badge
                                   variant="secondary"
-                                  className="text-[10px] uppercase font-bold"
+                                  className="text-[10px] uppercase font-bold bg-white/[0.06] text-indigo-300 border-white/[0.08]"
                                 >
                                   {q.category}
                                 </Badge>
                                 <span>{q.question}</span>
                               </div>
                             </AccordionTrigger>
-                            <AccordionContent className="space-y-3 text-xs pt-1 pb-3 text-foreground">
+                            <AccordionContent className="space-y-3 text-xs pt-1 pb-4 text-slate-200">
                               {q.tip && (
-                                <div className="p-2.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200">
+                                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300">
                                   <strong>💡 Recruiter Intent:</strong> {q.tip}
                                 </div>
                               )}
-                              <div className="p-3 rounded-md bg-card border border-border/60 space-y-1">
+                              <div className="p-3.5 rounded-lg bg-[#0C0E18] border border-white/[0.06] space-y-1.5">
                                 <div className="flex items-center justify-between text-muted-foreground text-[11px] font-semibold">
-                                  <span>Recommended STAR Answer:</span>
+                                  <span className="text-indigo-400">Recommended STAR Answer:</span>
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => onCopyText(q.sampleAnswer, "Answer")}
-                                    className="h-6 text-[10px] p-1"
+                                    className="h-6 text-[10px] p-1 text-slate-400 hover:text-white"
                                   >
                                     <Copy className="w-3 h-3 mr-1" />
                                     Copy
                                   </Button>
                                 </div>
-                                <p className="leading-relaxed whitespace-pre-wrap font-sans text-xs">
+                                <p className="leading-relaxed whitespace-pre-wrap font-sans text-xs text-slate-300">
                                   {q.sampleAnswer}
                                 </p>
                               </div>
@@ -417,7 +422,7 @@ export function TabInterviewPrep({
                         ))}
                       </Accordion>
                     ) : (
-                      <div className="p-6 rounded-lg border border-dashed text-center text-xs text-muted-foreground">
+                      <div className="p-8 rounded-xl border border-dashed border-white/[0.1] text-center text-xs text-muted-foreground bg-[#131726]/20">
                         Click &quot;Generate Q&amp;A&quot; to simulate questions tailored to this
                         role and stage.
                       </div>
@@ -432,15 +437,15 @@ export function TabInterviewPrep({
 
       {/* Modal Dialog: Parse Recruiter Invite */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl bg-[#0C0E18] border border-white/[0.12] text-foreground">
           <DialogHeader>
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600">
+              <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <DialogTitle className="text-lg">Paste Recruiter Invitation</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-lg font-bold text-white">Paste Recruiter Invitation</DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
                   Paste email or chat from HR/Recruiter. Gemini AI will extract the time, stage, and
                   Google Meet/Zoom link.
                 </DialogDescription>
@@ -454,22 +459,23 @@ export function TabInterviewPrep({
               rows={8}
               value={rawInviteText}
               onChange={(e) => setRawInviteText(e.target.value)}
-              className="text-xs font-mono"
+              className="text-xs font-mono bg-[#131726] border-white/[0.08] focus:border-purple-500/50 text-slate-200 leading-relaxed"
             />
           </div>
 
-          <DialogFooter className="pt-3 border-t">
+          <DialogFooter className="pt-3 border-t border-white/[0.08]">
             <Button
               variant="outline"
               onClick={() => setIsInviteDialogOpen(false)}
               disabled={isParsingInvite}
+              className="bg-[#131726] border-white/[0.08] text-slate-300 text-xs"
             >
               Cancel
             </Button>
             <Button
               onClick={handleParseSubmit}
               disabled={isParsingInvite || !rawInviteText.trim()}
-              className="gap-2"
+              className="gap-2 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-500/20"
             >
               {isParsingInvite ? (
                 <>
@@ -489,15 +495,15 @@ export function TabInterviewPrep({
 
       {/* Modal Dialog: Add Interview Manually */}
       <Dialog open={isAddInterviewDialogOpen} onOpenChange={setIsAddInterviewDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg bg-[#0C0E18] border border-white/[0.12] text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-lg">Schedule Interview Stage</DialogTitle>
-            <DialogDescription>Manually log an upcoming interview round</DialogDescription>
+            <DialogTitle className="text-lg font-bold text-white">Schedule Interview Stage</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">Manually log an upcoming interview round</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <Label htmlFor="stageType" className="text-xs">
+              <Label htmlFor="stageType" className="text-xs font-semibold text-slate-300">
                 Stage Type
               </Label>
               <Select
@@ -519,10 +525,10 @@ export function TabInterviewPrep({
                   })
                 }
               >
-                <SelectTrigger className="text-xs">
+                <SelectTrigger className="text-xs bg-[#131726] border-white/[0.08] text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-[#0C0E18] border-white/[0.12] text-slate-200">
                   <SelectItem value="hr_screening">HR Screening</SelectItem>
                   <SelectItem value="technical_interview">Technical Interview</SelectItem>
                   <SelectItem value="live_coding">Live Coding</SelectItem>
@@ -536,7 +542,7 @@ export function TabInterviewPrep({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="intTitle" className="text-xs">
+              <Label htmlFor="intTitle" className="text-xs font-semibold text-slate-300">
                 Interview Title
               </Label>
               <Input
@@ -545,12 +551,12 @@ export function TabInterviewPrep({
                 onChange={(e) =>
                   setNewInterviewForm({ ...newInterviewForm, title: e.target.value })
                 }
-                className="text-xs"
+                className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="intDate" className="text-xs">
+              <Label htmlFor="intDate" className="text-xs font-semibold text-slate-300">
                 Scheduled Date & Time
               </Label>
               <Input
@@ -563,12 +569,12 @@ export function TabInterviewPrep({
                     scheduledAt: new Date(e.target.value),
                   })
                 }
-                className="text-xs"
+                className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white font-mono"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="intLink" className="text-xs">
+              <Label htmlFor="intLink" className="text-xs font-semibold text-slate-300">
                 Meeting Link (Zoom / Meet)
               </Label>
               <Input
@@ -581,12 +587,12 @@ export function TabInterviewPrep({
                     meetingLink: e.target.value,
                   })
                 }
-                className="text-xs"
+                className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="interviewers" className="text-xs">
+              <Label htmlFor="interviewers" className="text-xs font-semibold text-slate-300">
                 Interviewer Names
               </Label>
               <Input
@@ -599,16 +605,18 @@ export function TabInterviewPrep({
                     interviewers: e.target.value,
                   })
                 }
-                className="text-xs"
+                className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white"
               />
             </div>
           </div>
 
-          <DialogFooter className="pt-3 border-t">
-            <Button variant="outline" onClick={() => setIsAddInterviewDialogOpen(false)}>
+          <DialogFooter className="pt-3 border-t border-white/[0.08]">
+            <Button variant="outline" onClick={() => setIsAddInterviewDialogOpen(false)} className="bg-[#131726] border-white/[0.08] text-slate-300 text-xs">
               Cancel
             </Button>
-            <Button onClick={handleCreateManual}>Save Interview</Button>
+            <Button onClick={handleCreateManual} className="text-xs bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white shadow-md shadow-indigo-500/20">
+              Save Interview
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

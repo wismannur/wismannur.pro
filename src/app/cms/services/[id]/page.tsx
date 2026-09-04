@@ -60,7 +60,6 @@ import { cn } from "@/lib/utils";
 import {
   serviceRequestService,
   inquiryMessagesService,
-  type ServiceRequest,
   type InquiryMessage,
 } from "@/services";
 
@@ -71,32 +70,32 @@ const SERVICE_TYPE_CONFIG: Record<
   frontend: {
     label: "Frontend Development",
     icon: Code2,
-    className: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    className: "bg-sky-500/10 text-sky-400 border-sky-500/20",
   },
   "ui-ux": {
     label: "UI/UX Implementation",
     icon: Layout,
-    className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+    className: "bg-purple-500/10 text-purple-400 border-purple-500/20",
   },
   performance: {
     label: "Performance Optimization",
     icon: Zap,
-    className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   },
   api: {
     label: "API Integration",
     icon: Network,
-    className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   },
   animation: {
     label: "Web Animation",
     icon: Sparkles,
-    className: "bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-500/20",
+    className: "bg-pink-500/10 text-pink-400 border-pink-500/20",
   },
   leadership: {
     label: "Technical Leadership",
     icon: Users,
-    className: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    className: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
   },
 };
 
@@ -107,22 +106,22 @@ const TIMEFRAME_CONFIG: Record<
   asap: {
     label: "As soon as possible",
     icon: Flame,
-    className: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    className: "bg-rose-500/10 text-rose-400 border-rose-500/20",
   },
   "1-2-weeks": {
     label: "Within 1-2 weeks",
     icon: Timer,
-    className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   },
   "1-month": {
     label: "Within a month",
     icon: Calendar,
-    className: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20",
+    className: "bg-sky-500/10 text-sky-400 border-sky-500/20",
   },
   flexible: {
     label: "Flexible / Not urgent",
     icon: Clock,
-    className: "bg-muted/50 text-muted-foreground border-border/50",
+    className: "bg-white/[0.04] text-slate-400 border-white/[0.08]",
   },
 };
 
@@ -244,35 +243,35 @@ export default function ServiceRequestDetailPage() {
     switch (status) {
       case "new":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 whitespace-nowrap">
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-blue-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap shadow-xs">
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-blue-400 animate-pulse" />
             New Request
           </span>
         );
       case "in-progress":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 whitespace-nowrap">
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-purple-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 whitespace-nowrap shadow-xs">
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-purple-400" />
             In Progress
           </span>
         );
       case "completed":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap shadow-xs">
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-emerald-400" />
             Completed
           </span>
         );
       case "cancelled":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 whitespace-nowrap">
-            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-rose-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap shadow-xs">
+            <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-rose-400" />
             Cancelled
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/[0.04] text-slate-400 border border-white/[0.08] whitespace-nowrap">
             {status}
           </span>
         );
@@ -294,23 +293,23 @@ export default function ServiceRequestDetailPage() {
     return (
       <div className="space-y-6 max-w-6xl pb-12">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-9 w-36 rounded-lg" />
+          <Skeleton className="h-9 w-36 rounded-xl bg-white/[0.05]" />
         </div>
-        <div className="flex justify-between items-center border-b pb-4">
+        <div className="flex justify-between items-center border-b border-white/[0.08] pb-4">
           <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-8 w-64 rounded-xl bg-white/[0.05]" />
+            <Skeleton className="h-4 w-48 rounded-lg bg-white/[0.05]" />
           </div>
-          <Skeleton className="h-9 w-32 rounded-lg" />
+          <Skeleton className="h-9 w-32 rounded-xl bg-white/[0.05]" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 space-y-6">
-            <Skeleton className="h-48 w-full rounded-xl" />
-            <Skeleton className="h-64 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-2xl bg-white/[0.05]" />
+            <Skeleton className="h-64 w-full rounded-2xl bg-white/[0.05]" />
           </div>
           <div className="lg:col-span-4 space-y-4">
-            <Skeleton className="h-48 w-full rounded-xl" />
-            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-2xl bg-white/[0.05]" />
+            <Skeleton className="h-40 w-full rounded-2xl bg-white/[0.05]" />
           </div>
         </div>
       </div>
@@ -319,13 +318,17 @@ export default function ServiceRequestDetailPage() {
 
   if (!request) {
     return (
-      <div className="text-center py-16 space-y-4">
-        <Inbox className="w-12 h-12 text-muted-foreground mx-auto" />
-        <h2 className="text-xl font-semibold">Service Request Not Found</h2>
-        <p className="text-sm text-muted-foreground">
+      <div className="text-center py-16 space-y-4 bg-[#0C0E18]/60 rounded-2xl border border-white/[0.08] p-8">
+        <Inbox className="w-12 h-12 text-slate-500 mx-auto" />
+        <h2 className="text-xl font-bold text-white">Service Request Not Found</h2>
+        <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto">
           The service request you are looking for was not found or has been deleted.
         </p>
-        <Button asChild variant="outline">
+        <Button
+          asChild
+          variant="outline"
+          className="rounded-xl border-white/[0.08] bg-white/[0.04] text-slate-200 hover:text-white hover:bg-white/[0.08]"
+        >
           <Link href="/cms/services">Back to List</Link>
         </Button>
       </div>
@@ -335,14 +338,14 @@ export default function ServiceRequestDetailPage() {
   const serviceConfig = SERVICE_TYPE_CONFIG[request.serviceType] || {
     label: request.serviceType,
     icon: Briefcase,
-    className: "bg-primary/10 text-primary border-primary/20",
+    className: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
   };
   const ServiceIcon = serviceConfig.icon;
 
   const timeframeConfig = TIMEFRAME_CONFIG[request.timeframe] || {
     label: request.timeframe,
     icon: Clock,
-    className: "bg-muted/40 text-muted-foreground border-border/50",
+    className: "bg-white/[0.04] text-slate-400 border-white/[0.08]",
   };
   const TimeframeIcon = timeframeConfig.icon;
 
@@ -354,7 +357,7 @@ export default function ServiceRequestDetailPage() {
           asChild
           variant="ghost"
           size="sm"
-          className="gap-2 -ml-2 text-muted-foreground hover:text-foreground"
+          className="gap-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-xl"
         >
           <Link href="/cms/services">
             <ArrowLeft className="w-4 h-4" />
@@ -362,15 +365,15 @@ export default function ServiceRequestDetailPage() {
           </Link>
         </Button>
 
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleUpdateStatus("in-progress")}
             disabled={request.status === "in-progress"}
-            className="text-xs flex-1 sm:flex-none"
+            className="text-xs flex-1 sm:flex-none rounded-xl border-white/[0.08] bg-[#0C0E18]/80 text-slate-300 hover:text-white hover:bg-white/[0.06]"
           >
-            <Clock className="w-3.5 h-3.5 mr-1.5 text-purple-500" />
+            <Clock className="w-3.5 h-3.5 mr-1.5 text-purple-400" />
             In Progress
           </Button>
           <Button
@@ -378,9 +381,9 @@ export default function ServiceRequestDetailPage() {
             size="sm"
             onClick={() => handleUpdateStatus("completed")}
             disabled={request.status === "completed"}
-            className="text-xs flex-1 sm:flex-none"
+            className="text-xs flex-1 sm:flex-none rounded-xl border-white/[0.08] bg-[#0C0E18]/80 text-slate-300 hover:text-white hover:bg-white/[0.06]"
           >
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />
+            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
             Completed
           </Button>
           <Button
@@ -388,16 +391,16 @@ export default function ServiceRequestDetailPage() {
             size="sm"
             onClick={() => handleUpdateStatus("cancelled")}
             disabled={request.status === "cancelled"}
-            className="text-xs flex-1 sm:flex-none hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/30"
+            className="text-xs flex-1 sm:flex-none rounded-xl border-white/[0.08] bg-[#0C0E18]/80 text-slate-300 hover:text-white hover:bg-white/[0.06]"
           >
-            <XCircle className="w-3.5 h-3.5 mr-1.5 text-rose-500" />
+            <XCircle className="w-3.5 h-3.5 mr-1.5 text-rose-400" />
             Cancel
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsDeleteDialogOpen(true)}
-            className="text-xs flex-1 sm:flex-none text-destructive hover:bg-destructive/10 hover:border-destructive/30"
+            className="text-xs flex-1 sm:flex-none rounded-xl border-rose-500/20 bg-rose-500/5 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/40 hover:text-rose-300"
           >
             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
             Delete
@@ -406,33 +409,40 @@ export default function ServiceRequestDetailPage() {
       </div>
 
       {/* Page Header Info */}
-      <div className="flex flex-col md:flex-row justify-between gap-3 items-start md:items-center border-b pb-4">
-        <div className="space-y-1 w-full md:w-auto">
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">{request.name}</h1>
-            {getStatusBadge(request.status)}
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-xs font-mono">
-              <span>{request.id}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(request.id);
-                  toast.success("Reference ID copied to clipboard!");
-                }}
-                className="hover:text-foreground transition-colors"
-                title="Copy Reference ID"
-              >
-                <Copy className="w-3 h-3" />
-              </button>
+      <div className="p-6 rounded-2xl bg-[#0C0E18]/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl">
+        <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                {request.name}
+              </h1>
+              {getStatusBadge(request.status)}
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-mono">
+                <span>{request.id}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(request.id);
+                    toast.success("Reference ID copied to clipboard!");
+                  }}
+                  className="hover:text-white transition-colors"
+                  title="Copy Reference ID"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+              </div>
             </div>
+            <p className="text-xs sm:text-sm text-slate-400 flex flex-wrap items-center gap-2 font-medium">
+              <span>Service Request</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-slate-200 font-semibold">{serviceConfig.label}</span>
+              <span className="text-slate-600">•</span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                Submitted {format(new Date(request.createdAt), "EEEE, dd MMMM yyyy · HH:mm")} WIB
+              </span>
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground flex flex-wrap items-center gap-1.5 sm:gap-2">
-            <span>Service Request</span>
-            <span>•</span>
-            <span className="font-medium text-foreground">{serviceConfig.label}</span>
-            <span>•</span>
-            <span>Submitted {format(new Date(request.createdAt), "dd MMM yyyy, HH:mm")}</span>
-          </p>
         </div>
       </div>
 
@@ -441,77 +451,77 @@ export default function ServiceRequestDetailPage() {
         {/* Left / Main Column (70%) */}
         <div className="lg:col-span-8 space-y-6">
           {/* Project Requirements Card */}
-          <Card className="rounded-xl border-border/60 shadow-xs">
-            <CardHeader className="p-4 sm:p-6 pb-3">
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-primary" />
+                <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-indigo-400" />
                   <span>Project Requirements</span>
                 </CardTitle>
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-slate-400 border-white/[0.08]">
                   Original Inquiry
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="bg-muted/30 border border-border/40 rounded-xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed text-foreground whitespace-pre-wrap break-words">
+            <CardContent className="p-5">
+              <div className="bg-[#131726]/70 border border-white/[0.06] rounded-xl p-4 text-xs sm:text-sm leading-relaxed text-slate-200 whitespace-pre-wrap break-words font-normal">
                 {request.projectDetails}
               </div>
             </CardContent>
           </Card>
 
           {/* Conversation Thread Card */}
-          <Card className="rounded-xl border-border/60 shadow-xs">
-            <CardHeader className="p-4 sm:p-6 pb-3">
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-primary" />
+                <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-indigo-400" />
                   <span>Conversation Thread ({threadMessages.length})</span>
                 </CardTitle>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => refetchThread()}
-                  className="h-7 w-7 text-muted-foreground"
+                  className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
                   title="Refresh thread"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" />
+                  <RefreshCw className={cn("h-3.5 w-3.5", isThreadLoading && "animate-spin text-indigo-400")} />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
+            <CardContent className="p-5 space-y-4">
               {threadMessages.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground text-xs bg-muted/10 rounded-xl border border-dashed border-border/60">
+                <div className="text-center py-8 text-slate-400 text-xs bg-[#131726]/40 rounded-xl border border-dashed border-white/[0.08] p-6">
                   No email replies sent yet. Write a message below to start communicating.
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {threadMessages.map((msg) => {
+                  {threadMessages.map((msg: InquiryMessage) => {
                     const isAdmin = msg.senderType === "admin";
                     return (
                       <div
                         key={msg.id}
                         className={cn(
-                          "rounded-xl p-3.5 sm:p-4 text-xs transition-all border",
+                          "rounded-2xl p-4 text-xs transition-all border",
                           isAdmin
-                            ? "bg-primary/5 border-primary/20 ml-2 sm:ml-6 md:ml-12"
-                            : "bg-muted/40 border-border/50 mr-2 sm:mr-6 md:mr-12"
+                            ? "bg-indigo-500/10 border-indigo-500/25 ml-2 sm:ml-6 md:ml-12 text-slate-200"
+                            : "bg-[#131726]/80 border-white/[0.08] mr-2 sm:mr-6 md:mr-12 text-slate-200"
                         )}
                       >
-                        <div className="flex flex-wrap justify-between items-center gap-1 mb-1.5">
-                          <div className="flex flex-wrap items-center gap-1.5 font-semibold">
-                            <span className={isAdmin ? "text-primary" : "text-foreground"}>
+                        <div className="flex flex-wrap justify-between items-center gap-1.5 mb-2 pb-2 border-b border-white/[0.06]">
+                          <div className="flex flex-wrap items-center gap-2 font-semibold">
+                            <span className={isAdmin ? "text-indigo-400 font-bold" : "text-white font-bold"}>
                               {isAdmin ? "Wisman Nur (Admin)" : msg.senderName}
                             </span>
-                            <span className="text-[10px] text-muted-foreground font-normal truncate max-w-[160px] sm:max-w-none">
+                            <span className="text-[11px] text-slate-400 font-normal truncate max-w-[180px]">
                               ({msg.senderEmail})
                             </span>
                           </div>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                            {format(new Date(msg.createdAt), "dd MMM yyyy, HH:mm")}
+                          <span className="text-[11px] text-slate-500 whitespace-nowrap">
+                            {format(new Date(msg.createdAt), "dd MMM yyyy, HH:mm")} WIB
                           </span>
                         </div>
-                        <div className="whitespace-pre-wrap text-foreground/90 leading-relaxed text-xs break-words">
+                        <div className="whitespace-pre-wrap text-slate-200 leading-relaxed text-xs sm:text-sm break-words">
                           {msg.message}
                         </div>
                       </div>
@@ -521,15 +531,15 @@ export default function ServiceRequestDetailPage() {
               )}
 
               {/* Reply Composer */}
-              <div className="pt-4 border-t space-y-3">
-                <div className="flex flex-wrap justify-between items-center gap-1">
-                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <Mail className="h-4 w-4 text-primary" />
+              <div className="pt-4 border-t border-white/[0.06] space-y-3">
+                <div className="flex flex-wrap justify-between items-center gap-1.5">
+                  <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Mail className="h-4 w-4 text-indigo-400" />
                     <span>Send Email Reply to Client</span>
                   </label>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[11px] text-slate-400">
                     Sender:{" "}
-                    <strong className="text-primary font-medium">{PUBLIC_SUPPORT_EMAIL}</strong>
+                    <strong className="text-indigo-400 font-semibold">{PUBLIC_SUPPORT_EMAIL}</strong>
                   </span>
                 </div>
 
@@ -538,23 +548,23 @@ export default function ServiceRequestDetailPage() {
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   rows={5}
-                  className="text-xs leading-relaxed resize-none rounded-xl border-border/60 focus-visible:ring-primary/30"
+                  className="text-xs sm:text-sm leading-relaxed resize-none rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 focus-visible:ring-indigo-500/40"
                 />
 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
-                  <span className="text-[11px] text-muted-foreground">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <span className="text-[11px] text-slate-400">
                     Client can reply directly to your email from their inbox.
                   </span>
                   <Button
                     size="sm"
                     onClick={handleSendReply}
                     disabled={isSendingReply || !replyMessage.trim()}
-                    className="w-full sm:w-auto rounded-lg text-xs gap-1.5"
+                    className="w-full sm:w-auto rounded-xl px-5 h-9 text-xs font-semibold gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30"
                   >
                     {isSendingReply ? (
                       <>
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Sending...</span>
+                        <span>Sending Email...</span>
                       </>
                     ) : (
                       <>
@@ -572,35 +582,35 @@ export default function ServiceRequestDetailPage() {
         {/* Right Sidebar Column (30%) */}
         <div className="lg:col-span-4 space-y-4">
           {/* Client Information Card */}
-          <Card className="rounded-xl border-border/60 shadow-xs">
-            <CardHeader className="p-4 sm:p-5 pb-3">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <User className="h-3.5 w-3.5 text-primary" />
-                <span>Client Information</span>
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <User className="h-3.5 w-3.5 text-indigo-400" />
+                <span>Client Profile</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-5 pt-0 space-y-4">
+            <CardContent className="p-5 space-y-4">
               <div className="flex items-center gap-3">
-                <Avatar className="h-10 sm:h-11 w-10 sm:w-11 shrink-0 border border-border/60 bg-muted/60">
-                  <AvatarFallback className="font-bold text-sm bg-primary/15 text-primary">
+                <Avatar className="h-11 w-11 shrink-0 border border-white/[0.08] bg-[#131726]">
+                  <AvatarFallback className="font-bold text-sm bg-indigo-500/20 text-indigo-300">
                     {getInitials(request.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <div className="font-semibold text-sm truncate">{request.name}</div>
-                  <div className="text-xs text-muted-foreground truncate">{request.email}</div>
+                  <div className="font-bold text-sm text-white truncate">{request.name}</div>
+                  <div className="text-xs text-slate-400 truncate">{request.email}</div>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-white/[0.06]" />
 
-              <div className="space-y-2.5 text-xs">
+              <div className="space-y-3 text-xs">
                 <div>
-                  <div className="text-muted-foreground mb-0.5">Email:</div>
-                  <div className="flex items-center justify-between gap-2 bg-muted/30 p-2 rounded-lg border border-border/40 min-w-0">
+                  <div className="text-slate-400 mb-1 text-[11px] font-medium">Work Email:</div>
+                  <div className="flex items-center justify-between gap-2 bg-[#131726]/70 p-2.5 rounded-xl border border-white/[0.06] min-w-0">
                     <a
                       href={`mailto:${request.email}`}
-                      className="text-primary font-medium hover:underline truncate text-xs"
+                      className="text-indigo-400 font-medium hover:underline truncate text-xs"
                     >
                       {request.email}
                     </a>
@@ -608,13 +618,13 @@ export default function ServiceRequestDetailPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleCopyEmail(request.email)}
-                      className="h-6 w-6 shrink-0"
+                      className="h-6 w-6 shrink-0 text-slate-400 hover:text-white hover:bg-white/[0.08]"
                       title="Copy Email"
                     >
                       {isCopied ? (
-                        <Check className="h-3 w-3 text-emerald-500" />
+                        <Check className="h-3 w-3 text-emerald-400" />
                       ) : (
-                        <Copy className="h-3 w-3 text-muted-foreground" />
+                        <Copy className="h-3 w-3 text-slate-400" />
                       )}
                     </Button>
                   </div>
@@ -622,9 +632,9 @@ export default function ServiceRequestDetailPage() {
 
                 {request.company && (
                   <div>
-                    <div className="text-muted-foreground mb-0.5">Company / Brand:</div>
-                    <div className="flex items-center gap-1.5 font-medium text-foreground bg-muted/30 p-2 rounded-lg border border-border/40 truncate">
-                      <Building2 className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" />
+                    <div className="text-slate-400 mb-1 text-[11px] font-medium">Company / Brand:</div>
+                    <div className="flex items-center gap-2 font-medium text-slate-200 bg-[#131726]/70 p-2.5 rounded-xl border border-white/[0.06] truncate">
+                      <Building2 className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                       <span className="truncate">{request.company}</span>
                     </div>
                   </div>
@@ -634,19 +644,19 @@ export default function ServiceRequestDetailPage() {
           </Card>
 
           {/* Service & Scope Parameters Card */}
-          <Card className="rounded-xl border-border/60 shadow-xs">
-            <CardHeader className="p-4 sm:p-5 pb-3">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <Briefcase className="h-3.5 w-3.5 text-primary" />
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <Briefcase className="h-3.5 w-3.5 text-indigo-400" />
                 <span>Service Parameters</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-5 pt-0 space-y-3 text-xs">
-              <div className="flex justify-between items-center py-1 border-b border-border/40 gap-2">
-                <span className="text-muted-foreground shrink-0">Service Type:</span>
+            <CardContent className="p-5 space-y-3.5 text-xs">
+              <div className="flex justify-between items-center py-1 border-b border-white/[0.06] gap-2">
+                <span className="text-slate-400 shrink-0">Service Type:</span>
                 <Badge
                   variant="outline"
-                  className={cn("gap-1.5 text-xs font-medium truncate", serviceConfig.className)}
+                  className={cn("gap-1.5 text-xs font-semibold truncate rounded-lg px-2.5 py-0.5", serviceConfig.className)}
                 >
                   <ServiceIcon className="h-3 w-3 shrink-0" />
                   <span className="truncate max-w-[140px] sm:max-w-none">
@@ -655,19 +665,19 @@ export default function ServiceRequestDetailPage() {
                 </Badge>
               </div>
 
-              <div className="flex justify-between items-center py-1 border-b border-border/40 gap-2">
-                <span className="text-muted-foreground shrink-0">Estimated Budget:</span>
-                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-muted/40 border border-border/50 font-semibold tabular-nums text-foreground">
-                  <DollarSign className="h-3.5 w-3.5 text-emerald-500 shrink-0 -mr-0.5" />
-                  <span>{getBudgetLabel(request.budget)}</span>
+              <div className="flex justify-between items-center py-1 border-b border-white/[0.06] gap-2">
+                <span className="text-slate-400 shrink-0">Estimated Budget:</span>
+                <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#131726]/70 border border-white/[0.06] font-semibold tabular-nums text-emerald-400">
+                  <DollarSign className="h-3.5 w-3.5 shrink-0 -mr-0.5" />
+                  <span className="text-slate-200">{getBudgetLabel(request.budget)}</span>
                 </div>
               </div>
 
               <div className="flex justify-between items-center py-1 gap-2">
-                <span className="text-muted-foreground shrink-0">Timeframe:</span>
+                <span className="text-slate-400 shrink-0">Timeframe:</span>
                 <Badge
                   variant="outline"
-                  className={cn("gap-1 text-xs font-medium truncate", timeframeConfig.className)}
+                  className={cn("gap-1 text-xs font-semibold truncate rounded-lg px-2.5 py-0.5", timeframeConfig.className)}
                 >
                   <TimeframeIcon className="h-3 w-3 shrink-0" />
                   <span className="truncate max-w-[140px] sm:max-w-none">
@@ -679,18 +689,18 @@ export default function ServiceRequestDetailPage() {
           </Card>
 
           {/* Metadata Card */}
-          <Card className="rounded-xl border-border/60 shadow-xs">
-            <CardContent className="p-4 sm:p-5 space-y-2 text-[11px] text-muted-foreground">
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl">
+            <CardContent className="p-5 space-y-2.5 text-xs text-slate-400">
               <div className="flex justify-between gap-2">
                 <span>Request ID:</span>
-                <span className="font-mono text-foreground/80 truncate max-w-[160px]">
+                <span className="font-mono text-slate-200 truncate max-w-[160px]">
                   {request.id}
                 </span>
               </div>
               <div className="flex justify-between gap-2">
                 <span>Submitted Date:</span>
-                <span className="text-foreground/80 whitespace-nowrap">
-                  {format(new Date(request.createdAt), "dd MMM yyyy HH:mm")}
+                <span className="text-slate-200 whitespace-nowrap">
+                  {format(new Date(request.createdAt), "dd MMM yyyy HH:mm")} WIB
                 </span>
               </div>
             </CardContent>
@@ -700,19 +710,26 @@ export default function ServiceRequestDetailPage() {
 
       {/* Delete Alert Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Service Request?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-white text-lg font-bold">
+              Delete Service Request?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-xs">
               This action cannot be undone. The service request from{" "}
-              <strong className="text-foreground">{request.name}</strong> ({request.email}) and its
+              <strong className="text-white">{request.name}</strong> ({request.email}) and its
               entire email conversation history will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] hover:text-white"
+            >
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-rose-500 hover:bg-rose-600 text-white font-semibold"
               onClick={handleDelete}
               disabled={isDeleting}
             >

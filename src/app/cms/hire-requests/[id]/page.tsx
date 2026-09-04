@@ -6,15 +6,12 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   ArrowLeft,
-  Briefcase,
   Building2,
   Calendar,
   Check,
   CheckCircle2,
   Clock,
   Copy,
-  DollarSign,
-  Globe,
   Inbox,
   Loader2,
   Mail,
@@ -54,7 +51,6 @@ import { cn } from "@/lib/utils";
 import {
   hireRequestService,
   inquiryMessagesService,
-  type HireRequest,
   type HireRequestStatus,
   type InquiryMessage,
 } from "@/services";
@@ -62,34 +58,34 @@ import {
 const EMPLOYMENT_CONFIG: Record<string, { label: string; className: string }> = {
   full_time: {
     label: "Full-time Employee",
-    className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   },
   contract: {
     label: "Long-term Contract",
-    className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    className: "bg-amber-500/10 text-amber-400 border-amber-500/20",
   },
   advisory: {
     label: "Advisory / Fractional",
-    className: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20",
+    className: "bg-purple-500/10 text-purple-400 border-purple-500/20",
   },
   other: {
     label: "Other Opportunity",
-    className: "bg-muted/50 text-muted-foreground border-border/50",
+    className: "bg-white/[0.04] text-slate-400 border-white/[0.08]",
   },
 };
 
 const WORKPLACE_CONFIG: Record<string, { label: string; className: string }> = {
   remote: {
     label: "Remote",
-    className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   },
   hybrid: {
     label: "Hybrid",
-    className: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
+    className: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
   },
   onsite: {
     label: "On-site",
-    className: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+    className: "bg-rose-500/10 text-rose-400 border-rose-500/20",
   },
 };
 
@@ -208,42 +204,42 @@ export default function HireRequestDetailPage() {
     switch (status) {
       case "new":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 whitespace-nowrap">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
             New Inquiry
           </span>
         );
       case "reviewed":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap shadow-xs">
             <Clock className="w-3.5 h-3.5" />
             Reviewed
           </span>
         );
       case "interviewing":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 whitespace-nowrap shadow-xs">
             <Users className="w-3.5 h-3.5" />
             Interviewing
           </span>
         );
       case "offered":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap shadow-xs">
             <CheckCircle2 className="w-3.5 h-3.5" />
             Offered
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap shadow-xs">
             <XCircle className="w-3.5 h-3.5" />
             Declined
           </span>
         );
       case "archived":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted/50 text-muted-foreground border border-border/50 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/[0.04] text-slate-400 border border-white/[0.08] whitespace-nowrap">
             Archived
           </span>
         );
@@ -260,23 +256,23 @@ export default function HireRequestDetailPage() {
     return (
       <div className="space-y-6 max-w-6xl pb-12">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-9 w-36 rounded-lg" />
+          <Skeleton className="h-9 w-36 rounded-xl bg-white/[0.05]" />
         </div>
-        <div className="flex justify-between items-center border-b pb-4">
+        <div className="flex justify-between items-center border-b border-white/[0.08] pb-4">
           <div className="space-y-2">
-            <Skeleton className="h-8 w-64" />
-            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-8 w-64 rounded-xl bg-white/[0.05]" />
+            <Skeleton className="h-4 w-48 rounded-lg bg-white/[0.05]" />
           </div>
-          <Skeleton className="h-9 w-32" />
+          <Skeleton className="h-9 w-32 rounded-xl bg-white/[0.05]" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-64 rounded-xl" />
-            <Skeleton className="h-96 rounded-xl" />
+            <Skeleton className="h-64 rounded-2xl bg-white/[0.05]" />
+            <Skeleton className="h-96 rounded-2xl bg-white/[0.05]" />
           </div>
           <div className="space-y-6">
-            <Skeleton className="h-48 rounded-xl" />
-            <Skeleton className="h-48 rounded-xl" />
+            <Skeleton className="h-48 rounded-2xl bg-white/[0.05]" />
+            <Skeleton className="h-48 rounded-2xl bg-white/[0.05]" />
           </div>
         </div>
       </div>
@@ -285,13 +281,17 @@ export default function HireRequestDetailPage() {
 
   if (!request) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-        <Inbox className="w-12 h-12 text-muted-foreground mx-auto" />
-        <h2 className="text-xl font-bold">Inquiry Not Found</h2>
-        <p className="text-muted-foreground text-sm max-w-sm">
+      <div className="flex flex-col items-center justify-center py-16 text-center space-y-4 bg-[#0C0E18]/60 rounded-2xl border border-white/[0.08] p-8">
+        <Inbox className="w-12 h-12 text-slate-500 mx-auto" />
+        <h2 className="text-xl font-bold text-white">Inquiry Not Found</h2>
+        <p className="text-xs sm:text-sm text-slate-400 max-w-sm">
           The hire inquiry you are looking for does not exist or has been deleted.
         </p>
-        <Button asChild variant="outline">
+        <Button
+          asChild
+          variant="outline"
+          className="rounded-xl border-white/[0.08] bg-white/[0.04] text-slate-200 hover:text-white hover:bg-white/[0.08]"
+        >
           <Link href="/cms/hire-requests">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Hire Inquiries
@@ -312,7 +312,7 @@ export default function HireRequestDetailPage() {
           variant="ghost"
           size="sm"
           asChild
-          className="-ml-2 text-muted-foreground hover:text-foreground"
+          className="-ml-2 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-xl"
         >
           <Link href="/cms/hire-requests">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -328,16 +328,16 @@ export default function HireRequestDetailPage() {
               refetchRequest();
               refetchThread();
             }}
-            className="h-8 gap-1.5"
+            className="h-8 gap-1.5 rounded-xl border-white/[0.08] bg-[#0C0E18]/80 text-slate-300 hover:text-white hover:bg-white/[0.06]"
           >
-            <RefreshCw className="h-3.5 w-3.5" />
+            <RefreshCw className="h-3.5 w-3.5 text-indigo-400" />
             Refresh
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsDeleteDialogOpen(true)}
-            className="h-8 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 border-rose-200 dark:border-rose-900/40"
+            className="h-8 text-xs rounded-xl border-rose-500/20 bg-rose-500/5 text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/40 hover:text-rose-300"
           >
             <Trash2 className="w-3.5 h-3.5 mr-1.5" />
             Delete
@@ -350,18 +350,18 @@ export default function HireRequestDetailPage() {
         {/* Left Column: Inquiry Overview & Conversation Thread */}
         <div className="lg:col-span-2 space-y-6">
           {/* Header Title Card */}
-          <Card className="border-border/50 bg-card/60 shadow-sm">
-            <CardHeader className="pb-3">
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
                     <div className="flex items-center gap-1.5">
-                      <Building2 className="h-4 w-4 text-primary" />
-                      <span className="font-semibold text-xs text-primary uppercase tracking-wider">
+                      <Building2 className="h-4 w-4 text-indigo-400" />
+                      <span className="font-bold text-xs text-indigo-400 uppercase tracking-wider">
                         {request.company}
                       </span>
                     </div>
-                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-xs font-mono">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-mono">
                       <span>{request.id}</span>
                       <button
                         type="button"
@@ -369,18 +369,18 @@ export default function HireRequestDetailPage() {
                           navigator.clipboard.writeText(request.id);
                           toast.success("Reference ID copied to clipboard!");
                         }}
-                        className="hover:text-foreground transition-colors"
+                        className="hover:text-white transition-colors"
                         title="Copy Reference ID"
                       >
                         <Copy className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
-                  <CardTitle className="text-xl md:text-2xl font-bold tracking-tight">
+                  <CardTitle className="text-xl md:text-2xl font-black tracking-tight text-white">
                     {request.roleTitle}
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                  <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5 font-medium">
+                    <Calendar className="w-3.5 h-3.5 text-slate-500" />
                     Received on {format(
                       new Date(request.createdAt),
                       "EEEE, dd MMMM yyyy · HH:mm"
@@ -392,28 +392,28 @@ export default function HireRequestDetailPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="pt-2">
+            <CardContent className="p-5 pt-2">
               {/* Scope Badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-xl bg-background/60 border border-border/40">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-[#131726]/70 border border-white/[0.06]">
                 <div>
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">Employment</span>
-                  <span className="font-semibold text-xs text-foreground">{empConfig.label}</span>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">Employment</span>
+                  <span className="font-semibold text-xs text-slate-200">{empConfig.label}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">Workplace</span>
-                  <span className="font-semibold text-xs text-foreground">{workConfig.label}</span>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">Workplace</span>
+                  <span className="font-semibold text-xs text-slate-200">{workConfig.label}</span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">
+                  <span className="text-[11px] text-slate-400 block mb-0.5">
                     Compensation
                   </span>
-                  <span className="font-semibold text-xs text-emerald-600 dark:text-emerald-400">
+                  <span className="font-semibold text-xs text-emerald-400">
                     {request.salaryRange || "Negotiable"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">Location</span>
-                  <span className="font-semibold text-xs text-foreground">
+                  <span className="text-[11px] text-slate-400 block mb-0.5">Location</span>
+                  <span className="font-semibold text-xs text-slate-200">
                     {request.location || "Remote / Worldwide"}
                   </span>
                 </div>
@@ -421,10 +421,10 @@ export default function HireRequestDetailPage() {
 
               {/* Opportunity Details & Message */}
               <div className="mt-5 space-y-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Opportunity Details & Message:
                 </h3>
-                <div className="p-4 rounded-xl bg-background/80 border border-border/50 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+                <div className="p-4 rounded-xl bg-[#131726]/70 border border-white/[0.06] text-xs sm:text-sm leading-relaxed whitespace-pre-wrap text-slate-200">
                   {request.message}
                 </div>
               </div>
@@ -432,27 +432,27 @@ export default function HireRequestDetailPage() {
           </Card>
 
           {/* Conversation Thread */}
-          <Card className="border-border/50 bg-card/60 shadow-sm">
-            <CardHeader className="pb-3 border-b border-border/40">
-              <CardTitle className="text-base font-bold flex items-center justify-between">
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-sm font-bold text-white flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-primary" />
+                  <MessageSquare className="w-4 h-4 text-indigo-400" />
                   Email Thread History
                 </span>
-                <Badge variant="secondary" className="text-xs font-normal">
+                <Badge variant="outline" className="text-xs font-semibold bg-white/[0.04] text-slate-300 border-white/[0.08]">
                   {threadMessages.length} Messages
                 </Badge>
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="pt-4 space-y-4">
+            <CardContent className="p-5 space-y-4">
               {isThreadLoading ? (
-                <div className="py-8 flex justify-center items-center text-muted-foreground text-xs gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <div className="py-8 flex justify-center items-center text-slate-400 text-xs gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
                   Loading thread messages...
                 </div>
               ) : threadMessages.length === 0 ? (
-                <div className="p-6 text-center rounded-xl bg-background/40 border border-dashed border-border/60 text-xs text-muted-foreground">
+                <div className="p-6 text-center rounded-xl bg-[#131726]/40 border border-dashed border-white/[0.08] text-xs text-slate-400">
                   No email replies sent yet. Send the first reply below to start the conversation
                   with the recruiter.
                 </div>
@@ -464,29 +464,29 @@ export default function HireRequestDetailPage() {
                       <div
                         key={msg.id}
                         className={cn(
-                          "p-4 rounded-xl border transition-all text-xs space-y-2",
+                          "p-4 rounded-2xl border transition-all text-xs space-y-2",
                           isAdmin
-                            ? "bg-primary/5 border-primary/20 ml-4 md:ml-10"
-                            : "bg-background/80 border-border/50 mr-4 md:mr-10"
+                            ? "bg-indigo-500/10 border-indigo-500/25 ml-4 md:ml-10 text-slate-200"
+                            : "bg-[#131726]/80 border-white/[0.08] mr-4 md:mr-10 text-slate-200"
                         )}
                       >
-                        <div className="flex items-center justify-between text-muted-foreground">
+                        <div className="flex items-center justify-between text-slate-400 pb-2 border-b border-white/[0.06]">
                           <div className="flex items-center gap-2 font-medium">
                             <span
                               className={
                                 isAdmin
-                                  ? "text-primary font-semibold"
-                                  : "text-foreground font-semibold"
+                                  ? "text-indigo-400 font-bold"
+                                  : "text-white font-bold"
                               }
                             >
                               {msg.senderName} {isAdmin && "(You)"}
                             </span>
-                            <span>·</span>
-                            <span>{msg.senderEmail}</span>
+                            <span className="text-slate-600">·</span>
+                            <span className="text-slate-400 text-[11px]">{msg.senderEmail}</span>
                           </div>
-                          <span>{format(new Date(msg.createdAt), "dd MMM, HH:mm")} WIB</span>
+                          <span className="text-[11px] text-slate-500">{format(new Date(msg.createdAt), "dd MMM, HH:mm")} WIB</span>
                         </div>
-                        <div className="text-foreground text-sm whitespace-pre-wrap leading-relaxed">
+                        <div className="text-slate-200 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">
                           {msg.message}
                         </div>
                       </div>
@@ -496,13 +496,13 @@ export default function HireRequestDetailPage() {
               )}
 
               {/* Quick Reply Form */}
-              <div className="pt-4 border-t border-border/40 space-y-3">
+              <div className="pt-4 border-t border-white/[0.06] space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <Send className="w-3.5 h-3.5 text-primary" />
+                  <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Send className="w-3.5 h-3.5 text-indigo-400" />
                     Reply directly via email (to {request.email}):
                   </label>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-[11px] text-slate-400">
                     Recruiter can reply directly via their inbox.
                   </span>
                 </div>
@@ -512,7 +512,7 @@ export default function HireRequestDetailPage() {
                   rows={4}
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
-                  className="rounded-xl border-border/50 bg-background resize-none text-sm focus-visible:ring-primary/30"
+                  className="rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 resize-none text-xs sm:text-sm leading-relaxed focus-visible:ring-indigo-500/40"
                 />
 
                 <div className="flex justify-end">
@@ -520,7 +520,7 @@ export default function HireRequestDetailPage() {
                     size="sm"
                     onClick={handleSendReply}
                     disabled={isSendingReply || !replyMessage.trim()}
-                    className="rounded-xl px-5 h-9 gap-2 shadow-sm"
+                    className="rounded-xl px-5 h-9 text-xs font-semibold gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30"
                   >
                     {isSendingReply ? (
                       <>
@@ -543,43 +543,43 @@ export default function HireRequestDetailPage() {
         {/* Right Column: Contact & Quick Actions Sidebar */}
         <div className="space-y-6">
           {/* Contact Card */}
-          <Card className="border-border/50 bg-card/60 shadow-sm">
-            <CardHeader className="pb-3 border-b border-border/40">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" />
-                Recruiter Information
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <User className="w-3.5 h-3.5 text-indigo-400" />
+                Recruiter Profile
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 space-y-4 text-xs">
+            <CardContent className="p-5 space-y-4 text-xs">
               <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border border-border/50">
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                <Avatar className="h-11 w-11 border border-white/[0.08] bg-[#131726]">
+                  <AvatarFallback className="bg-indigo-500/20 text-indigo-300 font-bold text-sm">
                     {getInitials(request.name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
-                  <p className="font-bold text-sm text-foreground truncate">{request.name}</p>
-                  <p className="text-muted-foreground truncate">{request.company}</p>
+                  <p className="font-bold text-sm text-white truncate">{request.name}</p>
+                  <p className="text-slate-400 truncate">{request.company}</p>
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-white/[0.06]" />
 
               <div className="space-y-3">
                 <div>
-                  <span className="text-[11px] text-muted-foreground block mb-1">Work Email:</span>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-background border border-border/40">
-                    <span className="font-mono text-xs truncate mr-2">{request.email}</span>
+                  <span className="text-[11px] text-slate-400 block mb-1 font-medium">Work Email:</span>
+                  <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#131726]/70 border border-white/[0.06]">
+                    <span className="font-mono text-xs text-indigo-400 truncate mr-2">{request.email}</span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 shrink-0"
+                      className="h-6 w-6 shrink-0 text-slate-400 hover:text-white hover:bg-white/[0.08]"
                       onClick={() => handleCopyEmail(request.email)}
                     >
                       {isCopied ? (
-                        <Check className="w-3 h-3 text-emerald-500" />
+                        <Check className="w-3 h-3 text-emerald-400" />
                       ) : (
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-3 h-3 text-slate-400" />
                       )}
                     </Button>
                   </div>
@@ -587,30 +587,35 @@ export default function HireRequestDetailPage() {
 
                 {request.location && (
                   <div>
-                    <span className="text-[11px] text-muted-foreground block mb-0.5">
+                    <span className="text-[11px] text-slate-400 block mb-0.5 font-medium">
                       Location:
                     </span>
-                    <span className="font-medium text-foreground flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="font-medium text-slate-200 flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-indigo-400" />
                       {request.location}
                     </span>
                   </div>
                 )}
 
                 <div>
-                  <span className="text-[11px] text-muted-foreground block mb-0.5">
+                  <span className="text-[11px] text-slate-400 block mb-0.5 font-medium">
                     Inquiry ID:
                   </span>
-                  <span className="font-mono text-[11px] text-muted-foreground">#{request.id}</span>
+                  <span className="font-mono text-[11px] text-slate-400">#{request.id}</span>
                 </div>
               </div>
 
               <div className="pt-2">
-                <Button variant="outline" size="sm" className="w-full gap-2 text-xs" asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 text-xs rounded-xl border-white/[0.08] bg-white/[0.04] text-slate-300 hover:text-white hover:bg-white/[0.08]"
+                  asChild
+                >
                   <a
                     href={`mailto:${request.email}?subject=Re: ${encodeURIComponent(request.roleTitle)} - Wisman Nur`}
                   >
-                    <Mail className="w-3.5 h-3.5" />
+                    <Mail className="w-3.5 h-3.5 text-indigo-400" />
                     Open in Mail App
                   </a>
                 </Button>
@@ -619,15 +624,15 @@ export default function HireRequestDetailPage() {
           </Card>
 
           {/* Status Controller Card */}
-          <Card className="border-border/50 bg-card/60 shadow-sm">
-            <CardHeader className="pb-3 border-b border-border/40">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary" />
+          <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-indigo-400" />
                 Inquiry Status
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 space-y-2">
-              <p className="text-xs text-muted-foreground mb-3">
+            <CardContent className="p-5 space-y-2">
+              <p className="text-xs text-slate-400 mb-3">
                 Update status to track your recruitment progress:
               </p>
 
@@ -635,52 +640,82 @@ export default function HireRequestDetailPage() {
                 <Button
                   variant={request.status === "new" ? "default" : "outline"}
                   size="sm"
-                  className="justify-start text-xs h-8"
+                  className={cn(
+                    "justify-start text-xs h-9 rounded-xl",
+                    request.status === "new"
+                      ? "bg-blue-500/20 text-blue-300 border-blue-500/40 hover:bg-blue-500/30"
+                      : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                  )}
                   onClick={() => handleUpdateStatus("new")}
                 >
-                  <Sparkles className="w-3.5 h-3.5 mr-2 text-blue-500" />
+                  <Sparkles className="w-3.5 h-3.5 mr-2 text-blue-400" />
                   New Inquiry
                 </Button>
                 <Button
                   variant={request.status === "reviewed" ? "default" : "outline"}
                   size="sm"
-                  className="justify-start text-xs h-8"
+                  className={cn(
+                    "justify-start text-xs h-9 rounded-xl",
+                    request.status === "reviewed"
+                      ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                      : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                  )}
                   onClick={() => handleUpdateStatus("reviewed")}
                 >
-                  <Clock className="w-3.5 h-3.5 mr-2 text-amber-500" />
+                  <Clock className="w-3.5 h-3.5 mr-2 text-amber-400" />
                   Reviewed
                 </Button>
                 <Button
                   variant={request.status === "interviewing" ? "default" : "outline"}
                   size="sm"
-                  className="justify-start text-xs h-8"
+                  className={cn(
+                    "justify-start text-xs h-9 rounded-xl",
+                    request.status === "interviewing"
+                      ? "bg-purple-500/20 text-purple-300 border-purple-500/40 hover:bg-purple-500/30"
+                      : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                  )}
                   onClick={() => handleUpdateStatus("interviewing")}
                 >
-                  <Users className="w-3.5 h-3.5 mr-2 text-purple-500" />
+                  <Users className="w-3.5 h-3.5 mr-2 text-purple-400" />
                   Interviewing
                 </Button>
                 <Button
                   variant={request.status === "offered" ? "default" : "outline"}
                   size="sm"
-                  className="justify-start text-xs h-8"
+                  className={cn(
+                    "justify-start text-xs h-9 rounded-xl",
+                    request.status === "offered"
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30"
+                      : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                  )}
                   onClick={() => handleUpdateStatus("offered")}
                 >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-emerald-500" />
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-2 text-emerald-400" />
                   Offered
                 </Button>
                 <Button
                   variant={request.status === "rejected" ? "default" : "outline"}
                   size="sm"
-                  className="justify-start text-xs h-8"
+                  className={cn(
+                    "justify-start text-xs h-9 rounded-xl",
+                    request.status === "rejected"
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 hover:bg-rose-500/30"
+                      : "border-white/[0.08] bg-white/[0.02] text-slate-300 hover:bg-white/[0.06] hover:text-white"
+                  )}
                   onClick={() => handleUpdateStatus("rejected")}
                 >
-                  <XCircle className="w-3.5 h-3.5 mr-2 text-rose-500" />
+                  <XCircle className="w-3.5 h-3.5 mr-2 text-rose-400" />
                   Declined
                 </Button>
                 <Button
                   variant={request.status === "archived" ? "default" : "outline"}
                   size="sm"
-                  className="justify-start text-xs h-8 text-muted-foreground"
+                  className={cn(
+                    "justify-start text-xs h-9 rounded-xl",
+                    request.status === "archived"
+                      ? "bg-white/[0.08] text-white border-white/[0.16]"
+                      : "border-white/[0.08] bg-white/[0.02] text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                  )}
                   onClick={() => handleUpdateStatus("archived")}
                 >
                   <Inbox className="w-3.5 h-3.5 mr-2" />
@@ -694,20 +729,25 @@ export default function HireRequestDetailPage() {
 
       {/* Delete Confirmation Modal */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Hire Inquiry</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this hire inquiry from <strong>{request.name}</strong>{" "}
+            <AlertDialogTitle className="text-white text-lg font-bold">Delete Hire Inquiry</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-xs">
+              Are you sure you want to delete this hire inquiry from <strong className="text-white">{request.name}</strong>{" "}
               ({request.company})? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] hover:text-white"
+            >
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
+              className="bg-rose-500 hover:bg-rose-600 text-white font-semibold"
             >
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>

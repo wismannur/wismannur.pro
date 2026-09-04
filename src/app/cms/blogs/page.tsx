@@ -2,6 +2,29 @@
 
 import type React from "react";
 
+import { useQuery } from "@tanstack/react-query";
+import {
+  CalendarArrowUp,
+  CalendarCog,
+  CalendarPlus,
+  Check,
+  Eye,
+  FilePlus,
+  FileText,
+  Filter,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +37,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Chip from "@/components/ui/chip";
 import { type ColumnDef, DataTable } from "@/components/ui/data-table";
 import {
   DropdownMenu,
@@ -34,32 +56,11 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { formatDate } from "@/lib/utils";
 import { type Blog, blogService } from "@/services";
-import { useQuery } from "@tanstack/react-query";
-import {
-  CalendarArrowUp,
-  CalendarCog,
-  CalendarPlus,
-  Check,
-  Eye,
-  FilePlus,
-  FileText,
-  Filter,
-  MoreHorizontal,
-  Pencil,
-  RefreshCw,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 // Number of blogs to show per page (in-memory pagination)
 const BLOGS_PER_PAGE = 10;
 
-const CmsBlogs = () => {
+export default function CmsBlogs() {
   const { user } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,7 +68,7 @@ const CmsBlogs = () => {
   const [blogToDelete, setBlogToDelete] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch ALL blogs (incl. drafts), newest-first, from the mock service.
+  // Fetch ALL blogs (incl. drafts), newest-first, from the service.
   const {
     data: allBlogs = [],
     isLoading,
@@ -109,22 +110,13 @@ const CmsBlogs = () => {
     return filteredBlogs.slice(start, start + BLOGS_PER_PAGE);
   }, [filteredBlogs, currentPage]);
 
-  // Reset to first page when search query or filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterStatus]);
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
   const handleFilterChange = (value: string) => {
     setFilterStatus(value);
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Search is applied in-memory via useMemo
+    setCurrentPage(1);
   };
 
   const handlePublishToggle = async (blogId: string, currentStatus: boolean) => {
@@ -146,7 +138,6 @@ const CmsBlogs = () => {
   const handleDeleteBlog = async (blogId: string) => {
     try {
       await blogService.delete(blogId);
-
       refetch();
       setBlogToDelete(null);
       toast.success("Blog deleted successfully");
@@ -159,88 +150,102 @@ const CmsBlogs = () => {
   // Define columns for DataTable
   const columns: ColumnDef<Blog>[] = [
     {
-      header: "Title",
+      header: "Article",
       cell: (blog) => (
-        <div className="flex flex-col">
-          <div className="font-medium">{blog.title}</div>
-          <div className="text-sm text-muted-foreground truncate max-w-lg">{blog.summary}</div>
-          <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-1">
-            {blog.tags && blog.tags.slice(0, 3).map((tag) => <Chip key={tag}>{tag}</Chip>)}
-            {blog.tags && blog.tags.length > 3 && <Chip>+{blog.tags.length - 3}</Chip>}
+        <div className="flex flex-col py-1">
+          <div className="font-bold text-sm text-slate-100">{blog.title}</div>
+          <div className="text-xs text-slate-400 truncate max-w-lg mt-0.5">{blog.summary}</div>
+          <div className="text-xs text-slate-400 mt-1.5 flex flex-wrap gap-1">
+            {blog.tags &&
+              blog.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[10px] font-medium"
+                >
+                  #{tag}
+                </span>
+              ))}
+            {blog.tags && blog.tags.length > 3 && (
+              <span className="px-1.5 py-0.5 rounded-md bg-white/[0.04] text-slate-400 border border-white/[0.08] text-[10px]">
+                +{blog.tags.length - 3}
+              </span>
+            )}
           </div>
         </div>
       ),
-      className: "w-[350px]",
+      className: "min-w-[320px]",
     },
     {
       header: "Status",
-      cell: (blog) => (
-        <Badge variant={blog.isPublished ? "default" : "secondary"}>
-          {blog.isPublished ? "Published" : "Draft"}
-        </Badge>
-      ),
-      className: "hidden w-8 md:table-cell",
+      cell: (blog) =>
+        blog.isPublished ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            Published
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            Draft
+          </span>
+        ),
+      className: "hidden md:table-cell min-w-[120px]",
     },
     {
-      header: "Date",
+      header: "Timeline",
       cell: (blog) => (
-        <div className="flex flex-col gap-y-1">
-          <div className="flex items-center text-muted-foreground text-sm">
-            <CalendarArrowUp className="w-4 h-4 mr-1.5" />
-            {formatDate(blog.publishedDate)}
-          </div>
-          <div className="flex items-center text-muted-foreground text-sm">
-            <CalendarCog className="w-4 h-4 mr-1.5" />
-            {formatDate(blog.updatedAt)}
-          </div>
-          <div className="flex items-center text-muted-foreground text-sm">
-            <CalendarPlus className="w-4 h-4 mr-1.5" />
-            {formatDate(blog.createdAt)}
+        <div className="flex flex-col gap-y-1 text-xs text-slate-400">
+          {blog.publishedDate && (
+            <div className="flex items-center text-slate-200">
+              <CalendarArrowUp className="w-3.5 h-3.5 mr-1.5 text-emerald-400 shrink-0" />
+              <span>Pub: {formatDate(blog.publishedDate)}</span>
+            </div>
+          )}
+          <div className="flex items-center text-slate-400">
+            <CalendarCog className="w-3.5 h-3.5 mr-1.5 text-indigo-400 shrink-0" />
+            <span>Upd: {formatDate(blog.updatedAt)}</span>
           </div>
         </div>
       ),
-      className: "hidden !w-[170px] md:table-cell",
+      className: "hidden md:table-cell min-w-[170px]",
     },
     {
-      header: "Stats",
+      header: "Views",
       cell: (blog) => (
-        <div className="text-sm">
-          <div className="flex items-center gap-1">
-            <Eye className="h-3.5 w-3.5 shrink-0" />
-            <span>{blog.views || 0} views</span>
-          </div>
+        <div className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+          <Eye className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+          <span className="tabular-nums font-mono">{blog.views || 0}</span>
         </div>
       ),
-      className: "hidden w-[130px] md:table-cell",
+      className: "hidden md:table-cell min-w-[90px]",
     },
     {
       header: "Actions",
       cell: (blog) => (
-        <div className="flex justify-end">
+        <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
           <AlertDialog
             open={blogToDelete === blog.id}
             onOpenChange={(open) => !open && setBlogToDelete(null)}
           >
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-lg">
                   <MoreHorizontal className="h-4 w-4" />
                   <span className="sr-only">Open menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push(`/blog/${blog.slug}`)}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  View
+              <DropdownMenuContent align="end" className="w-44 bg-[#0C0E18] border-white/[0.08] text-slate-200">
+                <DropdownMenuItem onClick={() => router.push(`/blog/${blog.slug}`)} className="focus:bg-indigo-500/10 focus:text-indigo-300">
+                  <Eye className="h-4 w-4 mr-2 text-indigo-400" />
+                  View Public
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push(`/cms/blogs/form/${blog.id}`)}>
-                  <Pencil className="h-4 w-4 mr-2" />
-                  Edit
+                <DropdownMenuItem onClick={() => router.push(`/cms/blogs/form/${blog.id}`)} className="focus:bg-indigo-500/10 focus:text-indigo-300">
+                  <Pencil className="h-4 w-4 mr-2 text-indigo-400" />
+                  Edit Post
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => handlePublishToggle(blog.id, blog.isPublished)}
-                  className={blog.isPublished ? "text-destructive" : ""}
+                  className={blog.isPublished ? "text-amber-400 focus:bg-amber-500/10" : "text-emerald-400 focus:bg-emerald-500/10"}
                 >
                   {blog.isPublished ? (
                     <>
@@ -254,121 +259,138 @@ const CmsBlogs = () => {
                     </>
                   )}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => setBlogToDelete(blog.id)}
-                  className="text-destructive"
+                  className="text-rose-400 focus:text-rose-300 focus:bg-rose-500/10"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  <Trash2 className="h-4 w-4 mr-2 text-rose-400" />
+                  Delete Post
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AlertDialogContent>
+
+            <AlertDialogContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200">
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the blog post "
-                  {blog.title}" and remove it from our servers.
+                <AlertDialogTitle className="text-white text-lg font-bold">Delete Blog Post?</AlertDialogTitle>
+                <AlertDialogDescription className="text-slate-400 text-xs">
+                  This action cannot be undone. The article will be permanently removed from your site and CMS.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel className="border-white/[0.08] bg-white/[0.04] text-slate-300 hover:bg-white/[0.08] hover:text-white">
+                  Cancel
+                </AlertDialogCancel>
                 <AlertDialogAction
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   onClick={() => handleDeleteBlog(blog.id)}
+                  className="bg-rose-500 hover:bg-rose-600 text-white font-semibold"
                 >
-                  Delete
+                  Delete Post
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         </div>
       ),
-      className: "w-[50px]",
+      className: "w-[80px]",
     },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Blog Posts</h1>
-          <p className="text-muted-foreground">Manage and publish your blog content</p>
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+              <FileText className="w-5 h-5" />
+            </span>
+            Blog Posts
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Write, publish, and manage engineering articles, tutorials, and thought leadership.
+          </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <Button asChild>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="h-10 px-3 gap-1.5 rounded-xl border-white/[0.08] bg-[#0C0E18]/80 text-slate-300 hover:text-white hover:bg-white/[0.06]"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 text-indigo-400 ${isRefetching ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+
+          <Button asChild className="h-10 px-4 rounded-xl text-xs font-semibold gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30">
             <Link href="/cms/blogs/form">
-              <FilePlus className="mr-2 h-4 w-4" />
+              <FilePlus className="h-4 w-4" />
               New Blog Post
             </Link>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between gap-4">
-        <form onSubmit={handleSearch} className="relative w-full md:w-auto">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Filter Bar */}
+      <div className="flex flex-col sm:flex-row justify-between gap-3">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Search blogs..."
+            placeholder="Search by title, summary, tag..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 w-full md:w-[250px] rounded-lg"
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="pl-9 h-10 rounded-xl bg-[#0C0E18]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-indigo-500/30"
           />
-        </form>
+        </div>
 
-        <div className="flex gap-3">
+        <div className="flex items-center gap-2.5">
           <Select value={filterStatus} onValueChange={handleFilterChange}>
-            <SelectTrigger className="w-full sm:w-[180px] rounded-lg">
-              <div className="flex items-center">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter by status" />
+            <SelectTrigger className="w-full sm:w-44 h-10 rounded-xl bg-[#0C0E18]/80 border-white/[0.08] text-slate-200 text-xs focus:ring-indigo-500/30">
+              <div className="flex items-center gap-2 truncate">
+                <Filter className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                <SelectValue placeholder="All Posts" />
               </div>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Posts</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="draft">Drafts</SelectItem>
+            <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200">
+              <SelectItem value="all" className="text-xs focus:bg-indigo-500/10 focus:text-indigo-300">All Posts</SelectItem>
+              <SelectItem value="published" className="text-xs focus:bg-emerald-500/10 focus:text-emerald-300">Published</SelectItem>
+              <SelectItem value="draft" className="text-xs focus:bg-amber-500/10 focus:text-amber-300">Drafts</SelectItem>
             </SelectContent>
           </Select>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="rounded-lg"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} />
-            <span className="sr-only">Refresh</span>
-          </Button>
         </div>
       </div>
 
-      <DataTable
-        columns={columns}
-        data={pagedBlogs}
-        isLoading={isLoading}
-        keyField="id"
-        emptyState={{
-          icon: <FileText className="h-8 w-8 mb-2" />,
-          title: "No blog posts found",
-          description: searchQuery
-            ? "Try adjusting your search query"
-            : filterStatus && filterStatus !== "all"
-              ? `No ${filterStatus} blog posts found`
-              : "Get started by creating your first blog post",
-        }}
-        pagination={{
-          currentPage,
-          hasMore,
-          onPageChange: handlePageChange,
-        }}
-        rowClassName={(blog) => (!blog.isPublished ? "bg-muted/30" : "")}
-      />
+      {/* Data Table */}
+      <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
+        <DataTable
+          columns={columns}
+          data={pagedBlogs}
+          isLoading={isLoading}
+          keyField="id"
+          rowClassName={() => "transition-colors hover:bg-white/[0.03] border-b border-white/[0.04]"}
+          pagination={{
+            currentPage,
+            hasMore,
+            onPageChange: handlePageChange,
+          }}
+          emptyState={{
+            icon: <FileText className="h-8 w-8 mb-2 text-slate-500" />,
+            title: "No blog posts found",
+            description: searchQuery
+              ? "Try adjusting your search query"
+              : filterStatus && filterStatus !== "all"
+                ? `No ${filterStatus} blog posts found`
+                : "Create your first blog post using the button above",
+          }}
+        />
+      </div>
     </div>
   );
-};
-
-export default CmsBlogs;
+}

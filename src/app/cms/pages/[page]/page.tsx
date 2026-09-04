@@ -1,5 +1,12 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Loader2, Save, Upload } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,23 +15,16 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { pageCopyService, siteSettingsService } from "@/services";
 import type { PageCopyContent, PageKey } from "@/services/page-copy/types";
-import { useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Save, Upload } from "lucide-react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 
 // Generic structure-preserving editor for a page_copy jsonb blob: it walks
 // the stored object and renders an input per string/number/boolean leaf, so
 // every page shape (hero blocks, section headers, meta, CTA) is editable
-// without one bespoke form per page. Structure (keys, array lengths for
-// object arrays) stays fixed — content only.
+// without one bespoke form per page.
 
 const LABELS: Record<string, string> = {
   meta: "SEO Meta",
   cta: "CTA Block",
-  hero: "Hero",
+  hero: "Hero Section",
   sections: "Section Headers",
   header: "Page Header",
   skillsSection: "Skills Section",
@@ -38,7 +38,7 @@ const LABELS: Record<string, string> = {
   contactSection: "Contact Form Section",
   requestSection: "Request Form Section",
   statPills: "Stat Pills",
-  paragraphs: "Paragraphs",
+  paragraphs: "Narrative Paragraphs",
 };
 
 const humanize = (key: string) =>
@@ -52,20 +52,25 @@ const LONG_TEXT_THRESHOLD = 70;
 
 type Path = Array<string | number>;
 
-const getAt = (obj: unknown, path: Path): unknown =>
-  path.reduce((acc: any, key) => (acc == null ? undefined : acc[key]), obj);
-
-const setAt = (obj: any, path: Path, value: unknown): any => {
+const setAt = (obj: unknown, path: Path, value: unknown): unknown => {
   if (path.length === 0) return value;
   const [head, ...rest] = path;
-  const clone = Array.isArray(obj) ? [...obj] : { ...obj };
-  clone[head as any] = setAt(obj?.[head as any], rest, value);
-  return clone;
+  if (Array.isArray(obj)) {
+    const clone = [...obj];
+    const index = Number(head);
+    clone[index] = setAt(clone[index], rest, value);
+    return clone;
+  }
+  if (obj !== null && typeof obj === "object") {
+    const clone = { ...(obj as Record<string, unknown>) };
+    const key = String(head);
+    clone[key] = setAt(clone[key], rest, value);
+    return clone;
+  }
+  return obj;
 };
 
-// Image-url leaves ("photoUrl", …) get an Upload button next to the input —
-// the file goes to Vercel Blob via uploadContentImage and the returned URL
-// lands in the field.
+// Image-url leaves ("photoUrl", …) get an Upload button next to the input
 function ImageUrlField({
   label,
   value,
@@ -86,7 +91,7 @@ function ImageUrlField({
       if (value) formData.append("previousUrl", value);
       const url = await siteSettingsService.uploadContentImage(formData);
       onChange(url);
-      toast.success("Image uploaded");
+      toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error("Failed to upload image");
@@ -96,14 +101,14 @@ function ImageUrlField({
   };
 
   return (
-    <div className="space-y-1.5">
-      <Label className="text-foreground/80 font-medium">{label}</Label>
+    <div className="space-y-2">
+      <Label className="text-slate-200 text-xs font-semibold">{label}</Label>
       <div className="flex gap-2">
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="/placeholder.svg or https://…"
-          className="rounded-lg border-border/50"
+          className="h-10 rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-indigo-500/40"
         />
         <input
           ref={fileInputRef}
@@ -119,26 +124,29 @@ function ImageUrlField({
         <Button
           type="button"
           variant="outline"
-          className="rounded-lg shrink-0"
+          className="rounded-xl h-10 px-4 text-xs font-semibold border-white/[0.08] bg-[#131726] text-slate-300 hover:text-white hover:bg-white/[0.08] shrink-0"
           disabled={isUploading}
           onClick={() => fileInputRef.current?.click()}
         >
           {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
           ) : (
             <>
-              <Upload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4 mr-2 text-indigo-400" />
               Upload
             </>
           )}
         </Button>
       </div>
       {value && (
-        <img
-          src={value}
-          alt="Preview"
-          className="mt-2 h-24 w-24 rounded-lg object-cover border border-border/50"
-        />
+        <div className="mt-2.5 inline-block rounded-xl p-1 bg-[#131726] border border-white/[0.08]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={value}
+            alt="Preview"
+            className="h-24 w-24 rounded-lg object-cover"
+          />
+        </div>
       )}
     </div>
   );
@@ -162,8 +170,8 @@ function LeafField({
   }
   if (typeof value === "boolean") {
     return (
-      <div className="flex items-center justify-between rounded-lg border p-3">
-        <Label className="text-foreground/80 font-medium">{label}</Label>
+      <div className="flex items-center justify-between rounded-xl bg-[#131726]/70 border border-white/[0.06] p-4">
+        <Label className="text-slate-200 text-xs font-semibold">{label}</Label>
         <Switch checked={value} onCheckedChange={onChange} />
       </div>
     );
@@ -171,12 +179,12 @@ function LeafField({
   if (typeof value === "number") {
     return (
       <div className="space-y-1.5">
-        <Label className="text-foreground/80 font-medium">{label}</Label>
+        <Label className="text-slate-200 text-xs font-semibold">{label}</Label>
         <Input
           type="number"
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="rounded-lg border-border/50"
+          className="h-10 rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 text-xs focus-visible:ring-indigo-500/40"
         />
       </div>
     );
@@ -184,19 +192,19 @@ function LeafField({
   const text = String(value ?? "");
   return (
     <div className="space-y-1.5">
-      <Label className="text-foreground/80 font-medium">{label}</Label>
+      <Label className="text-slate-200 text-xs font-semibold">{label}</Label>
       {text.length > LONG_TEXT_THRESHOLD ? (
         <Textarea
           value={text}
           rows={3}
           onChange={(e) => onChange(e.target.value)}
-          className="rounded-lg border-border/50"
+          className="rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs leading-relaxed focus-visible:ring-indigo-500/40"
         />
       ) : (
         <Input
           value={text}
           onChange={(e) => onChange(e.target.value)}
-          className="rounded-lg border-border/50"
+          className="h-10 rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-indigo-500/40"
         />
       )}
     </div>
@@ -218,13 +226,15 @@ function Node({
       return (
         <div className="space-y-3">
           {value.map((item, index) => (
-            <Textarea
-              key={index}
-              value={item as string}
-              rows={3}
-              onChange={(e) => onChange([...path, index], e.target.value)}
-              className="rounded-lg border-border/50"
-            />
+            <div key={index} className="space-y-1">
+              <span className="text-[11px] font-mono text-indigo-400">Paragraph #{index + 1}</span>
+              <Textarea
+                value={item as string}
+                rows={3}
+                onChange={(e) => onChange([...path, index], e.target.value)}
+                className="rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 text-xs leading-relaxed focus-visible:ring-indigo-500/40"
+              />
+            </div>
           ))}
         </div>
       );
@@ -233,8 +243,8 @@ function Node({
     return (
       <div className="space-y-4">
         {value.map((item, index) => (
-          <div key={index} className="rounded-lg border border-border/50 p-4 space-y-4">
-            <div className="text-sm font-medium text-muted-foreground">#{index + 1}</div>
+          <div key={index} className="rounded-xl bg-[#131726]/60 border border-white/[0.06] p-4.5 space-y-4">
+            <div className="text-xs font-bold text-indigo-400 font-mono">Item #{index + 1}</div>
             <Node value={item} path={[...path, index]} onChange={onChange} />
           </div>
         ))}
@@ -247,8 +257,8 @@ function Node({
         {Object.entries(value).map(([key, child]) => {
           const isNested = child !== null && typeof child === "object";
           return isNested ? (
-            <div key={key} className="space-y-2">
-              <div className="text-sm font-semibold">{humanize(key)}</div>
+            <div key={key} className="space-y-2 pt-2 first:pt-0">
+              <div className="text-xs font-bold text-slate-300 uppercase tracking-wider">{humanize(key)}</div>
               <Node value={child} path={[...path, key]} onChange={onChange} />
             </div>
           ) : (
@@ -296,7 +306,7 @@ export default function CmsPageCopyEditor() {
   }, [page, router]);
 
   const handleChange = (path: Path, value: unknown) => {
-    setContent((current) => (current ? setAt(current, path, value) : current));
+    setContent((current) => (current ? (setAt(current, path, value) as PageCopyContent) : current));
   };
 
   const handleSave = async () => {
@@ -305,7 +315,7 @@ export default function CmsPageCopyEditor() {
     try {
       await pageCopyService.update(page as PageKey, content);
       queryClient.invalidateQueries({ queryKey: ["cmsPageCopy"] });
-      toast.success("Page copy saved — the public page updates immediately");
+      toast.success("Page copy saved — public page updates immediately");
     } catch (error) {
       console.error("Error saving page copy:", error);
       toast.error("Failed to save page copy");
@@ -317,8 +327,8 @@ export default function CmsPageCopyEditor() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading page copy...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+        <span className="ml-3 text-sm font-medium text-slate-300">Loading page copy...</span>
       </div>
     );
   }
@@ -326,46 +336,54 @@ export default function CmsPageCopyEditor() {
   if (!content) return null;
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-6 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button asChild variant="ghost" size="icon" className="rounded-lg">
+          <Button asChild variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06]">
             <Link href="/cms/pages">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight capitalize">{page} Copy</h1>
-            <p className="text-muted-foreground text-sm">
-              Use **text** for the primary-colored accent and __text__ for bold in hero titles and
-              paragraphs
+            <h1 className="text-2xl font-black tracking-tight text-white capitalize">{page} Copy</h1>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Use <code className="text-indigo-400 bg-indigo-500/10 px-1 py-0.5 rounded font-mono">**text**</code> for primary accent color and <code className="text-slate-200 bg-white/[0.06] px-1 py-0.5 rounded font-mono">__text__</code> for bold in titles and bio text.
             </p>
           </div>
         </div>
-        <Button onClick={handleSave} disabled={isSubmitting} className="rounded-lg">
+        <Button
+          onClick={handleSave}
+          disabled={isSubmitting}
+          className="rounded-xl px-6 h-10 text-xs font-semibold gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30"
+        >
           {isSubmitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Saving Copy...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
-              Save
+              <Save className="h-4 w-4" />
+              Save Page Copy
             </>
           )}
         </Button>
       </div>
 
       {Object.entries(content).map(([sectionKey, sectionValue]) => (
-        <Card key={sectionKey} className="border-border/50 shadow-md rounded-xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">{humanize(sectionKey)}</CardTitle>
+        <Card key={sectionKey} className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+          <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+            <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" />
+              {humanize(sectionKey)}
+            </CardTitle>
             {sectionKey === "meta" && (
-              <CardDescription>Browser title and search-result description</CardDescription>
+              <CardDescription className="text-xs text-slate-400">
+                Browser title and search engine metadata snippet.
+              </CardDescription>
             )}
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6">
             {typeof sectionValue === "object" && sectionValue !== null ? (
               <Node value={sectionValue} path={[sectionKey]} onChange={handleChange} />
             ) : (

@@ -1,5 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Check, Clock, FileText, Info, Loader2, Save, Tag } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { lazy, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,14 +27,6 @@ import { useAuth } from "@/contexts/auth-context";
 import { calculateReadingTime } from "@/lib/mdx";
 import { slugify } from "@/lib/utils";
 import { type Blog, blogService, type NewBlog } from "@/services";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Check, Clock, FileText, Info, Loader2, Save, Tag } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { lazy, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 
 const MDXEditor = lazy(() => import("@/components/mdx/mdx-editor"));
 
@@ -161,10 +163,9 @@ export function BlogForm() {
         };
 
         await blogService.create(newBlog);
-        toast.success("Blog post published successfully!");
+        toast.success("Blog post created successfully!");
       }
 
-      // One key per call — a composite key is a single hierarchical key, not a list.
       queryClient.invalidateQueries({ queryKey: ["blogs"] });
       queryClient.invalidateQueries({ queryKey: ["blog"] });
       queryClient.invalidateQueries({ queryKey: ["latestBlogs"] });
@@ -182,47 +183,56 @@ export function BlogForm() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading blog post...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+        <span className="ml-3 text-sm font-medium text-slate-300">Loading blog post...</span>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0 mb-6 sm:mb-8">
-        <h1 className="text-3xl font-bold">
-          {isEditMode ? "Edit Blog Post" : "Create New Blog Post"}
-        </h1>
-        <div className="flex items-center text-muted-foreground">
-          <Clock className="h-4 w-4 mr-1.5" />
-          <span className="text-sm">Estimated reading time: {readingTime} min</span>
+    <div className="max-w-6xl mx-auto space-y-6 pb-12">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="icon" className="rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06]">
+            <Link href="/cms/blogs">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-white">
+              {isEditMode ? "Edit Blog Post" : "Create New Blog Post"}
+            </h1>
+            <div className="flex items-center text-slate-400 text-xs mt-0.5">
+              <Clock className="h-3.5 w-3.5 mr-1 text-indigo-400" />
+              <span>Estimated reading time: {readingTime} min</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <Card className="border-x-0 border-b-0 sm:border-border/50 sm:shadow-md rounded-none sm:rounded-xl overflow-hidden">
-                <CardHeader className="bg-muted/30 border-b border-border/30 p-4 sm:p-6">
-                  <CardTitle className="flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-primary" />
-                    Blog Content
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+                  <CardTitle className="text-base font-bold text-white flex items-center">
+                    <FileText className="h-4 w-4 mr-2 text-indigo-400" />
+                    Article Content
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6 px-0 py-4 sm:p-6">
+                <CardContent className="space-y-5 p-6">
                   <FormField
                     control={form.control}
                     name="isPublished"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Publication Status</FormLabel>
-                          <div className="text-sm text-muted-foreground">
+                      <FormItem className="flex flex-row items-center justify-between rounded-xl bg-[#131726]/70 border border-white/[0.06] p-4.5">
+                        <div className="space-y-1">
+                          <FormLabel className="text-sm font-bold text-white">Publication Status</FormLabel>
+                          <div className="text-xs text-slate-400">
                             {field.value
-                              ? "Your article will be publicly visible"
-                              : "Your article will be saved as a draft"}
+                              ? "Your article will be publicly visible to all visitors"
+                              : "Saved as draft — hidden from public website"}
                           </div>
                         </div>
                         <FormControl>
@@ -237,18 +247,20 @@ export function BlogForm() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">Blog Title</FormLabel>
+                        <FormLabel className="text-slate-200 text-xs font-semibold">Article Title</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter blog title"
-                            className="rounded-lg border-border/50 focus-visible:ring-primary/30"
+                            placeholder="e.g. Architecting Scalable Next.js Applications"
+                            className="h-10 rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-indigo-500/40"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
-                        <div className="text-xs text-muted-foreground mt-1">
-                          Slug: {form.watch("title") ? slugify(form.watch("title")) : ""}
-                        </div>
+                        <FormMessage className="text-xs text-rose-400" />
+                        {form.watch("title") && (
+                          <div className="text-[11px] text-slate-400 font-mono mt-1 flex items-center gap-1">
+                            <span className="text-indigo-400">URL Slug:</span> /{slugify(form.watch("title"))}
+                          </div>
+                        )}
                       </FormItem>
                     )}
                   />
@@ -258,15 +270,16 @@ export function BlogForm() {
                     name="summary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium">Summary</FormLabel>
+                        <FormLabel className="text-slate-200 text-xs font-semibold">Article Summary</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Brief summary of your blog post"
-                            className="resize-none h-20 rounded-lg border-border/50 focus-visible:ring-primary/30"
+                            placeholder="Brief summary shown on blog cards and search engine previews"
+                            rows={3}
+                            className="rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs leading-relaxed focus-visible:ring-indigo-500/40"
                             {...field}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs text-rose-400" />
                       </FormItem>
                     )}
                   />
@@ -276,7 +289,7 @@ export function BlogForm() {
                     name="content"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-foreground/80 font-medium m-0">
+                        <FormLabel className="text-slate-200 text-xs font-semibold">
                           Content (MDX)
                         </FormLabel>
                         <FormControl>
@@ -285,7 +298,7 @@ export function BlogForm() {
                             onChange={(code) => field.onChange(code)}
                           />
                         </FormControl>
-                        <FormMessage />
+                        <FormMessage className="text-xs text-rose-400" />
                       </FormItem>
                     )}
                   />
@@ -293,162 +306,145 @@ export function BlogForm() {
               </Card>
             </div>
 
-            <div className="lg:col-span-1">
-              <div className="space-y-6 sticky">
-                <Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-                  <CardHeader className="bg-muted/30 border-b border-border/30">
-                    <CardTitle className="flex items-center">
-                      <Tag className="h-5 w-5 mr-2 text-primary" />
-                      Blog Post Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6 p-6">
-                    <FormField
-                      control={form.control}
-                      name="tags"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">Tags</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="technology, react, web-dev"
-                              className="rounded-lg border-border/50 focus-visible:ring-primary/30"
-                              {...field}
-                            />
-                          </FormControl>
-                          <div className="text-xs text-muted-foreground mt-2 flex items-center">
-                            <Info className="h-3.5 w-3.5 mr-1.5" />
-                            Separate tags with commas
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            <div className="lg:col-span-1 space-y-6">
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
+                  <CardTitle className="text-base font-bold text-white flex items-center">
+                    <Tag className="h-4 w-4 mr-2 text-indigo-400" />
+                    Meta & Taxonomy
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-5 p-6">
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-slate-200 text-xs font-semibold">Tags (comma-separated)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="nextjs, react, typescript, web-dev"
+                            className="h-10 rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-indigo-500/40"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="text-[11px] text-slate-400 mt-1 flex items-center">
+                          <Info className="h-3 w-3 mr-1 text-indigo-400" />
+                          Separate tags with commas
+                        </div>
+                        <FormMessage className="text-xs text-rose-400" />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={form.control}
-                      name="image"
-                      render={() => (
-                        <FormItem>
-                          <FormLabel className="text-foreground/80 font-medium">
-                            Featured Image
-                          </FormLabel>
-                          <FormControl>
-                            <div className="space-y-3">
-                              <div className="relative">
-                                <Input
-                                  placeholder="Enter image URL"
-                                  className="rounded-lg border-border/50 focus-visible:ring-primary/30"
-                                  value={selectedImage || ""}
-                                  onChange={(e) => {
-                                    setSelectedImage(e.target.value);
-                                    form.setValue("image", e.target.value);
+                  <FormField
+                    control={form.control}
+                    name="image"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel className="text-slate-200 text-xs font-semibold">
+                          Cover Image URL
+                        </FormLabel>
+                        <FormControl>
+                          <div className="space-y-3">
+                            <Input
+                              placeholder="https://... or /placeholder.svg"
+                              className="h-10 rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-indigo-500/40"
+                              value={selectedImage || ""}
+                              onChange={(e) => {
+                                setSelectedImage(e.target.value);
+                                form.setValue("image", e.target.value);
+                              }}
+                            />
+                            {selectedImage && (
+                              <div className="relative aspect-video rounded-xl overflow-hidden border border-white/[0.08] bg-[#131726]">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={selectedImage || "/placeholder.svg"}
+                                  alt="Preview"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/placeholder.svg";
                                   }}
                                 />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute top-2 right-2 h-7 w-7 p-0 rounded-full bg-rose-500/80 hover:bg-rose-600"
+                                  onClick={() => {
+                                    setSelectedImage(null);
+                                    form.setValue("image", "");
+                                  }}
+                                >
+                                  ×
+                                </Button>
                               </div>
-                              {selectedImage && (
-                                <div className="relative aspect-video rounded-lg overflow-hidden border border-border/50 bg-muted/30">
-                                  <img
-                                    src={selectedImage || "/placeholder.svg"}
-                                    alt="Preview"
-                                    className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.src = "/placeholder.svg";
-                                    }}
-                                  />
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="sm"
-                                    className="absolute top-2 right-2 h-8 w-8 p-0 rounded-full"
-                                    onClick={() => {
-                                      setSelectedImage(null);
-                                      form.setValue("image", "");
-                                    }}
-                                  >
-                                    <span className="sr-only">Remove image</span>×
-                                  </Button>
-                                </div>
-                              )}
-                              <p className="text-xs text-muted-foreground">
-                                Recommended: 1200 × 630 pixels
-                              </p>
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                  <CardFooter className="px-6 py-4 bg-muted/20 border-t border-border/30">
-                    <Button
-                      type="submit"
-                      className="w-full rounded-lg group relative overflow-hidden"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {form.getValues("isPublished") ? "Publishing..." : "Saving..."}
-                        </>
-                      ) : (
-                        <>
-                          <span className="flex items-center group-hover:-translate-x-1 transition-transform duration-300">
-                            {form.getValues("isPublished") ? (
-                              <>
-                                <Check className="mr-2 h-4 w-4" />
-                                Publish Blog Post
-                              </>
-                            ) : (
-                              <>
-                                <Save className="mr-2 h-4 w-4" />
-                                Save as Draft
-                              </>
                             )}
-                          </span>
-                          <ArrowRight className="absolute right-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-4 transition-all duration-300" />
-                        </>
-                      )}
-                    </Button>
-                  </CardFooter>
-                </Card>
+                            <p className="text-[11px] text-slate-400">
+                              Recommended ratio: 1200 × 630 pixels
+                            </p>
+                          </div>
+                        </FormControl>
+                        <FormMessage className="text-xs text-rose-400" />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+                <CardFooter className="p-6 bg-[#131726]/40 border-t border-white/[0.06]">
+                  <Button
+                    type="submit"
+                    className="w-full rounded-xl h-10 text-xs font-semibold gap-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {form.getValues("isPublished") ? "Publishing..." : "Saving..."}
+                      </>
+                    ) : (
+                      <>
+                        {form.getValues("isPublished") ? (
+                          <>
+                            <Check className="mr-1.5 h-4 w-4" />
+                            Publish Article
+                          </>
+                        ) : (
+                          <>
+                            <Save className="mr-1.5 h-4 w-4" />
+                            Save as Draft
+                          </>
+                        )}
+                      </>
+                    )}
+                  </Button>
+                </CardFooter>
+              </Card>
 
-                <Card className="border-border/50 shadow-md rounded-xl overflow-hidden">
-                  <CardHeader className="bg-muted/30 border-b border-border/30 py-3">
-                    <CardTitle className="text-sm flex items-center">
-                      <Info className="h-4 w-4 mr-2 text-primary" />
-                      MDX Tips
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <div className="text-xs space-y-2 text-muted-foreground">
-                      <p>
-                        <span className="font-semibold">Headings:</span> Use # for h1, ## for h2,
-                        etc.
-                      </p>
-                      <p>
-                        <span className="font-semibold">Lists:</span> Use - or * for bullet points,
-                        1. for numbered lists
-                      </p>
-                      <p>
-                        <span className="font-semibold">Links:</span> [Link
-                        text](https://example.com)
-                      </p>
-                      <p>
-                        <span className="font-semibold">Images:</span> ![Alt
-                        text](https://example.com/image.jpg)
-                      </p>
-                      <p>
-                        <span className="font-semibold">Code:</span> `inline code` or ```js
-                        <br />
-                        // code block
-                        <br />
-                        ```
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+              <Card className="border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="p-4 pb-2 border-b border-white/[0.06]">
+                  <CardTitle className="text-xs font-bold text-slate-300 flex items-center uppercase tracking-wider">
+                    <Info className="h-3.5 w-3.5 mr-2 text-indigo-400" />
+                    MDX Quick Tips
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4">
+                  <div className="text-xs space-y-2 text-slate-400">
+                    <p>
+                      <strong className="text-slate-200">Headings:</strong> # Title, ## Subtitle
+                    </p>
+                    <p>
+                      <strong className="text-slate-200">Lists:</strong> - Bullet item, 1. Ordered
+                    </p>
+                    <p>
+                      <strong className="text-slate-200">Links:</strong> [Text](https://url.com)
+                    </p>
+                    <p>
+                      <strong className="text-slate-200">Code:</strong> `inline` or ```ts code ```
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </form>

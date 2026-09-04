@@ -2,25 +2,15 @@
 
 import { useState, useMemo } from "react";
 import {
-  ArrowRight,
   Banknote,
   Calculator,
   CheckCircle2,
-  Coins,
   DollarSign,
-  Gift,
-  Globe,
-  HeartPulse,
-  Info,
-  Laptop,
   Loader2,
   Mail,
-  Percent,
   Receipt,
   Save,
-  SendHorizontal,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -188,15 +178,15 @@ export function TabOfferingPackage({
   return (
     <div className="space-y-6">
       {/* Celebration / Status Banner */}
-      <Card className="border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-card">
-        <CardHeader className="pb-3">
+      <Card className="bg-gradient-to-br from-emerald-950/40 via-[#0C0E18] to-[#0C0E18] border border-emerald-500/30 shadow-2xl shadow-emerald-500/5 overflow-hidden">
+        <CardHeader className="pb-4 pt-5 px-6">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
             <div>
-              <CardTitle className="text-lg flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              <CardTitle className="text-lg font-bold flex items-center gap-2 text-emerald-400">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                 Executive Offer & Compensation Package
               </CardTitle>
-              <CardDescription className="text-xs">
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
                 Calculate net take-home pay, progressive tax (PPh 21 / Freelance), multi-currency conversions, and equity value.
               </CardDescription>
             </div>
@@ -209,22 +199,21 @@ export function TabOfferingPackage({
                   setFollowUpScenario("negotiation");
                   setIsFollowUpOpen(true);
                 }}
-                className="text-xs font-semibold border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10 gap-1.5"
+                className="text-xs font-semibold bg-[#131726] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50 gap-1.5 shadow-sm"
               >
-                <Mail className="w-3.5 h-3.5 text-emerald-500" />
-                Draft Negotiation / Counter Email
+                <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                Draft Negotiation Email
               </Button>
 
               {application.status === "accepted" ? (
-                <Badge className="bg-emerald-600 text-white hover:bg-emerald-700 text-xs px-3 py-1 font-bold">
+                <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1 font-bold">
                   🚀 Offer Accepted
                 </Badge>
               ) : (
                 <Button
-                  variant="outline"
                   size="sm"
                   onClick={() => onStatusAdvance("accepted")}
-                  className="text-xs font-bold border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1.5"
+                  className="text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white gap-1.5 shadow-lg shadow-emerald-500/20"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Mark Offer as Accepted 🚀
@@ -235,14 +224,14 @@ export function TabOfferingPackage({
         </CardHeader>
 
         {/* Quick Annual Value & Net Take-Home Grid */}
-        <CardContent className="pt-0 pb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-2 border-t border-emerald-500/20">
-            <div className="p-3 rounded-lg bg-card/80 border border-border/60">
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Banknote className="w-3.5 h-3.5 text-emerald-500" />
+        <CardContent className="pt-0 pb-5 px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 pt-3 border-t border-emerald-500/20">
+            <div className="p-3.5 rounded-xl bg-[#131726]/80 border border-white/[0.08]">
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
+                <Banknote className="w-3.5 h-3.5 text-emerald-400" />
                 Offered Gross Base
               </div>
-              <div className="text-base font-bold text-foreground mt-0.5">
+              <div className="text-base font-bold text-white mt-1">
                 {formatSalary(
                   formData.salaryMin ?? application.salaryMin,
                   formData.salaryMax ?? application.salaryMax,
@@ -251,43 +240,43 @@ export function TabOfferingPackage({
                 )}
               </div>
               {currentCurrency !== "IDR" && (
-                <div className="text-[10px] text-muted-foreground mt-0.5">
+                <div className="text-[10px] text-muted-foreground mt-0.5 font-mono">
                   ≈ {formatIdrMillion(compMetrics.monthlyBaseIdr)}/mo
                 </div>
               )}
             </div>
 
-            <div className="p-3 rounded-lg bg-card/80 border border-border/60">
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Wallet className="w-3.5 h-3.5 text-emerald-500" />
+            <div className="p-3.5 rounded-xl bg-[#131726]/80 border border-emerald-500/20">
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
+                <Wallet className="w-3.5 h-3.5 text-emerald-400" />
                 Estimated Net Take-Home (Gaji Bersih)
               </div>
-              <div className="text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+              <div className="text-base font-black text-emerald-400 mt-1">
                 {formatIdrMillion(compMetrics.netMonthlyIdr)}
                 <span className="text-xs font-normal text-muted-foreground">/mo</span>
               </div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-[10px] text-emerald-400/80 mt-0.5 font-mono">
                 After ~{compMetrics.effectiveDeductionPct}% tax & deductions
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-card/80 border border-border/60">
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Calculator className="w-3.5 h-3.5 text-blue-500" />
+            <div className="p-3.5 rounded-xl bg-[#131726]/80 border border-white/[0.08]">
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
+                <Calculator className="w-3.5 h-3.5 text-sky-400" />
                 Total Annual Comp (Base+THR+Bonus+Equity)
               </div>
-              <div className="text-base font-bold text-blue-600 dark:text-blue-400 mt-0.5">
+              <div className="text-base font-bold text-sky-400 mt-1">
                 {formatIdrMillion(compMetrics.totalAnnualCompIdr)}
                 <span className="text-xs font-normal text-muted-foreground">/yr</span>
               </div>
             </div>
 
-            <div className="p-3 rounded-lg bg-card/80 border border-border/60">
-              <div className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
+            <div className="p-3.5 rounded-xl bg-[#131726]/80 border border-white/[0.08]">
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 font-medium">
+                <TrendingUp className="w-3.5 h-3.5 text-purple-400" />
                 Target Role
               </div>
-              <div className="text-base font-bold text-foreground mt-0.5 truncate">
+              <div className="text-base font-bold text-white mt-1 truncate">
                 {application.jobTitle}
               </div>
             </div>
@@ -298,17 +287,17 @@ export function TabOfferingPackage({
       {/* Detailed Compensation Elements */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Column 1: Financial & Equity Package */}
-        <Card className="border-border/80 shadow-sm space-y-4">
-          <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-emerald-500" />
+        <Card className="bg-[#0C0E18]/80 backdrop-blur-md border border-white/[0.08] shadow-2xl overflow-hidden">
+          <CardHeader className="pb-3 border-b border-white/[0.06] bg-[#131726]/40 px-6 py-4">
+            <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-emerald-400" />
               Base Salary & Direct Compensation
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="offeredMin" className="text-xs">
+                <Label htmlFor="offeredMin" className="text-xs font-semibold text-slate-300">
                   Min / Initial Offer
                 </Label>
                 <Input
@@ -322,11 +311,11 @@ export function TabOfferingPackage({
                       salaryMin: e.target.value ? parseInt(e.target.value) : undefined,
                     })
                   }
-                  className="text-xs"
+                  className="text-xs bg-[#131726] border-white/[0.08] focus:border-emerald-500/50 text-white font-mono h-9"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="offeredMax" className="text-xs">
+                <Label htmlFor="offeredMax" className="text-xs font-semibold text-slate-300">
                   Max / Target Offer
                 </Label>
                 <Input
@@ -340,34 +329,34 @@ export function TabOfferingPackage({
                       salaryMax: e.target.value ? parseInt(e.target.value) : undefined,
                     })
                   }
-                  className="text-xs"
+                  className="text-xs bg-[#131726] border-white/[0.08] focus:border-emerald-500/50 text-white font-mono h-9"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="offerCurrency" className="text-xs">
-                  Currency
+                <Label htmlFor="offerCurrency" className="text-xs font-semibold text-slate-300">
+                  Currency Code
                 </Label>
                 <Input
                   id="offerCurrency"
                   placeholder="IDR / USD / SGD"
                   value={formData.salaryCurrency ?? application.salaryCurrency}
                   onChange={(e) => onFormChange({ ...formData, salaryCurrency: e.target.value })}
-                  className="text-xs"
+                  className="text-xs bg-[#131726] border-white/[0.08] focus:border-emerald-500/50 text-white uppercase font-mono h-9"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="offerPeriod" className="text-xs">
-                  Period
+                <Label htmlFor="offerPeriod" className="text-xs font-semibold text-slate-300">
+                  Compensation Period
                 </Label>
                 <Input
                   id="offerPeriod"
                   placeholder="monthly / yearly"
                   value={formData.salaryPeriod ?? application.salaryPeriod}
                   onChange={(e) => onFormChange({ ...formData, salaryPeriod: e.target.value })}
-                  className="text-xs"
+                  className="text-xs bg-[#131726] border-white/[0.08] focus:border-emerald-500/50 text-white h-9"
                 />
               </div>
             </div>
@@ -375,31 +364,31 @@ export function TabOfferingPackage({
         </Card>
 
         {/* Column 2: Interactive Tax & Take-Home Pay Simulator */}
-        <Card className="border-border/80 shadow-sm space-y-4">
-          <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
+        <Card className="bg-[#0C0E18]/80 backdrop-blur-md border border-white/[0.08] shadow-2xl overflow-hidden">
+          <CardHeader className="pb-3 border-b border-white/[0.06] bg-[#131726]/40 px-6 py-4">
             <div className="flex justify-between items-center">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-emerald-500" />
+              <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-emerald-400" />
                 Tax & Net Take-Home Estimator (Indonesian PPh 21 / Remote)
               </CardTitle>
-              <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
+              <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
                 Live Simulator
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3.5">
+          <CardContent className="p-6 space-y-4">
             {/* Employment Type & BPJS Toggle */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold">Employment Model</Label>
+                <Label className="text-[11px] font-semibold text-slate-300">Employment Model</Label>
                 <Select
                   value={contractType}
                   onValueChange={(v) => setContractType(v as "permanent" | "contractor")}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-8 text-xs bg-[#131726] border-white/[0.08] text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#0C0E18] border-white/[0.12] text-slate-200">
                     <SelectItem value="permanent">🏢 Full-Time (PPh 21 + THR)</SelectItem>
                     <SelectItem value="contractor">🌐 Remote Contractor (NPPN Norma)</SelectItem>
                   </SelectContent>
@@ -407,15 +396,15 @@ export function TabOfferingPackage({
               </div>
 
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold">Performance Bonus Target</Label>
+                <Label className="text-[11px] font-semibold text-slate-300">Performance Bonus Target</Label>
                 <Select
                   value={bonusMonths.toString()}
                   onValueChange={(v) => setBonusMonths(parseFloat(v))}
                 >
-                  <SelectTrigger className="h-8 text-xs">
+                  <SelectTrigger className="h-8 text-xs bg-[#131726] border-white/[0.08] text-white">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-[#0C0E18] border-white/[0.12] text-slate-200">
                     <SelectItem value="0">No Bonus (0 mo)</SelectItem>
                     <SelectItem value="1">1.0 Month Base</SelectItem>
                     <SelectItem value="1.5">1.5 Months Base (Target)</SelectItem>
@@ -429,13 +418,13 @@ export function TabOfferingPackage({
             {/* Annual Equity / RSU grant */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold">Annual RSU / Equity Grant ($ USD)</Label>
+                <Label className="text-[11px] font-semibold text-slate-300">Annual RSU / Equity Grant ($ USD)</Label>
                 <Input
                   type="number"
                   placeholder="e.g. 5000"
                   value={annualEquityUsd || ""}
                   onChange={(e) => setAnnualEquityUsd(e.target.value ? parseInt(e.target.value) : 0)}
-                  className="h-8 text-xs"
+                  className="h-8 text-xs bg-[#131726] border-white/[0.08] focus:border-emerald-500/50 text-white font-mono"
                 />
               </div>
 
@@ -445,8 +434,9 @@ export function TabOfferingPackage({
                     id="includeBpjs"
                     checked={includeBpjs}
                     onCheckedChange={(c) => setIncludeBpjs(Boolean(c))}
+                    className="border-white/[0.2]"
                   />
-                  <Label htmlFor="includeBpjs" className="text-xs cursor-pointer">
+                  <Label htmlFor="includeBpjs" className="text-xs text-slate-300 cursor-pointer">
                     Deduct BPJS TK & Kes (3%)
                   </Label>
                 </div>
@@ -454,24 +444,24 @@ export function TabOfferingPackage({
             </div>
 
             {/* Deductions Breakdown Table */}
-            <div className="p-3 rounded-xl border border-border/70 bg-muted/20 space-y-2 text-xs">
-              <div className="flex justify-between text-muted-foreground">
+            <div className="p-4 rounded-xl border border-white/[0.08] bg-[#131726] space-y-2.5 text-xs">
+              <div className="flex justify-between text-muted-foreground font-mono">
                 <span>Gross Monthly Income ({currentCurrency}):</span>
-                <span className="font-semibold text-foreground">{formatIdrMillion(compMetrics.monthlyBaseIdr)}</span>
+                <span className="font-semibold text-white">{formatIdrMillion(compMetrics.monthlyBaseIdr)}</span>
               </div>
-              <div className="flex justify-between text-rose-600 dark:text-rose-400">
+              <div className="flex justify-between text-rose-400 font-mono">
                 <span>Est. Monthly Tax ({contractType === "permanent" ? "PPh 21" : "NPPN Norma 50%"}):</span>
                 <span className="font-semibold">- {formatIdrMillion(compMetrics.monthlyTaxIdr)}</span>
               </div>
               {contractType === "permanent" && includeBpjs && (
-                <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                <div className="flex justify-between text-amber-400 font-mono">
                   <span>Est. Monthly BPJS Karyawan (JHT/JP/Kes):</span>
                   <span className="font-semibold">- {formatIdrMillion(compMetrics.monthlyBpjsIdr)}</span>
                 </div>
               )}
-              <div className="pt-2 border-t border-border/60 flex justify-between items-baseline font-bold">
-                <span className="text-emerald-700 dark:text-emerald-400">Net Take-Home Pay (Gaji Bersih):</span>
-                <span className="text-base text-emerald-600 dark:text-emerald-400">
+              <div className="pt-3 border-t border-white/[0.08] flex justify-between items-baseline font-bold">
+                <span className="text-emerald-400 font-sans">Net Take-Home Pay (Gaji Bersih):</span>
+                <span className="text-base text-emerald-400 font-mono">
                   {formatIdrMillion(compMetrics.netMonthlyIdr)}/mo
                 </span>
               </div>
@@ -481,18 +471,17 @@ export function TabOfferingPackage({
       </div>
 
       {/* Full Offer Specifications & Negotiation Log */}
-      <Card className="border-border/80 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-primary" />
+      <Card className="bg-[#0C0E18]/80 backdrop-blur-md border border-white/[0.08] shadow-2xl overflow-hidden">
+        <CardHeader className="pb-3 border-b border-white/[0.06] bg-[#131726]/40 px-6 py-4">
+          <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-indigo-400" />
             Offer Letter Details & Negotiation Log
           </CardTitle>
-          <CardDescription className="text-xs">
-            Detailkan seluruh poin penawaran formal: tanggal mulai kerja, batas kadaluarsa surat
-            penawaran (*offer deadline*), skema bonus, dan poin tawar (*counter points*).
+          <CardDescription className="text-xs text-muted-foreground">
+            Detail formal offer points: start date, expiry deadline, bonus structure, benefits, and counter points.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="p-6 space-y-4">
           <Textarea
             id="offerNotes"
             rows={8}
@@ -512,11 +501,15 @@ export function TabOfferingPackage({
 - Point 2: Request 20 days annual leave instead of 12.`}
             value={formData.notes ?? application.notes ?? ""}
             onChange={(e) => onFormChange({ ...formData, notes: e.target.value })}
-            className="text-xs font-mono leading-relaxed"
+            className="text-xs font-mono leading-relaxed bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-slate-200"
           />
 
-          <div className="flex justify-end pt-3 border-t">
-            <Button onClick={onSave} disabled={isSaving} className="gap-1.5">
+          <div className="flex justify-end pt-3 border-t border-white/[0.08]">
+            <Button
+              onClick={onSave}
+              disabled={isSaving}
+              className="gap-2 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-medium text-xs shadow-lg shadow-indigo-500/25"
+            >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (

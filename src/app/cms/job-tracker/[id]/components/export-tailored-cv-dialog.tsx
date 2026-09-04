@@ -285,17 +285,17 @@ export function ExportTailoredCvDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-4 border-b border-border/70 bg-muted/20">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden bg-[#0C0E18] border border-white/[0.12] text-foreground shadow-2xl">
+        <DialogHeader className="p-6 pb-4 border-b border-white/[0.08] bg-[#131726]/60">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
             <div>
-              <DialogTitle className="text-lg flex items-center gap-2">
-                <FileText className="w-5 h-5 text-primary" />
+              <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-400" />
                 Export Tailored ATS Resume
               </DialogTitle>
-              <DialogDescription className="text-xs">
-                Export ATS-friendly resume customized for <strong>{application.jobTitle}</strong> at{" "}
-                <strong>{application.companyName}</strong>.
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                Export ATS-friendly resume customized for <strong className="text-white">{application.jobTitle}</strong> at{" "}
+                <strong className="text-indigo-400">{application.companyName}</strong>.
               </DialogDescription>
             </div>
 
@@ -304,9 +304,9 @@ export function ExportTailoredCvDialog({
                 variant="outline"
                 size="sm"
                 onClick={handleCopyMarkdown}
-                className="gap-1.5 text-xs h-8"
+                className="gap-1.5 text-xs h-8 bg-[#0C0E18] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 {copied ? "Copied!" : "Copy Markdown"}
               </Button>
 
@@ -314,16 +314,16 @@ export function ExportTailoredCvDialog({
                 variant="outline"
                 size="sm"
                 onClick={handleDownloadMarkdown}
-                className="gap-1.5 text-xs h-8"
+                className="gap-1.5 text-xs h-8 bg-[#0C0E18] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-3.5 h-3.5 text-indigo-400" />
                 .md
               </Button>
 
               <Button
                 size="sm"
                 onClick={handlePrintPdf}
-                className="gap-1.5 text-xs h-8 bg-primary shadow-sm"
+                className="gap-1.5 text-xs h-8 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white shadow-md shadow-indigo-500/20"
               >
                 <Printer className="w-3.5 h-3.5" />
                 Print / Save PDF
@@ -334,33 +334,37 @@ export function ExportTailoredCvDialog({
           {/* Section Toggles */}
           <div className="flex flex-wrap items-center gap-4 pt-3 text-xs">
             <span className="text-muted-foreground font-semibold flex items-center gap-1">
-              <SlidersHorizontal className="w-3.5 h-3.5" /> Include:
+              <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" /> Include:
             </span>
-            <label className="flex items-center gap-1.5 cursor-pointer">
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
               <Checkbox
                 checked={includeTailoredSummary}
                 onCheckedChange={(c) => setIncludeTailoredSummary(Boolean(c))}
+                className="border-white/[0.2]"
               />
               <span>Tailored Summary</span>
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
               <Checkbox
                 checked={includeTailoredBullets}
                 onCheckedChange={(c) => setIncludeTailoredBullets(Boolean(c))}
+                className="border-white/[0.2]"
               />
               <span>XYZ Targeted Bullets</span>
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
               <Checkbox
                 checked={includeSkills}
                 onCheckedChange={(c) => setIncludeSkills(Boolean(c))}
+                className="border-white/[0.2]"
               />
               <span>Core Skills</span>
             </label>
-            <label className="flex items-center gap-1.5 cursor-pointer">
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
               <Checkbox
                 checked={includeEducation}
                 onCheckedChange={(c) => setIncludeEducation(Boolean(c))}
+                className="border-white/[0.2]"
               />
               <span>Education</span>
             </label>
@@ -368,20 +372,20 @@ export function ExportTailoredCvDialog({
         </DialogHeader>
 
         {/* View Switcher */}
-        <div className="px-6 pt-3 flex items-center justify-between border-b border-border/40 bg-muted/10">
+        <div className="px-6 pt-3 flex items-center justify-between border-b border-white/[0.08] bg-[#131726]/40">
           <Tabs value={formatMode} onValueChange={(v) => setFormatMode(v as "preview" | "markdown")} className="w-full">
             <div className="flex items-center justify-between">
-              <TabsList className="h-8">
-                <TabsTrigger value="preview" className="text-xs gap-1.5 px-3">
-                  <Eye className="w-3.5 h-3.5" /> ATS Document Preview
+              <TabsList className="h-8 bg-[#0C0E18] border border-white/[0.08]">
+                <TabsTrigger value="preview" className="text-xs gap-1.5 px-3 data-[state=active]:bg-[#131726] data-[state=active]:text-white">
+                  <Eye className="w-3.5 h-3.5 text-indigo-400" /> ATS Document Preview
                 </TabsTrigger>
-                <TabsTrigger value="markdown" className="text-xs gap-1.5 px-3">
-                  <Code className="w-3.5 h-3.5" /> Raw Markdown (ATS Copy-Paste)
+                <TabsTrigger value="markdown" className="text-xs gap-1.5 px-3 data-[state=active]:bg-[#131726] data-[state=active]:text-white">
+                  <Code className="w-3.5 h-3.5 text-purple-400" /> Raw Markdown (ATS Copy-Paste)
                 </TabsTrigger>
               </TabsList>
 
               {application.atsScore && (
-                <Badge variant="outline" className="text-[11px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30 gap-1">
+                <Badge variant="outline" className="text-[11px] bg-emerald-500/15 text-emerald-400 border-emerald-500/30 gap-1 font-mono">
                   <Sparkles className="w-3 h-3" /> ATS Match: {application.atsScore}%
                 </Badge>
               )}
@@ -389,18 +393,18 @@ export function ExportTailoredCvDialog({
 
             {/* TAB CONTENT: PREVIEW */}
             <TabsContent value="preview" className="mt-3 mb-0">
-              <div className="p-6 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 rounded-lg border border-border/80 shadow-inner overflow-y-auto max-h-[50vh] font-sans">
+              <div className="p-6 bg-[#08090C] text-slate-100 rounded-xl border border-white/[0.08] shadow-inner overflow-y-auto max-h-[50vh] font-sans">
                 {/* Print area container */}
                 <div ref={printRef} className="space-y-4 max-w-2xl mx-auto">
                   {/* Header */}
                   <div>
-                    <h1 className="text-2xl font-extrabold uppercase tracking-tight text-foreground">
+                    <h1 className="text-2xl font-extrabold uppercase tracking-tight text-white">
                       {candidateName}
                     </h1>
-                    <div className="text-xs font-semibold text-primary mt-0.5">
+                    <div className="text-xs font-semibold text-indigo-400 mt-0.5">
                       Target Role: {application.jobTitle} • {application.companyName}
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-1 border-b pb-2 border-border/80">
+                    <div className="text-[11px] text-muted-foreground mt-1 border-b pb-2 border-white/[0.1]">
                       {candidateLocation} | {candidateEmail} | {candidateWebsite}
                     </div>
                   </div>
@@ -408,10 +412,10 @@ export function ExportTailoredCvDialog({
                   {/* Summary */}
                   {includeTailoredSummary && application.tailoredSummary && (
                     <div className="space-y-1">
-                      <div className="text-xs font-bold uppercase tracking-wider text-foreground border-b pb-0.5 border-border/60">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
                         Professional Summary
                       </div>
-                      <p className="text-xs leading-relaxed text-muted-foreground pt-1">
+                      <p className="text-xs leading-relaxed text-slate-300 pt-1">
                         {application.tailoredSummary}
                       </p>
                     </div>
@@ -420,13 +424,13 @@ export function ExportTailoredCvDialog({
                   {/* Targeted Highlights */}
                   {includeTailoredBullets && application.tailoredBulletPoints && application.tailoredBulletPoints.length > 0 && (
                     <div className="space-y-1">
-                      <div className="text-xs font-bold uppercase tracking-wider text-foreground border-b pb-0.5 border-border/60">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
                         Targeted Accomplishments (XYZ Method)
                       </div>
-                      <ul className="list-disc list-inside space-y-1 pt-1 text-xs text-muted-foreground">
+                      <ul className="list-disc list-inside space-y-1 pt-1 text-xs text-slate-300">
                         {application.tailoredBulletPoints.map((b, idx) => (
                           <li key={idx} className="leading-relaxed">
-                            {b.roleContext && <span className="font-semibold text-foreground">[{b.roleContext}] </span>}
+                            {b.roleContext && <span className="font-semibold text-indigo-300">[{b.roleContext}] </span>}
                             <span>{b.tailored}</span>
                           </li>
                         ))}
@@ -437,7 +441,7 @@ export function ExportTailoredCvDialog({
                   {/* Work Experience */}
                   {resumeData?.experiences && resumeData.experiences.length > 0 && (
                     <div className="space-y-2">
-                      <div className="text-xs font-bold uppercase tracking-wider text-foreground border-b pb-0.5 border-border/60">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
                         Work Experience
                       </div>
                       <div className="space-y-3 pt-1">
@@ -445,12 +449,12 @@ export function ExportTailoredCvDialog({
                           const period = formatResumePeriod(exp);
                           return (
                             <div key={exp.id} className="space-y-0.5 text-xs">
-                              <div className="flex justify-between font-bold text-foreground">
+                              <div className="flex justify-between font-bold text-slate-200">
                                 <span>{exp.title} — {exp.organization}</span>
-                                <span className="text-[11px] font-normal text-muted-foreground">{period}</span>
+                                <span className="text-[11px] font-normal text-muted-foreground font-mono">{period}</span>
                               </div>
                               {exp.description && (
-                                <p className="text-muted-foreground leading-relaxed text-[11px]">
+                                <p className="text-slate-400 leading-relaxed text-[11px]">
                                   {exp.description}
                                 </p>
                               )}
@@ -464,10 +468,10 @@ export function ExportTailoredCvDialog({
                   {/* Skills */}
                   {includeSkills && skillsData.length > 0 && (
                     <div className="space-y-1">
-                      <div className="text-xs font-bold uppercase tracking-wider text-foreground border-b pb-0.5 border-border/60">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
                         Core Skills & Technologies
                       </div>
-                      <p className="text-xs text-muted-foreground pt-1 leading-relaxed">
+                      <p className="text-xs text-slate-300 pt-1 leading-relaxed">
                         {skillsData.map((s) => s.name).join(" • ")}
                       </p>
                     </div>
@@ -476,14 +480,14 @@ export function ExportTailoredCvDialog({
                   {/* Education */}
                   {includeEducation && resumeData?.education && resumeData.education.length > 0 && (
                     <div className="space-y-1">
-                      <div className="text-xs font-bold uppercase tracking-wider text-foreground border-b pb-0.5 border-border/60">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
                         Education
                       </div>
                       <div className="space-y-1.5 pt-1">
                         {resumeData.education.map((edu) => (
                           <div key={edu.id} className="text-xs flex justify-between">
-                            <span className="font-semibold text-foreground">{edu.title} — {edu.organization}</span>
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="font-semibold text-slate-200">{edu.title} — {edu.organization}</span>
+                            <span className="text-[11px] text-muted-foreground font-mono">
                               {formatResumePeriod(edu)}
                             </span>
                           </div>
@@ -497,8 +501,8 @@ export function ExportTailoredCvDialog({
 
             {/* TAB CONTENT: MARKDOWN */}
             <TabsContent value="markdown" className="mt-3 mb-0">
-              <div className="p-4 bg-muted/40 rounded-lg border border-border/80 max-h-[50vh] overflow-y-auto">
-                <pre className="text-xs font-mono text-foreground whitespace-pre-wrap leading-relaxed">
+              <div className="p-4 bg-[#08090C] rounded-xl border border-white/[0.08] max-h-[50vh] overflow-y-auto">
+                <pre className="text-xs font-mono text-indigo-300 whitespace-pre-wrap leading-relaxed">
                   {markdownCv}
                 </pre>
               </div>
@@ -506,9 +510,9 @@ export function ExportTailoredCvDialog({
           </Tabs>
         </div>
 
-        <div className="p-4 bg-muted/20 border-t border-border/60 flex justify-between items-center text-xs text-muted-foreground">
+        <div className="p-4 bg-[#131726]/60 border-t border-white/[0.08] flex justify-between items-center text-xs text-muted-foreground">
           <span>Formatted according to ATS single-column parse standards.</span>
-          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="text-slate-400 hover:text-white text-xs">
             Close
           </Button>
         </div>

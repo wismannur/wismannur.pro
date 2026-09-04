@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { Plus, Sparkles, Inbox, Send, Search, Users, Gift, Archive } from "lucide-react";
+import { Plus, Inbox, Send, Search, Users, Gift, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApplicationCard } from "./application-card";
 import type { JobApplication, JobApplicationStatus } from "@/services/job-tracker/types";
 
@@ -13,8 +12,9 @@ interface KanbanColumnConfig {
   title: string;
   statuses: JobApplicationStatus[];
   icon: React.ComponentType<{ className?: string }>;
-  color: string;
+  accentColor: string;
   badgeColor: string;
+  topGlow: string;
   defaultStatus: JobApplicationStatus;
 }
 
@@ -24,8 +24,9 @@ const KANBAN_COLUMNS: KanbanColumnConfig[] = [
     title: "Wishlist / Sourced",
     statuses: ["wishlist"],
     icon: Inbox,
-    color: "border-slate-500/20 bg-slate-500/5",
-    badgeColor: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
+    accentColor: "border-slate-500/30 bg-slate-500/5",
+    badgeColor: "bg-slate-500/15 text-slate-300 border-slate-500/30",
+    topGlow: "from-slate-500/20 to-transparent",
     defaultStatus: "wishlist",
   },
   {
@@ -33,8 +34,9 @@ const KANBAN_COLUMNS: KanbanColumnConfig[] = [
     title: "Applied",
     statuses: ["applied"],
     icon: Send,
-    color: "border-blue-500/20 bg-blue-500/5",
-    badgeColor: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    accentColor: "border-blue-500/30 bg-blue-500/5",
+    badgeColor: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+    topGlow: "from-blue-500/20 to-transparent",
     defaultStatus: "applied",
   },
   {
@@ -42,8 +44,9 @@ const KANBAN_COLUMNS: KanbanColumnConfig[] = [
     title: "Screening / OA",
     statuses: ["screening"],
     icon: Search,
-    color: "border-amber-500/20 bg-amber-500/5",
-    badgeColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    accentColor: "border-amber-500/30 bg-amber-500/5",
+    badgeColor: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+    topGlow: "from-amber-500/20 to-transparent",
     defaultStatus: "screening",
   },
   {
@@ -51,8 +54,9 @@ const KANBAN_COLUMNS: KanbanColumnConfig[] = [
     title: "Interview Stages",
     statuses: ["interview_hr", "interview_tech", "interview_user"],
     icon: Users,
-    color: "border-purple-500/20 bg-purple-500/5",
-    badgeColor: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+    accentColor: "border-purple-500/30 bg-purple-500/5",
+    badgeColor: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+    topGlow: "from-purple-500/20 to-transparent",
     defaultStatus: "interview_hr",
   },
   {
@@ -60,8 +64,9 @@ const KANBAN_COLUMNS: KanbanColumnConfig[] = [
     title: "Offering Letter 🎉",
     statuses: ["offering"],
     icon: Gift,
-    color: "border-emerald-500/20 bg-emerald-500/5",
-    badgeColor: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    accentColor: "border-emerald-500/30 bg-emerald-500/5",
+    badgeColor: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+    topGlow: "from-emerald-500/20 to-transparent",
     defaultStatus: "offering",
   },
   {
@@ -69,8 +74,9 @@ const KANBAN_COLUMNS: KanbanColumnConfig[] = [
     title: "Outcome / Archived",
     statuses: ["accepted", "rejected", "withdrawn", "ghosted"],
     icon: Archive,
-    color: "border-zinc-500/20 bg-zinc-500/5",
-    badgeColor: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
+    accentColor: "border-zinc-500/30 bg-zinc-500/5",
+    badgeColor: "bg-zinc-500/15 text-zinc-300 border-zinc-500/30",
+    topGlow: "from-zinc-500/20 to-transparent",
     defaultStatus: "accepted",
   },
 ];
@@ -107,7 +113,7 @@ export function KanbanBoard({
   }, [applications]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-start min-w-[1200px] xl:min-w-full overflow-x-auto pb-4">
+    <div className="flex items-start gap-5 overflow-x-auto pb-6 pt-1 px-0.5 scroll-smooth custom-scrollbar">
       {KANBAN_COLUMNS.map((col) => {
         const items = groupedApps.get(col.id) || [];
         const Icon = col.icon;
@@ -115,16 +121,23 @@ export function KanbanBoard({
         return (
           <div
             key={col.id}
-            className={`flex flex-col rounded-xl border ${col.color} p-3 min-h-[520px] max-h-[calc(100vh-240px)] shadow-sm`}
+            className="relative flex flex-col w-[340px] min-w-[340px] max-w-[340px] shrink-0 rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-4 min-h-[580px] max-h-[calc(100vh-220px)] shadow-xl overflow-hidden backdrop-blur-md"
           >
+            {/* Top ambient highlight header */}
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${col.topGlow}`} />
+
             {/* Column Header */}
-            <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center justify-between mb-3.5 px-0.5 pt-0.5">
               <div className="flex items-center gap-2">
-                <Icon className="w-4 h-4 text-muted-foreground" />
-                <span className="font-semibold text-xs tracking-tight">{col.title}</span>
+                <div className="p-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+                  <Icon className="w-3.5 h-3.5 text-gray-300" />
+                </div>
+                <span className="font-bold text-xs sm:text-sm tracking-tight text-white">
+                  {col.title}
+                </span>
                 <Badge
                   variant="outline"
-                  className={`text-[10px] h-5 px-1.5 font-bold ${col.badgeColor}`}
+                  className={`text-[10px] h-5 px-1.5 font-mono font-bold ${col.badgeColor}`}
                 >
                   {items.length}
                 </Badge>
@@ -133,26 +146,29 @@ export function KanbanBoard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 rounded-md text-muted-foreground hover:text-foreground"
+                className="h-7 w-7 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] transition-colors"
                 onClick={() => onAddNew(col.defaultStatus)}
                 title={`Add new to ${col.title}`}
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
               </Button>
             </div>
 
             {/* Card List */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-2.5">
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 custom-scrollbar">
               {items.length === 0 ? (
-                <div className="h-40 rounded-lg border border-dashed border-border/60 flex flex-col items-center justify-center p-3 text-center text-muted-foreground/60 text-xs">
-                  <span>No jobs in this stage</span>
+                <div className="h-48 rounded-xl border border-dashed border-white/[0.08] bg-white/[0.01] flex flex-col items-center justify-center p-4 text-center text-gray-400 text-xs">
+                  <span className="text-gray-400 font-medium">No jobs in this stage</span>
+                  <p className="text-[11px] text-gray-500 mt-1 max-w-[200px]">
+                    Track new applications or drag cards here
+                  </p>
                   <Button
                     variant="link"
                     size="sm"
-                    className="text-[11px] h-auto p-0 mt-1 text-primary"
+                    className="text-[11px] h-auto p-0 mt-3 text-primary hover:text-primary/80 font-semibold"
                     onClick={() => onAddNew(col.defaultStatus)}
                   >
-                    + Add Job
+                    + Add Job Opportunity
                   </Button>
                 </div>
               ) : (

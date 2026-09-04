@@ -284,22 +284,22 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
   const atsColor = getAtsScoreColor(currentApp.atsScore);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-fade-in">
       {/* Top Bar Navigation */}
       <div className="flex items-center justify-between">
-        <Button asChild variant="ghost" size="sm" className="gap-1.5 -ml-2">
+        <Button asChild variant="ghost" size="sm" className="gap-1.5 -ml-2 text-gray-300 hover:text-white hover:bg-white/[0.06] rounded-xl">
           <Link href="/cms/job-tracker">
             <ArrowLeft className="w-4 h-4" />
-            Back to Job Tracker
+            <span>Back to Job Tracker</span>
           </Link>
         </Button>
 
         <div className="flex items-center gap-2">
           {currentApp.jobUrl && (
-            <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs">
+            <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs rounded-xl border-white/[0.1] bg-white/[0.04] text-gray-300 hover:text-white">
               <a href={currentApp.jobUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-3.5 h-3.5" />
-                Original Job Post
+                <span>Original Job Post</span>
               </a>
             </Button>
           )}
@@ -307,35 +307,38 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
       </div>
 
       {/* Main Header Banner */}
-      <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0C0E18] via-[#090A10] to-[#08090C] p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-6">
+        {/* Glow accent */}
+        <div className="absolute top-0 right-0 w-[400px] h-[200px] bg-primary/10 rounded-full blur-[100px] pointer-events-none -z-0" />
+
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xl shrink-0">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30 flex items-center justify-center text-primary font-extrabold text-2xl shrink-0 shadow-inner">
               {currentApp.companyName.slice(0, 2).toUpperCase()}
             </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <div className="space-y-1.5">
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
                 {currentApp.jobTitle}
               </h1>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground flex items-center gap-1">
-                  <Building2 className="w-3.5 h-3.5" />
-                  {currentApp.companyName}
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                <span className="font-bold text-gray-200 flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                  <span>{currentApp.companyName}</span>
                 </span>
                 {currentApp.location && (
                   <>
                     <span>•</span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
-                      {currentApp.location}
+                    <span className="flex items-center gap-1 text-gray-400">
+                      <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                      <span>{currentApp.location}</span>
                     </span>
                   </>
                 )}
                 <span>•</span>
-                <Badge variant="outline" className={`text-[11px] ${platformCfg.color}`}>
+                <Badge variant="outline" className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${platformCfg.color}`}>
                   {platformCfg.label}
                 </Badge>
-                <Badge variant="secondary" className="text-[11px]">
+                <Badge variant="secondary" className="text-[11px] px-2 py-0.5 rounded-md bg-white/[0.05] text-gray-300 border border-white/[0.05]">
                   {WORKPLACE_CONFIG[currentApp.workplaceType]}
                 </Badge>
               </div>
@@ -343,8 +346,8 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
           </div>
 
           {/* Salary & ATS Badge */}
-          <div className="flex flex-col md:items-end gap-1.5">
-            <div className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+          <div className="flex flex-col md:items-end gap-2 shrink-0">
+            <div className="text-lg font-bold text-emerald-400">
               {formatSalary(
                 currentApp.salaryMin,
                 currentApp.salaryMax,
@@ -363,22 +366,22 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/10"
+                className="gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/10 rounded-xl"
                 onClick={handleRunATSAnalysis}
                 disabled={isAnalyzingATS}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                {isAnalyzingATS ? "Analyzing..." : "Analyze ATS Match"}
+                <span>{isAnalyzingATS ? "Analyzing..." : "Analyze ATS Match"}</span>
               </Button>
             )}
           </div>
         </div>
 
         {/* Lifecycle Pipeline Stepper */}
-        <div className="pt-4 border-t border-border/60 space-y-3">
+        <div className="pt-5 border-t border-white/[0.08] space-y-3 relative z-10">
           <div className="flex items-center justify-between">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Application Stage
+            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+              Application Pipeline Stage
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -386,10 +389,10 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleStatusAdvance("rejected")}
-                className={`h-7 text-[11px] font-semibold border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 ${
+                className={`h-7 text-[11px] font-semibold rounded-lg border-rose-500/30 text-rose-400 hover:bg-rose-500/10 ${
                   currentApp.status === "rejected"
-                    ? "bg-rose-500/15 border-rose-500/50 ring-1 ring-rose-500/30"
-                    : ""
+                    ? "bg-rose-500/20 border-rose-500/60 ring-1 ring-rose-500/40 text-rose-300"
+                    : "bg-transparent"
                 }`}
               >
                 ❌ Mark Rejected
@@ -399,10 +402,10 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleStatusAdvance("ghosted")}
-                className={`h-7 text-[11px] font-semibold border-orange-500/30 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 ${
+                className={`h-7 text-[11px] font-semibold rounded-lg border-orange-500/30 text-orange-400 hover:bg-orange-500/10 ${
                   currentApp.status === "ghosted"
-                    ? "bg-orange-500/15 border-orange-500/50 ring-1 ring-orange-500/30"
-                    : ""
+                    ? "bg-orange-500/20 border-orange-500/60 ring-1 ring-orange-500/40 text-orange-300"
+                    : "bg-transparent"
                 }`}
               >
                 👻 Mark Ghosted
@@ -418,10 +421,10 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
                   key={step.status}
                   type="button"
                   onClick={() => handleStatusAdvance(step.status)}
-                  className={`py-2 px-1.5 rounded-lg border text-xs font-medium text-center transition-all ${
+                  className={`py-2 px-1.5 rounded-xl border text-xs font-medium text-center transition-all ${
                     isActive
-                      ? "bg-primary text-primary-foreground border-primary shadow-sm ring-2 ring-primary/20 font-bold"
-                      : "bg-muted/30 border-border/60 hover:bg-muted text-muted-foreground"
+                      ? "bg-primary text-white border-primary shadow-lg shadow-primary/30 font-bold"
+                      : "bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] text-gray-400 hover:text-white"
                   }`}
                 >
                   {step.label}
@@ -432,21 +435,20 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
 
           {/* Post-Mortem Alert Banner when status is rejected or ghosted */}
           {(currentApp.status === "rejected" || currentApp.status === "ghosted") && (
-            <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-500/5 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+            <div className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
               <div className="space-y-0.5">
-                <div className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1.5">
+                <div className="text-xs font-bold text-rose-300 flex items-center gap-1.5">
                   <span>Application Marked as {JOB_STATUS_CONFIG[currentApp.status].label}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Keep track of what went well, interviewer feedback, and improvement areas to
-                  refine your career search strategy.
+                <p className="text-[11px] text-gray-400">
+                  Keep track of what went well, interviewer feedback, and improvement areas to refine your career strategy.
                 </p>
               </div>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setIsPostMortemOpen(true)}
-                className="h-8 text-xs font-semibold shrink-0 border-rose-500/30 hover:bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                className="h-8 text-xs font-bold rounded-xl shrink-0 border-rose-500/40 hover:bg-rose-500/20 text-rose-300"
               >
                 📝 View / Edit Reflection
               </Button>
@@ -456,40 +458,55 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
       </div>
 
       {/* Tabs Section */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full md:w-auto h-auto sm:h-11 p-1 bg-muted/80 gap-1">
-          <TabsTrigger value="tailor" className="flex items-center gap-2 text-xs md:text-sm">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            AI CV Tailor & ATS
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full md:w-auto h-auto sm:h-12 p-1 bg-[#0C0E18] border border-white/[0.08] rounded-2xl gap-1">
+          <TabsTrigger
+            value="tailor"
+            className="flex items-center gap-2 text-xs md:text-sm py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-medium transition-all"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>AI CV Tailor & ATS</span>
           </TabsTrigger>
-          <TabsTrigger value="outreach" className="flex items-center gap-2 text-xs md:text-sm">
-            <SendHorizontal className="w-4 h-4 text-sky-500" />
-            Outreach & Emails
+          <TabsTrigger
+            value="outreach"
+            className="flex items-center gap-2 text-xs md:text-sm py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-medium transition-all"
+          >
+            <SendHorizontal className="w-4 h-4 text-sky-400" />
+            <span>Outreach & Emails</span>
             {linkedOutreaches.length > 0 && (
               <Badge
                 variant="secondary"
-                className="text-[10px] h-4 px-1 ml-0.5 bg-sky-500/20 text-sky-700 dark:text-sky-300"
+                className="text-[10px] h-4 px-1.5 ml-0.5 bg-sky-500/20 text-sky-300 font-mono"
               >
                 {linkedOutreaches.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="interview" className="flex items-center gap-2 text-xs md:text-sm">
-            <Users className="w-4 h-4 text-purple-500" />
-            Interview Copilot
+          <TabsTrigger
+            value="interview"
+            className="flex items-center gap-2 text-xs md:text-sm py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-medium transition-all"
+          >
+            <Users className="w-4 h-4 text-purple-400" />
+            <span>Interview Copilot</span>
             {(currentApp.interviews?.length ?? 0) > 0 && (
-              <Badge variant="secondary" className="text-[10px] h-4 px-1 ml-0.5">
+              <Badge variant="secondary" className="text-[10px] h-4 px-1.5 ml-0.5 bg-purple-500/20 text-purple-300 font-mono">
                 {currentApp.interviews?.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="overview" className="flex items-center gap-2 text-xs md:text-sm">
-            <FileText className="w-4 h-4 text-blue-500" />
-            Job Overview & JD
+          <TabsTrigger
+            value="overview"
+            className="flex items-center gap-2 text-xs md:text-sm py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-medium transition-all"
+          >
+            <FileText className="w-4 h-4 text-blue-400" />
+            <span>Job Overview & JD</span>
           </TabsTrigger>
-          <TabsTrigger value="offering" className="flex items-center gap-2 text-xs md:text-sm">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-            Offering & Strategy
+          <TabsTrigger
+            value="offering"
+            className="flex items-center gap-2 text-xs md:text-sm py-2 rounded-xl data-[state=active]:bg-primary data-[state=active]:text-white font-medium transition-all"
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>Offering & Package</span>
           </TabsTrigger>
         </TabsList>
 

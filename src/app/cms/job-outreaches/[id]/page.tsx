@@ -55,40 +55,32 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import {
-  jobOutreachService,
-  type JobOutreach,
-  type OutreachStatus,
-  type OutreachType,
-} from "@/services";
+import { jobOutreachService, type OutreachStatus } from "@/services";
 
 const STATUS_CONFIG: Record<OutreachStatus, { label: string; className: string }> = {
   draft: {
     label: "Draft",
-    className: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20",
+    className: "bg-slate-500/10 text-slate-300 border-slate-700/50",
   },
   sent: {
     label: "Awaiting Reply",
-    className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    className: "bg-blue-500/10 text-blue-400 border-blue-500/20",
   },
   follow_up_due: {
     label: "Follow-up Due ⚠️",
-    className:
-      "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-semibold",
+    className: "bg-amber-500/15 text-amber-300 border-amber-500/30 font-semibold animate-pulse",
   },
   replied: {
     label: "Replied 🎉",
-    className:
-      "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-semibold",
+    className: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 font-semibold",
   },
   converted: {
     label: "Converted to Job Interview 🚀",
-    className:
-      "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30 font-bold",
+    className: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30 font-bold",
   },
   closed: {
     label: "Closed / No Fit",
-    className: "bg-zinc-500/10 text-zinc-500 border-zinc-500/20",
+    className: "bg-zinc-500/10 text-zinc-400 border-zinc-700/40",
   },
 };
 
@@ -273,14 +265,14 @@ export default function JobOutreachDetailPage() {
   const statusInfo = STATUS_CONFIG[outreach.status] || STATUS_CONFIG.sent;
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-14 text-slate-100 max-w-7xl mx-auto">
       {/* Top Navigation */}
       <div className="flex items-center justify-between">
         <Button
           asChild
           variant="ghost"
           size="sm"
-          className="gap-2 -ml-2 text-muted-foreground hover:text-foreground text-xs font-medium"
+          className="gap-2 -ml-2 text-slate-400 hover:text-white hover:bg-[#131726] text-xs font-medium rounded-lg"
         >
           <Link href="/cms/job-outreaches">
             <ArrowLeft className="h-4 w-4" /> Back to Job Outreaches
@@ -288,69 +280,83 @@ export default function JobOutreachDetailPage() {
         </Button>
       </div>
 
-      {/* Top Action Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-5">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-semibold text-primary">
-            <Building2 className="h-3.5 w-3.5" />
-            <span>{outreach.companyName}</span>
-            {outreach.companyWebsite && (
-              <a
-                href={outreach.companyWebsite}
-                target="_blank"
-                rel="noreferrer"
-                className="text-muted-foreground hover:text-primary"
-              >
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            )}
+      {/* Top Action Bar / Workspace Header */}
+      <div className="relative overflow-hidden p-6 rounded-2xl bg-[#0C0E18] border border-white/[0.08] shadow-xl">
+        <div className="absolute -top-10 right-10 h-40 w-80 rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            {/* Monogram Company Avatar */}
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-transparent border border-indigo-500/30 flex items-center justify-center text-lg font-bold text-indigo-300 shrink-0 shadow-inner">
+              {outreach.companyName ? outreach.companyName[0].toUpperCase() : "C"}
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-semibold text-indigo-400">
+                <Building2 className="h-3.5 w-3.5" />
+                <span>{outreach.companyName}</span>
+                {outreach.companyWebsite && (
+                  <a
+                    href={outreach.companyWebsite}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-400 hover:text-indigo-300 transition-colors"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                {outreach.jobTitle}
+              </h1>
+            </div>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground mt-1">
-            {outreach.jobTitle}
-          </h1>
-        </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Status Selector */}
-          <Select
-            value={outreach.status}
-            onValueChange={(val) => handleStatusChange(val as OutreachStatus)}
-          >
-            <SelectTrigger
-              className={cn("h-9 text-xs font-medium w-[180px]", statusInfo.className)}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Status Selector */}
+            <Select
+              value={outreach.status}
+              onValueChange={(val) => handleStatusChange(val as OutreachStatus)}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="sent">Awaiting Reply</SelectItem>
-              <SelectItem value="follow_up_due">Follow-up Due</SelectItem>
-              <SelectItem value="replied">Replied 🎉</SelectItem>
-              <SelectItem value="converted">Converted to Interview 🚀</SelectItem>
-              <SelectItem value="closed">Closed / No Fit</SelectItem>
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                className={cn(
+                  "h-9 text-xs font-medium w-[190px] bg-[#131726] border-white/[0.08]",
+                  statusInfo.className
+                )}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0C0E18] border-white/[0.1] text-slate-200">
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="sent">Awaiting Reply</SelectItem>
+                <SelectItem value="follow_up_due">Follow-up Due</SelectItem>
+                <SelectItem value="replied">Replied 🎉</SelectItem>
+                <SelectItem value="converted">Converted to Interview 🚀</SelectItem>
+                <SelectItem value="closed">Closed / No Fit</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="h-9 w-9 rounded-lg"
-            title="Refresh Thread"
-          >
-            <RefreshCw className={cn("h-4 w-4", isRefetching && "animate-spin")} />
-          </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetch()}
+              disabled={isRefetching}
+              className="h-9 w-9 rounded-xl border-white/[0.08] bg-[#131726] hover:bg-[#1C2237] text-slate-300"
+              title="Refresh Thread"
+            >
+              <RefreshCw className={cn("h-4 w-4", isRefetching && "animate-spin text-indigo-400")} />
+            </Button>
 
-          <Button
-            variant="destructive"
-            size="icon"
-            onClick={() => setIsDeleteDialogOpen(true)}
-            className="h-9 w-9 rounded-lg"
-            title="Delete Outreach"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="h-9 w-9 rounded-xl bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-500/30"
+              title="Delete Outreach"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -360,27 +366,25 @@ export default function JobOutreachDetailPage() {
         <div className="lg:col-span-2 space-y-6">
           {/* Draft Banner if status is draft */}
           {outreach.status === "draft" && (
-            <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+            <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
+                <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
                   <Send className="h-5 w-5" />
                 </div>
                 <div className="space-y-0.5">
-                  <div className="text-sm font-bold text-foreground">
-                    This outreach is still a draft
-                  </div>
-                  <p className="text-xs text-muted-foreground">
+                  <div className="text-sm font-bold text-white">This outreach is still a draft</div>
+                  <p className="text-xs text-slate-300">
                     Email has not been sent to{" "}
-                    <strong className="text-foreground">{outreach.contactName}</strong> (
+                    <strong className="text-white">{outreach.contactName}</strong> (
                     {outreach.contactEmail}) yet. Click the button to send it directly via{" "}
-                    <strong className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</strong>.
+                    <strong className="text-indigo-300 font-mono">{PUBLIC_SUPPORT_EMAIL}</strong>.
                   </p>
                 </div>
               </div>
               <Button
                 onClick={handleSendDraft}
                 disabled={isSendingDraft}
-                className="gap-2 shrink-0 font-semibold w-full sm:w-auto"
+                className="gap-2 shrink-0 font-semibold w-full sm:w-auto rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white shadow-md"
               >
                 {isSendingDraft ? (
                   <>
@@ -395,25 +399,25 @@ export default function JobOutreachDetailPage() {
             </div>
           )}
 
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 sm:p-5 border-b border-border/50 bg-muted/20">
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 sm:p-5 border-b border-white/[0.06] bg-[#131726]/40">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <CardTitle className="text-base font-bold flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-base font-bold flex items-center gap-2 text-white">
+                    <Mail className="h-4 w-4 text-indigo-400" />
                     Email Thread: &ldquo;{outreach.subject}&rdquo;
                   </CardTitle>
 
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-xs text-slate-400">
                     Ref ID:{" "}
-                    <span className="font-mono text-foreground font-semibold">#{outreach.id}</span>{" "}
+                    <span className="font-mono text-slate-200 font-semibold">#{outreach.id}</span>{" "}
                     · Sent from{" "}
-                    <span className="text-primary font-mono">{PUBLIC_SUPPORT_EMAIL}</span>
+                    <span className="text-indigo-300 font-mono">{PUBLIC_SUPPORT_EMAIL}</span>
                   </CardDescription>
                 </div>
                 <Badge
                   variant="outline"
-                  className={cn("text-xs font-semibold", statusInfo.className)}
+                  className={cn("text-xs font-semibold rounded-md", statusInfo.className)}
                 >
                   {statusInfo.label}
                 </Badge>
@@ -424,11 +428,11 @@ export default function JobOutreachDetailPage() {
               {/* Message Timeline */}
               {!outreach.messages || outreach.messages.length === 0 ? (
                 /* Fallback if no messages array yet, show initial body */
-                <div className="p-4 rounded-xl border bg-muted/30 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2 font-medium text-foreground">
+                <div className="p-4 rounded-xl border border-white/[0.08] bg-[#131726] space-y-3">
+                  <div className="flex items-center justify-between text-xs text-slate-400">
+                    <div className="flex items-center gap-2 font-medium text-slate-200">
                       <Avatar className="h-6 w-6">
-                        <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                        <AvatarFallback className="bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">
                           WN
                         </AvatarFallback>
                       </Avatar>
@@ -440,7 +444,7 @@ export default function JobOutreachDetailPage() {
                         : "Draft"}
                     </span>
                   </div>
-                  <div className="text-sm whitespace-pre-wrap leading-relaxed text-foreground/90 pl-8">
+                  <div className="text-sm whitespace-pre-wrap leading-relaxed text-slate-200 pl-8 font-sans">
                     {outreach.body}
                   </div>
                 </div>
@@ -454,8 +458,8 @@ export default function JobOutreachDetailPage() {
                         className={cn(
                           "p-4 rounded-xl border transition-all text-sm space-y-2.5",
                           isAdmin
-                            ? "bg-muted/30 border-border/60 ml-0 sm:ml-4"
-                            : "bg-emerald-500/10 border-emerald-500/30 mr-0 sm:mr-4 shadow-sm"
+                            ? "bg-[#131726] border-white/[0.08] ml-0 sm:ml-4 shadow-sm"
+                            : "bg-emerald-950/20 border-emerald-500/30 mr-0 sm:mr-4 shadow-lg shadow-emerald-950/20"
                         )}
                       >
                         <div className="flex items-center justify-between text-xs">
@@ -465,31 +469,31 @@ export default function JobOutreachDetailPage() {
                                 className={cn(
                                   "text-[10px] font-bold",
                                   isAdmin
-                                    ? "bg-primary/20 text-primary"
+                                    ? "bg-indigo-500/20 text-indigo-300"
                                     : "bg-emerald-600 text-white"
                                 )}
                               >
                                 {isAdmin ? "WN" : msg.senderName[0] || "R"}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="font-semibold text-foreground flex items-center gap-1.5">
+                            <div className="font-semibold text-white flex items-center gap-1.5">
                               <span>{msg.senderName}</span>
-                              <span className="text-[11px] font-normal text-muted-foreground">
+                              <span className="text-[11px] font-normal text-slate-400 font-mono">
                                 &lt;{msg.senderEmail}&gt;
                               </span>
                               {!isAdmin && (
-                                <Badge className="bg-emerald-600 text-[10px] py-0 h-4">
+                                <Badge className="bg-emerald-600 text-white text-[10px] py-0 h-4 font-semibold">
                                   Recruiter Reply
                                 </Badge>
                               )}
                             </div>
                           </div>
-                          <span className="text-muted-foreground text-[11px]">
+                          <span className="text-slate-400 text-[11px]">
                             {format(new Date(msg.createdAt), "dd MMM yyyy, HH:mm")}
                           </span>
                         </div>
 
-                        <div className="text-sm whitespace-pre-wrap leading-relaxed pl-8 text-foreground/90 font-sans">
+                        <div className="text-sm whitespace-pre-wrap leading-relaxed pl-8 text-slate-200 font-sans">
                           {msg.message}
                         </div>
                       </div>
@@ -498,13 +502,13 @@ export default function JobOutreachDetailPage() {
                 </div>
               )}
 
-              <Separator />
+              <Separator className="bg-white/[0.06]" />
 
               {/* Follow-up / Reply Composer */}
               <div className="space-y-3 pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="text-sm font-bold flex items-center gap-2">
-                    <Send className="h-4 w-4 text-primary" />
+                  <div className="text-sm font-bold flex items-center gap-2 text-white">
+                    <Send className="h-4 w-4 text-indigo-400" />
                     Send Follow-up / Reply
                   </div>
                   <Button
@@ -513,7 +517,7 @@ export default function JobOutreachDetailPage() {
                     size="sm"
                     onClick={handleGenerateAiFollowUp}
                     disabled={isGeneratingAiFollowUp || isSendingFollowUp}
-                    className="h-8 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/10"
+                    className="h-8 gap-1.5 text-xs rounded-lg border-indigo-500/30 text-indigo-300 bg-[#131726] hover:bg-indigo-500/20 hover:text-white"
                   >
                     {isGeneratingAiFollowUp ? (
                       <>
@@ -532,17 +536,18 @@ export default function JobOutreachDetailPage() {
                   placeholder={`Write a reply or follow-up message for ${outreach.contactName}...`}
                   value={followUpMessage}
                   onChange={(e) => setFollowUpMessage(e.target.value)}
-                  className="text-sm leading-relaxed"
+                  className="text-sm leading-relaxed bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
                 />
 
                 <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs text-muted-foreground">
-                    Sending from <strong className="text-foreground">{PUBLIC_SUPPORT_EMAIL}</strong>
+                  <span className="text-xs text-slate-400">
+                    Sending from{" "}
+                    <strong className="text-slate-200 font-mono">{PUBLIC_SUPPORT_EMAIL}</strong>
                   </span>
                   <Button
                     onClick={handleSendFollowUp}
                     disabled={isSendingFollowUp || !followUpMessage.trim()}
-                    className="gap-2 font-medium"
+                    className="gap-2 font-semibold rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md shadow-indigo-500/20 border border-indigo-400/30"
                   >
                     {isSendingFollowUp ? (
                       <>
@@ -563,46 +568,46 @@ export default function JobOutreachDetailPage() {
         {/* Right Column: Contact & Job Tracker Info */}
         <div className="space-y-6">
           {/* Target Recruiter Card */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <User className="h-4 w-4 text-primary" />
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <User className="h-4 w-4 text-indigo-400" />
                 Target Recruiter
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3.5 text-sm">
+            <CardContent className="p-4 space-y-3.5 text-sm">
               <div className="flex items-start gap-3">
-                <Avatar className="h-10 w-10 border border-primary/20">
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                <Avatar className="h-10 w-10 border border-indigo-500/30">
+                  <AvatarFallback className="bg-indigo-500/20 text-indigo-300 font-bold">
                     {outreach.contactName[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-0.5 overflow-hidden">
-                  <div className="font-bold text-foreground truncate">{outreach.contactName}</div>
+                  <div className="font-bold text-white truncate">{outreach.contactName}</div>
                   {outreach.contactRole && (
-                    <div className="text-xs text-muted-foreground truncate">
-                      {outreach.contactRole}
-                    </div>
+                    <div className="text-xs text-slate-400 truncate">{outreach.contactRole}</div>
                   )}
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="bg-white/[0.06]" />
 
               <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-muted/40">
+                <div className="flex items-center justify-between p-2 rounded-xl bg-[#131726] border border-white/[0.06]">
                   <div className="flex items-center gap-2 truncate">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="truncate font-mono">{outreach.contactEmail}</span>
+                    <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                    <span className="truncate font-mono text-slate-200">
+                      {outreach.contactEmail}
+                    </span>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-6 w-6 text-slate-400 hover:text-white hover:bg-white/[0.06]"
                     onClick={() => handleCopyEmail(outreach.contactEmail)}
                   >
                     {isCopied ? (
-                      <Check className="h-3 w-3 text-emerald-500" />
+                      <Check className="h-3 w-3 text-emerald-400" />
                     ) : (
                       <Copy className="h-3 w-3" />
                     )}
@@ -614,7 +619,7 @@ export default function JobOutreachDetailPage() {
                     href={outreach.contactLinkedin}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/40 hover:bg-muted/70 transition-colors text-blue-600 dark:text-blue-400 font-medium"
+                    className="flex items-center justify-between p-2 rounded-xl bg-[#131726] border border-white/[0.06] hover:bg-[#1C2237] transition-colors text-sky-400 font-medium"
                   >
                     <div className="flex items-center gap-2 truncate">
                       <Linkedin className="h-3.5 w-3.5 shrink-0" />
@@ -628,40 +633,45 @@ export default function JobOutreachDetailPage() {
           </Card>
 
           {/* Linked Job Tracker Card */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-primary" />
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-indigo-400" />
                 Job Tracker Integration
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-3.5 text-sm">
+            <CardContent className="p-4 space-y-3.5 text-sm">
               {outreach.jobApplication ? (
-                <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
+                <div className="p-3 bg-[#131726] border border-indigo-500/20 rounded-xl space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-primary">Linked Application</span>
-                    <Badge variant="outline" className="text-[10px] capitalize">
+                    <span className="text-xs font-semibold text-indigo-300">
+                      Linked Application
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] capitalize bg-indigo-500/10 border-indigo-500/30 text-indigo-300"
+                    >
                       {outreach.jobApplication.status.replace("_", " ")}
                     </Badge>
                   </div>
-                  <div className="font-bold text-sm">{outreach.jobApplication.companyName}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {outreach.jobApplication.jobTitle}
+                  <div className="font-bold text-sm text-white">
+                    {outreach.jobApplication.companyName}
                   </div>
+                  <div className="text-xs text-slate-400">{outreach.jobApplication.jobTitle}</div>
 
                   <Button
                     asChild
                     variant="outline"
                     size="sm"
-                    className="w-full text-xs h-8 gap-1.5 mt-2"
+                    className="w-full text-xs h-8 gap-1.5 mt-2 rounded-lg border-white/[0.08] bg-[#0C0E18] hover:bg-[#1C2237] text-slate-200"
                   >
                     <Link href={`/cms/job-tracker/${outreach.jobApplication.id}`}>
-                      <Briefcase className="h-3.5 w-3.5" /> Open in Job Tracker
+                      <Briefcase className="h-3.5 w-3.5 text-indigo-400" /> Open in Job Tracker
                     </Link>
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-3 text-xs text-muted-foreground">
+                <div className="space-y-3 text-xs text-slate-400">
                   <p>
                     This outreach is not linked to Job Tracker yet. If the recruiter responds
                     positively, you can convert it directly to an active job application or
@@ -670,7 +680,7 @@ export default function JobOutreachDetailPage() {
                   <Button
                     onClick={handleConvertToJobTracker}
                     disabled={isConverting}
-                    className="w-full text-xs h-9 gap-2"
+                    className="w-full text-xs h-9 gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-md border border-indigo-400/30"
                   >
                     {isConverting ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -686,27 +696,29 @@ export default function JobOutreachDetailPage() {
 
           {/* Attached Documents Card */}
           {outreach.attachments && outreach.attachments.length > 0 && (
-            <Card className="border-border/60 shadow-sm">
-              <CardHeader className="p-4 pb-3">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                  <Paperclip className="h-4 w-4 text-primary" />
+            <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+              <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
+                <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-indigo-400" />
                   Attachments ({outreach.attachments.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-4 pt-0 space-y-2 text-xs">
+              <CardContent className="p-4 space-y-2 text-xs">
                 {outreach.attachments.map((att, idx) => (
                   <a
                     key={idx}
                     href={att.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center justify-between p-2.5 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/60 transition-colors text-foreground group"
+                    className="flex items-center justify-between p-2.5 rounded-xl border border-white/[0.08] bg-[#131726] hover:bg-[#1C2237] transition-colors text-slate-200 group"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <FileText className="h-4 w-4 text-primary shrink-0" />
-                      <span className="font-medium truncate group-hover:underline">{att.name}</span>
+                      <FileText className="h-4 w-4 text-indigo-400 shrink-0" />
+                      <span className="font-medium truncate group-hover:text-indigo-300">
+                        {att.name}
+                      </span>
                     </div>
-                    <ExternalLink className="h-3 w-3 text-muted-foreground group-hover:text-primary" />
+                    <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-indigo-300" />
                   </a>
                 ))}
               </CardContent>
@@ -714,29 +726,29 @@ export default function JobOutreachDetailPage() {
           )}
 
           {/* Delivery & Follow-up Metadata */}
-          <Card className="border-border/60 shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Clock className="h-4 w-4 text-primary" />
+          <Card className="bg-[#0C0E18] border-white/[0.08] shadow-md">
+            <CardHeader className="p-4 pb-3 border-b border-white/[0.06]">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-indigo-400" />
                 Timeline & Cadence
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-2.5 text-xs text-muted-foreground">
-              <div className="flex justify-between py-1 border-b border-border/40">
+            <CardContent className="p-4 space-y-2.5 text-xs text-slate-400">
+              <div className="flex justify-between py-1 border-b border-white/[0.06]">
                 <span>Created Date:</span>
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-slate-200">
                   {format(new Date(outreach.createdAt), "dd MMM yyyy")}
                 </span>
               </div>
 
-              <div className="flex justify-between py-1 border-b border-border/40">
+              <div className="flex justify-between py-1 border-b border-white/[0.06]">
                 <span>Initial Email Sent:</span>
-                <span className="font-medium text-foreground">
+                <span className="font-medium text-slate-200">
                   {outreach.sentAt ? format(new Date(outreach.sentAt), "dd MMM yyyy, HH:mm") : "-"}
                 </span>
               </div>
 
-              <div className="flex justify-between py-1 border-b border-border/40">
+              <div className="flex justify-between py-1 border-b border-white/[0.06]">
                 <span>Follow-up Due:</span>
                 <span
                   className={cn(
@@ -744,8 +756,8 @@ export default function JobOutreachDetailPage() {
                     outreach.followUpDueDate &&
                       new Date(outreach.followUpDueDate) < new Date() &&
                       !outreach.lastRepliedAt
-                      ? "text-amber-500 font-bold"
-                      : "text-foreground"
+                      ? "text-amber-400 font-bold"
+                      : "text-slate-200"
                   )}
                 >
                   {outreach.followUpDueDate
@@ -756,7 +768,7 @@ export default function JobOutreachDetailPage() {
 
               <div className="flex justify-between py-1">
                 <span>Last Reply:</span>
-                <span className="font-medium text-emerald-500">
+                <span className="font-medium text-emerald-400">
                   {outreach.lastRepliedAt
                     ? format(new Date(outreach.lastRepliedAt), "dd MMM yyyy, HH:mm")
                     : "No replies yet"}
@@ -769,20 +781,25 @@ export default function JobOutreachDetailPage() {
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[#0C0E18] border-white/[0.1] text-slate-200">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete This Outreach?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-white">Delete This Outreach?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-400 text-xs">
               This action is permanent and will delete the entire email draft along with all
               associated replies.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel
+              disabled={isDeleting}
+              className="border-white/[0.08] bg-[#131726] text-slate-300 hover:bg-[#1C2237]"
+            >
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-rose-600 text-white hover:bg-rose-500"
             >
               {isDeleting ? "Deleting..." : "Delete Outreach"}
             </AlertDialogAction>
