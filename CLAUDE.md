@@ -1,8 +1,32 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code and Antigravity when working with code in this repository.
 
 @AGENTS.md
+
+## Senior Syndicate Operating Framework
+
+When working in this repository, operate as a high-caliber **Senior Syndicate Engineering & Design Unit**:
+- **Staff Fullstack Engineer**: Clean architecture, zero regressions, type-safe mutations, optimized database queries, robust edge runtime behavior.
+- **Principal UI/UX Architect**: Electric Obsidian design system fidelity, high-contrast typography, interactive feedback loops, seamless micro-animations, glassmorphism aesthetics.
+- **Senior Product Manager**: Strict user requirement alignment, proactive edge-case handling, comprehensive test steps, and crystal-clear progress updates.
+
+---
+
+## Design System: Electric Obsidian Standard
+
+All user-facing public and CMS interfaces must conform to the **Electric Obsidian** design system:
+- **Canvas / Background**: `#08090C` (Deep obsidian dark mode, `bg-background`).
+- **Container / Glass Cards**: `#0C0E18` with `border-white/[0.08]` or `#1E2235`, subtle backdrop-blur and radial gradient glow accents.
+- **Inner Data Cards**: `#131726` with border `#22283E`.
+- **Accents**:
+  - **Electric Indigo**: `#6366F1` / `#818CF8` (Primary brand & interactive buttons).
+  - **Electric Violet**: `#8B5CF6` / `#A78BFA` (Services & secondary highlights).
+  - **Emerald Pulse**: `#10B981` / `#34D399` (Live statuses, success states, career badges).
+- **Code Indentation**: Strict 2 spaces across the entire codebase (`tabWidth: 2`, `useTabs: false`).
+- **Entity ID Standard**: Format `<prefix>-<YYMMDDHHMM>-<5char pure lowercase letters a-z>` (e.g., `contact-2609040200-abcde`, `service-2609040200-defgh`, `hire-2609040200-ghijk`, `outreach-2609040200-zfoxq`).
+
+---
 
 ## Commands
 
@@ -11,7 +35,7 @@ pnpm dev          # dev server with Neon development DB (port 7000)
 pnpm dev --prod   # dev server with Neon production DB / main branch (alias: pnpm dev:prod)
 pnpm build        # runs drizzle-kit migrate FIRST, then next build — needs DATABASE_URL
 pnpm lint         # eslint
-pnpm exec tsc --noEmit   # typecheck (no test suite exists in this repo)
+pnpm exec tsc --noEmit   # typecheck (always verify before finalizing tasks)
 
 pnpm db:generate  # generate migration from src/db/schema.ts changes (works offline)
 pnpm db:migrate   # apply migrations (needs DATABASE_URL in .env.local)
@@ -19,6 +43,8 @@ pnpm db:studio    # browse the DB
 ```
 
 Environment lives in `.env.local` (never committed). You can configure `DATABASE_URL` (or `DATABASE_URL_DEV` and `DATABASE_URL_PROD` for easy switching between Neon branches). Required: `DATABASE_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD_HASH_B64`. The password hash is base64-encoded because bcrypt hashes contain `$`, which Next's env loader mangles via variable expansion. See README for the full list.
+
+---
 
 ## Architecture
 
@@ -40,11 +66,16 @@ Personal site + blog/portfolio with a self-hosted CMS. Everything content-relate
 
 **Client side** — TanStack Query for CMS data fetching, `contexts/auth-context` wraps Auth.js sign-in/out, forms use React Hook Form + Zod, UI primitives are shadcn/ui in `src/components/ui/`.
 
+---
+
 ## Public-repo rules
 
 - This is a public repository. The seed data in `src/db/migrations/` is deliberately fictional placeholder content ("John Doe") — never seed real personal data, real pricing, or real contact info into migrations or code. Real content lives only in the production DB via the CMS.
 - Editing the content of an already-applied migration is safe for existing databases (timestamp-based dedupe), but never edit `meta/_journal.json` timestamps.
 
+---
+
 ## Commit conventions
 
 - Never add `Co-Authored-By: Claude ...` or any other AI attribution trailer to commit messages in this repo.
+- For opening PRs and pushing atomic commits, use `/branch-commit-pr`.
