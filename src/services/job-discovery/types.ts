@@ -17,12 +17,17 @@ export interface DiscoveredJob {
   description: string;
   matchScore: number;
   matchedSkills: string[];
-  source: "remotive" | "jobicy" | "global";
+  source: "jobicy" | "remotive" | "arbeitnow" | "remoteok" | "linkedin" | "google_linkedin" | "global";
+  sourceName: string;
+  sourceBadgeColor?: string;
+  visaSponsorship?: boolean;
+  seniorityLevel?: "Junior" | "Mid" | "Senior" | "Lead" | "Staff" | "Executive" | "All Levels";
+  geoRegion?: "apac" | "japan" | "europe" | "australia" | "usa" | "worldwide";
 }
 
 export interface JobDiscoverySearchParams {
   query?: string;
   tag?: string;
-  geo?: "worldwide" | "apac" | "usa" | "europe" | "all";
+  geo?: "all" | "worldwide" | "apac" | "japan" | "europe" | "australia" | "usa";
   limit?: number;
 }
