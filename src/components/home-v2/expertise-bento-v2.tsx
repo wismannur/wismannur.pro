@@ -17,7 +17,7 @@ export function ExpertiseBentoV2() {
     { name: "Next.js 16 (App Router)", cat: "fullstack", badge: "Primary" },
     { name: "React 19 Server Components", cat: "frontend", badge: "Core" },
     { name: "TypeScript (Strict 5.x)", cat: "fullstack", badge: "Standard" },
-    { name: "Gemini 3.7 Flash & Vertex AI", cat: "ai", badge: "AI Core" },
+    { name: "Gemini 3.8 Flash & Vertex AI", cat: "ai", badge: "AI Core" },
     { name: "Autonomous Tool Calling", cat: "ai", badge: "Agentic" },
     { name: "Model Context Protocol (MCP)", cat: "ai", badge: "Advanced" },
     { name: "Neon Serverless Postgres", cat: "cloud", badge: "Relational" },
@@ -152,7 +152,7 @@ export function ExpertiseBentoV2() {
               <div className="pt-4 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
                 <span>Production GenAI Systems</span>
                 <span className="font-mono text-cyan-400 font-semibold text-[11px]">
-                  Gemini 3.7 Flash SDK
+                  Gemini 3.8 Flash SDK
                 </span>
               </div>
             </SpotlightCard>

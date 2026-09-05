@@ -6,7 +6,7 @@
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-0.45.2-green?style=flat-square&logo=drizzle)](https://orm.drizzle.team/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon%20Serverless-336791?style=flat-square&logo=postgresql)](https://neon.tech/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.19-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Google Gemini](https://img.shields.io/badge/Google%20GenAI-Gemini%203.7%20Flash-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
+[![Google Gemini](https://img.shields.io/badge/Google%20GenAI-Gemini%203.8%20Flash-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
 [![Resend](https://img.shields.io/badge/Email-Resend%20v6-black?style=flat-square&logo=resend)](https://resend.com/)
 
 > **Production-grade personal digital ecosystem, technical publication, and full-stack enterprise control plane.**  
@@ -48,7 +48,7 @@ This platform is architected around the philosophy of **zero-redeploy content mu
 - **Domain-Driven RPC Service Layer**: Business logic is partitioned into dedicated domain modules under `src/services/<domain>/`, exposing type-safe Next.js Server Actions with uniform error handling (`ServiceError`) and mandatory authorization guards (`assertAdmin`).
 - **Edge Proxy Boundary**: Authentication verification for admin routes (`/cms/*`) and login redirects (`/login`) is performed in `src/proxy.ts` using raw JWT verification (`next-auth/jwt`), avoiding heavy cryptographic libraries (`bcryptjs`) or database drivers inside the Edge runtime bundle.
 - **Bidirectional Communications Engine**: Integrates Resend with automated inbound webhook ingestion (`/api/webhooks/resend-inbound`), Svix cryptographic signature validation, RFC 5322 thread linking (`In-Reply-To`, `References`), and entity-scoped dynamic routing (`inquiry-{id}@...`, `outreach-{id}@...`).
-- **Real-Time Generative AI RAG**: A streaming Server-Sent Events (SSE) chat endpoint (`/api/chat`) leveraging `@google/genai` (Gemini 3.7 / 2.5 Flash / Vertex AI) coupled with database-backed system knowledge context and deterministic tool calling for lead capture.
+- **Real-Time Generative AI RAG**: A streaming Server-Sent Events (SSE) chat endpoint (`/api/chat`) leveraging `@google/genai` (Gemini 3.8 / 2.5 Flash / Vertex AI) coupled with database-backed system knowledge context and deterministic tool calling for lead capture.
 
 ---
 
@@ -76,7 +76,7 @@ flowchart TB
 
     subgraph DataAndAI["Data, Storage & AI Cloud"]
         PostgresDB[("PostgreSQL (Neon Serverless)")]
-        GeminiAI["Google Gemini 3.7 / Vertex AI"]
+        GeminiAI["Google Gemini 3.8 / Vertex AI"]
         ResendService["Resend API & SMTP Infrastructure"]
         VercelBlob["Vercel Blob Storage (Media & Assets)"]
     end
@@ -152,7 +152,7 @@ sequenceDiagram
     participant Route as /api/chat (Next.js Node.js)
     participant RAG as Knowledge Context Builder
     participant DB as PostgreSQL (Neon)
-    participant Gemini as Google Gemini 3.7 / Vertex AI
+    participant Gemini as Google Gemini 3.8 / Vertex AI
     participant Resend as Resend Notification API
 
     Visitor->>Widget: Sends prompt ("Are you available for freelance Next.js work?")
@@ -233,7 +233,7 @@ Runtime Engine       : Node.js 24.x (LTS) · React 19.2.4 · TypeScript 5.x
 UI & Styling         : Tailwind CSS 3.4.19 · Radix UI Primitives (shadcn/ui) · Framer Motion 11.x
 Database & ORM       : PostgreSQL (Neon Serverless) · Drizzle ORM 0.45.2 · Drizzle Kit 0.31.10
 Authentication       : Auth.js v5 (next-auth 5.0.0-beta.32) · JWT Session Strategy · bcryptjs
-Generative AI & LLM  : Google GenAI SDK (@google/genai 2.19.0) · Gemini 3.7 / 2.5 Flash · Vertex AI
+Generative AI & LLM  : Google GenAI SDK (@google/genai 2.19.0) · Gemini 3.8 / 2.5 Flash · Vertex AI
 Email Infrastructure : Resend 6.24.0 · React Email 1.0.12 · Svix 2.1.0 (Webhook HMAC Verification)
 Content Processing   : Unified · Remark 11 · Rehype 8 · Rehype-Sanitize · PrismJS Syntax Highlighting
 State & Forms        : TanStack React Query v5 · React Hook Form 7.x · Zod 3.23.8
@@ -326,7 +326,7 @@ NEXT_PUBLIC_SITE_URL="http://localhost:7000"
 # 4. GOOGLE GEMINI / VERTEX AI (24/7 AI Assistant Engine)
 # =============================================================================
 GEMINI_API_KEY="AIzaSy..."
-GEMINI_MODEL="gemini-3.7-flash"
+GEMINI_MODEL="gemini-3.8-flash"
 
 # Optional: Google Cloud Vertex AI enterprise mode
 USE_VERTEX_AI="false"

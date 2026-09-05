@@ -217,7 +217,7 @@ const AuthorBio = ({ settings: initialSettings }: AuthorBioProps) => {
 
           <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
             {authorData?.bio ||
-              "7+ years architecting scalable fullstack web applications, autonomous AI agent pipelines with Gemini 3.7 & Model Context Protocol (MCP), and production database systems with sub-second performance rigor."}
+              "7+ years architecting scalable fullstack web applications, autonomous AI agent pipelines with Gemini 3.8 & Model Context Protocol (MCP), and production database systems with sub-second performance rigor."}
           </p>
 
           {/* Core Stack Pills */}
