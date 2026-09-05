@@ -21,7 +21,6 @@ const pagePath: Record<PageKey, string> = {
   about: "/about",
   services: "/services",
   "hire-me": "/hire-me",
-  offers: "/offers",
   blog: "/blog",
   projects: "/projects",
   contact: "/contact",
