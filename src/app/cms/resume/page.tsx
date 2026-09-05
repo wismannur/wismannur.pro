@@ -255,7 +255,11 @@ export default function CmsResumePage() {
                 <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => handlePublishToggle(entry.id, entry.isPublished)}
-                  className={entry.isPublished ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer" : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"}
+                  className={
+                    entry.isPublished
+                      ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                      : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                  }
                 >
                   {entry.isPublished ? (
                     <>
@@ -283,8 +287,8 @@ export default function CmsResumePage() {
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-slate-100">Delete Resume Entry?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
-                  This action cannot be undone. This will permanently delete &quot;{entry.title}&quot; at{" "}
-                  {entry.organization} from your about page.
+                  This action cannot be undone. This will permanently delete &quot;{entry.title}
+                  &quot; at {entry.organization} from your about page.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -310,8 +314,13 @@ export default function CmsResumePage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100">Resume & Credentials</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+              <GraduationCap className="w-5 h-5" />
+            </span>
+            Resume & Credentials
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Manage work experience and education shown on your public profile
           </p>
         </div>
@@ -440,7 +449,9 @@ export default function CmsResumePage() {
             hasMore,
             onPageChange: handlePageChange,
           }}
-          rowClassName={(entry) => (!entry.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors")}
+          rowClassName={(entry) =>
+            !entry.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors"
+          }
         />
       </div>
     </div>

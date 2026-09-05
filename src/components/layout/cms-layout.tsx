@@ -26,7 +26,6 @@ import {
   MessagesSquare,
   PenSquare,
   Scale,
-  Search,
   SendHorizontal,
   Settings,
   Sparkles,
@@ -107,10 +106,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
     } catch {
       toast.error("Failed to log out. Please try again.");
     }
-  };
-
-  const openCommandPalette = () => {
-    window.dispatchEvent(new CustomEvent("open-command-palette"));
   };
 
   const navigationItems = [
@@ -392,20 +387,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 
             {/* Right: Actions (Search, Live Site, Profile Dropdown) */}
             <div className="flex items-center gap-2.5">
-              {/* Quick Command Search Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={openCommandPalette}
-                className="h-8 px-2.5 rounded-full text-xs text-gray-300 hover:text-white hover:bg-white/[0.06] border border-white/[0.08] hidden sm:inline-flex"
-              >
-                <Search size={13} className="mr-1.5 text-primary" />
-                <span>Search</span>
-                <kbd className="ml-1.5 inline-flex h-4 items-center rounded border border-white/[0.1] bg-black/40 px-1 font-mono text-[9px] text-gray-400">
-                  ⌘K
-                </kbd>
-              </Button>
-
               {/* View Live Site Button */}
               <Button
                 variant="outline"

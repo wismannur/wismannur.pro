@@ -177,7 +177,10 @@ export default function CmsProjectsPage() {
           <div className="text-xs text-slate-500 flex flex-wrap gap-1 mt-0.5">
             {project.technologies &&
               project.technologies.slice(0, 3).map((tech) => (
-                <Chip key={tech} className="text-[10px] py-0 px-2 bg-white/[0.04] text-slate-300 border-white/[0.06]">
+                <Chip
+                  key={tech}
+                  className="text-[10px] py-0 px-2 bg-white/[0.04] text-slate-300 border-white/[0.06]"
+                >
                   {tech}
                 </Chip>
               ))}
@@ -322,7 +325,11 @@ export default function CmsProjectsPage() {
                 <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => handlePublishToggle(project.id, project.isPublished)}
-                  className={project.isPublished ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer" : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"}
+                  className={
+                    project.isPublished
+                      ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                      : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                  }
                 >
                   {project.isPublished ? (
                     <>
@@ -377,8 +384,15 @@ export default function CmsProjectsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100">Projects</h1>
-          <p className="text-sm text-slate-400">Manage and showcase your engineering portfolio</p>
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+              <Folder className="w-5 h-5" />
+            </span>
+            Projects
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Manage and showcase your engineering portfolio
+          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
