@@ -234,7 +234,7 @@ export default function CmsAiChatLogsPage() {
             <Sparkles className="h-4 w-4 text-amber-500" />
           </div>
           <div className="text-sm font-semibold mt-2.5 text-foreground truncate">
-            Gemini 3.7 / 2.5 Flash
+            Gemini 3.8 / 2.5 Flash
           </div>
         </div>
       </div>

@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  Wrench,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -269,7 +270,11 @@ export default function CmsServiceCatalogPage() {
                 <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => handlePublishToggle(service.id, service.isPublished)}
-                  className={service.isPublished ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer" : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"}
+                  className={
+                    service.isPublished
+                      ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                      : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                  }
                 >
                   {service.isPublished ? (
                     <>
@@ -297,8 +302,8 @@ export default function CmsServiceCatalogPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-slate-100">Delete Service?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
-                  This action cannot be undone. This will permanently delete &quot;{service.title}&quot; from
-                  your public service offerings and catalog.
+                  This action cannot be undone. This will permanently delete &quot;{service.title}
+                  &quot; from your public service offerings and catalog.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -324,8 +329,13 @@ export default function CmsServiceCatalogPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100">Service Catalog</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+              <Wrench className="w-5 h-5" />
+            </span>
+            Service Catalog
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Manage offerings shown on home, /services, and /hire-me
           </p>
         </div>
@@ -430,10 +440,11 @@ export default function CmsServiceCatalogPage() {
             hasMore,
             onPageChange: handlePageChange,
           }}
-          rowClassName={(service) => (!service.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors")}
+          rowClassName={(service) =>
+            !service.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors"
+          }
         />
       </div>
     </div>
   );
 }
-

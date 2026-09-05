@@ -411,7 +411,7 @@ export function HeroConsole() {
                   Wisman&apos;s AI Representative
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono hidden sm:inline">
-                  Gemini 3.7 Flash • Vertex AI
+                  Gemini 3.8 Flash • Vertex AI
                 </span>
               </div>
 
@@ -615,7 +615,7 @@ export function HeroConsole() {
                 <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.07] hover:border-primary/40 transition-colors">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Bot size={14} className="text-purple-400 shrink-0" />
-                    <span className="font-bold text-xs text-foreground truncate">Gemini 3.7 Flash</span>
+                    <span className="font-bold text-xs text-foreground truncate">Gemini 3.8 Flash</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-tight">
                     Google Vertex AI SDK, Tool Calling & Agentic workflows
@@ -762,7 +762,7 @@ export function HeroConsole() {
         <div className="mt-3 pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-[11px] text-muted-foreground font-mono">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Powered by Gemini 3.7 Flash & Vertex AI</span>
+            <span>Powered by Gemini 3.8 Flash & Vertex AI</span>
           </div>
           <span>Engineered by Wisman Nur</span>
         </div>

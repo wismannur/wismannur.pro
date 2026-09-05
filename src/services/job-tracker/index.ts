@@ -1,7 +1,6 @@
 import * as jobTrackerActions from "./actions";
 
 export * from "./types";
-export { jobTrackerActions };
 
 export const jobTrackerService = {
   getAll: jobTrackerActions.getAllApplications,

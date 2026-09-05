@@ -18,7 +18,7 @@ const BREAKPOINTS: BreakpointConfig = {
   "2xl": 1536,
 };
 
-export function useBreakpoint(breakpoint: keyof BreakpointConfig) {
+function useBreakpoint(breakpoint: keyof BreakpointConfig) {
   const [isMatched, setIsMatched] = React.useState<boolean | undefined>(undefined);
 
   React.useEffect(() => {
@@ -36,14 +36,4 @@ export function useBreakpoint(breakpoint: keyof BreakpointConfig) {
 
 export function useIsMobile() {
   return !useBreakpoint("md");
-}
-
-export function useIsTablet() {
-  const isAboveMd = useBreakpoint("md");
-  const isBelowLg = !useBreakpoint("lg");
-  return isAboveMd && isBelowLg;
-}
-
-export function useIsDesktop() {
-  return useBreakpoint("lg");
 }

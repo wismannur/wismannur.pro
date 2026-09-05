@@ -101,7 +101,7 @@ export function RecruiterFastTrack({ settings }: RecruiterFastTrackProps) {
                       <span>AI & Cloud Architecture</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Gemini 3.7 Agents, MCP Protocols, Cloud Run & Edge
+                      Gemini 3.8 Agents, MCP Protocols, Cloud Run & Edge
                     </p>
                   </div>
                 </div>

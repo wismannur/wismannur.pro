@@ -277,7 +277,6 @@ export const pageKeyEnum = pgEnum("page_key", [
   "about",
   "services",
   "hire-me",
-  "offers",
   "blog",
   "projects",
   "contact",
@@ -389,29 +388,6 @@ export const services = pgTable("services", {
     .$onUpdate(() => new Date()),
 });
 
-export const pricingTiers = pgTable("pricing_tiers", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  slug: text("slug").notNull().unique(),
-  name: text("name").notNull(),
-  priceLabel: text("price_label").notNull(),
-  description: text("description").notNull(),
-  features: text("features")
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
-  isPopular: boolean("is_popular").notNull().default(false),
-  ctaLabel: text("cta_label").notNull().default("Get Started"),
-  sortOrder: integer("sort_order").notNull().default(0),
-  isPublished: boolean("is_published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
-
 export const faqs = pgTable("faqs", {
   id: text("id")
     .primaryKey()
@@ -473,33 +449,6 @@ export const availabilitySlots = pgTable("availability_slots", {
   year: integer("year").notNull(),
   status: availabilityStatus("status").notNull().default("available"),
   label: text("label").notNull().default("Available"),
-  sortOrder: integer("sort_order").notNull().default(0),
-  isPublished: boolean("is_published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
-
-// The /offers catalog (IDR fixed-price packages). Icons are lucide names
-// resolved through src/lib/icon-registry.ts.
-export const offers = pgTable("offers", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  slug: text("slug").notNull().unique(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  icon: text("icon").notNull(),
-  price: integer("price").notNull(),
-  forWho: text("for_who").notNull().default(""),
-  extras: text("extras")
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
-  isPopular: boolean("is_popular").notNull().default(false),
-  color: text("color"),
   sortOrder: integer("sort_order").notNull().default(0),
   isPublished: boolean("is_published").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -733,12 +682,10 @@ export type SiteSettingsRow = typeof siteSettings.$inferSelect;
 export type PageCopyRow = typeof pageCopy.$inferSelect;
 export type SkillRow = typeof skills.$inferSelect;
 export type ServiceRow = typeof services.$inferSelect;
-export type PricingTierRow = typeof pricingTiers.$inferSelect;
 export type FaqRow = typeof faqs.$inferSelect;
 export type ProcessStepRow = typeof processSteps.$inferSelect;
 export type TestimonialRow = typeof testimonials.$inferSelect;
 export type AvailabilitySlotRow = typeof availabilitySlots.$inferSelect;
-export type OfferRow = typeof offers.$inferSelect;
 export type SitePageRow = typeof sitePages.$inferSelect;
 export type JobApplicationRow = typeof jobApplications.$inferSelect;
 export type JobInterviewRow = typeof jobInterviews.$inferSelect;

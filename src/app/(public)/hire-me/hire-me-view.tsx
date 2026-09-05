@@ -97,7 +97,7 @@ const TARGET_ROLES = [
       "Designing and implementing autonomous multi-agent loops, Model Context Protocol (MCP) servers, structured tool-calling, and reasoning workflows.",
     icon: Bot,
     skills: [
-      "Gemini 3.7 & Claude Reasoning APIs",
+      "Gemini 3.8 & Claude Reasoning APIs",
       "Model Context Protocol (MCP) Tooling",
       "Multi-Agent Automation Loops",
       "Structured Outputs & Schemas",
@@ -162,7 +162,7 @@ const STACK_MATRIX = [
     description: "Agentic tool calling, MCP servers, and LLM automation pipelines.",
     tech: [
       "Model Context Protocol (MCP)",
-      "Gemini 3.7 & Claude APIs",
+      "Gemini 3.8 & Claude APIs",
       "Structured Reasoning Loops",
       "Vector Embeddings & RAG",
       "Custom AI Sidecars",

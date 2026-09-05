@@ -226,7 +226,11 @@ export default function CmsFaqsPage() {
                 <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => handlePublishToggle(faq.id, faq.isPublished)}
-                  className={faq.isPublished ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer" : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"}
+                  className={
+                    faq.isPublished
+                      ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                      : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                  }
                 >
                   {faq.isPublished ? (
                     <>
@@ -254,8 +258,8 @@ export default function CmsFaqsPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-slate-100">Delete FAQ?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
-                  This action cannot be undone. This will permanently delete &quot;{faq.question}&quot; from
-                  your FAQ sections.
+                  This action cannot be undone. This will permanently delete &quot;{faq.question}
+                  &quot; from your FAQ sections.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -281,8 +285,13 @@ export default function CmsFaqsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100">Frequently Asked Questions</h1>
-          <p className="text-sm text-slate-400">
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+              <HelpCircle className="w-5 h-5" />
+            </span>
+            Frequently Asked Questions
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Manage inquiries and clarifications displayed on /services and /hire-me
           </p>
         </div>
@@ -381,10 +390,11 @@ export default function CmsFaqsPage() {
             hasMore,
             onPageChange: handlePageChange,
           }}
-          rowClassName={(faq) => (!faq.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors")}
+          rowClassName={(faq) =>
+            !faq.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors"
+          }
         />
       </div>
     </div>
   );
 }
-

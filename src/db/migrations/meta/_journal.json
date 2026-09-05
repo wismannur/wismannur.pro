@@ -127,6 +127,13 @@
       "when": 1788345164163,
       "tag": "0017_happy_expediter",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788600465002,
+      "tag": "0018_warm_triathlon",
+      "breakpoints": true
     }
   ]
 }

@@ -626,7 +626,7 @@ export function FloatingChatWidget() {
               </Button>
             </form>
             <p className="text-[10px] text-center text-gray-400 mt-2 leading-none font-medium">
-              Powered by Gemini 3.7 Flash • Instant responses 24/7
+              Powered by Gemini 3.8 Flash • Instant responses 24/7
             </p>
           </div>
         </div>

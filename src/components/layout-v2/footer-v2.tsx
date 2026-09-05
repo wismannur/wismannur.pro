@@ -228,7 +228,7 @@ export function FooterV2({ settings }: { settings: SiteSettings }) {
                 <li>Next.js 16 (App Router)</li>
                 <li>React 19 Server Components</li>
                 <li>TypeScript Strict Typings</li>
-                <li>Gemini 3.7 Flash & MCP</li>
+                <li>Gemini 3.8 Flash & MCP</li>
                 <li>Neon Serverless PostgreSQL</li>
                 <li>Tailwind CSS & Motion</li>
               </ul>

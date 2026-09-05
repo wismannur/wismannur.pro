@@ -1,7 +1,6 @@
 import * as jobDiscoveryActions from "./actions";
 
 export * from "./types";
-export { jobDiscoveryActions };
 
 export const jobDiscoveryService = {
   fetchJobs: jobDiscoveryActions.fetchWorldwideTechJobs,

@@ -14,7 +14,7 @@ const BlogHeader = ({ eyebrow, title, description }: BlogHeaderProps) => {
       title={title || "Architectural **Essays** & Engineering Insights."}
       description={
         description ||
-        "In-depth write-ups on scaling modern web platforms, autonomous AI agent workflows with Gemini 3.7 & MCP, and hard-earned engineering lessons from 7+ years in production."
+        "In-depth write-ups on scaling modern web platforms, autonomous AI agent workflows with Gemini 3.8 & MCP, and hard-earned engineering lessons from 7+ years in production."
       }
       className="text-center mb-10 md:mb-12"
     />

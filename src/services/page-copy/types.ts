@@ -9,7 +9,6 @@ export type PageKey =
   | "about"
   | "services"
   | "hire-me"
-  | "offers"
   | "blog"
   | "projects"
   | "contact"
@@ -103,11 +102,6 @@ export interface HireMeCopy {
   cta: CtaData;
 }
 
-export interface OffersCopy {
-  meta: PageMeta;
-  header: SectionCopy;
-}
-
 // Blog + projects list pages share the same eyebrow/title/description header.
 export interface ListHeaderCopy {
   meta: PageMeta;
@@ -138,7 +132,6 @@ export interface PageCopyMap {
   about: AboutCopy;
   services: ServicesCopy;
   "hire-me": HireMeCopy;
-  offers: OffersCopy;
   blog: ListHeaderCopy;
   projects: ListHeaderCopy;
   contact: ContactCopy;

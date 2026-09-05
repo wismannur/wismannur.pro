@@ -18,7 +18,7 @@ export function CredibilityStrip() {
     {
       icon: Sparkles,
       label: "Production AI Agents",
-      sub: "Gemini 3.7 Flash & Tool Calling",
+      sub: "Gemini 3.8 Flash & Tool Calling",
     },
     {
       icon: Layers,

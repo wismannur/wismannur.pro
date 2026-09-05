@@ -15,7 +15,7 @@ export function HeroV2({ eyebrow, title, bio }: HeroV2Props) {
   const defaultEyebrow = "FULLSTACK ARCHITECTURE • AGENTIC AI • CLOUD";
   const defaultTitle = "Building High-Performance **Web Platforms** Powered by **Agentic AI**.";
   const defaultBio =
-    "__Senior Fullstack Engineer__ turning complex product visions into production-grade web platforms and autonomous multi-agent workflows with Next.js 16, TypeScript, Neon PostgreSQL, and Gemini 3.7 Flash.";
+    "__Senior Fullstack Engineer__ turning complex product visions into production-grade web platforms and autonomous multi-agent workflows with Next.js 16, TypeScript, Neon PostgreSQL, and Gemini 3.8 Flash.";
 
   const displayEyebrow = eyebrow || defaultEyebrow;
   const displayTitle = title || defaultTitle;

@@ -105,7 +105,7 @@ export interface JobOutreachSendPayload {
  * Formats a message ID for RFC 5322 In-Reply-To and References headers.
  * Standard RFC headers require angle brackets `<...>`, e.g. `<id@domain.com>` or `<resend-uuid@resend.dev>`.
  */
-export function formatMessageIdHeader(id: string | null | undefined): string | null {
+function formatMessageIdHeader(id: string | null | undefined): string | null {
   if (!id) return null;
   const trimmed = id.trim();
   if (!trimmed) return null;
@@ -122,7 +122,7 @@ export function formatMessageIdHeader(id: string | null | undefined): string | n
 /**
  * Constructs email headers containing X-Entity-Ref-ID, In-Reply-To, and References for proper email client threading.
  */
-export function buildThreadingHeaders(params: {
+function buildThreadingHeaders(params: {
   entityRefId?: string;
   inReplyToId?: string | null;
   referencesIds?: (string | null | undefined)[];

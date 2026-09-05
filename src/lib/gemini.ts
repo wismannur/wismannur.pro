@@ -76,7 +76,7 @@ export function getGeminiClient(): GoogleGenAI {
       (credentials?.project_id as string | undefined) ||
       "wismannur-person-1787504146495";
 
-    // Global location supports Gemini 3.7 Flash, 2.5 Flash, and latest models
+    // Global location supports Gemini 3.8 Flash, 2.5 Flash, and latest models
     const location = process.env.GOOGLE_CLOUD_LOCATION || "global";
 
     if (credentials) {
@@ -114,12 +114,12 @@ export function getGeminiClient(): GoogleGenAI {
 }
 
 /**
- * Resolves the default model name (defaults to gemini-3.7-flash).
+ * Resolves the default model name (defaults to gemini-3.8-flash).
  */
 export function getGeminiModel(preferredModel?: string): string {
   if (preferredModel) {
     return preferredModel;
   }
 
-  return process.env.GEMINI_MODEL || "gemini-3.7-flash";
+  return process.env.GEMINI_MODEL || "gemini-3.8-flash";
 }

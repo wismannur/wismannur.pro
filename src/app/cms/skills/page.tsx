@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  Award,
   CalendarCog,
   Check,
   Eye,
@@ -148,7 +149,9 @@ export default function CmsSkillsPage() {
       cell: (skill) => (
         <div className="flex flex-col gap-0.5 py-1">
           <div className="font-semibold text-slate-100">{skill.name}</div>
-          <div className="text-[11px] text-slate-500 font-mono">Order Weight: {skill.sortOrder}</div>
+          <div className="text-[11px] text-slate-500 font-mono">
+            Order Weight: {skill.sortOrder}
+          </div>
         </div>
       ),
       className: "w-[320px]",
@@ -218,7 +221,11 @@ export default function CmsSkillsPage() {
                 <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => handlePublishToggle(skill.id, skill.isPublished)}
-                  className={skill.isPublished ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer" : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"}
+                  className={
+                    skill.isPublished
+                      ? "text-amber-400 hover:bg-amber-500/10 cursor-pointer"
+                      : "text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
+                  }
                 >
                   {skill.isPublished ? (
                     <>
@@ -246,8 +253,8 @@ export default function CmsSkillsPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle className="text-slate-100">Delete Skill?</AlertDialogTitle>
                 <AlertDialogDescription className="text-slate-400">
-                  This action cannot be undone. This will permanently delete &quot;{skill.name}&quot; from
-                  your skills catalog.
+                  This action cannot be undone. This will permanently delete &quot;{skill.name}
+                  &quot; from your skills catalog.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -273,8 +280,15 @@ export default function CmsSkillsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-100">Skills Catalog</h1>
-          <p className="text-sm text-slate-400">Manage tech stack badges displayed on your profile</p>
+          <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-400">
+              <Award className="w-5 h-5" />
+            </span>
+            Skills Catalog
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Manage tech stack badges displayed on your profile
+          </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
@@ -371,10 +385,11 @@ export default function CmsSkillsPage() {
             hasMore,
             onPageChange: handlePageChange,
           }}
-          rowClassName={(skill) => (!skill.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors")}
+          rowClassName={(skill) =>
+            !skill.isPublished ? "bg-white/[0.01]" : "hover:bg-white/[0.02] transition-colors"
+          }
         />
       </div>
     </div>
   );
 }
-
