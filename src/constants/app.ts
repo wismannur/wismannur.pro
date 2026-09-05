@@ -14,5 +14,3 @@ export const API_CONFIG = {
   TIMEOUT: 90000, // 90 seconds
   RETRY_ATTEMPTS: 3,
 } as const;
-
-export const MY_USER_ID = process.env.NEXT_PUBLIC_FIREBASE_USER_ID;

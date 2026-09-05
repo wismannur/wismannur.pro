@@ -246,7 +246,7 @@ export function generateGoogleCalendarUrl(params: CalendarEventParams): string {
 /**
  * Generates an iCalendar (.ics) format string.
  */
-export function generateIcsContent(params: CalendarEventParams): string {
+function generateIcsContent(params: CalendarEventParams): string {
   const start = new Date(params.scheduledAt);
   const end = new Date(start.getTime() + (params.durationMinutes || 60) * 60 * 1000);
   const now = new Date();

@@ -1,4 +1,3 @@
-import { APP_CONFIG } from "@/constants/app";
 import { type ClassValue, clsx } from "clsx";
 import { format, parseISO } from "date-fns";
 import { twMerge } from "tailwind-merge";
@@ -28,56 +27,4 @@ export function slugify(text: string): string {
     .toLowerCase()
     .replace(/[^\w ]+/g, "")
     .replace(/ +/g, "-");
-}
-
-export function truncateText(text: string, maxLength: number, suffix = "..."): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength - suffix.length).trim() + suffix;
-}
-
-export function formatNumber(num: number, locale = APP_CONFIG.DEFAULT_LANGUAGE): string {
-  return new Intl.NumberFormat(locale).format(num);
-}
-
-export function debounce<T extends (...args: TAny[]) => TAny>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
-export function throttle<T extends (...args: TAny[]) => TAny>(
-  func: T,
-  limit: number
-): (...args: Parameters<T>) => void {
-  let inThrottle: boolean;
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args);
-      inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
-    }
-  };
-}
-
-export function isExternalLink(url: string): boolean {
-  if (!url) return false;
-  return url.startsWith("http") || url.startsWith("//");
-}
-
-export function getDomain(url: string): string {
-  try {
-    const domain = new URL(url).hostname;
-    return domain.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-}
-
-export function generateMetaTitle(title: string): string {
-  return title ? `${title} | ${APP_CONFIG.SITE_NAME}` : APP_CONFIG.SITE_NAME;
 }
