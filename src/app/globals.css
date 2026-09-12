@@ -149,15 +149,6 @@
     @apply relative after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full;
   }
 
-  /* Page Transition Animations */
-  .page-transition-out {
-    animation: fade-out 0.3s ease forwards;
-  }
-
-  .page-transition-in {
-    animation: fade-in 0.5s ease forwards;
-  }
-
   .prose {
     @apply max-w-none;
   }

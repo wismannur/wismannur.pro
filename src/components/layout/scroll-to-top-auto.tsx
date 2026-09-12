@@ -1,32 +1,28 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
+/**
+ * Ensures window scroll position resets to top on client route transitions.
+ *
+ * Senior Staff Engineering note:
+ * - Skips initial mount so SSR-rendered HTML is never interrupted or flashed during hydration.
+ * - Uses instant scroll to avoid jank and conflicts with Next.js navigation.
+ * - Removes harmful DOM mutations on document.body that cause CSS transform glitches and break
+ *   position: fixed elements across the app.
+ */
 const ScrollToTopAuto = () => {
   const pathname = usePathname();
+  const isFirstMount = useRef(true);
 
   useEffect(() => {
-    // Add a class to the body to trigger page transition animations
-    document.body.classList.add("page-transition-out");
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
 
-    // Scroll to top with smooth animation
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    // After small delay, switch classes to trigger entrance animations
-    const timeout = setTimeout(() => {
-      document.body.classList.remove("page-transition-out");
-      document.body.classList.add("page-transition-in");
-
-      // Remove the entrance class after animations complete
-      const cleanupTimeout = setTimeout(() => {
-        document.body.classList.remove("page-transition-in");
-      }, 1000);
-
-      return () => clearTimeout(cleanupTimeout);
-    }, 100);
-
-    return () => clearTimeout(timeout);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname]);
 
   return null;
