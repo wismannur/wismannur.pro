@@ -1,0 +1,181 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1785657493282,
+      "tag": "0000_dizzy_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785918067636,
+      "tag": "0001_fantastic_next_avengers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786077016047,
+      "tag": "0002_numerous_trauma",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787499995693,
+      "tag": "0003_workable_harrier",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787817082722,
+      "tag": "0004_petite_umar",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787908866222,
+      "tag": "0005_chief_nightcrawler",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787912591366,
+      "tag": "0006_mute_barracuda",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788107821224,
+      "tag": "0007_polite_serpent_society",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788110017753,
+      "tag": "0008_curious_nebula",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788157269295,
+      "tag": "0009_gifted_mercury",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788200000000,
+      "tag": "0010_update_services_pillars",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788200000001,
+      "tag": "0011_update_page_copy_services",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788200000002,
+      "tag": "0012_update_page_copy_projects_blog_cta",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788200000003,
+      "tag": "0013_update_about_page_copy",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1788200000004,
+      "tag": "0014_update_experience_and_skills",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1788343024990,
+      "tag": "0015_light_korath",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788344023296,
+      "tag": "0016_flippant_bloodscream",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788345164163,
+      "tag": "0017_happy_expediter",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1788600465002,
+      "tag": "0018_warm_triathlon",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1788675759459,
+      "tag": "0019_purple_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1788678962560,
+      "tag": "0020_tidy_puck",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788690650094,
+      "tag": "0021_daily_thunderball",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1788716764125,
+      "tag": "0022_closed_night_nurse",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1788719572457,
+      "tag": "0023_lively_rattler",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1788769808471,
+      "tag": "0024_chemical_living_lightning",
+      "breakpoints": true
+    }
+  ]
+}

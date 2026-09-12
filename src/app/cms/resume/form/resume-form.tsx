@@ -1,0 +1,534 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowRight,
+  Briefcase,
+  Calendar,
+  Check,
+  GraduationCap,
+  Info,
+  Loader2,
+  MapPin,
+  Save,
+} from "lucide-react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { formatResumePeriod } from "@/lib/resume";
+import { resumeService, type ResumeKind } from "@/services";
+
+// The `date` columns hold ISO days; the month inputs speak "YYYY-MM".
+const MONTH_PATTERN = /^\d{4}-\d{2}$/;
+const toIsoDay = (month: string) => `${month}-01`;
+const toMonthInput = (isoDay?: string) => (isoDay ? isoDay.slice(0, 7) : "");
+
+const resumeSchema = z
+  .object({
+    kind: z.enum(["experience", "education"]),
+    title: z.string().min(2, { message: "Title must be at least 2 characters" }),
+    organization: z.string().min(2, { message: "Organization must be at least 2 characters" }),
+    location: z.string().optional(),
+    startMonth: z.string().regex(MONTH_PATTERN, { message: "Pick a start month" }),
+    endMonth: z.string().optional(),
+    isCurrent: z.boolean().default(false),
+    description: z.string().optional(),
+    sortOrder: z.number().int(),
+    isPublished: z.boolean().default(true),
+  })
+  .refine((data) => data.isCurrent || MONTH_PATTERN.test(data.endMonth ?? ""), {
+    message: "Pick an end month, or mark this entry as ongoing",
+    path: ["endMonth"],
+  })
+  .refine((data) => data.isCurrent || !data.endMonth || data.endMonth >= data.startMonth, {
+    message: "End month cannot be earlier than the start month",
+    path: ["endMonth"],
+  });
+
+type ResumeFormValues = z.infer<typeof resumeSchema>;
+
+export function ResumeForm() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const { id } = useParams<{ id?: string }>();
+  const isEditMode = Boolean(id);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditMode);
+
+  // `/cms/resume` links here with the tab the owner was looking at.
+  const initialKind: ResumeKind =
+    searchParams.get("kind") === "education" ? "education" : "experience";
+
+  const form = useForm<ResumeFormValues>({
+    resolver: zodResolver(resumeSchema),
+    defaultValues: {
+      kind: initialKind,
+      title: "",
+      organization: "",
+      location: "",
+      startMonth: "",
+      endMonth: "",
+      isCurrent: false,
+      description: "",
+      sortOrder: 0,
+      isPublished: true,
+    },
+  });
+
+  const kind = useWatch({ control: form.control, name: "kind" }) ?? "experience";
+  const isExperience = kind === "experience";
+  const isCurrent = useWatch({ control: form.control, name: "isCurrent" }) ?? false;
+  const startMonth = useWatch({ control: form.control, name: "startMonth" }) ?? "";
+  const endMonth = useWatch({ control: form.control, name: "endMonth" });
+
+  // Live version of what /about will show for this entry.
+  const periodPreview = MONTH_PATTERN.test(startMonth)
+    ? formatResumePeriod({
+        kind,
+        startDate: toIsoDay(startMonth),
+        endDate: MONTH_PATTERN.test(endMonth ?? "") ? toIsoDay(endMonth!) : undefined,
+        isCurrent,
+      })
+    : null;
+
+  useEffect(() => {
+    const fetchEntry = async () => {
+      if (!id) return;
+
+      setIsLoading(true);
+      try {
+        const entry = await resumeService.getById(id);
+        if (entry) {
+          form.reset({
+            kind: entry.kind,
+            title: entry.title,
+            organization: entry.organization,
+            location: entry.location ?? "",
+            startMonth: toMonthInput(entry.startDate),
+            endMonth: toMonthInput(entry.endDate),
+            isCurrent: entry.isCurrent,
+            description: entry.description,
+            sortOrder: entry.sortOrder,
+            isPublished: entry.isPublished,
+          });
+        } else {
+          toast.error("Entry not found");
+          router.push("/cms/resume");
+        }
+      } catch (error) {
+        console.error("Error loading resume entry:", error);
+        toast.error("Failed to load entry");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEntry();
+  }, [id, form, router]);
+
+  const onSubmit = async (data: ResumeFormValues) => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        kind: data.kind,
+        title: data.title.trim(),
+        organization: data.organization.trim(),
+        // Location only belongs to work experience.
+        location: data.kind === "experience" ? data.location?.trim() || undefined : undefined,
+        startDate: toIsoDay(data.startMonth),
+        endDate: data.isCurrent || !data.endMonth ? undefined : toIsoDay(data.endMonth),
+        isCurrent: data.isCurrent,
+        description: data.description?.trim() ?? "",
+        sortOrder: data.sortOrder,
+        isPublished: data.isPublished,
+      };
+
+      if (isEditMode && id) {
+        await resumeService.update(id, payload);
+        toast.success("Entry updated successfully!");
+      } else {
+        await resumeService.create(payload);
+        toast.success("Entry created successfully!");
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["resumeEntries"] });
+      router.push("/cms/resume");
+    } catch (error) {
+      console.error("Error saving resume entry:", error);
+      toast.error("Failed to save entry. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-400" />
+        <span className="ml-2 text-lg text-slate-300">Loading entry...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-100">
+            {isEditMode ? "Edit Resume Entry" : "Add Resume Entry"}
+          </h1>
+          <p className="text-sm text-slate-400 mt-1">
+            Showcase your career milestones and academic history
+          </p>
+        </div>
+        {periodPreview && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0C0E18]/80 border border-white/[0.08] text-slate-300 text-xs">
+            <Calendar className="h-3.5 w-3.5 text-indigo-400" />
+            <span>Timeline format: <span className="font-semibold text-slate-100">{periodPreview}</span></span>
+          </div>
+        )}
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] px-6 py-4">
+                  <CardTitle className="flex items-center text-slate-100 text-base font-semibold">
+                    {isExperience ? (
+                      <Briefcase className="h-4 w-4 mr-2 text-indigo-400" />
+                    ) : (
+                      <GraduationCap className="h-4 w-4 mr-2 text-indigo-400" />
+                    )}
+                    {isExperience ? "Work Experience Details" : "Education & Credential Details"}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 p-6">
+                  <FormField
+                    control={form.control}
+                    name="isPublished"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.06] bg-[#131726]/60 p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Publication Status
+                          </FormLabel>
+                          <div className="text-xs text-slate-400">
+                            {field.value
+                              ? "This entry appears on your public profile"
+                              : "This entry stays hidden as draft"}
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="kind"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-slate-200">Entry Type</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-[#131726]/80 border-white/[0.08] text-slate-200 rounded-xl focus:ring-indigo-500/40">
+                              <SelectValue placeholder="Select entry type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200">
+                            <SelectItem value="experience">Work Experience</SelectItem>
+                            <SelectItem value="education">Education & Certification</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          Experience entries show the month & year; education entries show the year only.
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          {isExperience ? "Job Title / Role" : "Degree / Certification"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={
+                              isExperience ? "e.g. Lead Full-Stack Engineer" : "e.g. B.S. in Computer Science"
+                            }
+                            className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="organization"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          {isExperience ? "Company / Organization" : "Institution / University"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={isExperience ? "e.g. Google DeepMind" : "e.g. MIT"}
+                            className="bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {isExperience && (
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200">Location</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <MapPin className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                              <Input
+                                placeholder="e.g. San Francisco, CA / Remote"
+                                className="pl-10 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-semibold text-slate-200">
+                          Role Summary & Accomplishments
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={
+                              isExperience
+                                ? "Problem: Slow API response. Role: Lead Architect. Action: Migrated to Rust microservices. Quantifiable results: 400% throughput gain."
+                                : "Major courses, honors, and notable capstone achievements."
+                            }
+                            className="min-h-36 bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 rounded-xl focus-visible:ring-indigo-500/40"
+                            {...field}
+                          />
+                        </FormControl>
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          Use structured keywords (Problem, Role, Action, Quantifiable results) for high visual prominence.
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-1 space-y-6">
+              <div className="space-y-6 sticky top-6">
+                <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] px-6 py-4">
+                    <CardTitle className="flex items-center text-slate-100 text-base font-semibold">
+                      <Calendar className="h-4 w-4 mr-2 text-indigo-400" />
+                      Timeline & Ordering
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-5 p-6">
+                    <FormField
+                      control={form.control}
+                      name="startMonth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Start Month
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="month"
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 rounded-xl focus-visible:ring-indigo-500/40"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="isCurrent"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-white/[0.06] bg-[#131726]/60 p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm font-semibold text-slate-200">Ongoing Role</FormLabel>
+                            <div className="text-xs text-slate-400">
+                              {isExperience ? "Presently active" : "Still enrolled"}
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="endMonth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            End Month
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="month"
+                              disabled={isCurrent}
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 disabled:opacity-40 rounded-xl focus-visible:ring-indigo-500/40"
+                              {...field}
+                            />
+                          </FormControl>
+                          <div className="text-[11px] text-slate-500 mt-1">
+                            {isCurrent
+                              ? 'Disabled for active positions (renders as "Present").'
+                              : periodPreview
+                                ? `Preview: ${periodPreview}`
+                                : "Select year & month."}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="sortOrder"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-semibold text-slate-200">
+                            Custom Sort Weight
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              className="bg-[#131726]/80 border-white/[0.08] text-slate-100 rounded-xl focus-visible:ring-indigo-500/40"
+                              value={field.value}
+                              onChange={(e) => field.onChange(Number(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <div className="text-[11px] text-slate-500 mt-1">
+                            0 = auto-sorted by newest date. Higher value pins item higher.
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                  <CardFooter className="px-6 py-4 bg-white/[0.02] border-t border-white/[0.06]">
+                    <Button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white shadow-lg shadow-indigo-500/20 border border-indigo-400/30 rounded-xl font-semibold group relative overflow-hidden h-11"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <span className="flex items-center group-hover:-translate-x-1 transition-transform duration-300">
+                            {form.getValues("isPublished") ? (
+                              <>
+                                <Check className="mr-2 h-4 w-4" />
+                                Publish Entry
+                              </>
+                            ) : (
+                              <>
+                                <Save className="mr-2 h-4 w-4" />
+                                Save as Hidden
+                              </>
+                            )}
+                          </span>
+                          <ArrowRight className="absolute right-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-4 transition-all duration-300" />
+                        </>
+                      )}
+                    </Button>
+                  </CardFooter>
+                </Card>
+
+                {/* Tips */}
+                <Card className="bg-[#0C0E18]/80 backdrop-blur-xl border-white/[0.08] shadow-2xl rounded-2xl overflow-hidden">
+                  <CardHeader className="bg-white/[0.02] border-b border-white/[0.06] py-3 px-6">
+                    <CardTitle className="text-xs font-semibold flex items-center text-slate-300">
+                      <Info className="h-3.5 w-3.5 mr-2 text-indigo-400" />
+                      Resume Architecture
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-2 text-xs text-slate-400">
+                    <p>
+                      <span className="text-slate-200 font-medium">Auto Sorting:</span> Dates are automatically formatted into chronological timelines on the About page.
+                    </p>
+                    <p>
+                      <span className="text-slate-200 font-medium">Impact Framing:</span> Highlight business KPIs and system scale numbers in the description.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
+

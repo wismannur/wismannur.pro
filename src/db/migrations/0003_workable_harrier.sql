@@ -1,0 +1,1 @@
+ALTER TABLE "site_settings" ADD COLUMN "enable_blog" boolean DEFAULT true NOT NULL;
