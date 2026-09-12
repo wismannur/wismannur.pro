@@ -1,6 +1,6 @@
 # wismannur.pro
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.3.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3.4-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.4-blue?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Drizzle ORM](https://img.shields.io/badge/Drizzle%20ORM-0.45.2-green?style=flat-square&logo=drizzle)](https://orm.drizzle.team/)
@@ -11,7 +11,7 @@
 [![Auth.js](https://img.shields.io/badge/Auth.js-v5.0.0--beta.32-black?style=flat-square&logo=auth0)](https://authjs.dev/)
 
 > **Production-grade personal digital ecosystem, technical publication, and full-stack enterprise control plane.**  
-> Engineered by **Wisman Nur** with a database-driven architecture, dark-first **Electric Obsidian** design system, streaming **24/7 Public AI Assistant (RAG + Tool Calling)**, autonomous **AI CMS Staff Copilot (110+ tools across 8 modules)**, end-to-end **Career Hub & ATS Intelligence**, and an e-commerce modernization **Finder Project Hub**.  
+> Engineered by **Wisman Nur** with a database-driven architecture, dark-first **Electric Obsidian** design system, streaming **24/7 Public Visitor AI Assistant (RAG + Deterministic Tool Calling)**, autonomous **AI CMS Staff Copilot (110+ tools across 8 operational modules)**, an end-to-end **Career Hub & ATS Intelligence Platform**, interactive **Storefront Modernization Concept Showcases (`/showcase/[slug]`)**, and a bidirectional **Resend Inbound Email Engine with RFC 5322 Threading**.  
 > Live at **[wismannur.pro](https://wismannur.pro)**.
 
 ---
@@ -21,14 +21,15 @@
 - [1. Executive Architectural Overview](#1-executive-architectural-overview)
 - [2. System Topology & Data Flow](#2-system-topology--data-flow)
 - [3. Core Subsystems & Capability Matrix](#3-core-subsystems--capability-matrix)
-  - [3.1 Public Surface Area (`/`)](#31-public-surface-area-)
+  - [3.1 Public Surface Area & Interactive Showcases](#31-public-surface-area--interactive-showcases)
   - [3.2 Enterprise CMS Control Plane (`/cms`)](#32-enterprise-cms-control-plane-cms)
   - [3.3 AI CMS Staff Copilot (Autonomous Control Agent)](#33-ai-cms-staff-copilot-autonomous-control-agent)
   - [3.4 24/7 Visitor AI Assistant & RAG Engine](#34-247-visitor-ai-assistant--rag-engine)
-  - [3.5 Finder Project Hub (E-Commerce Modernization Engine)](#35-finder-project-hub-e-commerce-modernization-engine)
+  - [3.5 Finder Project Hub & E-Commerce Modernization Showcases](#35-finder-project-hub--e-commerce-modernization-showcases)
   - [3.6 Career Hub & ATS Intelligence](#36-career-hub--ats-intelligence)
   - [3.7 AI English Fluency Hub](#37-ai-english-fluency-hub)
-  - [3.8 Resend Inbound Pipeline & RFC 5322 Threading](#38-resend-inbound-pipeline--rfc-5322-threading)
+  - [3.8 Resend Communications Engine & RFC 5322 Threading](#38-resend-communications-engine--rfc-5322-threading)
+  - [3.9 Secure Asset Streaming & Proxy Route](#39-secure-asset-streaming--proxy-route)
 - [4. Database Architecture (33 PostgreSQL Models)](#4-database-architecture-33-postgresql-models)
 - [5. Engineering Invariants & Security Architecture](#5-engineering-invariants--security-architecture)
 - [6. Technology Stack](#6-technology-stack)
@@ -47,16 +48,16 @@
 
 ## 1. Executive Architectural Overview
 
-This platform is architected around the philosophy of **zero-redeploy content mutations**, **high-density operational control**, and **strict edge-to-server isolation**:
+This platform is architected around the principles of **zero-redeploy content mutations**, **high-density operational control**, and **strict edge-to-server isolation**:
 
-- **100% Database-Driven Content**: Every public layout token, MDX publication, portfolio case study, pricing tier, workflow stage, FAQ item, testimonial, and availability calendar slot is sourced dynamically from PostgreSQL via Drizzle ORM with selective on-demand Incremental Static Regeneration (ISR).
-- **Dual AI Orchestration**:
-  1. **Public Visitor AI Assistant (`/api/chat`)**: Real-time streaming conversational agent (Server-Sent Events) with RAG knowledge hydration and deterministic tool calling for lead capture (`submit_contact_message`, `submit_hire_inquiry`).
-  2. **AI CMS Staff Copilot (`/api/cms/copilot/chat`)**: Multi-turn admin copilot equipped with **110+ Google GenAI function-calling tools** covering all 8 CMS modules, wired with live page context (`useRegisterCmsPageContext`) and strict safety guardrails.
-- **Domain-Driven RPC Service Layer**: Business logic is partitioned into dedicated domain modules under `src/services/<domain>/`, exposing type-safe Next.js Server Actions with uniform error handling (`ServiceError`) and mandatory authorization guards (`assertAdmin`).
+- **100% Database-Driven Content**: Every public layout token, MDX publication, portfolio case study, pricing tier, workflow stage, FAQ item, testimonial, and availability calendar slot is sourced dynamically from PostgreSQL (Neon) via Drizzle ORM with selective on-demand Incremental Static Regeneration (ISR).
+- **Dual AI Orchestration Engine**:
+  1. **Public Visitor AI Assistant (`/api/chat`)**: Real-time streaming conversational agent (Server-Sent Events) powered by Google Gemini 3.8 Flash, featuring dynamic RAG knowledge hydration across 7 database tables and deterministic function calling for autonomous lead capture (`submit_contact_message`, `submit_hire_inquiry`).
+  2. **AI CMS Staff Copilot (`/api/cms/copilot/chat`)**: Multi-turn admin copilot equipped with **110+ Google GenAI function-calling tools** covering all 8 CMS modules, wired with live page context (`useRegisterCmsPageContext`) and destructive action safety guardrails.
+- **Domain-Driven RPC Service Layer**: Business logic is cleanly partitioned into 27 dedicated domain modules under `src/services/<domain>/`, exposing type-safe Next.js Server Actions with uniform error handling (`ServiceError`) and mandatory authorization guards (`assertAdmin`).
 - **Edge Proxy Boundary**: Authentication verification for admin routes (`/cms/*`) and login redirects (`/login`) is performed in `src/proxy.ts` using raw JWT verification (`next-auth/jwt`), avoiding heavy cryptographic libraries (`bcryptjs`) or database drivers inside the Edge runtime bundle.
-- **Bidirectional Communications Engine**: Integrates Resend with automated inbound webhook ingestion (`/api/webhooks/resend-inbound`), Svix cryptographic signature validation, RFC 5322 thread linking (`In-Reply-To`, `References`), and entity-scoped dynamic routing (`inquiry-{id}@...`, `outreach-{id}@...`).
-- **Multi-Market Modernization Engine**: Built-in specialized hubs for mid-market international e-commerce audits (Finder Project Hub) and global tech career pipelines (Career Hub).
+- **Bidirectional Communications Engine**: Integrates Resend with automated inbound webhook ingestion (`/api/webhooks/resend-inbound`), Svix cryptographic signature validation, RFC 5322 thread linking (`In-Reply-To`, `References`), entity-scoped dynamic routing (`inquiry-{id}@...`, `outreach-{id}@...`), and 10 custom React Email templates.
+- **Targeted Storefront Modernization Showcases**: High-impact, unindexed client pitch hubs (`/showcase/[slug]`) combining live Core Web Vitals audits, before-and-after architecture comparisons (e.g. monolithic PHP/jQuery vs. Nuxt 4 SSR / Next.js), interactive ROI metrics, and video walkthroughs.
 
 ---
 
@@ -66,6 +67,7 @@ This platform is architected around the philosophy of **zero-redeploy content mu
 flowchart TB
     subgraph Clients["Clients Layer"]
         PublicUser["Public Visitor (Web / Mobile)"]
+        ShowcaseViewer["Enterprise Prospect / Client"]
         AdminUser["Administrator / Staff (CMS Control Plane)"]
         MailClient["Inbound Mail Client (Recruiter / Client)"]
     end
@@ -76,23 +78,28 @@ flowchart TB
 
     subgraph NodeRuntime["Node.js Server Runtime (Next.js 16 App Router)"]
         PublicRoutes["Public SSR / ISR Routes (/(public))"]
+        ShowcaseRoutes["Modernization Showcases (/showcase/[slug])"]
         CMSRoutes["CMS Admin Cockpit (/cms/*)"]
         ChatAPI["Visitor AI SSE Endpoint (/api/chat)"]
         CopilotAPI["Staff Copilot API (/api/cms/copilot/chat)"]
         WebhookAPI["Resend Inbound Webhook (/api/webhooks/resend-inbound)"]
+        AttachmentAPI["Blob Streaming Proxy (/attachments/[...path])"]
         ServerActions["Typed RPC Server Actions (src/services/*)"]
     end
 
     subgraph DataAndAI["Data, Storage & AI Cloud"]
         PostgresDB[("PostgreSQL (Neon Serverless - 33 Tables)")]
         GeminiAI["Google GenAI (Gemini 3.8 / 2.5 Flash / Vertex AI)"]
-        ResendService["Resend API & SMTP Infrastructure"]
-        VercelBlob["Vercel Blob Storage (Media & Assets)"]
+        ResendService["Resend API & Inbound Infrastructure"]
+        VercelBlob["Vercel Blob Storage (Media & Attachments)"]
     end
 
     PublicUser --> PublicRoutes
     PublicUser -->|SSE Stream / Prompts| ChatAPI
     PublicUser -->|Submit Lead / Service Request| ServerActions
+
+    ShowcaseViewer --> ShowcaseRoutes
+    ShowcaseRoutes -->|Read Prospect Audit & Concept| PostgresDB
 
     AdminUser --> JWTGuard
     JWTGuard -->|Authenticated Session| CMSRoutes
@@ -113,24 +120,32 @@ flowchart TB
     WebhookAPI -->|Verify Signature & Deduplicate| PostgresDB
     WebhookAPI -->|Append Thread Message| PostgresDB
 
+    AttachmentAPI -->|Fetch & Stream with Immutable Cache| VercelBlob
+
     ServerActions -->|Read / Write (Drizzle ORM)| PostgresDB
-    ServerActions -->|Dispatch Notifications & Cold Outreaches| ResendService
-    ServerActions -->|Upload Images / Avatars| VercelBlob
+    ServerActions -->|Dispatch Notifications & Outreaches| ResendService
+    ServerActions -->|Upload Media & Files| VercelBlob
 ```
 
 ---
 
 ## 3. Core Subsystems & Capability Matrix
 
-### 3.1 Public Surface Area (`/`)
+### 3.1 Public Surface Area & Interactive Showcases
 
 - **Electric Obsidian Design System**: Built with modern CSS variables, fluid glassmorphism (`backdrop-blur-xl`), matrix grid overlays, and Framer Motion micro-interactions.
-- **Hero & Identity (`/`)**: Real-time availability indicator, profile stats, core tech competencies, experience & education timeline (`resume_entries`), and CV preview/download engine (`/cv`).
-- **About & Technical Matrix (`/about`)**: Comprehensive background, career timeline, categorized skills matrix with interactive filtering, and personal engineering philosophy.
-- **Technical Publication (`/blog`, `/blog/[slug]`)**: MDX compilation with Prism syntax highlighting, interactive reading progress bar, reading time calculation, tag-based taxonomy, and optimistic view/like counters.
+- **Hero & Identity (`/`)**: Real-time availability status indicator, profile stats, core tech competencies, experience & education timeline (`resume_entries`), and CV preview/download engine (`/cv`).
+- **About & Technical Matrix (`/about`)**: Comprehensive background, career timeline, categorized skills matrix with interactive category pills, and personal engineering philosophy.
+- **Technical Publication (`/blog`, `/blog/[slug]`)**: MDX compilation with Prism syntax highlighting, interactive reading progress indicator, reading time calculation, tag-based taxonomy, and optimistic view/like counters.
 - **Engineering Portfolio (`/projects`, `/projects/[slug]`)**: Featured case studies, repository & live demo integration, dynamic metadata, and detailed architectural write-ups.
 - **Commercial Offerings (`/services`, `/hire-me`)**: Modular service definitions, interactive pricing tiers, workflow roadmap steps, client testimonials, and fixed-price sprint packages.
 - **Direct Contact & Inquiries (`/contact`)**: Form lead capture with Google reCAPTCHA v3 protection, automated Resend email dispatch, and threaded reply tracking.
+- **Storefront Modernization Concept Showcases (`/showcase/[slug]`)**: Tailored client pitch pages (e.g., `/showcase/maxaro`) featuring:
+  - Estimated Core Web Vitals optimizations (LCP 4.2s → 0.9s, INP < 100ms, CLS 0.0).
+  - Detected legacy tech stack breakdowns vs. modernized Nuxt 4 / Next.js SSR architecture.
+  - Interactive ROI conversion lift modeling (+18% to +24% mobile checkout completion).
+  - Live interactive demo links and Loom video walkthrough embeds.
+  - Hardened privacy via `robots: { index: false, follow: false }` metadata.
 - **Legal Compliance (`/privacy-policy`, `/terms-of-service`)**: Dynamic legal documents parsed directly from database MDX in `site_pages`.
 - **SEO & Social Graph**: Dynamic `sitemap.xml`, `robots.txt`, auto-generated Open Graph cards (`/opengraph-image`), and privacy-first Umami analytics telemetry.
 
@@ -138,13 +153,13 @@ flowchart TB
 
 ### 3.2 Enterprise CMS Control Plane (`/cms`)
 
-A high-density single-tenant cockpit divided into 8 distinct operational menu groups:
+A high-density single-tenant cockpit organized into 8 distinct operational domains:
 
 | Group | Route | Subsystems & Capabilities |
 | :--- | :--- | :--- |
-| **1. General** | `/cms/dashboard` | Aggregated executive command center: publication counts, unread inquiries, pending client briefs, upcoming interviews, and system alerts. |
-| **2. Career Hub** | `/cms/job-hunter`<br>`/cms/job-tracker`<br>`/cms/job-outreaches` | Direct ATS feeds (Ashby, Greenhouse, Lever, etc.), Kanban application tracker, interview stages, `.ics` calendar sync, and cold email outreach engine with dynamic reply routing. |
-| **3. Finder Project Hub** | `/cms/project-hunter`<br>`/cms/project-tracker`<br>`/cms/project-outreaches` | High-value e-commerce modernization sourcing (EU, NA, ANZ), instant legacy tech audit (Magento 1, PHP, jQuery), conversion lift ROI pitch generator, and prospect pipeline. |
+| **1. General** | `/cms/dashboard` | Aggregated executive command center: publication stats, unread inquiries, pending client briefs, upcoming interviews, and system alerts. |
+| **2. Career Hub** | `/cms/job-hunter`<br>`/cms/job-tracker`<br>`/cms/job-outreaches` | Direct ATS feeds (Ashby, Greenhouse, Lever, etc.), 11-stage Kanban application tracker, interview stages, RFC 5545 `.ics` calendar sync, and cold email outreach engine with dynamic reply routing. |
+| **3. Finder Project Hub** | `/cms/project-hunter`<br>`/cms/project-tracker`<br>`/cms/project-outreaches` | High-value e-commerce modernization sourcing (EU, NA, ANZ), instant legacy tech audit (Magento 1, PHP, jQuery), conversion lift ROI pitch generator, prospect pipeline, and showcase URL generator (`/showcase/[slug]`). |
 | **4. AI Assistant** | `/cms/ai-knowledge`<br>`/cms/ai-english-fluency`<br>`/cms/ai-chat-logs` | RAG knowledge base curation, English fluency practice hub with CEFR scoring & TTS, and visitor conversation transcript inspector. |
 | **5. Inbox & Leads** | `/cms/contacts`<br>`/cms/services`<br>`/cms/hire-requests` | 2-way threaded email management for general contacts, commercial project briefs, and talent recruitment inquiries. |
 | **6. Site Architecture** | `/cms/site`<br>`/cms/pages`<br>`/cms/legal` | Global metadata, SEO tags, footer social links, per-page hero copy/CTA overrides, and MDX legal policy document editor. |
@@ -155,7 +170,7 @@ A high-density single-tenant cockpit divided into 8 distinct operational menu gr
 
 ### 3.3 AI CMS Staff Copilot (Autonomous Control Agent)
 
-Mounted persistently inside `CmsLayout` (`src/components/cms/copilot/cms-copilot-panel.tsx`), the **AI CMS Staff Copilot** functions as an intelligent junior staff engineer and executive assistant:
+Mounted persistently inside `CmsLayout` (`src/components/cms/copilot/cms-copilot-panel.tsx`), the **AI CMS Staff Copilot** acts as an autonomous staff engineer and executive assistant:
 
 ```
 src/services/cms-copilot/
@@ -174,10 +189,10 @@ src/services/cms-copilot/
 
 #### Key Capabilities:
 - **110+ Tool Function Declarations**: Uses `@google/genai` function calling to interact directly with Neon PostgreSQL without human SQL errors.
-- **Dynamic Live Page Context (`useRegisterCmsPageContext`)**: Automatically captures current table rows, active filters, search queries, and visible records from the screen so the Copilot answers contextually without prompting.
+- **Dynamic Live Page Context (`useRegisterCmsPageContext`)**: Automatically captures current table rows, active filters, search queries, pagination, and visible records from the screen so the Copilot answers contextually without prompting.
 - **Contextual Quick Prompts**: Bottom suggestion chips dynamically adapt based on the active CMS route (e.g. suggesting tech stack audits on `/cms/project-hunter` or draft review on `/cms/blogs`).
 - **Destructive Mutation Guardrails**: Explicit safety rules require human confirmation before performing destructive actions (permanent deletion, purging chat logs).
-- **Session Telemetry & Inspection**: All conversation turns are logged to `cms_copilot_sessions` and `cms_copilot_messages` and inspectable via CLI (`pnpm copilot:inspect`).
+- **Session Telemetry & CLI Inspector**: All conversation turns are logged to `cms_copilot_sessions` and `cms_copilot_messages` and inspectable via CLI (`pnpm copilot:inspect` or `pnpm copilot:list`).
 
 ---
 
@@ -226,13 +241,14 @@ sequenceDiagram
 
 ---
 
-### 3.5 Finder Project Hub (E-Commerce Modernization Engine)
+### 3.5 Finder Project Hub & E-Commerce Modernization Showcases
 
 Targeted sourcing engine for mid-market European, North American, and ANZ brands:
 
 - **Niche Hunter**: Pre-curated datasets across Luxury D2C, Home & Living, Outdoor Mobility, and B2B Wholesale.
 - **Instant Web Auditor**: Evaluates legacy stacks (Magento 1, monolithic PHP, outdated jQuery), calculates estimated Core Web Vitals (LCP, CLS), and measures mobile checkout friction.
-- **AI Proposal & Pitch Generator**: Synthesizes audit findings into tailored modernization pitches highlighting estimated conversion lifts (+15% to +28%) and headless transition roadmaps (Nuxt 3 / Next.js + Tailwind CSS).
+- **AI Proposal & Pitch Generator**: Synthesizes audit findings into tailored modernization pitches highlighting estimated conversion lifts (+15% to +28%) and headless transition roadmaps (Nuxt 4 / Next.js + Tailwind CSS).
+- **Interactive Modernization Concept Showcases (`/showcase/[slug]`)**: Dedicated client landing pages presenting technical architecture solutions, interactive performance comparisons, and video walkthroughs.
 - **Multi-Market Clocks**: Real-time timezone monitoring for CET (Amsterdam), ET (New York), PT (Los Angeles), and AEST (Sydney) indicating active business hours.
 
 ---
@@ -255,12 +271,13 @@ An autonomous conversational fluency training environment for global technical c
 
 - **CEFR Level Progression**: Structured learning units targeting B2 (Professional), C1 (Advanced Technical), and C2 (Mastery/Executive).
 - **Interactive Practice Sessions**: AI audio and text scenarios simulating architecture reviews, salary negotiations, and executive presentations.
+- **Speech Synthesis (TTS)**: Built-in text-to-speech engine (`src/services/ai-english-fluency/tts.ts`) providing natural native voice models.
 - **Vocabulary Bank & Mastery**: Real-time extraction of technical idioms, phrasal verbs, and collocation tracking.
 - **Streak & Analytics**: Daily streak tracking and retention metrics.
 
 ---
 
-### 3.8 Resend Inbound Pipeline & RFC 5322 Threading
+### 3.8 Resend Communications Engine & RFC 5322 Threading
 
 Complete two-way asynchronous email communication:
 
@@ -273,6 +290,27 @@ Complete two-way asynchronous email communication:
    - The route `/api/webhooks/resend-inbound` verifies incoming payloads using **Svix** (`RESEND_WEBHOOK_SECRET`).
    - Transactional deduplication ensures exactly-once message ingestion.
    - HTML/Text parser (`src/lib/email-cleaner.ts`) strips client boilerplate and quoted history.
+4. **10 Custom React Email Templates (`src/components/emails/`)**:
+   - `admin-contact-notification.tsx`
+   - `admin-direct-email-alert.tsx`
+   - `admin-hire-request-notification.tsx`
+   - `admin-inbound-alert.tsx`
+   - `admin-reply-to-client.tsx`
+   - `admin-service-request-notification.tsx`
+   - `client-contact-auto-reply.tsx`
+   - `client-hire-request-auto-reply.tsx`
+   - `client-service-request-auto-reply.tsx`
+   - `job-outreach-email.tsx`
+
+---
+
+### 3.9 Secure Asset Streaming & Proxy Route
+
+- **Vercel Blob Storage Integration**: Uploads avatars, case study hero banners, and project attachments via `@vercel/blob`.
+- **Dedicated Proxy Route (`/attachments/[...path]`)**:
+  - Securely proxies assets from the blob store host.
+  - Enforces `inline` Content-Disposition and long-term immutable caching (`public, max-age=31536000, immutable`).
+  - Preserves exact content types and content lengths.
 
 ---
 
@@ -317,7 +355,7 @@ AI English Fluency:
 └── ai_english_curriculum_progress # Unit and lesson completion progress
 
 Marketing, Catalog & Governance:
-├── skills                       # Skills matrix entries and order
+├── skills                       # Skills matrix entries and category order
 ├── services                     # Commercial services catalog (pricing, features, scope)
 ├── faqs                         # Categorized accordion FAQs
 ├── process_steps                # How-it-works roadmap steps (services / hire-me)
@@ -341,18 +379,19 @@ The following engineering invariants are strictly enforced across the codebase:
 - [x] **Single Source of Truth**: All schema changes originate in `src/db/schema.ts` and are versioned through `drizzle-kit generate` into `src/db/migrations/`.
 - [x] **Synthetic Seed Data**: Migration seeds in `src/db/migrations/` contain **strictly fictional placeholder data** ("John Doe"). Real operational data resides solely in the production PostgreSQL instance.
 - [x] **Strict Type Safety**: The codebase enforces `0` TypeScript compilation errors via `pnpm typecheck` (`tsc --noEmit`).
+- [x] **Standardized Entity IDs**: All record identifiers adhere to `<prefix>-<YYMMDDHHMM>-<5char lowercase>` generated by `src/lib/id-generator.ts`.
 
 ---
 
 ## 6. Technology Stack
 
 ```
-Core Framework       : Next.js 16.3.0 (App Router, Server Actions, React Compiler)
+Core Framework       : Next.js 16.3.4 (App Router, Server Actions, React Compiler)
 Runtime Engine       : Node.js 24.x (LTS) · React 19.2.4 · TypeScript 5.x
-UI & Styling         : Tailwind CSS 3.4.19 · Radix UI Primitives (shadcn/ui) · Framer Motion 11.x
+UI & Styling         : Tailwind CSS 3.4.19 · Radix UI Primitives (shadcn/ui) · Framer Motion 11.x · Lucide Icons
 Database & ORM       : PostgreSQL (Neon Serverless) · Drizzle ORM 0.45.2 · Drizzle Kit 0.31.10
 Authentication       : Auth.js v5 (next-auth 5.0.0-beta.32) · JWT Session Strategy · bcryptjs
-Generative AI & LLM  : Google GenAI SDK (@google/genai 2.19.0) · Gemini 3.8 / 2.5 Flash · Vertex AI
+Generative AI & LLM  : Google GenAI SDK (@google/genai 2.19.0) · Gemini 3.8 Flash / 2.5 Flash · Vertex AI
 Email Infrastructure : Resend 6.24.0 · React Email 1.0.12 · Svix 2.1.0 (Webhook HMAC Verification)
 Content Processing   : Unified · Remark 11 · Rehype 8 · Rehype-Sanitize · PrismJS Syntax Highlighting
 State & Forms        : TanStack React Query v5 · React Hook Form 7.x · Zod 3.23.8
@@ -511,12 +550,14 @@ NEXT_PUBLIC_UMAMI_SCRIPT_URL="https://cloud.umami.is/script.js"
 ├── src/
 │   ├── app/
 │   │   ├── (public)/                 # Public SSR/ISR routes (home, about, blog, projects, etc.)
+│   │   │   └── showcase/[slug]/      # Client Storefront Modernization Concept Showcase
 │   │   ├── api/
 │   │   │   ├── auth/[...nextauth]/   # Auth.js route handlers
 │   │   │   ├── chat/                 # 24/7 Visitor AI SSE streaming endpoint with lead tools
 │   │   │   ├── cms/copilot/chat/     # AI CMS Staff Copilot endpoint (110+ tools)
 │   │   │   └── webhooks/resend-inbound/ # Svix-verified email webhook receiver
-│   │   ├── cms/                      # CMS Admin cockpit (8 module groups + forms)
+│   │   ├── attachments/[...path]/    # Secure Vercel Blob proxy streaming route
+│   │   ├── cms/                      # CMS Admin cockpit (8 module groups + form editors)
 │   │   ├── cv/                       # Printable CV preview and download engine
 │   │   ├── login/                    # Secure admin credentials login view
 │   │   ├── layout.tsx                # Root layout with providers & floating AI widget
@@ -558,14 +599,15 @@ NEXT_PUBLIC_UMAMI_SCRIPT_URL="https://cloud.umami.is/script.js"
 │   │   ├── skills/                   # Skills matrix & categories
 │   │   ├── testimonials/             # Verified client recommendations
 │   │   └── user/                     # Admin profile and system appearance settings
-│   ├── features/                     # Domain-specific UI features (career hub, blog, projects)
+│   ├── features/                     # Domain-specific UI features (blog filters, project grid)
 │   ├── components/
-│   │   ├── ai-chat/                  # 24/7 floating visitor AI conversational widget
+│   │   ├── chat/                     # 24/7 floating visitor AI conversational widget
 │   │   ├── cms/copilot/              # AI Staff Copilot UI panel & live page context integration
+│   │   ├── emails/                   # 10 React Email templates for inquiries & alerts
 │   │   ├── mdx/                      # MDX rendering components (code blocks, callouts)
 │   │   ├── ui/                       # shadcn/ui design primitives (Radix UI)
 │   │   └── ...                       # Layouts, navigation, cards, footer
-│   ├── hooks/                        # Custom React hooks (reading-progress, theme, media-query)
+│   ├── hooks/                        # Custom React hooks (reading-progress, theme, mobile)
 │   └── lib/                          # Utility modules (gemini, mdx, resend, cms-page-context)
 └── drizzle.config.ts                 # Drizzle Kit CLI configuration
 ```
@@ -586,6 +628,7 @@ The application is engineered for continuous deployment on **[Vercel](https://ve
 
 - **Open-Source Integrity**: This is an open-source codebase. Seed data in `src/db/migrations/` contains **strictly synthetic placeholder data** ("John Doe").
 - **Zero Production Data Leakage**: Real personal identities, corporate outreach logs, candidate resumes, client service requests, and communication transcripts reside strictly within the private production PostgreSQL instance.
+- **Client Pitch Confidentiality**: Storefront modernization showcases (`/showcase/[slug]`) are unlisted and protected from search engine indexing via explicit `robots: { index: false, follow: false }` metadata.
 
 ---
 
