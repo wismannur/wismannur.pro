@@ -78,12 +78,12 @@ flowchart TB
 
     subgraph NodeRuntime["Node.js Server Runtime (Next.js 16 App Router)"]
         PublicRoutes["Public SSR / ISR Routes (/(public))"]
-        ShowcaseRoutes["Modernization Showcases (/showcase/[slug])"]
+        ShowcaseRoutes["Modernization Showcases (/showcase/:slug)"]
         CMSRoutes["CMS Admin Cockpit (/cms/*)"]
         ChatAPI["Visitor AI SSE Endpoint (/api/chat)"]
         CopilotAPI["Staff Copilot API (/api/cms/copilot/chat)"]
         WebhookAPI["Resend Inbound Webhook (/api/webhooks/resend-inbound)"]
-        AttachmentAPI["Blob Streaming Proxy (/attachments/[...path])"]
+        AttachmentAPI["Blob Streaming Proxy (/attachments/*)"]
         ServerActions["Typed RPC Server Actions (src/services/*)"]
     end
 
@@ -99,7 +99,7 @@ flowchart TB
     PublicUser -->|Submit Lead / Service Request| ServerActions
 
     ShowcaseViewer --> ShowcaseRoutes
-    ShowcaseRoutes -->|Read Prospect Audit & Concept| PostgresDB
+    ShowcaseViewer -->|Read Prospect Audit & Concept| PostgresDB
 
     AdminUser --> JWTGuard
     JWTGuard -->|Authenticated Session| CMSRoutes
@@ -122,7 +122,7 @@ flowchart TB
 
     AttachmentAPI -->|Fetch & Stream with Immutable Cache| VercelBlob
 
-    ServerActions -->|Read / Write (Drizzle ORM)| PostgresDB
+    ServerActions -->|Read and Write via Drizzle ORM| PostgresDB
     ServerActions -->|Dispatch Notifications & Outreaches| ResendService
     ServerActions -->|Upload Media & Files| VercelBlob
 ```
