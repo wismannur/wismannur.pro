@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Copy,
   Cpu,
+  ExternalLink,
   Laptop,
   Linkedin,
   Lock,
@@ -263,15 +264,32 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   </Button>
                 </a>
               )}
-              <a href="#demo-simulator">
-                <Button
-                  size="sm"
-                  className="gap-1.5 text-xs h-7 bg-primary hover:bg-primary/90 text-white font-semibold"
+              {prospect.mvpDemoUrl ? (
+                <a
+                  href={prospect.mvpDemoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
-                  <Zap className="w-3 h-3" />
-                  Live Demo
-                </Button>
-              </a>
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-xs h-7 bg-primary hover:bg-primary/90 text-white font-semibold shadow-sm"
+                  >
+                    <Zap className="w-3 h-3" />
+                    <span>Live MVP Demo</span>
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </Button>
+                </a>
+              ) : (
+                <a href="#demo-simulator">
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-xs h-7 bg-primary hover:bg-primary/90 text-white font-semibold"
+                  >
+                    <Zap className="w-3 h-3" />
+                    Live Demo
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -307,16 +325,33 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3 pt-2">
-                  <a href="#demo-simulator">
-                    <Button
-                      size="lg"
-                      className="gap-2 text-sm bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/20 h-11 px-6"
+                  {prospect.mvpDemoUrl ? (
+                    <a
+                      href={prospect.mvpDemoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     >
-                      <Laptop className="w-4 h-4" />
-                      Try Live Storefront Prototype
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </a>
+                      <Button
+                        size="lg"
+                        className="gap-2 text-sm bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/20 h-11 px-6"
+                      >
+                        <Laptop className="w-4 h-4" />
+                        Launch Live Storefront MVP
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </a>
+                  ) : (
+                    <a href="#demo-simulator">
+                      <Button
+                        size="lg"
+                        className="gap-2 text-sm bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/20 h-11 px-6"
+                      >
+                        <Laptop className="w-4 h-4" />
+                        Try Live Storefront Prototype
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </a>
+                  )}
 
                   {prospect.loomVideoUrl && (
                     <a
@@ -427,11 +462,18 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                       Decoupled from Monolith
                     </span>
                     <a
-                      href="#demo-simulator"
+                      href={prospect.mvpDemoUrl || "#demo-simulator"}
+                      {...(prospect.mvpDemoUrl
+                        ? { target: "_blank", rel: "noopener noreferrer" }
+                        : {})}
                       className="text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1"
                     >
-                      Simulate Live
-                      <ArrowRight className="w-3 h-3" />
+                      {prospect.mvpDemoUrl ? "Open Live Storefront" : "Simulate Live"}
+                      {prospect.mvpDemoUrl ? (
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      ) : (
+                        <ArrowRight className="w-3 h-3" />
+                      )}
                     </a>
                   </div>
                 </div>
@@ -566,7 +608,23 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {prospect.mvpDemoUrl && (
+                <a
+                  href={prospect.mvpDemoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-xs h-9 bg-primary hover:bg-primary/90 text-white font-semibold shadow-md shadow-primary/25"
+                  >
+                    <Laptop className="w-3.5 h-3.5" />
+                    <span>Open Live Storefront (Nuxt 4)</span>
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </Button>
+                </a>
+              )}
               <Button
                 variant="outline"
                 size="sm"
