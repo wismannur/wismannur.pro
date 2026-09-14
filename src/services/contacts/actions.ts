@@ -9,13 +9,15 @@ import { countRows } from "@/db/sort";
 import { ServiceError } from "../core/base-service";
 import { assertSubmissionAllowed } from "../core/rate-limit";
 import { assertHuman } from "../core/recaptcha";
+import { assertHoneypotClean, assertLegitimateInquiry } from "../core/spam-detection";
 import { sendContactEmails } from "../core/resend";
 import type { Contact, ContactForm } from "./types";
 
 // Server actions backing `contactService`. `submit` is the public contact
 // form — input is re-validated on the server (the client-side Zod schema is
 // advisory only once requests can be crafted directly), reCAPTCHA-verified
-// (once RECAPTCHA_SECRET_KEY is set) and rate-limited (phase 8.6).
+// (once RECAPTCHA_SECRET_KEY is set), rate-limited (phase 8.6), honeypot-checked,
+// and heuristically verified against gibberish/scam probes.
 // getContacts/getById/updateStatus are gated by assertAdmin().
 
 const { contacts } = schema;
@@ -27,6 +29,7 @@ const contactFormSchema = z.object({
   email: z.string().trim().email().max(320),
   subject: z.string().trim().min(1).max(300),
   message: z.string().trim().min(1).max(5000),
+  honeypot: z.string().optional(),
 });
 
 export async function getContacts(page = 1, _startAfterDoc: unknown = null, status?: string) {
@@ -66,17 +69,34 @@ export async function submit(formData: ContactForm, recaptchaToken?: string): Pr
   // Cast: with `strictNullChecks` off (legacy tsconfig), Zod's inferred object
   // type degrades to all-optional; the schema itself guarantees this shape.
   const clean = parsed.data as ContactForm;
+
+  // 1. Honeypot check - reject bot submissions immediately
+  assertHoneypotClean(clean.honeypot);
+
+  // 2. Anti-gibberish and anti-scam heuristic validation
+  assertLegitimateInquiry({
+    name: clean.name,
+    subject: clean.subject,
+    message: clean.message,
+  });
+
+  // 3. reCAPTCHA verification (when configured in env)
   await assertHuman(recaptchaToken);
+
+  // 4. Rate-limiting check
   await assertSubmissionAllowed(
     contacts,
     { email: contacts.email, createdAt: contacts.createdAt },
     clean.email
   );
+
+  const { honeypot: _hp, ...contactData } = clean;
+
   const [{ id }] = await getDb()
     .insert(contacts)
-    .values({ ...clean, status: "new" })
+    .values({ ...contactData, status: "new" })
     .returning({ id: contacts.id });
-  const { clientEmailId } = await sendContactEmails({ ...clean, id });
+  const { clientEmailId } = await sendContactEmails({ ...contactData, id });
   if (clientEmailId) {
     await getDb().update(contacts).set({ messageId: clientEmailId }).where(eq(contacts.id, id));
   }

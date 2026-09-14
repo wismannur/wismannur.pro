@@ -11,4 +11,6 @@ export interface ServiceRequest {
   createdAt: Date;
 }
 
-export type NewServiceRequest = Omit<ServiceRequest, "id" | "status" | "createdAt">;
+export type NewServiceRequest = Omit<ServiceRequest, "id" | "status" | "createdAt"> & {
+  honeypot?: string;
+};

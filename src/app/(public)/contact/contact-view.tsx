@@ -48,6 +48,7 @@ const contactFormSchema = z.object({
   email: z.string().min(1, "Please enter your email").email("Please enter a valid email address"),
   subject: z.string().min(1, "Please specify a subject or topic"),
   message: z.string().min(15, "Message must be at least 15 characters"),
+  honeypot: z.string().optional(),
 });
 
 type ContactViewProps = {
@@ -140,6 +141,7 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
       email: "",
       subject: "",
       message: "",
+      honeypot: "",
     },
   });
 
@@ -411,6 +413,22 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
                   {/* React Hook Form */}
                   <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+                      {/* Honeypot field for spam bots */}
+                      <div className="sr-only opacity-0 absolute -z-50 pointer-events-none select-none h-0 w-0 overflow-hidden" aria-hidden="true" tabIndex={-1}>
+                        <FormField
+                          control={form.control}
+                          name="honeypot"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Company Website</FormLabel>
+                              <FormControl>
+                                <Input tabIndex={-1} autoComplete="off" {...field} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Name */}
                         <FormField
