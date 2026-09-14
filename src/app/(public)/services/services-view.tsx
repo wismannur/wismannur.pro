@@ -55,6 +55,7 @@ const serviceFormSchema = z.object({
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: "You must accept the terms to submit",
   }),
+  honeypot: z.string().optional(),
 });
 
 type ServiceFormValues = z.infer<typeof serviceFormSchema>;
@@ -150,6 +151,7 @@ export function ServicesView({
       timeframe: "",
       projectDetails: "",
       termsAccepted: false,
+      honeypot: "",
     },
   });
 
@@ -164,6 +166,7 @@ export function ServicesView({
           budget: formData.budget,
           timeframe: formData.timeframe,
           projectDetails: formData.projectDetails,
+          honeypot: formData.honeypot,
         },
         token
       );
@@ -387,6 +390,22 @@ export function ServicesView({
               {/* Form Content */}
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Honeypot field for spam bots */}
+                  <div className="sr-only opacity-0 absolute -z-50 pointer-events-none select-none h-0 w-0 overflow-hidden" aria-hidden="true" tabIndex={-1}>
+                    <FormField
+                      control={form.control}
+                      name="honeypot"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Website</FormLabel>
+                          <FormControl>
+                            <Input tabIndex={-1} autoComplete="off" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {/* Name */}
                     <FormField

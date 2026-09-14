@@ -9,12 +9,14 @@ import { countRows } from "@/db/sort";
 import { ServiceError } from "../core/base-service";
 import { assertSubmissionAllowed } from "../core/rate-limit";
 import { assertHuman } from "../core/recaptcha";
+import { assertHoneypotClean, assertLegitimateInquiry } from "../core/spam-detection";
 import { sendServiceRequestEmails } from "../core/resend";
 import type { NewServiceRequest, ServiceRequest } from "./types";
 
 // Server actions backing `serviceRequestService`. `submit` is the public
-// hire-me form — input is re-validated on the server, reCAPTCHA-verified
-// (once RECAPTCHA_SECRET_KEY is set) and rate-limited (phase 8.6).
+// service inquiry form — input is re-validated on the server, reCAPTCHA-verified
+// (once RECAPTCHA_SECRET_KEY is set), rate-limited (phase 8.6), honeypot-checked,
+// and heuristically verified against gibberish/scam probes.
 // getRequests/getById/updateStatus are gated by assertAdmin().
 
 const { serviceRequests } = schema;
@@ -29,6 +31,7 @@ const newRequestSchema = z.object({
   budget: z.string().trim().min(1).max(100),
   timeframe: z.string().trim().min(1).max(100),
   projectDetails: z.string().trim().min(1).max(5000),
+  honeypot: z.string().optional(),
 });
 
 const toRequest = (row: typeof serviceRequests.$inferSelect): ServiceRequest => ({
@@ -74,18 +77,34 @@ export async function submit(data: NewServiceRequest, recaptchaToken?: string): 
   // Cast: with `strictNullChecks` off (legacy tsconfig), Zod's inferred object
   // type degrades to all-optional; the schema itself guarantees this shape.
   const clean = parsed.data as NewServiceRequest;
+
+  // 1. Honeypot check
+  assertHoneypotClean(clean.honeypot);
+
+  // 2. Anti-gibberish and anti-scam heuristic validation
+  assertLegitimateInquiry({
+    name: clean.name,
+    message: clean.projectDetails,
+  });
+
+  // 3. reCAPTCHA verification
   await assertHuman(recaptchaToken);
+
+  // 4. Rate-limiting check
   await assertSubmissionAllowed(
     serviceRequests,
     { email: serviceRequests.email, createdAt: serviceRequests.createdAt },
     clean.email
   );
+
+  const { honeypot: _hp, ...requestData } = clean;
+
   const [{ id }] = await getDb()
     .insert(serviceRequests)
-    .values({ ...clean, status: "new" })
+    .values({ ...requestData, status: "new" })
     .returning({ id: serviceRequests.id });
 
-  const { clientEmailId } = await sendServiceRequestEmails({ ...clean, id });
+  const { clientEmailId } = await sendServiceRequestEmails({ ...requestData, id });
   if (clientEmailId) {
     await getDb()
       .update(serviceRequests)

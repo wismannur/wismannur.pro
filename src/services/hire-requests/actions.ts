@@ -9,6 +9,7 @@ import { countRows } from "@/db/sort";
 import { ServiceError } from "../core/base-service";
 import { assertSubmissionAllowed } from "../core/rate-limit";
 import { assertHuman } from "../core/recaptcha";
+import { assertHoneypotClean, assertLegitimateInquiry } from "../core/spam-detection";
 import { sendHireRequestEmails } from "../core/resend";
 import type { HireRequest, HireRequestStatus, NewHireRequest } from "./types";
 
@@ -26,6 +27,7 @@ const newHireRequestSchema = z.object({
   location: z.string().trim().max(200).optional(),
   salaryRange: z.string().trim().max(100).optional(),
   message: z.string().trim().min(10, "Message must be at least 10 characters").max(5000),
+  honeypot: z.string().optional(),
 });
 
 const toHireRequest = (row: typeof hireRequests.$inferSelect): HireRequest => ({
@@ -74,30 +76,46 @@ export async function submit(data: NewHireRequest, recaptchaToken?: string): Pro
   }
 
   const clean = parsed.data as NewHireRequest;
+
+  // 1. Honeypot check
+  assertHoneypotClean(clean.honeypot);
+
+  // 2. Anti-gibberish and anti-scam heuristic validation
+  assertLegitimateInquiry({
+    name: clean.name,
+    subject: clean.roleTitle,
+    message: clean.message,
+  });
+
+  // 3. reCAPTCHA verification
   await assertHuman(recaptchaToken);
+
+  // 4. Rate-limiting check
   await assertSubmissionAllowed(
     hireRequests,
     { email: hireRequests.email, createdAt: hireRequests.createdAt },
     clean.email
   );
 
+  const { honeypot: _hp, ...hireData } = clean;
+
   const [{ id }] = await getDb()
     .insert(hireRequests)
     .values({
-      name: clean.name,
-      email: clean.email,
-      company: clean.company,
-      roleTitle: clean.roleTitle,
-      employmentType: clean.employmentType,
-      workplaceType: clean.workplaceType,
-      location: clean.location || null,
-      salaryRange: clean.salaryRange || null,
-      message: clean.message,
+      name: hireData.name,
+      email: hireData.email,
+      company: hireData.company,
+      roleTitle: hireData.roleTitle,
+      employmentType: hireData.employmentType,
+      workplaceType: hireData.workplaceType,
+      location: hireData.location || null,
+      salaryRange: hireData.salaryRange || null,
+      message: hireData.message,
       status: "new",
     })
     .returning({ id: hireRequests.id });
 
-  const { clientEmailId } = await sendHireRequestEmails({ ...clean, id });
+  const { clientEmailId } = await sendHireRequestEmails({ ...hireData, id });
   if (clientEmailId) {
     await getDb()
       .update(hireRequests)
