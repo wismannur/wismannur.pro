@@ -3,6 +3,7 @@ export interface ContactForm {
   email: string;
   subject: string;
   message: string;
+  honeypot?: string;
 }
 
 export type Contact = {

@@ -7,6 +7,7 @@ import { Webhook } from "svix";
 import { getDb, schema } from "@/db";
 import { cleanReplyBody } from "@/lib/email-cleaner";
 import { sendInboundAlertToAdmin } from "@/services/core/resend";
+import { isGibberish, isScamContent } from "@/services/core/spam-detection";
 
 const {
   contacts,
@@ -733,6 +734,24 @@ export async function POST(req: NextRequest) {
     if (!targetInquiryId) {
       isNewInquiry = true;
       const cleanSubject = subject.replace(/^(?:re|fwd|fw):\s*/gi, "").trim() || "Inbound Email";
+
+      // Filter unsolicited spam, scams, and gibberish probes from polluting CMS contacts
+      if (
+        isScamContent(cleanSubject) ||
+        isScamContent(textContent) ||
+        isGibberish(textContent) ||
+        (senderName && isGibberish(senderName))
+      ) {
+        console.log(
+          `[Resend Inbound] Filtered unsolicited spam/scam email from ${senderEmail} (subject: "${cleanSubject}"). Skipped contacts creation.`
+        );
+        return NextResponse.json({
+          success: true,
+          filtered: true,
+          reason: "spam_or_scam_detected",
+        });
+      }
+
       const [newContact] = await db
         .insert(contacts)
         .values({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Activity,
   ArrowRight,
@@ -30,12 +30,14 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/umami";
 import type { ProjectProspect } from "@/services/project-finder/types";
 
 interface ShowcaseViewProps {
   prospect: ProjectProspect;
   publicEmail?: string;
   linkedinUrl?: string;
+  slug?: string;
 }
 
 // Sample interactive products for high-ticket showroom simulation (Maxaro style)
@@ -134,12 +136,28 @@ const MOCK_PRODUCTS: MockProduct[] = [
   },
 ];
 
-export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseViewProps) {
+export function ShowcaseView({
+  prospect,
+  publicEmail,
+  linkedinUrl,
+  slug = "maxaro",
+}: ShowcaseViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedFinish, setSelectedFinish] = useState<string>("all");
   const [cartItems, setCartItems] = useState<{ product: MockProduct; quantity: number }[]>([]);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
+
+  // Umami page tracking on showcase deck mount
+  useEffect(() => {
+    trackEvent("showcase-deck-view", {
+      company: prospect.companyName,
+      slug,
+      industry: prospect.industry,
+      auditScore: prospect.auditScore,
+      status: prospect.status,
+    });
+  }, [prospect.companyName, prospect.industry, prospect.auditScore, prospect.status, slug]);
 
   const filteredProducts = useMemo(() => {
     return MOCK_PRODUCTS.filter((p) => {
@@ -149,7 +167,25 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
     });
   }, [selectedCategory, selectedFinish]);
 
+  const totalCartCount = useMemo(() => {
+    return cartItems.reduce((acc, curr) => acc + curr.quantity, 0);
+  }, [cartItems]);
+
+  const cartTotal = useMemo(() => {
+    return cartItems.reduce((acc, curr) => acc + curr.product.price * curr.quantity, 0);
+  }, [cartItems]);
+
   const handleAddToCart = (product: MockProduct) => {
+    trackEvent("showcase-cart-add", {
+      company: prospect.companyName,
+      slug,
+      productId: product.id,
+      productName: product.name,
+      price: product.price,
+      finish: product.finish,
+      category: product.category,
+    });
+
     setCartItems((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (existing) {
@@ -164,8 +200,21 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
   };
 
   const handleUpdateQuantity = (productId: string, delta: number) => {
-    setCartItems((prev) =>
-      prev
+    setCartItems((prev) => {
+      const item = prev.find((i) => i.product.id === productId);
+      if (item) {
+        const nextQty = item.quantity + delta;
+        trackEvent("showcase-cart-update-quantity", {
+          company: prospect.companyName,
+          slug,
+          productId,
+          productName: item.product.name,
+          delta,
+          action: delta > 0 ? "increase" : "decrease",
+          newQuantity: Math.max(0, nextQty),
+        });
+      }
+      return prev
         .map((item) => {
           if (item.product.id === productId) {
             const nextQty = item.quantity + delta;
@@ -173,30 +222,42 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
           }
           return item;
         })
-        .filter(Boolean) as { product: MockProduct; quantity: number }[],
-    );
+        .filter(Boolean) as { product: MockProduct; quantity: number }[];
+    });
   };
 
   const handleRemoveItem = (productId: string) => {
+    const item = cartItems.find((i) => i.product.id === productId);
+    trackEvent("showcase-cart-remove-item", {
+      company: prospect.companyName,
+      slug,
+      productId,
+      productName: item?.product.name,
+    });
     setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
     toast.info("Artikel verwijderd uit winkelmand");
   };
 
   const handleClearCart = () => {
+    trackEvent("showcase-cart-clear", {
+      company: prospect.companyName,
+      slug,
+      clearedItemCount: totalCartCount,
+      clearedTotal: cartTotal,
+    });
     setCartItems([]);
     toast.info("Winkelmand is leeggemaakt");
   };
 
-  const totalCartCount = useMemo(() => {
-    return cartItems.reduce((acc, curr) => acc + curr.quantity, 0);
-  }, [cartItems]);
-
-  const cartTotal = useMemo(() => {
-    return cartItems.reduce((acc, curr) => acc + curr.product.price * curr.quantity, 0);
-  }, [cartItems]);
-
   const handleProceedToCheckout = () => {
     if (cartItems.length === 0) return;
+    trackEvent("showcase-checkout-click", {
+      company: prospect.companyName,
+      slug,
+      total: cartTotal,
+      itemCount: totalCartCount,
+      items: cartItems.map((i) => `${i.product.name} (x${i.quantity})`).join(", "),
+    });
     toast.success("⚡ Sub-Second Checkout Handshake", {
       description: `Nuxt 4 Nitro prepared cart payload (€${cartTotal.toLocaleString("nl-NL")}) and initiated checkout session in 12ms with zero full-page reload!`,
       duration: 5000,
@@ -209,11 +270,58 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
     try {
       await navigator.clipboard.writeText(emailToCopy);
       setCopiedEmail(true);
+      trackEvent("showcase-copy-email", {
+        company: prospect.companyName,
+        slug,
+        email: emailToCopy,
+      });
       toast.success("Email copied to clipboard!");
       setTimeout(() => setCopiedEmail(false), 2000);
     } catch {
       toast.error("Failed to copy email.");
     }
+  };
+
+  const handleSelectCategory = (categoryId: string, label: string) => {
+    setSelectedCategory(categoryId);
+    trackEvent("showcase-filter-category", {
+      company: prospect.companyName,
+      slug,
+      category: categoryId,
+      categoryLabel: label,
+    });
+  };
+
+  const handleSelectFinish = (finishId: string, label: string) => {
+    setSelectedFinish(finishId);
+    trackEvent("showcase-filter-finish", {
+      company: prospect.companyName,
+      slug,
+      finish: finishId,
+      finishLabel: label,
+    });
+  };
+
+  const handleOpenCartDrawer = (source: string) => {
+    setIsCartDrawerOpen(true);
+    trackEvent("showcase-cart-drawer-open", {
+      company: prospect.companyName,
+      slug,
+      source,
+      itemCount: totalCartCount,
+      cartTotal,
+    });
+  };
+
+  const handleCloseCartDrawer = (action: string) => {
+    setIsCartDrawerOpen(false);
+    trackEvent("showcase-cart-drawer-close", {
+      company: prospect.companyName,
+      slug,
+      action,
+      itemCount: totalCartCount,
+      cartTotal,
+    });
   };
 
   return (
@@ -253,6 +361,17 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   href={prospect.loomVideoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-umami-event="showcase-walkthrough-click"
+                  data-umami-event-company={prospect.companyName}
+                  data-umami-event-location="top_banner"
+                  onClick={() => {
+                    trackEvent("showcase-walkthrough-click", {
+                      company: prospect.companyName,
+                      slug,
+                      location: "top_banner",
+                      url: prospect.loomVideoUrl,
+                    });
+                  }}
                 >
                   <Button
                     size="sm"
@@ -269,6 +388,18 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   href={prospect.mvpDemoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-umami-event="showcase-demo-click"
+                  data-umami-event-company={prospect.companyName}
+                  data-umami-event-location="top_banner"
+                  onClick={() => {
+                    trackEvent("showcase-demo-click", {
+                      company: prospect.companyName,
+                      slug,
+                      location: "top_banner",
+                      type: "external_mvp",
+                      url: prospect.mvpDemoUrl,
+                    });
+                  }}
                 >
                   <Button
                     size="sm"
@@ -280,7 +411,21 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   </Button>
                 </a>
               ) : (
-                <a href="#demo-simulator">
+                <a
+                  href="#demo-simulator"
+                  data-umami-event="showcase-demo-click"
+                  data-umami-event-company={prospect.companyName}
+                  data-umami-event-location="top_banner"
+                  onClick={() => {
+                    trackEvent("showcase-demo-click", {
+                      company: prospect.companyName,
+                      slug,
+                      location: "top_banner",
+                      type: "internal_simulator",
+                      url: "#demo-simulator",
+                    });
+                  }}
+                >
                   <Button
                     size="sm"
                     className="gap-1.5 text-xs h-7 bg-primary hover:bg-primary/90 text-white font-semibold"
@@ -330,6 +475,18 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                       href={prospect.mvpDemoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      data-umami-event="showcase-demo-click"
+                      data-umami-event-company={prospect.companyName}
+                      data-umami-event-location="hero"
+                      onClick={() => {
+                        trackEvent("showcase-demo-click", {
+                          company: prospect.companyName,
+                          slug,
+                          location: "hero",
+                          type: "external_mvp",
+                          url: prospect.mvpDemoUrl,
+                        });
+                      }}
                     >
                       <Button
                         size="lg"
@@ -341,7 +498,21 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                       </Button>
                     </a>
                   ) : (
-                    <a href="#demo-simulator">
+                    <a
+                      href="#demo-simulator"
+                      data-umami-event="showcase-demo-click"
+                      data-umami-event-company={prospect.companyName}
+                      data-umami-event-location="hero"
+                      onClick={() => {
+                        trackEvent("showcase-demo-click", {
+                          company: prospect.companyName,
+                          slug,
+                          location: "hero",
+                          type: "internal_simulator",
+                          url: "#demo-simulator",
+                        });
+                      }}
+                    >
                       <Button
                         size="lg"
                         className="gap-2 text-sm bg-primary hover:bg-primary/90 text-white font-semibold shadow-lg shadow-primary/20 h-11 px-6"
@@ -358,6 +529,17 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                       href={prospect.loomVideoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      data-umami-event="showcase-walkthrough-click"
+                      data-umami-event-company={prospect.companyName}
+                      data-umami-event-location="hero"
+                      onClick={() => {
+                        trackEvent("showcase-walkthrough-click", {
+                          company: prospect.companyName,
+                          slug,
+                          location: "hero",
+                          url: prospect.loomVideoUrl,
+                        });
+                      }}
                     >
                       <Button
                         size="lg"
@@ -467,6 +649,18 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                         ? { target: "_blank", rel: "noopener noreferrer" }
                         : {})}
                       className="text-primary hover:text-primary/80 font-medium inline-flex items-center gap-1"
+                      data-umami-event="showcase-demo-click"
+                      data-umami-event-company={prospect.companyName}
+                      data-umami-event-location="pulse_card"
+                      onClick={() => {
+                        trackEvent("showcase-demo-click", {
+                          company: prospect.companyName,
+                          slug,
+                          location: "pulse_card",
+                          type: prospect.mvpDemoUrl ? "external_mvp" : "internal_simulator",
+                          url: prospect.mvpDemoUrl || "#demo-simulator",
+                        });
+                      }}
                     >
                       {prospect.mvpDemoUrl ? "Open Live Storefront" : "Simulate Live"}
                       {prospect.mvpDemoUrl ? (
@@ -614,6 +808,18 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   href={prospect.mvpDemoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-umami-event="showcase-demo-click"
+                  data-umami-event-company={prospect.companyName}
+                  data-umami-event-location="simulator_header"
+                  onClick={() => {
+                    trackEvent("showcase-demo-click", {
+                      company: prospect.companyName,
+                      slug,
+                      location: "simulator_header",
+                      type: "external_mvp",
+                      url: prospect.mvpDemoUrl,
+                    });
+                  }}
                 >
                   <Button
                     size="sm"
@@ -628,7 +834,9 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setIsCartDrawerOpen(true)}
+                onClick={() => handleOpenCartDrawer("simulator_header_button")}
+                data-umami-event="showcase-cart-drawer-open"
+                data-umami-event-company={prospect.companyName}
                 className="gap-2 text-xs h-9 bg-[#0C0E18] border-white/[0.1] hover:bg-white/[0.06] text-white relative"
               >
                 <ShoppingBag className="w-4 h-4 text-primary" />
@@ -657,7 +865,9 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
               ].map((cat) => (
                 <button
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => handleSelectCategory(cat.id, cat.label)}
+                  data-umami-event="showcase-filter-category"
+                  data-umami-event-category={cat.id}
                   className={`text-xs px-3 py-1.5 rounded-xl transition-all ${
                     selectedCategory === cat.id
                       ? "bg-primary text-white font-semibold shadow-md shadow-primary/20"
@@ -681,7 +891,9 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
               ].map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => setSelectedFinish(f.id)}
+                  onClick={() => handleSelectFinish(f.id, f.label)}
+                  data-umami-event="showcase-filter-finish"
+                  data-umami-event-finish={f.id}
                   className={`text-xs px-2.5 py-1 rounded-lg transition-all ${
                     selectedFinish === f.id
                       ? "bg-white text-black font-semibold"
@@ -744,6 +956,9 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   <Button
                     size="sm"
                     onClick={() => handleAddToCart(product)}
+                    data-umami-event="showcase-cart-add"
+                    data-umami-event-product={product.name}
+                    data-umami-event-price={String(product.price)}
                     className="gap-1.5 text-xs h-9 bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/30 font-semibold"
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
@@ -833,6 +1048,15 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   href={linkedinUrl || "https://linkedin.com/in/wismannur"}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-umami-event="showcase-contact-linkedin"
+                  data-umami-event-company={prospect.companyName}
+                  onClick={() => {
+                    trackEvent("showcase-contact-linkedin", {
+                      company: prospect.companyName,
+                      slug,
+                      url: linkedinUrl || "https://linkedin.com/in/wismannur",
+                    });
+                  }}
                 >
                   <Button
                     size="sm"
@@ -846,6 +1070,15 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                   <a
                     href={`mailto:${publicEmail || "hi@wismannur.pro"}?subject=Maxaro%20Storefront%20Modernization%20Concept`}
                     className="flex-1"
+                    data-umami-event="showcase-contact-email"
+                    data-umami-event-company={prospect.companyName}
+                    onClick={() => {
+                      trackEvent("showcase-contact-email", {
+                        company: prospect.companyName,
+                        slug,
+                        email: publicEmail || "hi@wismannur.pro",
+                      });
+                    }}
                   >
                     <Button
                       size="sm"
@@ -860,6 +1093,8 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                     size="icon"
                     variant="outline"
                     onClick={handleCopyEmail}
+                    data-umami-event="showcase-copy-email"
+                    data-umami-event-company={prospect.companyName}
                     title="Copy Email Address"
                     className="h-9 w-9 bg-black/40 border-white/[0.12] text-gray-400 hover:text-white hover:border-primary/40 shrink-0"
                   >
@@ -910,7 +1145,14 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
 
       {/* Optimistic Cart Slide-over Drawer (Elevated to z-[100] above floating chat widget) */}
       {isCartDrawerOpen && (
-        <div className="fixed inset-0 z-[100] flex justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-[100] flex justify-end bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleCloseCartDrawer("backdrop_click");
+            }
+          }}
+        >
           <div className="w-full max-w-md bg-[#0C0E18] border-l border-white/[0.08] p-5 sm:p-6 flex flex-col justify-between shadow-2xl h-full">
             <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
               {/* Drawer Header */}
@@ -932,7 +1174,9 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setIsCartDrawerOpen(false)}
+                  onClick={() => handleCloseCartDrawer("header_close_button")}
+                  data-umami-event="showcase-cart-drawer-close"
+                  data-umami-event-action="header_close_button"
                   className="h-8 w-8 text-gray-400 hover:text-white rounded-lg"
                 >
                   <X className="w-4 h-4" />
@@ -978,6 +1222,8 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                           variant="ghost"
                           size="icon"
                           onClick={() => handleRemoveItem(item.product.id)}
+                          data-umami-event="showcase-cart-remove-item"
+                          data-umami-event-product={item.product.name}
                           title="Verwijder artikel"
                           className="h-7 w-7 text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 shrink-0 rounded-lg"
                         >
@@ -992,6 +1238,8 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                             variant="ghost"
                             size="icon"
                             onClick={() => handleUpdateQuantity(item.product.id, -1)}
+                            data-umami-event="showcase-cart-update-quantity"
+                            data-umami-event-action="decrease"
                             className="h-6 w-6 text-gray-400 hover:text-white rounded"
                           >
                             <Minus className="w-3 h-3" />
@@ -1003,6 +1251,8 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                             variant="ghost"
                             size="icon"
                             onClick={() => handleUpdateQuantity(item.product.id, 1)}
+                            data-umami-event="showcase-cart-update-quantity"
+                            data-umami-event-action="increase"
                             className="h-6 w-6 text-gray-400 hover:text-white rounded"
                           >
                             <Plus className="w-3 h-3" />
@@ -1050,6 +1300,8 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                 <Button
                   onClick={handleProceedToCheckout}
                   disabled={cartItems.length === 0}
+                  data-umami-event="showcase-checkout-click"
+                  data-umami-event-company={prospect.companyName}
                   className="w-full text-xs h-10 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white font-semibold shadow-lg shadow-emerald-900/30 gap-1.5"
                 >
                   <Lock className="w-3.5 h-3.5" />
@@ -1059,7 +1311,9 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
 
                 <Button
                   variant="outline"
-                  onClick={() => setIsCartDrawerOpen(false)}
+                  onClick={() => handleCloseCartDrawer("continue_shopping_button")}
+                  data-umami-event="showcase-cart-drawer-close"
+                  data-umami-event-action="continue_shopping_button"
                   className="w-full text-xs h-9 bg-black/40 border-white/[0.1] hover:bg-white/[0.06] text-gray-300"
                 >
                   Verder winkelen
@@ -1070,6 +1324,8 @@ export function ShowcaseView({ prospect, publicEmail, linkedinUrl }: ShowcaseVie
                     variant="ghost"
                     size="sm"
                     onClick={handleClearCart}
+                    data-umami-event="showcase-cart-clear"
+                    data-umami-event-company={prospect.companyName}
                     className="w-full text-[11px] text-gray-500 hover:text-rose-400 h-6"
                   >
                     Winkelmand leegmaken

@@ -118,6 +118,7 @@ export default async function ShowcasePage({ params }: Params) {
       prospect={prospect}
       publicEmail={siteSettings.publicEmail}
       linkedinUrl={siteSettings.social?.linkedin}
+      slug={slug}
     />
   );
 }

@@ -199,6 +199,7 @@ const hireFormSchema = z.object({
   termsAccepted: z.boolean().refine((val) => val === true, {
     message: "You must accept the terms and conditions",
   }),
+  honeypot: z.string().optional(),
 });
 
 type HireFormValues = z.infer<typeof hireFormSchema>;
@@ -287,6 +288,7 @@ export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeVi
       salaryRange: "",
       message: "",
       termsAccepted: false,
+      honeypot: "",
     },
   });
 
@@ -303,6 +305,7 @@ export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeVi
           location: formData.location || "",
           salaryRange: formData.salaryRange || "",
           message: formData.message,
+          honeypot: formData.honeypot,
         },
         token
       );
@@ -685,6 +688,22 @@ export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeVi
               {/* Form Content */}
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Honeypot field for spam bots */}
+                  <div className="sr-only opacity-0 absolute -z-50 pointer-events-none select-none h-0 w-0 overflow-hidden" aria-hidden="true" tabIndex={-1}>
+                    <FormField
+                      control={form.control}
+                      name="honeypot"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Website</FormLabel>
+                          <FormControl>
+                            <Input tabIndex={-1} autoComplete="off" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {/* Name */}
                     <FormField

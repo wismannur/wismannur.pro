@@ -22,4 +22,6 @@ export interface HireRequest {
   updatedAt: Date;
 }
 
-export type NewHireRequest = Omit<HireRequest, "id" | "status" | "createdAt" | "updatedAt">;
+export type NewHireRequest = Omit<HireRequest, "id" | "status" | "createdAt" | "updatedAt"> & {
+  honeypot?: string;
+};
