@@ -81,7 +81,7 @@ const FALLBACK_MAXARO_PROSPECT: ProjectProspect = {
       "Maxaro represents an exemplary transformation candidate: established industry leader, high-consideration bathroom & tile catalog, stellar customer reputation, yet constrained by aging monolithic web frontend architecture.",
   },
   mvpDemoUrl: "https://maxaro-storefront.wismannur.pro",
-  loomVideoUrl: "https://www.loom.com/share/maxaro-nuxt4-modernization-demo",
+  loomVideoUrl: "https://www.loom.com/share/10914d29257c4f7b9653d71b07718823",
   contactName: "Lennard Bakhuys",
   contactRole: "Projectmanager E-commerce",
   contactEmail: "l.bakhuys@maxaro.nl",
@@ -110,6 +110,9 @@ export default async function ShowcasePage({ params }: Params) {
   } else if (slug.toLowerCase().includes("maxaro")) {
     if (!prospect.mvpDemoUrl || prospect.mvpDemoUrl === "https://wismannur.pro/showcase/maxaro") {
       prospect = { ...prospect, mvpDemoUrl: "https://maxaro-storefront.wismannur.pro" };
+    }
+    if (!prospect.loomVideoUrl || prospect.loomVideoUrl.includes("maxaro-nuxt")) {
+      prospect = { ...prospect, loomVideoUrl: "https://www.loom.com/share/10914d29257c4f7b9653d71b07718823" };
     }
   }
 
