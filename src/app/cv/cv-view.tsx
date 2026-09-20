@@ -10,17 +10,22 @@ import {
   Code2,
   Copy,
   Download,
+  ExternalLink,
+  FolderGit2,
   Github,
   Globe,
   GraduationCap,
   Linkedin,
+  Loader2,
   Mail,
   MapPin,
+  Printer,
   Send,
   Sparkles,
   Twitter,
   User,
 } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +33,7 @@ import { formatResumePeriod } from "@/lib/resume";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
+import type { Project } from "@/services/project/types";
 import type { ResumeEntry } from "@/services/resume/types";
 import type { SiteSettings } from "@/services/site-settings/types";
 import type { Skill } from "@/services/skills/types";
@@ -38,6 +44,7 @@ interface CVViewProps {
   experiences: ResumeEntry[];
   education: ResumeEntry[];
   skills: Skill[];
+  projects?: Project[];
   settings: SiteSettings;
 }
 
@@ -64,16 +71,28 @@ function CVSectionTitle({ icon: Icon, title }: CVSectionTitleProps) {
   );
 }
 
+function splitDescriptionToBullets(description?: string): string[] {
+  if (!description) return [];
+  if (description.includes("\n")) {
+    return description
+      .split("\n")
+      .map((item) => item.trim().replace(/^[-•*]\s*/, ""))
+      .filter(Boolean);
+  }
+
+  // Safe sentence boundary regex (avoiding splitting numbers/decimals/abbreviations)
+  const sentenceRegex = /(?<=[.!?])\s+(?=[A-Z])/;
+  return description
+    .split(sentenceRegex)
+    .map((item) => item.trim().replace(/^[-•*]\s*/, ""))
+    .filter(Boolean)
+    .map((item) => (item.endsWith(".") || item.includes(":") ? item : `${item}.`));
+}
+
 function renderDescriptionItems(description?: string) {
   if (!description) return null;
 
-  const rawItems = description.includes("\n") ? description.split("\n") : description.split(". ");
-
-  const items = rawItems
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((item) => (item.endsWith(".") || item.includes(":") ? item : `${item}.`));
-
+  const items = splitDescriptionToBullets(description);
   if (items.length === 0) return null;
 
   const highlightPrefixes = [
@@ -131,10 +150,21 @@ function renderDescriptionItems(description?: string) {
   );
 }
 
-export function CVView({ user, experiences, education, skills, settings }: CVViewProps) {
+export function CVView({
+  user,
+  experiences,
+  education,
+  skills,
+  projects = [],
+  settings,
+}: CVViewProps) {
   const [copied, setCopied] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const name = user?.displayName || settings.siteName || "Wisman Nur";
+  const headline =
+    settings.ogTagline ||
+    "Senior Fullstack & Autonomous AI Systems Engineer";
   const email = settings.publicEmail || user?.email || PUBLIC_SUPPORT_EMAIL;
   const location = settings.location || user?.location || "Bandung, ID";
   const timezone = settings.timezoneLabel || "WIB (UTC+7)";
@@ -153,6 +183,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
       await navigator.clipboard.writeText(email);
       setCopied(true);
       trackEvent("cv-copy-email", { email });
+      toast.success("Email copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy email", err);
@@ -160,7 +191,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
   };
 
   const handlePrint = () => {
-    trackEvent("cv-download-pdf-click", { name, format: "pdf" });
+    trackEvent("cv-download-pdf-click", { name, format: "browser-print" });
     const previousTitle = document.title;
     document.title = `CV_${name.replace(/\s+/g, "_")}_wismannur.pro`;
     window.print();
@@ -171,6 +202,71 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
       },
       { once: true }
     );
+  };
+
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    trackEvent("cv-download-pdf-click", { name, format: "vector-pdf" });
+    const toastId = toast.loading("Generating ATS Vector PDF...");
+    try {
+      const { pdf } = await import("@react-pdf/renderer");
+      const { CvPdfDocument } = await import("./cv-pdf-document");
+
+      const pdfExperiences = experiences.map((exp) => ({
+        title: exp.title,
+        organization: exp.organization,
+        location: exp.location,
+        period: formatResumePeriod(exp),
+        bullets: splitDescriptionToBullets(exp.description),
+      }));
+
+      const pdfProjects = projects.map((proj) => ({
+        title: proj.title,
+        technologies: proj.technologies,
+        description: proj.summary || proj.description,
+      }));
+
+      const pdfEducation = education.map((edu) => ({
+        title: edu.title,
+        organization: edu.organization,
+        period: formatResumePeriod(edu),
+        description: edu.description,
+      }));
+
+      const pdfSkills = skills.map((s) => s.name);
+
+      const doc = (
+        <CvPdfDocument
+          name={name}
+          headline={headline}
+          email={email}
+          location={location}
+          website={website}
+          linkedin={linkedin}
+          github={github}
+          bio={bio}
+          experiences={pdfExperiences}
+          projects={pdfProjects}
+          skills={pdfSkills}
+          education={pdfEducation}
+        />
+      );
+
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `CV_${name.replace(/\s+/g, "_")}_wismannur.pro.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("ATS Vector PDF downloaded successfully!", { id: toastId });
+    } catch (err) {
+      console.error("Failed to generate vector PDF, falling back to print dialog:", err);
+      toast.error("Generating direct PDF failed, opening print dialog...", { id: toastId });
+      handlePrint();
+    } finally {
+      setIsDownloadingPdf(false);
+    }
   };
 
   return (
@@ -253,12 +349,28 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
           <div className="flex items-center gap-2">
             <Button
               onClick={handlePrint}
+              variant="ghost"
+              size="sm"
+              title="Print via browser dialog"
+              data-umami-event="cv-top-print-click"
+              className="rounded-full gap-1.5 px-3 h-9 text-gray-300 hover:text-white hover:bg-white/[0.06] font-medium hidden sm:inline-flex"
+            >
+              <Printer size={14} />
+              <span>Print</span>
+            </Button>
+            <Button
+              onClick={handleDownloadPdf}
+              disabled={isDownloadingPdf}
               data-umami-event="cv-top-download-pdf-click"
               size="sm"
-              className="rounded-full gap-1.5 px-4 h-9 bg-primary text-white font-semibold shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="rounded-full gap-1.5 px-4 h-9 bg-primary text-white font-semibold shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-75"
             >
-              <Download size={14} />
-              <span>Download PDF</span>
+              {isDownloadingPdf ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Download size={14} />
+              )}
+              <span>{isDownloadingPdf ? "Generating..." : "Download PDF"}</span>
             </Button>
           </div>
         </div>
@@ -288,7 +400,7 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
                   {name}
                 </h1>
                 <p className="text-base sm:text-lg font-bold text-primary print:text-zinc-800 print:text-sm">
-                  Senior Fullstack & Autonomous AI Systems Engineer
+                  {headline}
                 </p>
 
                 {/* Live Availability Badge (Screen only) */}
@@ -503,6 +615,54 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
             </section>
           )}
 
+          {/* Key Technical Projects */}
+          {projects && projects.length > 0 && (
+            <section className="mb-10 print:mb-6">
+              <CVSectionTitle icon={FolderGit2} title="Key Technical Projects" />
+
+              <div className="space-y-6 print:space-y-3">
+                {projects.map((proj) => (
+                  <div
+                    key={proj.id}
+                    className="relative pl-6 border-l-2 border-primary/30 print:border-l-0 print:pl-0 break-inside-avoid print:break-inside-avoid space-y-1.5 print:space-y-1"
+                  >
+                    <div
+                      aria-hidden="true"
+                      className="absolute -left-[7px] top-1.5 w-3 h-3 rounded-full bg-primary ring-4 ring-[#0C0E18] print:hidden"
+                    />
+
+                    <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1 print:flex-row print:justify-between print:items-baseline">
+                      <h3 className="text-base sm:text-lg font-bold text-white print:text-zinc-950 print:text-sm print:font-bold flex items-center gap-2">
+                        {proj.demoUrl ? (
+                          <a
+                            href={proj.demoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-primary transition-colors inline-flex items-center gap-1.5"
+                          >
+                            <span>{proj.title}</span>
+                            <ExternalLink size={13} className="text-gray-400 print:hidden" />
+                          </a>
+                        ) : (
+                          <span>{proj.title}</span>
+                        )}
+                      </h3>
+                      {proj.technologies && proj.technologies.length > 0 && (
+                        <span className="text-xs font-semibold text-primary print:text-zinc-700 bg-primary/10 print:bg-transparent border border-primary/20 print:border-none px-2.5 py-0.5 print:px-0 print:py-0 rounded-full w-fit print:text-[8.5pt] font-mono">
+                          {proj.technologies.slice(0, 4).join(" • ")}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-gray-300 print:text-zinc-800 leading-relaxed print:text-xs">
+                      {proj.summary || proj.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Education & Certifications */}
           {education.length > 0 && (
             <section className="mb-8 print:mb-4">
@@ -562,13 +722,29 @@ export function CVView({ user, experiences, education, skills, settings }: CVVie
 
           <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
             <Button
-              onClick={handlePrint}
+              onClick={handleDownloadPdf}
+              disabled={isDownloadingPdf}
               data-umami-event="cv-bottom-download-pdf-click"
               size="lg"
-              className="rounded-full px-7 h-11 text-xs md:text-sm font-bold bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+              className="rounded-full px-7 h-11 text-xs md:text-sm font-bold bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all group disabled:opacity-75"
             >
-              <Download size={16} />
-              <span>Download PDF</span>
+              {isDownloadingPdf ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Download size={16} />
+              )}
+              <span>{isDownloadingPdf ? "Generating PDF..." : "Download PDF"}</span>
+            </Button>
+
+            <Button
+              onClick={handlePrint}
+              variant="outline"
+              size="lg"
+              data-umami-event="cv-bottom-print-click"
+              className="rounded-full px-5 h-11 text-xs md:text-sm font-medium border-white/[0.12] bg-white/[0.04] text-gray-300 hover:text-white hover:bg-white/[0.08] transition-all"
+            >
+              <Printer size={15} />
+              <span>Print</span>
             </Button>
 
             <Button

@@ -48,3 +48,4 @@ export * from "./inquiry-messages/types";
 export * from "./ai-knowledge/types";
 export * from "./job-discovery/types";
 export * from "./project-finder/types";
+export * from "./frontend-mastery/types";

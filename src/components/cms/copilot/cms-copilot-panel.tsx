@@ -73,7 +73,7 @@ const INITIAL_GREETING: MessageUI = {
   id: "copilot-welcome",
   role: "assistant",
   content:
-    "Halo Wisman! 👋 Saya adalah **CMS Executive Copilot** Anda yang ditenagai oleh **Gemini 3.8 Flash**.\n\nSaya terintegrasi penuh ke database Anda dengan kapabilitas **Query, Analisis, Mutasi, & Hapus Data** di seluruh menu CMS kita:\n- 📊 **Dashboard & General**: Health check metrik & performa situs\n- 🎯 **Career Hub**: Job Hunter (ATS Feeds & Target Companies), Job Tracker (Pipeline & Interviews), Job Outreaches (Cold Pitches & Threads)\n- 🚀 **Finder Project Hub**: Project Hunter (Site Audits), Project Tracker (Prospect Pipeline), Project Outreaches (Modernization Pitches)\n- 🧠 **AI Assistant**: AI Knowledge Hub, AI English Fluency Hub (Habit Streak, Speech drills, Vocab decks), AI Chat Logs\n- 📬 **Inbox & Leads**: Contacts, Service Orders & Consulting Inquiries, Recruiter Hire Requests\n- 🌐 **Site Architecture**: Site Settings, Page Copy, Legal Pages\n- 📁 **Content & Catalog**: Blog Posts, Portfolio Projects, Resume, Skills, Service Catalog, FAQs, Process Steps, Testimonials, Availability\n- ⚙️ **Account & System**: Admin Profile & Preferences Settings\n\nAda modul yang ingin Anda query, kelola, atau perbarui sekarang?",
+    "Halo Wisman! 👋 Saya adalah **CMS Executive Copilot** Anda yang ditenagai oleh **Gemini 3.8 Flash**.\n\nSaya terintegrasi penuh ke database Anda dengan kapabilitas **Query, Analisis, Mutasi, & Hapus Data** di seluruh menu CMS kita:\n- 📊 **Dashboard & General**: Health check metrik & performa situs\n- 🎯 **Career Hub**: Job Hunter (ATS Feeds & Target Companies), Job Tracker (Pipeline & Interviews), Job Outreaches (Cold Pitches & Threads), Frontend Mastery (Big Tech Interview Gym & Curriculum)\n- 🚀 **Finder Project Hub**: Project Hunter (Site Audits), Project Tracker (Prospect Pipeline), Project Outreaches (Modernization Pitches)\n- 🧠 **AI Assistant**: AI Knowledge Hub, AI English Fluency Hub (Habit Streak, Speech drills, Vocab decks), AI Chat Logs\n- 📬 **Inbox & Leads**: Contacts, Service Orders & Consulting Inquiries, Recruiter Hire Requests\n- 🌐 **Site Architecture**: Site Settings, Page Copy, Legal Pages\n- 📁 **Content & Catalog**: Blog Posts, Portfolio Projects, Resume, Skills, Service Catalog, FAQs, Process Steps, Testimonials, Availability\n- ⚙️ **Account & System**: Admin Profile & Preferences Settings\n\nAda modul yang ingin Anda query, kelola, atau perbarui sekarang?",
   status: "done",
 };
 
@@ -524,6 +524,13 @@ export function CmsCopilotPanel() {
         { label: "📅 Interviews", prompt: "Apakah ada interview yang terjadwal dalam waktu dekat?" },
       ];
     }
+    if (pathname.includes("/cms/frontend-mastery")) {
+      return [
+        { label: "⚡ Quick Drill", prompt: "Pilihkan satu topik JavaScript atau React coding drill yang paling krusial untuk saya latih sekarang" },
+        { label: "📊 Mastery Progress", prompt: "Bagaimana progress saya di Frontend Mastery Gym sejauh ini? Berapa topik yang sudah mastered?" },
+        { label: "🎯 Mock Interview", prompt: "Buatkan skenario mock interview frontend tingkat Senior/Staff untuk topik System Design" },
+      ];
+    }
 
     // 3. Finder Project Hub
     if (pathname.includes("/cms/project-hunter")) {
@@ -831,34 +838,6 @@ export function CmsCopilotPanel() {
 
   return (
     <>
-      {/* Floating Trigger Button (Bottom Right) */}
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => setIsOpen(true)}
-              className={cn(
-                "fixed bottom-6 right-6 z-40 h-12 w-12 rounded-2xl flex items-center justify-center",
-                "bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 text-white shadow-xl",
-                "hover:scale-105 active:scale-95 transition-all duration-300",
-                "border border-white/20 shadow-indigo-500/30",
-                isOpen && "opacity-0 pointer-events-none"
-              )}
-              aria-label="Open AI Copilot"
-            >
-              <Sparkles className="h-5 w-5 animate-pulse text-white" />
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
-              </span>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="left" className="bg-[#0C0E18] text-white border-white/[0.1] text-xs font-mono">
-            CMS Copilot (⌘J)
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
       {/* Slide-over Panel (Right Drawer with Left Resize Handle) */}
       <div
         style={{ width: `min(100vw, ${panelWidth}px)` }}

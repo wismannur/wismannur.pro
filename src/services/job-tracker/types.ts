@@ -45,15 +45,26 @@ export type InterviewStageType =
 
 export type InterviewStatus = "scheduled" | "completed" | "passed" | "failed" | "cancelled";
 
+export interface TailoredProjectHighlight {
+  title: string;
+  technologies: string[];
+  description: string;
+  relevanceRationale?: string;
+}
+
 export interface AtsAnalysis {
   score: number;
+  deterministicScore?: number;
+  matchedKeywords?: string[];
   matchStrengths: string[];
   missingKeywords: string[];
   recommendations: string[];
   summaryFeedback: string;
+  tailoredProjects?: TailoredProjectHighlight[];
 }
 
 export interface TailoredBullet {
+  experienceId?: string;
   roleContext?: string;
   tailored: string;
   rationale?: string;

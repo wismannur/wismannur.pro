@@ -127,10 +127,22 @@ export async function analyzeResumeMatchWithGemini(params: {
   jobDescription: string;
   requirements: string[];
   masterResume: {
-    experiences: { title: string; organization: string; description: string; period?: string }[];
-    education: { title: string; organization: string; description: string }[];
+    experiences: {
+      id?: string;
+      title: string;
+      organization: string;
+      description: string;
+      period?: string;
+    }[];
+    education: {
+      id?: string;
+      title: string;
+      organization: string;
+      description: string;
+    }[];
   };
   skills: { name: string; category?: string }[];
+  featuredProjects?: { title: string; summary: string; technologies: string[] }[];
 }): Promise<{
   atsAnalysis: AtsAnalysis;
   tailoredSummary: string;
@@ -144,32 +156,45 @@ export async function analyzeResumeMatchWithGemini(params: {
       experiences: params.masterResume.experiences,
       education: params.masterResume.education,
       skills: params.skills.map((s) => s.name),
+      featuredProjects: params.featuredProjects || [],
     },
     null,
     2
   );
 
-  const prompt = `You are a senior hiring manager and ATS optimization specialist.
-Analyze the candidate's real profile against the target job posting.
+  const prompt = `You are a Senior Staff Engineer and expert Technical Recruiter specializing in high-level engineering talent and ATS optimization.
+Analyze the candidate's authentic master profile against the target job posting.
 
 Target Job:
 - Title: ${params.jobTitle}
 - Company: ${params.companyName}
-- Requirements & JD:
+- Requirements & Job Description:
 ${params.jobDescription}
 ${params.requirements.join("\n- ")}
 
 Candidate's Real Master Profile:
 ${resumeContext}
 
+CRITICAL ANTI-HALLUCINATION & AUTHENTICITY GUARDRAILS:
+1. Ground all achievements, metrics, and bullet points strictly in the candidate's real experiences, projects, and skills.
+2. DO NOT fabricate wild numbers, exaggerated revenue figures, or ungrounded claims that have no basis in the candidate's actual responsibilities.
+3. DO NOT invent employers, job titles, degrees, or certifications the candidate never held.
+4. For the XYZ Formula ("Accomplished [X] as measured by [Y], by doing [Z]"), formulate realistic, defensible engineering outcomes based on their tech stack, architectural scope, and responsibilities described in their profile.
+
+IN-PLACE EXPERIENCE MAPPING:
+- Generate tailored bullet points mapped directly to the candidate's actual work experiences via "experienceId" and "roleContext" (e.g. "<title> at <organization>").
+- Each tailored bullet point must serve as an in-place improvement for that specific role, re-framing real past accomplishments to align directly with the target job's tech stack and priorities.
+- Provide 2 to 4 high-impact bullets per relevant experience.
+
 Tasks:
-1. ATS Score (0 to 100) based on role suitability, technology stack alignment, and experience level.
+1. ATS Score (0 to 100) based on role suitability, technology stack alignment, and engineering seniority level.
 2. Match strengths (key areas where the candidate strongly matches).
 3. Missing keywords / skills gaps that the job requires but are absent or weak in the candidate's profile.
 4. Actionable recommendations for the application.
-5. Tailored Professional Summary highlighting the most relevant accomplishments for this specific role.
-6. Tailored Experience Bullet Points using the XYZ Formula ("Accomplished [X] as measured by [Y], by doing [Z]") adapted from the candidate's real experience.
+5. Tailored Professional Summary highlighting the most relevant accomplishments and architectural leadership for this specific role.
+6. Tailored Experience Bullet Points using the XYZ Formula, mapped to each relevant work experience.
 7. High-impact, concise Cover Letter / Cold outreach message addressed to the hiring team.
+8. Relevant Projects: Select 2 to 3 most relevant projects from the Candidate's Featured Projects that best prove technical depth and architecture for this target job. Formulate a concise impact description.
 
 Return a JSON object conforming strictly to this format:
 {
@@ -178,14 +203,23 @@ Return a JSON object conforming strictly to this format:
     "matchStrengths": ["string"],
     "missingKeywords": ["string"],
     "recommendations": ["string"],
-    "summaryFeedback": "string"
+    "summaryFeedback": "string",
+    "tailoredProjects": [
+      {
+        "title": "string (project title from featured projects)",
+        "technologies": ["string"],
+        "description": "string (1-2 sentences on architectural impact and engineering outcome)",
+        "relevanceRationale": "string (why this project directly aligns with the target job)"
+      }
+    ]
   },
   "tailoredSummary": "string",
   "tailoredBulletPoints": [
     {
-      "roleContext": "string (e.g. at Previous Company)",
-      "tailored": "string (XYZ bullet point)",
-      "rationale": "string"
+      "experienceId": "string (matching experience ID from Candidate Profile, or empty if general)",
+      "roleContext": "string (e.g. Senior Fullstack Engineer at Kick Avenue)",
+      "tailored": "string (XYZ bullet point: Accomplished [X] as measured by [Y], by doing [Z])",
+      "rationale": "string (why this highlights fit for the target JD)"
     }
   ],
   "coverLetter": "string"
