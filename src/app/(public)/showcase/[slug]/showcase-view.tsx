@@ -11,6 +11,7 @@ import {
   Cpu,
   ExternalLink,
   Laptop,
+  Layers,
   Linkedin,
   Lock,
   Mail,
@@ -19,6 +20,7 @@ import {
   Plus,
   Server,
   ShoppingBag,
+  Sliders,
   Sparkles,
   Star,
   Trash2,
@@ -142,30 +144,59 @@ export function ShowcaseView({
   linkedinUrl,
   slug = "maxaro",
 }: ShowcaseViewProps) {
+  const companyName = prospect?.companyName || (slug.toLowerCase().includes("maxaro") ? "Maxaro" : "Client");
+  const isMaxaro = companyName.toLowerCase().includes("maxaro");
+
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedFinish, setSelectedFinish] = useState<string>("all");
   const [cartItems, setCartItems] = useState<{ product: MockProduct; quantity: number }[]>([]);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
 
+  // Dynamic edge region based on prospect country
+  const edgeRegion = useMemo(() => {
+    const c = (prospect.country || "").toLowerCase();
+    if (c.includes("netherlands") || c.includes("nl") || c.includes("belgium") || c.includes("germany") || c.includes("europe")) {
+      return { code: "ams", city: "Amsterdam, NL" };
+    }
+    if (c.includes("united states") || c.includes("usa") || c.includes("us") || c.includes("canada")) {
+      return { code: "iad", city: "Washington D.C., US" };
+    }
+    if (c.includes("australia") || c.includes("new zealand") || c.includes("anz")) {
+      return { code: "syd", city: "Sydney, AU" };
+    }
+    if (c.includes("united kingdom") || c.includes("uk")) {
+      return { code: "lhr", city: "London, UK" };
+    }
+    return { code: "ams", city: "Amsterdam, NL" };
+  }, [prospect.country]);
+
+  // Dynamically tailor sample products with the prospect's brand name
+  const dynamicProducts = useMemo(() => {
+    return MOCK_PRODUCTS.map((p) => ({
+      ...p,
+      name: isMaxaro ? p.name : p.name.replace(/^Maxaro\s+/, `${companyName} `),
+    }));
+  }, [companyName, isMaxaro]);
+
   // Umami page tracking on showcase deck mount
   useEffect(() => {
     trackEvent("showcase-deck-view", {
-      company: prospect.companyName,
+      company: companyName,
       slug,
       industry: prospect.industry,
       auditScore: prospect.auditScore,
       status: prospect.status,
     });
-  }, [prospect.companyName, prospect.industry, prospect.auditScore, prospect.status, slug]);
+  }, [companyName, prospect.industry, prospect.auditScore, prospect.status, slug]);
 
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter((p) => {
+    return dynamicProducts.filter((p) => {
       const matchCat = selectedCategory === "all" || p.category === selectedCategory;
       const matchFinish = selectedFinish === "all" || p.finish === selectedFinish;
       return matchCat && matchFinish;
     });
-  }, [selectedCategory, selectedFinish]);
+  }, [dynamicProducts, selectedCategory, selectedFinish]);
 
   const totalCartCount = useMemo(() => {
     return cartItems.reduce((acc, curr) => acc + curr.quantity, 0);
@@ -446,12 +477,19 @@ export function ShowcaseView({
               {/* Left Column: Headline & Value Proposition */}
               <div className="space-y-6 lg:col-span-7">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-xs px-3 py-1 font-mono">
-                    <Award className="w-3.5 h-3.5 mr-1.5" />
-                    4.6 Trustpilot Rating • 34,000+ Reviews
-                  </Badge>
+                  {isMaxaro ? (
+                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-xs px-3 py-1 font-mono">
+                      <Award className="w-3.5 h-3.5 mr-1.5" />
+                      4.6 Trustpilot Rating • 34,000+ Reviews
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 text-xs px-3 py-1 font-mono">
+                      <Award className="w-3.5 h-3.5 mr-1.5" />
+                      Tailored Architecture Audit
+                    </Badge>
+                  )}
                   <Badge className="bg-primary/15 text-primary border-primary/30 text-xs px-3 py-1 font-mono">
-                    Roosendaal, Netherlands 🇳🇱
+                    {prospect.city ? `${prospect.city}, ` : ""}{prospect.country}
                   </Badge>
                   <Badge className="bg-sky-500/15 text-sky-400 border-sky-500/30 text-xs px-3 py-1 font-mono">
                     Opportunity Score: {prospect.auditScore || 88}/100
@@ -461,12 +499,18 @@ export function ShowcaseView({
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.15]">
                   Sub-Second Storefront Modernization for{" "}
                   <span className="bg-gradient-to-r from-primary via-indigo-300 to-emerald-400 bg-clip-text text-transparent">
-                    {prospect.companyName}
+                    {companyName}
                   </span>
                 </h1>
 
                 <p className="text-base sm:text-lg text-gray-300 leading-relaxed">
-                  Maxaro commands exceptional market trust and category leadership in high-ticket sanitary ware and tiles. This interactive deck demonstrates how transitioning from monolithic frontend architecture to a decoupled <strong className="text-white">Nuxt 4 SSR + Nitro Edge Storefront</strong> eliminates mobile catalog latency, eliminates layout shifts on filter drawers, and drives an estimated <strong className="text-emerald-400">+18% to +24% mobile checkout lift</strong>.
+                  {prospect.auditAnalysis?.modernizationPitchSummary ? (
+                    prospect.auditAnalysis.modernizationPitchSummary
+                  ) : (
+                    <>
+                      {companyName} commands exceptional market trust and category leadership. This interactive deck demonstrates how transitioning from monolithic frontend architecture to a decoupled <strong className="text-white">Nuxt 4 SSR + Nitro Edge Storefront</strong> eliminates mobile catalog latency, eliminates layout shifts on filter drawers, and drives an estimated <strong className="text-emerald-400">{prospect.auditAnalysis?.estimatedConversionLift || "+18% to +24% mobile checkout lift"}</strong>.
+                    </>
+                  )}
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -476,11 +520,11 @@ export function ShowcaseView({
                       target="_blank"
                       rel="noopener noreferrer"
                       data-umami-event="showcase-demo-click"
-                      data-umami-event-company={prospect.companyName}
+                      data-umami-event-company={companyName}
                       data-umami-event-location="hero"
                       onClick={() => {
                         trackEvent("showcase-demo-click", {
-                          company: prospect.companyName,
+                          company: companyName,
                           slug,
                           location: "hero",
                           type: "external_mvp",
@@ -501,11 +545,11 @@ export function ShowcaseView({
                     <a
                       href="#demo-simulator"
                       data-umami-event="showcase-demo-click"
-                      data-umami-event-company={prospect.companyName}
+                      data-umami-event-company={companyName}
                       data-umami-event-location="hero"
                       onClick={() => {
                         trackEvent("showcase-demo-click", {
-                          company: prospect.companyName,
+                          company: companyName,
                           slug,
                           location: "hero",
                           type: "internal_simulator",
@@ -530,11 +574,11 @@ export function ShowcaseView({
                       target="_blank"
                       rel="noopener noreferrer"
                       data-umami-event="showcase-walkthrough-click"
-                      data-umami-event-company={prospect.companyName}
+                      data-umami-event-company={companyName}
                       data-umami-event-location="hero"
                       onClick={() => {
                         trackEvent("showcase-walkthrough-click", {
-                          company: prospect.companyName,
+                          company: companyName,
                           slug,
                           location: "hero",
                           url: prospect.loomVideoUrl,
@@ -569,7 +613,7 @@ export function ShowcaseView({
                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
                       </span>
                       <span className="text-xs font-mono font-medium text-gray-200">
-                        Edge Region: <strong className="text-emerald-400">ams</strong> (Amsterdam, NL)
+                        Edge Region: <strong className="text-emerald-400">{edgeRegion.code}</strong> ({edgeRegion.city})
                       </span>
                     </div>
                     <Badge
@@ -689,7 +733,7 @@ export function ShowcaseView({
               Current Monolith vs. Proposed Nuxt 4 Storefront
             </h2>
             <p className="text-xs sm:text-sm text-gray-400 max-w-2xl">
-              Tested on simulated mobile 4G network profile representing typical Dutch mobile shoppers.
+              Tested on simulated mobile 4G network profile representing typical {prospect.country ? `${prospect.country} ` : ""}mobile shoppers.
             </p>
           </div>
 
@@ -773,7 +817,7 @@ export function ShowcaseView({
                   +18% to +24%
                 </div>
                 <p className="text-[11px] text-gray-400 mt-1 md:mt-0 lg:mt-1 leading-relaxed md:max-w-md lg:max-w-none">
-                  For high-consideration bathroom purchases (€1,500+ AOV), eliminating mobile hesitation directly recovers abandoned revenue.
+                  For high-consideration purchases, eliminating mobile hesitation directly recovers abandoned revenue.
                 </p>
               </div>
             </div>
@@ -781,39 +825,35 @@ export function ShowcaseView({
         </div>
       </section>
 
-      {/* Interactive Storefront Prototype Simulator */}
+      {/* Interactive Nuxt 4 Storefront Prototype Simulator */}
       <section id="demo-simulator" className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge className="bg-primary/20 text-primary border-primary/30 text-xs px-2.5 py-0.5">
-                  Interactive Prototype
-                </Badge>
-                <span className="text-xs font-mono text-gray-400">
-                  0ms Client Filter Latency
-                </span>
+              <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-emerald-400">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Live Interactive Proof-of-Concept
               </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                Experience the Lightning-Fast Catalog Experience
+              <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">
+                Experience Instant Commerce
               </h2>
-              <p className="text-xs sm:text-sm text-gray-400 max-w-2xl">
-                Test the sub-second category switching, instant color facet filters, and optimistic cart additions below. No page reloads, zero layout shifts.
+              <p className="text-xs sm:text-sm text-gray-400 max-w-2xl leading-relaxed">
+                Interact with the simulated {companyName} catalog below. Notice zero full-page reloads, instantaneous filter updates, and optimistic add-to-cart state.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {prospect.mvpDemoUrl && (
                 <a
                   href={prospect.mvpDemoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-umami-event="showcase-demo-click"
-                  data-umami-event-company={prospect.companyName}
+                  data-umami-event-company={companyName}
                   data-umami-event-location="simulator_header"
                   onClick={() => {
                     trackEvent("showcase-demo-click", {
-                      company: prospect.companyName,
+                      company: companyName,
                       slug,
                       location: "simulator_header",
                       type: "external_mvp",
@@ -823,131 +863,147 @@ export function ShowcaseView({
                 >
                   <Button
                     size="sm"
-                    className="gap-1.5 text-xs h-9 bg-primary hover:bg-primary/90 text-white font-semibold shadow-md shadow-primary/25"
+                    className="gap-1.5 text-xs bg-primary hover:bg-primary/90 text-white font-medium"
                   >
-                    <Laptop className="w-3.5 h-3.5" />
-                    <span>Open Live Storefront (Nuxt 4)</span>
-                    <ExternalLink className="w-3 h-3 opacity-70" />
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Open Dedicated Nuxt 4 Web App
                   </Button>
                 </a>
               )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => handleOpenCartDrawer("simulator_header_button")}
+                onClick={() => handleOpenCartDrawer("navbar")}
                 data-umami-event="showcase-cart-drawer-open"
-                data-umami-event-company={prospect.companyName}
-                className="gap-2 text-xs h-9 bg-[#0C0E18] border-white/[0.1] hover:bg-white/[0.06] text-white relative"
+                data-umami-event-company={companyName}
+                className="gap-1.5 text-xs border-white/[0.12] bg-white/[0.04] hover:bg-white/[0.08] text-white relative"
               >
-                <ShoppingBag className="w-4 h-4 text-primary" />
+                <ShoppingBag className="w-3.5 h-3.5" />
                 <span>Winkelmand</span>
-                {cartItems.length > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full bg-primary text-white text-[10px] font-bold">
-                    {cartItems.length}
-                  </span>
+                {totalCartCount > 0 && (
+                  <Badge className="h-4 min-w-4 px-1 text-[9px] bg-emerald-500 text-black font-bold font-mono ml-0.5">
+                    {totalCartCount}
+                  </Badge>
                 )}
               </Button>
             </div>
           </div>
 
-          {/* Interactive Catalog Controls */}
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 space-y-4">
-            {/* Category Pills */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.06] pb-4">
-              <span className="text-xs font-mono text-gray-400 mr-2">Categorieën:</span>
-              {[
-                { id: "all", label: "Alle Categorieën" },
-                { id: "baden", label: "Vrijstaande Baden" },
-                { id: "douches", label: "Inloopdouches" },
-                { id: "meubels", label: "Badkamermeubels" },
-                { id: "tegels", label: "Tegels" },
-                { id: "kranen", label: "Kranen" },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => handleSelectCategory(cat.id, cat.label)}
-                  data-umami-event="showcase-filter-category"
-                  data-umami-event-category={cat.id}
-                  className={`text-xs px-3 py-1.5 rounded-xl transition-all ${
-                    selectedCategory === cat.id
-                      ? "bg-primary text-white font-semibold shadow-md shadow-primary/20"
-                      : "bg-black/40 text-gray-400 hover:text-white border border-white/[0.06]"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+          {/* Category & Finish Filter Bars */}
+          <div className="p-4 sm:p-5 rounded-2xl border border-white/[0.08] bg-black/40 backdrop-blur-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
+              <div className="text-xs font-mono uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-primary" />
+                <span>Selecteer Categorie:</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: "all", label: "Alle Producten" },
+                  { id: "baden", label: "Baden" },
+                  { id: "douches", label: "Inloopdouches" },
+                  { id: "meubels", label: "Badkamermeubels" },
+                  { id: "tegels", label: "Tegels" },
+                  { id: "kranen", label: "Kranen" },
+                ].map((cat) => (
+                  <Button
+                    key={cat.id}
+                    size="sm"
+                    variant={selectedCategory === cat.id ? "default" : "ghost"}
+                    onClick={() => handleSelectCategory(cat.id, cat.label)}
+                    data-umami-event="showcase-filter-category"
+                    data-umami-event-company={companyName}
+                    data-umami-event-category={cat.id}
+                    className={`text-xs h-7 px-2.5 rounded-lg ${
+                      selectedCategory === cat.id
+                        ? "bg-primary text-white font-semibold shadow-sm"
+                        : "text-gray-400 hover:text-white hover:bg-white/[0.05]"
+                    }`}
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
             </div>
 
-            {/* Finish Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-mono text-gray-400 mr-2">Afwerking / Kleur:</span>
-              {[
-                { id: "all", label: "Alle Kleuren" },
-                { id: "Mat Wit", label: "Mat Wit" },
-                { id: "Mat Zwart", label: "Mat Zwart" },
-                { id: "Eiken", label: "Massief Eiken" },
-                { id: "Chroom", label: "Chroom" },
-              ].map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => handleSelectFinish(f.id, f.label)}
-                  data-umami-event="showcase-filter-finish"
-                  data-umami-event-finish={f.id}
-                  className={`text-xs px-2.5 py-1 rounded-lg transition-all ${
-                    selectedFinish === f.id
-                      ? "bg-white text-black font-semibold"
-                      : "bg-black/30 text-gray-400 hover:text-white border border-white/[0.04]"
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="text-xs font-mono uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                <Sliders className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Filter op Afwerking / Materiaal:</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: "all", label: "Alle Afwerkingen" },
+                  { id: "Mat Wit", label: "Mat Wit / Solid Surface" },
+                  { id: "Mat Zwart", label: "Mat Zwart PVD" },
+                  { id: "Eiken", label: "Massief Eiken" },
+                ].map((finish) => (
+                  <Button
+                    key={finish.id}
+                    size="sm"
+                    variant={selectedFinish === finish.id ? "default" : "ghost"}
+                    onClick={() => handleSelectFinish(finish.id, finish.label)}
+                    data-umami-event="showcase-filter-finish"
+                    data-umami-event-company={companyName}
+                    data-umami-event-finish={finish.id}
+                    className={`text-xs h-7 px-2.5 rounded-lg ${
+                      selectedFinish === finish.id
+                        ? "bg-white/10 text-white font-semibold border border-white/20"
+                        : "text-gray-400 hover:text-white hover:bg-white/[0.05]"
+                    }`}
+                  >
+                    {finish.label}
+                  </Button>
+                ))}
+              </div>
             </div>
-
-            <span className="text-[11px] font-mono text-emerald-400 ml-auto flex items-center gap-1 justify-center sm:justify-end pt-2">
-              <Zap className="w-3 h-3" /> Filter updates in 0ms (no server roundtrip)
-            </span>
           </div>
 
-          {/* Simulated Products Grid */}
+          {/* Interactive Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="group rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-5 hover:border-primary/40 hover:bg-white/[0.02] transition-all duration-200 flex flex-col justify-between space-y-4 shadow-lg"
+                className="group rounded-2xl border border-white/[0.08] bg-[#0C0E18] hover:border-primary/40 transition-all duration-200 overflow-hidden flex flex-col justify-between"
               >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className="p-5 space-y-3.5">
+                  <div className="flex items-center justify-between text-xs">
                     <Badge
                       variant="outline"
-                      className="text-[10px] bg-primary/10 text-primary border-primary/20 font-mono"
+                      className="text-[10px] font-mono bg-white/[0.03] text-gray-300 border-white/[0.08]"
                     >
                       {product.highlight}
                     </Badge>
-                    <div className="flex items-center gap-1 text-xs text-amber-400">
-                      <Star className="w-3.5 h-3.5 fill-amber-400" />
-                      <span className="font-semibold text-white">{product.rating}</span>
-                      <span className="text-gray-500">({product.reviewsCount})</span>
+                    <div className="flex items-center gap-1 text-amber-400 text-xs">
+                      <Star className="w-3 h-3 fill-amber-400" />
+                      <span className="font-bold font-mono text-[11px]">{product.rating}</span>
+                      <span className="text-gray-500 text-[10px]">({product.reviewsCount})</span>
                     </div>
                   </div>
 
-                  <h3 className="text-base font-bold text-white group-hover:text-primary transition-colors leading-snug">
-                    {product.name}
-                  </h3>
+                  <div>
+                    <h3 className="text-base font-bold text-white group-hover:text-primary transition-colors leading-snug">
+                      {product.name}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">{product.specs}</p>
+                  </div>
 
-                  <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed">
-                    {product.specs}
-                  </p>
+                  <div className="flex items-center gap-2 pt-1 text-[11px] text-gray-400 font-mono">
+                    <span className="px-2 py-0.5 rounded bg-black/40 border border-white/[0.06]">
+                      {product.finish}
+                    </span>
+                    <span className="text-emerald-400 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Direct leverbaar
+                    </span>
+                  </div>
                 </div>
 
-                <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-3">
+                <div className="p-5 border-t border-white/[0.06] bg-black/30 flex items-center justify-between gap-3">
                   <div>
                     <div className="text-lg font-bold font-mono text-white">
                       €{product.price.toLocaleString("nl-NL")}
                     </div>
                     {product.originalPrice && (
-                      <div className="text-[11px] font-mono text-gray-500 line-through">
+                      <div className="text-[11px] text-gray-500 line-through font-mono">
                         €{product.originalPrice.toLocaleString("nl-NL")}
                       </div>
                     )}
@@ -957,11 +1013,11 @@ export function ShowcaseView({
                     size="sm"
                     onClick={() => handleAddToCart(product)}
                     data-umami-event="showcase-cart-add"
+                    data-umami-event-company={companyName}
                     data-umami-event-product={product.name}
-                    data-umami-event-price={String(product.price)}
-                    className="gap-1.5 text-xs h-9 bg-primary/20 hover:bg-primary text-primary hover:text-white border border-primary/30 font-semibold"
+                    className="gap-1.5 text-xs bg-primary hover:bg-primary/90 text-white font-semibold h-8 px-3"
                   >
-                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <ShoppingBag className="w-3 h-3" />
                     In Winkelmand
                   </Button>
                 </div>
@@ -971,10 +1027,10 @@ export function ShowcaseView({
         </div>
       </section>
 
-      {/* Architectural Transition Blueprint (Strangler Pattern) */}
+      {/* Migration Phasing Blueprint */}
       <section className="py-16 border-t border-white/[0.08] bg-[#0C0E18]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
-          <div className="space-y-2 max-w-3xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-10">
+          <div className="space-y-2 text-center sm:text-left max-w-2xl">
             <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-primary">
               <Cpu className="w-3.5 h-3.5" />
               Engineering Roadmap
@@ -983,7 +1039,7 @@ export function ShowcaseView({
               Zero-Downtime Storefront Migration Blueprint
             </h2>
             <p className="text-xs sm:text-sm text-gray-400 leading-relaxed">
-              How Maxaro can modernize its customer-facing storefront without risking operations, rewriting existing ERP/PIM systems, or stopping ongoing sales.
+              How {companyName} can modernize its customer-facing storefront without risking operations, rewriting existing ERP/PIM systems, or stopping ongoing sales.
             </p>
           </div>
 
@@ -1004,7 +1060,7 @@ export function ShowcaseView({
               {
                 step: "Phase 03",
                 title: "Showroom Digital Hub Integration",
-                desc: "Connect the high-speed web storefront with Maxaro's physical showroom digital consultants, unified product configs, and Indonesian engineering hub.",
+                desc: `Connect the high-speed web storefront with ${companyName}'s physical showroom digital consultants, unified product configs, and dedicated engineering support.`,
                 badge: "Omnichannel Scale",
               },
             ].map((phase, idx) => (
@@ -1036,11 +1092,15 @@ export function ShowcaseView({
                   Engineering Leadership & Storefront Architecture
                 </Badge>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  Let&apos;s Discuss Maxaro&apos;s Storefront Roadmap
+                  Let&apos;s Discuss {companyName}&apos;s Storefront Roadmap
                 </h2>
                 <p className="text-xs sm:text-sm text-gray-300 max-w-2xl lg:max-w-xl leading-relaxed">
                   Prepared by <strong>Wisman Nur</strong> — Senior Frontend Engineer & E-Commerce Architect with 4+ years dedicated Vue/Nuxt expertise and proven ownership of high-traffic storefronts (400k+ MAU, Kick Avenue).
                 </p>
+                <div className="pt-2 flex items-center gap-2 text-xs text-emerald-400/90 font-mono">
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Available for 2-Week Decoupled Pilot or Full Architecture Modernization</span>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 shrink-0 pt-2 lg:pt-0">
@@ -1049,10 +1109,10 @@ export function ShowcaseView({
                   target="_blank"
                   rel="noopener noreferrer"
                   data-umami-event="showcase-contact-linkedin"
-                  data-umami-event-company={prospect.companyName}
+                  data-umami-event-company={companyName}
                   onClick={() => {
                     trackEvent("showcase-contact-linkedin", {
-                      company: prospect.companyName,
+                      company: companyName,
                       slug,
                       url: linkedinUrl || "https://linkedin.com/in/wismannur",
                     });
@@ -1068,13 +1128,13 @@ export function ShowcaseView({
                 </a>
                 <div className="flex items-center gap-1.5">
                   <a
-                    href={`mailto:${publicEmail || "hi@wismannur.pro"}?subject=Maxaro%20Storefront%20Modernization%20Concept`}
+                    href={`mailto:${publicEmail || "hi@wismannur.pro"}?subject=${encodeURIComponent(`${companyName} Storefront Modernization Concept`)}`}
                     className="flex-1"
                     data-umami-event="showcase-contact-email"
-                    data-umami-event-company={prospect.companyName}
+                    data-umami-event-company={companyName}
                     onClick={() => {
                       trackEvent("showcase-contact-email", {
-                        company: prospect.companyName,
+                        company: companyName,
                         slug,
                         email: publicEmail || "hi@wismannur.pro",
                       });
@@ -1094,7 +1154,7 @@ export function ShowcaseView({
                     variant="outline"
                     onClick={handleCopyEmail}
                     data-umami-event="showcase-copy-email"
-                    data-umami-event-company={prospect.companyName}
+                    data-umami-event-company={companyName}
                     title="Copy Email Address"
                     className="h-9 w-9 bg-black/40 border-white/[0.12] text-gray-400 hover:text-white hover:border-primary/40 shrink-0"
                   >
@@ -1135,7 +1195,7 @@ export function ShowcaseView({
                   Remote Hub Foundation
                 </div>
                 <p className="text-gray-400 text-[11px] leading-relaxed">
-                  Ready to spearhead Maxaro&apos;s Indonesian engineering presence with world-class velocity.
+                  Ready to spearhead {companyName}&apos;s modern storefront engineering presence with world-class velocity.
                 </p>
               </div>
             </div>
