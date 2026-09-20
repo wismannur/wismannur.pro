@@ -13,6 +13,7 @@ import {
 import type { PageCopyContent } from "@/services/page-copy/types";
 import type { CompanyIntelligence, InboundReachout } from "@/services/job-tracker/types";
 import type { ProjectAuditAnalysis } from "@/services/project-finder/types";
+import type { FrontendMasteryEvaluation } from "@/services/frontend-mastery/types";
 import { generateEntityId } from "@/lib/id-generator";
 
 // Mirrors the service contracts in `src/services/*/types.ts` 1:1 — those
@@ -870,6 +871,47 @@ export const projectProspects = pgTable("project_prospects", {
     .$onUpdate(() => new Date()),
 });
 
+export const frontendMasterySessions = pgTable("frontend_mastery_sessions", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => generateEntityId("fms")),
+  pillar: text("pillar").notNull(),
+  topicId: text("topic_id").notNull(),
+  topicTitle: text("topic_title").notNull(),
+  difficulty: text("difficulty").notNull().default("senior"),
+  questionPrompt: text("question_prompt").notNull(),
+  starterCode: text("starter_code"),
+  hints: jsonb("hints").$type<string[]>(),
+  userSubmission: text("user_submission"),
+  evaluationResult: jsonb("evaluation_result").$type<FrontendMasteryEvaluation>(),
+  score: integer("score"),
+  status: text("status").notNull().default("in_progress"),
+  timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+export const frontendMasteryProgress = pgTable("frontend_mastery_progress", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => generateEntityId("fmp")),
+  topicId: text("topic_id").notNull().unique(),
+  pillar: text("pillar").notNull(),
+  topicTitle: text("topic_title").notNull(),
+  masteryStatus: text("mastery_status").notNull().default("not_started"),
+  attemptsCount: integer("attempts_count").notNull().default(0),
+  bestScore: integer("best_score").default(0),
+  lastCompletedAt: timestamp("last_completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
 export type BlogRow = typeof blogs.$inferSelect;
 export type ProjectRow = typeof projects.$inferSelect;
 export type ResumeEntryRow = typeof resumeEntries.$inferSelect;
@@ -903,5 +945,7 @@ export type AiEnglishVocabularyRow = typeof aiEnglishVocabularies.$inferSelect;
 export type AiEnglishStreakRow = typeof aiEnglishStreaks.$inferSelect;
 export type AiEnglishCurriculumProgressRow = typeof aiEnglishCurriculumProgress.$inferSelect;
 export type ProjectProspectRow = typeof projectProspects.$inferSelect;
+export type FrontendMasterySessionRow = typeof frontendMasterySessions.$inferSelect;
+export type FrontendMasteryProgressRow = typeof frontendMasteryProgress.$inferSelect;
 
 
