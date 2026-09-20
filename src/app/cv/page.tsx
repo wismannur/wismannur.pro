@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getCachedSiteSettings } from "@/lib/site-metadata";
-import { resumeService, skillsService, userService } from "@/services";
+import { projectService, resumeService, skillsService, userService } from "@/services";
 import { CVView } from "./cv-view";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,9 +28,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CVPage() {
-  const [{ experiences, education }, skills, user, settings] = await Promise.all([
+  const [{ experiences, education }, skills, projects, user, settings] = await Promise.all([
     resumeService.getPublished(),
     skillsService.getPublished(),
+    projectService.getFeatured(4),
     userService.getAuthorProfile(),
     getCachedSiteSettings(),
   ]);
@@ -41,6 +42,7 @@ export default async function CVPage() {
       experiences={experiences}
       education={education}
       skills={skills}
+      projects={projects}
       settings={settings}
     />
   );
