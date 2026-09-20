@@ -535,10 +535,21 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
 
   const allSkills = await db.select().from(skills).orderBy(asc(skills.sortOrder));
 
+  const topProjects = await db
+    .select({
+      title: schema.projects.title,
+      summary: schema.projects.summary,
+      technologies: schema.projects.technologies,
+    })
+    .from(schema.projects)
+    .where(eq(schema.projects.isPublished, true))
+    .limit(6);
+
   const masterResume = {
     experiences: allResumeRows
       .filter((r) => r.kind === "experience")
       .map((r) => ({
+        id: r.id,
         title: r.title,
         organization: r.organization,
         description: r.description,
@@ -547,6 +558,7 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
     education: allResumeRows
       .filter((r) => r.kind === "education")
       .map((r) => ({
+        id: r.id,
         title: r.title,
         organization: r.organization,
         description: r.description,
@@ -560,7 +572,32 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
     requirements: application.requirements || [],
     masterResume,
     skills: allSkills.map((s) => ({ name: s.name })),
+    featuredProjects: topProjects,
   });
+
+  // Deterministic Keyword Match Calculation
+  const jdTextLower = `${application.jobTitle} ${application.jobDescriptionRaw || ""} ${(application.requirements || []).join(" ")}`.toLowerCase();
+
+  const matchedSkills: string[] = [];
+  allSkills.forEach((s) => {
+    const skillName = s.name.trim();
+    if (!skillName) return;
+    const escaped = skillName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(^|[^a-zA-Z0-9])${escaped}([^a-zA-Z0-9]|$)`, "i");
+    if (regex.test(jdTextLower)) {
+      matchedSkills.push(skillName);
+    }
+  });
+
+  const detectedMissing = result.atsAnalysis.missingKeywords || [];
+  const totalKeywords = matchedSkills.length + detectedMissing.length;
+  const deterministicScore =
+    totalKeywords > 0
+      ? Math.min(100, Math.max(10, Math.round((matchedSkills.length / totalKeywords) * 100)))
+      : result.atsAnalysis.score;
+
+  result.atsAnalysis.deterministicScore = deterministicScore;
+  result.atsAnalysis.matchedKeywords = matchedSkills;
 
   await db
     .update(jobApplications)

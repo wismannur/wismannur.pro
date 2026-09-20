@@ -559,6 +559,7 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
             isAnalyzingATS={isAnalyzingATS}
             onRunATSAnalysis={handleRunATSAnalysis}
             onCopyText={handleCopyText}
+            onUpdate={handleDirectUpdateApplication}
           />
         </TabsContent>
 
