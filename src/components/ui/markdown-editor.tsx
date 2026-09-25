@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
-  Check,
   Columns2,
   Copy,
   Eye,
@@ -13,6 +12,7 @@ import {
   PenLine,
   Sparkles,
   SquareCode,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Monaco } from "@monaco-editor/react";
@@ -20,62 +20,47 @@ import type { Monaco } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useMDXPreview } from "@/hooks/use-mdx-preview";
-import MDXPreview from "./mdx-preview";
+import { CopilotMarkdown } from "@/components/cms/copilot/copilot-markdown";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full min-h-[380px] w-full flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-[#08090C] text-xs text-zinc-400">
-      <Sparkles className="h-5 w-5 animate-spin text-indigo-400" />
-      <span>Loading Monaco MDX Engine...</span>
+    <div className="flex h-full min-h-[340px] w-full flex-col items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-[#08090C] text-xs text-zinc-400">
+      <Sparkles className="h-5 w-5 animate-spin text-primary" />
+      <span>Loading Monaco Editor Engine...</span>
     </div>
   ),
 });
 
-export interface MDXEditorProps {
-  value?: string;
-  initialCode?: string;
-  height?: string | number;
-  onChange?: (code: string) => void;
+export interface MarkdownEditorProps {
+  value: string;
+  onChange: (value: string) => void;
   className?: string;
+  defaultHeight?: number;
+  badgeLabel?: string;
+  placeholder?: string;
 }
 
-export const MDXEditor: React.FC<MDXEditorProps> = ({
+export function MarkdownEditor({
   value,
-  initialCode = "",
-  height = "520px",
   onChange,
   className,
-}) => {
-  const initialValue = value !== undefined ? value : initialCode;
-  const { code, setCode, parsedCode, isLoading } = useMDXPreview({
-    initialCode: initialValue,
-  });
-
-  // Sync when controlled value or initialCode changes externally (e.g. async fetch)
-  useEffect(() => {
-    if (value !== undefined && value !== code) {
-      setCode(value);
-    } else if (value === undefined && initialCode && initialCode !== code && !code) {
-      setCode(initialCode);
-    }
-  }, [value, initialCode, code, setCode]);
-
-  const parsedInitialHeight = typeof height === "number" ? height : parseInt(height, 10) || 520;
-
-  // View state: "split" (side-by-side) or "tab" (single pane toggle between write & preview)
+  defaultHeight = 380,
+  badgeLabel = "Monaco Markdown",
+  placeholder = "Markdown preview will render here in real time as you write.",
+}: MarkdownEditorProps) {
+  // Modes: "split" (side-by-side) or "tab" (single pane toggle between write & preview)
   const [viewMode, setViewMode] = useState<"split" | "tab">("split");
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
   const [splitRatio, setSplitRatio] = useState<number>(50); // percentage for left editor pane
-  const [editorHeight, setEditorHeight] = useState<number>(parsedInitialHeight);
+  const [editorHeight, setEditorHeight] = useState<number>(defaultHeight);
   const [copied, setCopied] = useState<boolean>(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const isDraggingSplitRef = useRef<boolean>(false);
   const isDraggingHeightRef = useRef<boolean>(false);
   const dragStartYHeightRef = useRef<number>(0);
-  const startHeightRef = useRef<number>(parsedInitialHeight);
+  const startHeightRef = useRef<number>(defaultHeight);
 
   // Define Monaco Editor Obsidian Theme
   const handleEditorBeforeMount = (monaco: Monaco) => {
@@ -134,6 +119,7 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
       const rect = containerRef.current.getBoundingClientRect();
       const relativeX = moveEvent.clientX - rect.left;
       const percentage = (relativeX / rect.width) * 100;
+      // Clamp between 20% and 80%
       const clampedRatio = Math.min(Math.max(percentage, 20), 80);
       setSplitRatio(clampedRatio);
     };
@@ -187,7 +173,7 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!isDraggingHeightRef.current) return;
       const deltaY = moveEvent.clientY - dragStartYHeightRef.current;
-      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 260), 1000);
+      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 260), 900);
       setEditorHeight(newHeight);
     };
 
@@ -204,17 +190,18 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
   };
 
   const handleHeightTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    if (!touch) return;
     isDraggingHeightRef.current = true;
-    dragStartYHeightRef.current = e.touches[0].clientY;
+    dragStartYHeightRef.current = touch.clientY;
     startHeightRef.current = editorHeight;
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
-      if (!isDraggingHeightRef.current || moveEvent.touches.length !== 1) return;
-      const touch = moveEvent.touches[0];
-      if (!touch) return;
-      const deltaY = touch.clientY - dragStartYHeightRef.current;
-      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 260), 1000);
+      if (!isDraggingHeightRef.current) return;
+      const currentTouch = moveEvent.touches[0];
+      if (!currentTouch) return;
+      const deltaY = currentTouch.clientY - dragStartYHeightRef.current;
+      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 260), 900);
       setEditorHeight(newHeight);
     };
 
@@ -228,24 +215,20 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
     window.addEventListener("touchend", handleTouchEnd);
   };
 
-  const handleCopy = useCallback(() => {
-    if (!code) {
+  const handleCopyMarkdown = useCallback(() => {
+    if (!value) {
       toast.info("No content to copy");
       return;
     }
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(value);
     setCopied(true);
-    toast.success("MDX content copied to clipboard!");
+    toast.success("Markdown copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
-  }, [code]);
+  }, [value]);
 
-  const handleCodeChange = (newCode: string) => {
-    setCode(newCode);
-    onChange?.(newCode);
-  };
-
-  const wordCount = code.trim() ? code.trim().split(/\s+/).length : 0;
-  const charCount = code.length;
+  // Word and character count
+  const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
+  const charCount = value.length;
 
   return (
     <div className={cn("space-y-2 rounded-2xl border border-white/[0.08] bg-[#0A0D18] p-3 sm:p-4 shadow-xl", className)}>
@@ -258,14 +241,14 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
             className="bg-indigo-500/10 border-indigo-500/25 text-indigo-300 font-mono text-[11px] gap-1 px-2.5 py-0.5"
           >
             <SquareCode className="w-3 h-3 text-indigo-400" />
-            <span>Monaco MDX Engine</span>
+            <span>{badgeLabel}</span>
           </Badge>
           <span className="text-[11px] text-gray-400 font-mono">
             {wordCount} words &bull; {charCount} chars
           </span>
         </div>
 
-        {/* Right switchers & actions */}
+        {/* Right switchers */}
         <div className="flex flex-wrap items-center gap-2">
           {/* If Tab mode is active, show Tab triggers */}
           {viewMode === "tab" && (
@@ -299,35 +282,35 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
             </div>
           )}
 
-          {/* Mode Switcher: Tab Toggle vs Side-by-Side Split */}
+          {/* View Mode Switcher (Split vs Tab) */}
           <div className="flex items-center rounded-xl bg-[#131726] border border-white/[0.08] p-0.5">
             <button
               type="button"
-              onClick={() => setViewMode("tab")}
-              title="Tabbed view (Toggle Write / Preview)"
+              onClick={() => setViewMode("split")}
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
-                viewMode === "tab"
-                  ? "bg-white/[0.12] text-white shadow-sm"
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
+                viewMode === "split"
+                  ? "bg-white/[0.1] text-white shadow-sm"
                   : "text-gray-400 hover:text-white"
               )}
+              title="Side-by-side Split View"
             >
-              <Eye className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Tabs</span>
+              <Columns2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Split</span>
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("split")}
-              title="Side-by-side view (Resizable editor & preview)"
+              onClick={() => setViewMode("tab")}
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
-                viewMode === "split"
-                  ? "bg-primary text-white shadow-sm"
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all",
+                viewMode === "tab"
+                  ? "bg-white/[0.1] text-white shadow-sm"
                   : "text-gray-400 hover:text-white"
               )}
+              title="Tab View (Write / Preview)"
             >
-              <Columns2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Side-by-Side</span>
+              <Eye className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Tabs</span>
             </button>
           </div>
 
@@ -335,63 +318,48 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
           <Button
             type="button"
             variant="ghost"
-            size="sm"
-            onClick={handleCopy}
-            className="h-8 px-2.5 rounded-xl border border-white/[0.08] bg-white/[0.04] text-gray-300 hover:text-white text-xs gap-1.5"
-            title="Copy MDX code"
+            size="icon"
+            onClick={handleCopyMarkdown}
+            className="h-7 w-7 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
+            title="Copy Markdown"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
           </Button>
 
-          {/* Quick Collapse / Expand Height Button */}
+          {/* Expand/Collapse Height Quick Toggles */}
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => {
-              setEditorHeight((prev) => (prev > 600 ? parsedInitialHeight : 780));
-            }}
-            className="h-8 w-8 rounded-xl border border-white/[0.08] bg-white/[0.04] text-gray-300 hover:text-white"
-            title={editorHeight > 600 ? "Collapse editor height" : "Expand editor height"}
+            onClick={() => setEditorHeight((prev) => (prev > 450 ? 320 : 560))}
+            className="h-7 w-7 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
+            title={editorHeight > 450 ? "Collapse height" : "Expand height"}
           >
-            {editorHeight > 600 ? (
-              <Minimize2 className="h-3.5 w-3.5" />
-            ) : (
-              <Maximize2 className="h-3.5 w-3.5" />
-            )}
+            {editorHeight > 450 ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </Button>
         </div>
       </div>
 
-      {/* Main Workspace Area with Nested Bottom Resize Handle */}
+      {/* Main Resizable Editor Box with Nested Bottom Drag Handle */}
       <div
         ref={containerRef}
         style={{ height: `${editorHeight}px` }}
-        className="relative w-full rounded-xl overflow-hidden border border-white/[0.08] bg-[#08090C] transition-[height] duration-75 flex flex-col focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/30 shadow-inner"
+        className="relative flex flex-col rounded-xl border border-white/[0.08] bg-[#08090C] overflow-hidden focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/30 transition-all shadow-inner"
       >
-        {/* Workspace Panes (Editor & Preview) */}
-        <div className="relative w-full flex-1 overflow-hidden flex min-h-0">
-          {/* SIDE-BY-SIDE MODE */}
+        {/* Pane Container */}
+        <div className="relative flex-1 flex flex-row overflow-hidden w-full">
           {viewMode === "split" ? (
+            /* SPLIT SIDE-BY-SIDE MODE */
             <>
               {/* Left: Monaco Editor Pane */}
-              <div
-                style={{ width: `${splitRatio}%` }}
-                className="relative h-full overflow-hidden flex flex-col shrink-0"
-              >
-                <div className="absolute top-2 right-3 z-10 pointer-events-none opacity-40 hover:opacity-100 transition-opacity">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 bg-[#0C0E18]/80 px-2 py-0.5 rounded border border-white/[0.08]">
-                    MDX Editor ({Math.round(splitRatio)}%)
-                  </span>
-                </div>
+              <div style={{ width: `${splitRatio}%` }} className="relative h-full overflow-hidden shrink-0">
                 <MonacoEditor
                   height="100%"
                   language="markdown"
                   theme="electric-obsidian"
-                  value={code}
+                  value={value}
                   beforeMount={handleEditorBeforeMount}
-                  onChange={(newVal) => handleCodeChange(newVal || "")}
+                  onChange={(newVal) => onChange(newVal || "")}
                   options={{
                     minimap: { enabled: false },
                     lineNumbers: "on",
@@ -410,37 +378,37 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
                 />
               </div>
 
-              {/* Middle: Resizable Divider Bar */}
+              {/* Center Divider Resizer Handle */}
               <div
                 onMouseDown={handleSplitMouseDown}
                 onTouchStart={handleSplitTouchStart}
-                className="relative z-20 w-3 -mx-1.5 flex items-center justify-center cursor-col-resize select-none group touch-none"
-                title="Drag horizontally to resize editor and preview panes"
+                className="group relative z-20 flex w-2 cursor-col-resize items-center justify-center bg-white/[0.03] hover:bg-primary/20 transition-colors select-none shrink-0 border-x border-white/[0.04]"
+                title="Drag horizontally to resize panes"
               >
-                <div className="w-1 h-full bg-white/[0.08] group-hover:bg-primary group-active:bg-primary transition-colors flex items-center justify-center">
-                  <div className="w-3.5 h-7 rounded-full bg-[#181C2E] border border-white/[0.15] group-hover:border-primary flex items-center justify-center shadow-lg transition-colors">
-                    <GripVertical className="w-2.5 h-2.5 text-gray-400 group-hover:text-primary transition-colors" />
-                  </div>
+                <div className="flex h-8 w-3 items-center justify-center rounded-sm bg-[#131726] border border-white/[0.1] group-hover:border-primary/50 shadow-sm">
+                  <GripVertical className="w-2.5 h-2.5 text-gray-400 group-hover:text-primary transition-colors" />
                 </div>
               </div>
 
-              {/* Right: MDX Preview Pane */}
+              {/* Right: Markdown Preview Pane */}
               <div
                 style={{ width: `${100 - splitRatio}%` }}
-                className="relative h-full overflow-y-auto custom-scrollbar p-6 bg-[#08090C] border-l border-white/[0.06] text-slate-100 flex-1"
+                className="relative h-full overflow-y-auto custom-scrollbar p-4 bg-[#08090C] border-l border-white/[0.06] text-slate-100 flex-1"
               >
                 <div className="sticky top-0 right-0 z-10 flex justify-end pb-2">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 bg-[#0C0E18]/80 px-2 py-0.5 rounded border border-white/[0.08]">
-                    MDX Live Preview ({Math.round(100 - splitRatio)}%)
+                    Live Preview ({Math.round(100 - splitRatio)}%)
                   </span>
                 </div>
-                {code.trim() ? (
-                  <MDXPreview code={parsedCode} isLoading={isLoading} />
+                {value.trim() ? (
+                  <div className="prose prose-invert prose-sm max-w-none text-xs leading-relaxed text-gray-200">
+                    <CopilotMarkdown content={value} />
+                  </div>
                 ) : (
                   <div className="flex h-48 flex-col items-center justify-center text-center text-xs text-gray-500 italic space-y-1">
                     <Sparkles className="w-5 h-5 text-gray-600 mb-1" />
-                    <p>Live MDX preview will render here in real time as you write.</p>
-                    <p className="text-[11px] text-gray-600">Supports headers, lists, code blocks, Callouts, and custom MDX components.</p>
+                    <p>{placeholder}</p>
+                    <p className="text-[11px] text-gray-600">Supports headers (#), lists (-), bold (**), tables, and code blocks.</p>
                   </div>
                 )}
               </div>
@@ -453,9 +421,9 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
                   height="100%"
                   language="markdown"
                   theme="electric-obsidian"
-                  value={code}
+                  value={value}
                   beforeMount={handleEditorBeforeMount}
-                  onChange={(newVal) => handleCodeChange(newVal || "")}
+                  onChange={(newVal) => onChange(newVal || "")}
                   options={{
                     minimap: { enabled: false },
                     lineNumbers: "on",
@@ -473,14 +441,16 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
                   }}
                 />
               ) : (
-                <div className="w-full h-full overflow-y-auto custom-scrollbar p-6 bg-[#08090C] text-slate-100">
-                  {code.trim() ? (
-                    <MDXPreview code={parsedCode} isLoading={isLoading} />
+                <div className="w-full h-full overflow-y-auto custom-scrollbar p-5 bg-[#08090C] text-slate-100">
+                  {value.trim() ? (
+                    <div className="prose prose-invert prose-sm max-w-none text-xs leading-relaxed text-gray-200">
+                      <CopilotMarkdown content={value} />
+                    </div>
                   ) : (
                     <div className="flex h-60 flex-col items-center justify-center text-center text-xs text-gray-500 italic space-y-1">
                       <Sparkles className="w-6 h-6 text-gray-600 mb-1" />
-                      <p>No MDX content entered yet.</p>
-                      <p className="text-[11px] text-gray-600">Switch back to &quot;Write&quot; tab to type or paste MDX content.</p>
+                      <p>No markdown content entered yet.</p>
+                      <p className="text-[11px] text-gray-600">Switch back to &quot;Write&quot; tab to type or paste content.</p>
                     </div>
                   )}
                 </div>
@@ -494,13 +464,11 @@ export const MDXEditor: React.FC<MDXEditorProps> = ({
           onMouseDown={handleHeightMouseDown}
           onTouchStart={handleHeightTouchStart}
           className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] shrink-0"
-          title="Drag handle to resize MDX editor height"
+          title="Drag handle to resize editor height"
         >
           <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 transition-all duration-200" />
         </div>
       </div>
     </div>
   );
-};
-
-export default MDXEditor;
+}
