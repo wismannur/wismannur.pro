@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import {
   getFrontendMasteryOverview,
@@ -31,7 +32,17 @@ import { TabHistory } from "./components/tab-history";
 
 export default function CmsFrontendMasteryPage() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<string>("curriculum");
+  const searchParams = useSearchParams();
+  const paramTab = searchParams.get("tab");
+  const targetCompany = searchParams.get("company") || undefined;
+  const targetRole = searchParams.get("role") || undefined;
+
+  const initialTab =
+    paramTab === "mock" || paramTab === "mock-generator" || Boolean(targetCompany)
+      ? "mock-generator"
+      : "curriculum";
+
+  const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [currentSession, setCurrentSession] = useState<FrontendMasterySession | null>(null);
   const [startingTopicId, setStartingTopicId] = useState<string | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState<boolean>(false);
@@ -248,6 +259,8 @@ export default function CmsFrontendMasteryPage() {
           <TabMockGenerator
             onGenerateMock={handleGenerateCustomMock}
             isGenerating={isGeneratingMock}
+            targetCompany={targetCompany}
+            targetRole={targetRole}
           />
         </TabsContent>
 
