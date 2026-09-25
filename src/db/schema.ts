@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -497,74 +498,90 @@ export const sitePages = pgTable("site_pages", {
     .$onUpdate(() => new Date()),
 });
 
-export const jobApplications = pgTable("job_applications", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  companyName: text("company_name").notNull(),
-  companyLogo: text("company_logo"),
-  companyWebsite: text("company_website"),
-  jobTitle: text("job_title").notNull(),
-  jobUrl: text("job_url"),
-  platform: jobPlatform("platform").notNull().default("linkedin"),
-  location: text("location"),
-  workplaceType: workplaceType("workplace_type").notNull().default("remote"),
-  jobType: jobEmploymentType("job_type").notNull().default("full_time"),
-  salaryMin: integer("salary_min"),
-  salaryMax: integer("salary_max"),
-  salaryCurrency: text("salary_currency").notNull().default("IDR"),
-  salaryPeriod: text("salary_period").notNull().default("monthly"),
-  jobDescriptionRaw: text("job_description_raw"),
-  requirements: text("requirements")
-    .array()
-    .notNull()
-    .default(sql`'{}'::text[]`),
-  status: jobApplicationStatus("status").notNull().default("wishlist"),
-  appliedAt: timestamp("applied_at", { withTimezone: true }),
-  atsScore: integer("ats_score"),
-  atsAnalysis: jsonb("ats_analysis"),
-  tailoredSummary: text("tailored_summary"),
-  tailoredBulletPoints: jsonb("tailored_bullet_points"),
-  coverLetter: text("cover_letter"),
-  notes: text("notes"),
-  contactName: text("contact_name"),
-  contactEmail: text("contact_email"),
-  contactPhone: text("contact_phone"),
-  followUpDate: timestamp("follow_up_date", { withTimezone: true }),
-  sortOrder: integer("sort_order").notNull().default(0),
-  companyIntelligence: jsonb("company_intelligence").$type<CompanyIntelligence>(),
-  inboundReachout: jsonb("inbound_reachout").$type<InboundReachout>(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const jobApplications = pgTable(
+  "job_applications",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateEntityId("job")),
+    companyName: text("company_name").notNull(),
+    companyLogo: text("company_logo"),
+    companyWebsite: text("company_website"),
+    jobTitle: text("job_title").notNull(),
+    jobUrl: text("job_url"),
+    platform: jobPlatform("platform").notNull().default("linkedin"),
+    location: text("location"),
+    workplaceType: workplaceType("workplace_type").notNull().default("remote"),
+    jobType: jobEmploymentType("job_type").notNull().default("full_time"),
+    salaryMin: integer("salary_min"),
+    salaryMax: integer("salary_max"),
+    salaryCurrency: text("salary_currency").notNull().default("IDR"),
+    salaryPeriod: text("salary_period").notNull().default("monthly"),
+    jobDescriptionRaw: text("job_description_raw"),
+    requirements: text("requirements")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    status: jobApplicationStatus("status").notNull().default("wishlist"),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+    atsScore: integer("ats_score"),
+    atsAnalysis: jsonb("ats_analysis"),
+    tailoredSummary: text("tailored_summary"),
+    tailoredBulletPoints: jsonb("tailored_bullet_points"),
+    coverLetter: text("cover_letter"),
+    notes: text("notes"),
+    contactName: text("contact_name"),
+    contactEmail: text("contact_email"),
+    contactPhone: text("contact_phone"),
+    followUpDate: timestamp("follow_up_date", { withTimezone: true }),
+    sortOrder: integer("sort_order").notNull().default(0),
+    companyIntelligence: jsonb("company_intelligence").$type<CompanyIntelligence>(),
+    inboundReachout: jsonb("inbound_reachout").$type<InboundReachout>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("job_applications_status_idx").on(table.status),
+    index("job_applications_created_at_idx").on(table.createdAt),
+    index("job_applications_company_name_idx").on(table.companyName),
+  ]
+);
 
-export const jobInterviews = pgTable("job_interviews", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  applicationId: text("application_id")
-    .notNull()
-    .references(() => jobApplications.id, { onDelete: "cascade" }),
-  stageType: interviewStageType("stage_type").notNull().default("hr_screening"),
-  title: text("title").notNull(),
-  scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
-  interviewers: text("interviewers"),
-  meetingLink: text("meeting_link"),
-  rawInvitation: text("raw_invitation"),
-  aiSummary: text("ai_summary"),
-  aiPredictedQuestions: jsonb("ai_predicted_questions"),
-  notes: text("notes"),
-  feedback: text("feedback"),
-  status: interviewStatus("status").notNull().default("scheduled"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const jobInterviews = pgTable(
+  "job_interviews",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateEntityId("interview")),
+    applicationId: text("application_id")
+      .notNull()
+      .references(() => jobApplications.id, { onDelete: "cascade" }),
+    stageType: interviewStageType("stage_type").notNull().default("hr_screening"),
+    title: text("title").notNull(),
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+    interviewers: text("interviewers"),
+    meetingLink: text("meeting_link"),
+    rawInvitation: text("raw_invitation"),
+    aiSummary: text("ai_summary"),
+    aiPredictedQuestions: jsonb("ai_predicted_questions"),
+    notes: text("notes"),
+    feedback: text("feedback"),
+    status: interviewStatus("status").notNull().default("scheduled"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("job_interviews_application_id_idx").on(table.applicationId),
+    index("job_interviews_status_idx").on(table.status),
+    index("job_interviews_scheduled_at_idx").on(table.scheduledAt),
+  ]
+);
 
 export const messageSenderType = pgEnum("message_sender_type", ["admin", "client"]);
 
@@ -581,51 +598,67 @@ export const outreachStatus = pgEnum("outreach_status", [
   "closed",
 ]);
 
-export const jobOutreaches = pgTable("job_outreaches", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => generateEntityId("outreach")),
-  jobApplicationId: text("job_application_id").references(() => jobApplications.id, {
-    onDelete: "set null",
-  }),
-  companyName: text("company_name").notNull(),
-  companyWebsite: text("company_website"),
-  jobTitle: text("job_title").notNull(),
-  contactName: text("contact_name").notNull(),
-  contactRole: text("contact_role"),
-  contactEmail: text("contact_email").notNull(),
-  contactLinkedin: text("contact_linkedin"),
-  outreachType: outreachType("outreach_type").notNull().default("cold_pitch"),
-  status: outreachStatus("status").notNull().default("draft"),
-  subject: text("subject").notNull(),
-  body: text("body").notNull(),
-  notes: text("notes"),
-  attachments: jsonb("attachments"),
-  initialMessageId: text("initial_message_id"),
-  sentAt: timestamp("sent_at", { withTimezone: true }),
-  followUpDueDate: timestamp("follow_up_due_date", { withTimezone: true }),
-  lastRepliedAt: timestamp("last_replied_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const jobOutreaches = pgTable(
+  "job_outreaches",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateEntityId("outreach")),
+    jobApplicationId: text("job_application_id").references(() => jobApplications.id, {
+      onDelete: "set null",
+    }),
+    companyName: text("company_name").notNull(),
+    companyWebsite: text("company_website"),
+    jobTitle: text("job_title").notNull(),
+    contactName: text("contact_name").notNull(),
+    contactRole: text("contact_role"),
+    contactEmail: text("contact_email").notNull(),
+    contactLinkedin: text("contact_linkedin"),
+    outreachType: outreachType("outreach_type").notNull().default("cold_pitch"),
+    status: outreachStatus("status").notNull().default("draft"),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    notes: text("notes"),
+    attachments: jsonb("attachments"),
+    initialMessageId: text("initial_message_id"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    followUpDueDate: timestamp("follow_up_due_date", { withTimezone: true }),
+    lastRepliedAt: timestamp("last_replied_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("job_outreaches_job_app_id_idx").on(table.jobApplicationId),
+    index("job_outreaches_status_idx").on(table.status),
+    index("job_outreaches_follow_up_idx").on(table.followUpDueDate),
+    index("job_outreaches_created_at_idx").on(table.createdAt),
+  ]
+);
 
-export const jobOutreachMessages = pgTable("job_outreach_messages", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  outreachId: text("outreach_id")
-    .notNull()
-    .references(() => jobOutreaches.id, { onDelete: "cascade" }),
-  senderType: messageSenderType("sender_type").notNull(),
-  senderName: text("sender_name").notNull(),
-  senderEmail: text("sender_email").notNull(),
-  message: text("message").notNull(),
-  messageId: text("message_id"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const jobOutreachMessages = pgTable(
+  "job_outreach_messages",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateEntityId("outmsg")),
+    outreachId: text("outreach_id")
+      .notNull()
+      .references(() => jobOutreaches.id, { onDelete: "cascade" }),
+    senderType: messageSenderType("sender_type").notNull(),
+    senderName: text("sender_name").notNull(),
+    senderEmail: text("sender_email").notNull(),
+    message: text("message").notNull(),
+    messageId: text("message_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("job_outreach_messages_outreach_id_idx").on(table.outreachId),
+    index("job_outreach_messages_created_at_idx").on(table.createdAt),
+  ]
+);
 
 export const inquiryMessages = pgTable("inquiry_messages", {
   id: text("id")
@@ -693,22 +726,29 @@ export const aiChatMessages = pgTable("ai_chat_messages", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const atsTargetCompanies = pgTable("ats_target_companies", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  name: text("name").notNull(),
-  platform: text("platform").notNull(),
-  slug: text("slug").notNull(),
-  websiteUrl: text("website_url"),
-  logoUrl: text("logo_url"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const atsTargetCompanies = pgTable(
+  "ats_target_companies",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    platform: text("platform").notNull(),
+    slug: text("slug").notNull(),
+    websiteUrl: text("website_url"),
+    logoUrl: text("logo_url"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("ats_target_companies_platform_idx").on(table.platform),
+    index("ats_target_companies_is_active_idx").on(table.isActive),
+  ]
+);
 
 export const cmsCopilotSessions = pgTable("cms_copilot_sessions", {
   id: text("id")
@@ -871,46 +911,62 @@ export const projectProspects = pgTable("project_prospects", {
     .$onUpdate(() => new Date()),
 });
 
-export const frontendMasterySessions = pgTable("frontend_mastery_sessions", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => generateEntityId("fms")),
-  pillar: text("pillar").notNull(),
-  topicId: text("topic_id").notNull(),
-  topicTitle: text("topic_title").notNull(),
-  difficulty: text("difficulty").notNull().default("senior"),
-  questionPrompt: text("question_prompt").notNull(),
-  starterCode: text("starter_code"),
-  hints: jsonb("hints").$type<string[]>(),
-  userSubmission: text("user_submission"),
-  evaluationResult: jsonb("evaluation_result").$type<FrontendMasteryEvaluation>(),
-  score: integer("score"),
-  status: text("status").notNull().default("in_progress"),
-  timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const frontendMasterySessions = pgTable(
+  "frontend_mastery_sessions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateEntityId("fms")),
+    pillar: text("pillar").notNull(),
+    topicId: text("topic_id").notNull(),
+    topicTitle: text("topic_title").notNull(),
+    difficulty: text("difficulty").notNull().default("senior"),
+    questionPrompt: text("question_prompt").notNull(),
+    starterCode: text("starter_code"),
+    hints: jsonb("hints").$type<string[]>(),
+    userSubmission: text("user_submission"),
+    evaluationResult: jsonb("evaluation_result").$type<FrontendMasteryEvaluation>(),
+    score: integer("score"),
+    status: text("status").notNull().default("in_progress"),
+    timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("frontend_mastery_sessions_topic_id_idx").on(table.topicId),
+    index("frontend_mastery_sessions_pillar_idx").on(table.pillar),
+    index("frontend_mastery_sessions_status_idx").on(table.status),
+    index("frontend_mastery_sessions_created_at_idx").on(table.createdAt),
+  ]
+);
 
-export const frontendMasteryProgress = pgTable("frontend_mastery_progress", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => generateEntityId("fmp")),
-  topicId: text("topic_id").notNull().unique(),
-  pillar: text("pillar").notNull(),
-  topicTitle: text("topic_title").notNull(),
-  masteryStatus: text("mastery_status").notNull().default("not_started"),
-  attemptsCount: integer("attempts_count").notNull().default(0),
-  bestScore: integer("best_score").default(0),
-  lastCompletedAt: timestamp("last_completed_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow()
-    .$onUpdate(() => new Date()),
-});
+export const frontendMasteryProgress = pgTable(
+  "frontend_mastery_progress",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => generateEntityId("fmp")),
+    topicId: text("topic_id").notNull().unique(),
+    pillar: text("pillar").notNull(),
+    topicTitle: text("topic_title").notNull(),
+    masteryStatus: text("mastery_status").notNull().default("not_started"),
+    attemptsCount: integer("attempts_count").notNull().default(0),
+    bestScore: integer("best_score").default(0),
+    lastCompletedAt: timestamp("last_completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("frontend_mastery_progress_pillar_idx").on(table.pillar),
+    index("frontend_mastery_progress_status_idx").on(table.masteryStatus),
+  ]
+);
 
 export type BlogRow = typeof blogs.$inferSelect;
 export type ProjectRow = typeof projects.$inferSelect;
