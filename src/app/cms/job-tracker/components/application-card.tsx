@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import {
+  AlertTriangle,
+  ArrowRight,
   Building2,
   Calendar,
   Clock,
   ExternalLink,
+  Loader2,
   MoreHorizontal,
   Pencil,
+  Send,
   Sparkles,
   Trash2,
   Users,
-  ArrowRight,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,7 @@ import {
   JOB_PLATFORM_CONFIG,
   JOB_STATUS_CONFIG,
   WORKPLACE_CONFIG,
+  checkIsStagnant,
   formatSalary,
   getAtsScoreColor,
 } from "@/lib/job-tracker";
@@ -40,17 +44,38 @@ interface ApplicationCardProps {
   application: JobApplication;
   onStatusChange: (id: string, newStatus: JobApplicationStatus) => void;
   onDelete: (id: string) => void;
+  onAnalyzeAts?: (id: string) => Promise<void>;
+  isAnalyzingAts?: boolean;
 }
 
-export function ApplicationCard({ application, onStatusChange, onDelete }: ApplicationCardProps) {
+export function ApplicationCard({
+  application,
+  onStatusChange,
+  onDelete,
+  onAnalyzeAts,
+  isAnalyzingAts = false,
+}: ApplicationCardProps) {
   const platformCfg = JOB_PLATFORM_CONFIG[application.platform] || JOB_PLATFORM_CONFIG.other;
   const atsConfig = getAtsScoreColor(application.atsScore);
   const upcomingInterview = application.interviews?.find(
     (i) => i.status === "scheduled" && new Date(i.scheduledAt) >= new Date()
   );
 
+  const { isStagnant, daysInactive: stagnantDays } = checkIsStagnant(
+    application.status,
+    application.appliedAt || application.createdAt,
+    Boolean(upcomingInterview)
+  );
+
   return (
-    <div className="group relative rounded-2xl border border-white/[0.08] bg-[#131726] p-4 shadow-lg hover:shadow-xl hover:border-primary/50 hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-3">
+    <div
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", application.id);
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      className="group relative rounded-2xl border border-white/[0.08] bg-[#131726] p-4 shadow-lg hover:shadow-xl hover:border-primary/50 hover:-translate-y-0.5 transition-all duration-200 cursor-grab active:cursor-grabbing flex flex-col gap-3.5 select-none"
+    >
       {/* Top row: Company & Action menu */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
@@ -100,6 +125,33 @@ export function ApplicationCard({ application, onStatusChange, onDelete }: Appli
                 <span>Interview Copilot</span>
               </Link>
             </DropdownMenuItem>
+
+            {isStagnant && (
+              <DropdownMenuItem asChild>
+                <Link
+                  href={`/cms/job-outreaches/new?company=${encodeURIComponent(application.companyName)}&role=${encodeURIComponent(application.jobTitle)}&purpose=follow_up&type=follow_up&jobAppId=${application.id}`}
+                  className="flex items-center gap-2 cursor-pointer text-amber-300 focus:text-amber-200 focus:bg-amber-500/10 font-medium"
+                >
+                  <Send className="h-4 w-4 text-amber-400" />
+                  <span>⚡ Send Follow-Up Outreach</span>
+                </Link>
+              </DropdownMenuItem>
+            )}
+
+            {onAnalyzeAts && (application.atsScore === undefined || application.atsScore === null) && (
+              <DropdownMenuItem
+                onClick={() => onAnalyzeAts(application.id)}
+                disabled={isAnalyzingAts}
+                className="flex items-center gap-2 cursor-pointer text-amber-300 focus:text-amber-200 focus:bg-amber-500/10"
+              >
+                {isAnalyzingAts ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-amber-400" />
+                )}
+                <span>⚡ Run Quick ATS Match</span>
+              </DropdownMenuItem>
+            )}
 
             {application.jobUrl && (
               <DropdownMenuItem asChild>
@@ -191,6 +243,26 @@ export function ApplicationCard({ application, onStatusChange, onDelete }: Appli
             <Sparkles className="w-3 h-3" />
             <span>ATS {application.atsScore}%</span>
           </div>
+        ) : onAnalyzeAts ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAnalyzeAts(application.id);
+            }}
+            disabled={isAnalyzingAts}
+            className="h-6 px-2 py-0 text-[11px] text-amber-400/90 hover:text-amber-300 hover:bg-amber-500/10 rounded-md border border-amber-500/30 gap-1 font-semibold transition-all"
+            title="Analyze candidate master profile against this job description"
+          >
+            {isAnalyzingAts ? (
+              <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+            ) : (
+              <Sparkles className="w-3 h-3 text-amber-400" />
+            )}
+            <span>{isAnalyzingAts ? "Matching..." : "⚡ Quick ATS Fit"}</span>
+          </Button>
         ) : (
           <Link
             href={`/cms/job-tracker/${application.id}?tab=tailor`}
@@ -223,6 +295,22 @@ export function ApplicationCard({ application, onStatusChange, onDelete }: Appli
             className="text-[10px] font-bold underline shrink-0 hover:text-white text-purple-300 transition-colors"
           >
             Prep Now
+          </Link>
+        </div>
+      )}
+
+      {/* Ghosting / Stagnant Alert Banner */}
+      {isStagnant && !upcomingInterview && (
+        <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 text-xs text-amber-300 flex items-center justify-between gap-1 shadow-inner">
+          <div className="flex items-center gap-1.5 truncate">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate font-semibold">Follow-up Due ({stagnantDays}d inactive)</span>
+          </div>
+          <Link
+            href={`/cms/job-outreaches/new?company=${encodeURIComponent(application.companyName)}&role=${encodeURIComponent(application.jobTitle)}&purpose=follow_up&type=follow_up&jobAppId=${application.id}`}
+            className="text-[10px] font-bold underline shrink-0 hover:text-white text-amber-300 transition-colors"
+          >
+            Nudge ✉️
           </Link>
         </div>
       )}
