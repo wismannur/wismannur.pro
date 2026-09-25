@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Bot,
+  BrainCircuit,
   Calendar,
   CalendarPlus,
   Copy,
@@ -126,6 +128,21 @@ export function TabInterviewPrep({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs bg-[#131726] border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/20 hover:text-white shadow-sm"
+          >
+            <Link
+              href={`/cms/frontend-mastery?tab=mock-generator&company=${encodeURIComponent(
+                application.companyName
+              )}&role=${encodeURIComponent(application.jobTitle)}`}
+            >
+              <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
+              Practice in Mock Arena
+            </Link>
+          </Button>
           <Button
             variant="outline"
             size="sm"

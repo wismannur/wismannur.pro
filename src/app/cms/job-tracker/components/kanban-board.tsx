@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Inbox, Send, Search, Users, Gift, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useDragToScroll } from "@/hooks/use-drag-to-scroll";
 import { ApplicationCard } from "./application-card";
 import type { JobApplication, JobApplicationStatus } from "@/services/job-tracker/types";
 
@@ -86,6 +87,8 @@ interface KanbanBoardProps {
   onStatusChange: (id: string, newStatus: JobApplicationStatus) => void;
   onDelete: (id: string) => void;
   onAddNew: (status?: JobApplicationStatus) => void;
+  onAnalyzeAts?: (id: string) => Promise<void>;
+  analyzingAppId?: string | null;
 }
 
 export function KanbanBoard({
@@ -93,7 +96,12 @@ export function KanbanBoard({
   onStatusChange,
   onDelete,
   onAddNew,
+  onAnalyzeAts,
+  analyzingAppId,
 }: KanbanBoardProps) {
+  const [dragOverColId, setDragOverColId] = useState<string | null>(null);
+  const { containerRef, isDragging, events } = useDragToScroll<HTMLDivElement>();
+
   const groupedApps = useMemo(() => {
     const map = new Map<string, JobApplication[]>();
     for (const col of KANBAN_COLUMNS) {
@@ -113,15 +121,46 @@ export function KanbanBoard({
   }, [applications]);
 
   return (
-    <div className="flex items-start gap-5 overflow-x-auto pb-6 pt-1 px-0.5 scroll-smooth custom-scrollbar">
+    <div
+      ref={containerRef}
+      {...events}
+      className={`flex items-start gap-5 overflow-x-auto pb-8 pt-1 px-1 scroll-smooth no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-none ${
+        isDragging ? "cursor-grabbing" : "cursor-grab"
+      }`}
+    >
       {KANBAN_COLUMNS.map((col) => {
         const items = groupedApps.get(col.id) || [];
         const Icon = col.icon;
+        const isDragOver = dragOverColId === col.id;
 
         return (
           <div
             key={col.id}
-            className="relative flex flex-col w-[340px] min-w-[340px] max-w-[340px] shrink-0 rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-4 min-h-[580px] max-h-[calc(100vh-220px)] shadow-xl overflow-hidden backdrop-blur-md"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              if (dragOverColId !== col.id) {
+                setDragOverColId(col.id);
+              }
+            }}
+            onDragLeave={(e) => {
+              // Prevent flickering when hovering over children
+              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+              setDragOverColId(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOverColId(null);
+              const applicationId = e.dataTransfer.getData("text/plain");
+              if (applicationId) {
+                onStatusChange(applicationId, col.defaultStatus);
+              }
+            }}
+            className={`relative flex flex-col w-[340px] min-w-[340px] max-w-[340px] shrink-0 rounded-2xl border transition-all duration-200 p-4 min-h-[580px] max-h-[calc(100vh-220px)] shadow-xl overflow-hidden backdrop-blur-md ${
+              isDragOver
+                ? "border-primary ring-2 ring-primary/40 bg-[#0C0E18] scale-[1.01] shadow-2xl shadow-primary/20"
+                : "border-white/[0.08] bg-[#0C0E18]"
+            }`}
           >
             {/* Top ambient highlight header */}
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${col.topGlow}`} />
@@ -155,12 +194,20 @@ export function KanbanBoard({
             </div>
 
             {/* Card List */}
-            <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-1 space-y-3.5 no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-text">
               {items.length === 0 ? (
-                <div className="h-48 rounded-xl border border-dashed border-white/[0.08] bg-white/[0.01] flex flex-col items-center justify-center p-4 text-center text-gray-400 text-xs">
-                  <span className="text-gray-400 font-medium">No jobs in this stage</span>
+                <div
+                  className={`h-48 rounded-xl border border-dashed flex flex-col items-center justify-center p-4 text-center text-xs transition-colors ${
+                    isDragOver
+                      ? "border-primary/60 bg-primary/5 text-primary"
+                      : "border-white/[0.08] bg-white/[0.01] text-gray-400"
+                  }`}
+                >
+                  <span className="font-medium text-gray-300">
+                    {isDragOver ? "Drop application here" : "No jobs in this stage"}
+                  </span>
                   <p className="text-[11px] text-gray-500 mt-1 max-w-[200px]">
-                    Track new applications or drag cards here
+                    {isDragOver ? "Release to update stage" : "Track new applications or drag cards here"}
                   </p>
                   <Button
                     variant="link"
@@ -178,6 +225,8 @@ export function KanbanBoard({
                     application={app}
                     onStatusChange={onStatusChange}
                     onDelete={onDelete}
+                    onAnalyzeAts={onAnalyzeAts}
+                    isAnalyzingAts={analyzingAppId === app.id}
                   />
                 ))
               )}

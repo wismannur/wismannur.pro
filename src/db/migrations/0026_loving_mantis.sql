@@ -1,0 +1,20 @@
+CREATE INDEX "ats_target_companies_platform_idx" ON "ats_target_companies" USING btree ("platform");--> statement-breakpoint
+CREATE INDEX "ats_target_companies_is_active_idx" ON "ats_target_companies" USING btree ("is_active");--> statement-breakpoint
+CREATE INDEX "frontend_mastery_progress_pillar_idx" ON "frontend_mastery_progress" USING btree ("pillar");--> statement-breakpoint
+CREATE INDEX "frontend_mastery_progress_status_idx" ON "frontend_mastery_progress" USING btree ("mastery_status");--> statement-breakpoint
+CREATE INDEX "frontend_mastery_sessions_topic_id_idx" ON "frontend_mastery_sessions" USING btree ("topic_id");--> statement-breakpoint
+CREATE INDEX "frontend_mastery_sessions_pillar_idx" ON "frontend_mastery_sessions" USING btree ("pillar");--> statement-breakpoint
+CREATE INDEX "frontend_mastery_sessions_status_idx" ON "frontend_mastery_sessions" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "frontend_mastery_sessions_created_at_idx" ON "frontend_mastery_sessions" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "job_applications_status_idx" ON "job_applications" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "job_applications_created_at_idx" ON "job_applications" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "job_applications_company_name_idx" ON "job_applications" USING btree ("company_name");--> statement-breakpoint
+CREATE INDEX "job_interviews_application_id_idx" ON "job_interviews" USING btree ("application_id");--> statement-breakpoint
+CREATE INDEX "job_interviews_status_idx" ON "job_interviews" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "job_interviews_scheduled_at_idx" ON "job_interviews" USING btree ("scheduled_at");--> statement-breakpoint
+CREATE INDEX "job_outreach_messages_outreach_id_idx" ON "job_outreach_messages" USING btree ("outreach_id");--> statement-breakpoint
+CREATE INDEX "job_outreach_messages_created_at_idx" ON "job_outreach_messages" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "job_outreaches_job_app_id_idx" ON "job_outreaches" USING btree ("job_application_id");--> statement-breakpoint
+CREATE INDEX "job_outreaches_status_idx" ON "job_outreaches" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "job_outreaches_follow_up_idx" ON "job_outreaches" USING btree ("follow_up_due_date");--> statement-breakpoint
+CREATE INDEX "job_outreaches_created_at_idx" ON "job_outreaches" USING btree ("created_at");

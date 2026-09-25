@@ -60,18 +60,24 @@ export default function NewOutreachPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasAutoFilledRef = useRef(false);
 
-  const [companyName, setCompanyName] = useState("");
+  const queryCompany = searchParams.get("company") || "";
+  const queryRole = searchParams.get("role") || "";
+  const querySubject = searchParams.get("subject") || "";
+  const queryMessage = searchParams.get("message") || "";
+  const queryType = (searchParams.get("type") as OutreachType) || (searchParams.get("purpose") === "follow_up" || searchParams.get("purpose") === "rejection_closure" ? "follow_up" : "cold_pitch");
+
+  const [companyName, setCompanyName] = useState(queryCompany);
   const [companyWebsite, setCompanyWebsite] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
+  const [jobTitle, setJobTitle] = useState(queryRole);
   const [contactName, setContactName] = useState("");
   const [contactRole, setContactRole] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactLinkedin, setContactLinkedin] = useState("");
-  const [outreachType, setOutreachType] = useState<OutreachType>("cold_pitch");
+  const [outreachType, setOutreachType] = useState<OutreachType>(queryType);
   const [selectedJobAppId, setSelectedJobAppId] = useState<string>(prefilledJobAppId);
 
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
+  const [subject, setSubject] = useState(querySubject);
+  const [body, setBody] = useState(queryMessage);
   const [notes, setNotes] = useState("");
   const [customPrompt, setCustomPrompt] = useState("");
 
@@ -257,6 +263,11 @@ export default function NewOutreachPage() {
     queryFn: () => jobTrackerService.getAll(),
   });
 
+  const selectedApp =
+    selectedJobAppId !== "none"
+      ? jobApplications.find((a) => a.id === selectedJobAppId)
+      : undefined;
+
   // Pre-fill fields if linked to a job application
   useEffect(() => {
     if (
@@ -274,6 +285,16 @@ export default function NewOutreachPage() {
           if (app.companyWebsite) setCompanyWebsite((prev) => prev || app.companyWebsite || "");
           if (app.contactName) setContactName((prev) => prev || app.contactName || "");
           if (app.contactEmail) setContactEmail((prev) => prev || app.contactEmail || "");
+          setSubject((prev) => prev || `Application: ${app.jobTitle} - Wisman Nur`);
+          if (app.coverLetter) {
+            setBody((prev) => prev || app.coverLetter!);
+          } else if (app.tailoredSummary) {
+            setBody(
+              (prev) =>
+                prev ||
+                `Dear ${app.contactName || "Hiring Team"},\n\nI am writing to express my strong interest in the ${app.jobTitle} position at ${app.companyName}.\n\n${app.tailoredSummary}\n\nLooking forward to discussing how my experience can deliver immediate impact for ${app.companyName}.\n\nBest regards,\nWisman Nur\nhttps://wismannur.pro`
+            );
+          }
         }, 0);
         return () => clearTimeout(timer);
       }
@@ -290,6 +311,18 @@ export default function NewOutreachPage() {
         if (app.companyWebsite) setCompanyWebsite(app.companyWebsite);
         if (app.contactName) setContactName(app.contactName);
         if (app.contactEmail) setContactEmail(app.contactEmail);
+        if (!subject.trim()) {
+          setSubject(`Application: ${app.jobTitle} - Wisman Nur`);
+        }
+        if (!body.trim()) {
+          if (app.coverLetter) {
+            setBody(app.coverLetter);
+          } else if (app.tailoredSummary) {
+            setBody(
+              `Dear ${app.contactName || "Hiring Team"},\n\nI am writing to express my strong interest in the ${app.jobTitle} position at ${app.companyName}.\n\n${app.tailoredSummary}\n\nLooking forward to discussing how my experience can deliver immediate impact for ${app.companyName}.\n\nBest regards,\nWisman Nur\nhttps://wismannur.pro`
+            );
+          }
+        }
       }
     }
   };
@@ -892,6 +925,46 @@ export default function NewOutreachPage() {
                     </Button>
                   </div>
                 </div>
+
+                {selectedApp && (selectedApp.coverLetter || selectedApp.tailoredSummary) && (
+                  <div className="flex flex-wrap items-center gap-2 p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs">
+                    <span className="font-semibold text-indigo-300 flex items-center gap-1.5 shrink-0">
+                      <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                      From Job Tracker:
+                    </span>
+                    {selectedApp.coverLetter && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setBody(selectedApp.coverLetter!);
+                          toast.success("Cover letter loaded into email body!");
+                        }}
+                        className="h-7 text-xs gap-1.5 px-2.5 rounded-lg border-indigo-500/30 text-indigo-200 bg-[#131726] hover:bg-indigo-500/20 hover:text-white"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        Load Tailored Cover Letter
+                      </Button>
+                    )}
+                    {selectedApp.tailoredSummary && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const pitch = `Dear ${selectedApp.contactName || "Hiring Team"},\n\nI am writing to express my strong interest in the ${selectedApp.jobTitle} position at ${selectedApp.companyName}.\n\n${selectedApp.tailoredSummary}\n\nLooking forward to discussing how my experience can deliver immediate impact for ${selectedApp.companyName}.\n\nBest regards,\nWisman Nur\nhttps://wismannur.pro`;
+                          setBody(pitch);
+                          toast.success("Tailored pitch loaded into email body!");
+                        }}
+                        className="h-7 text-xs gap-1.5 px-2.5 rounded-lg border-purple-500/30 text-purple-200 bg-[#131726] hover:bg-purple-500/20 hover:text-white"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Load Tailored Pitch
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 <div className="relative flex flex-col">
                   <Textarea

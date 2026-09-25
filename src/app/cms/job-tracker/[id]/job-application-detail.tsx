@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
+  BrainCircuit,
   Building2,
   CheckCircle2,
   ExternalLink,
@@ -309,7 +310,7 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
           </Link>
         </Button>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {currentApp.jobUrl && (
             <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs rounded-xl border-white/[0.1] bg-white/[0.04] text-gray-300 hover:text-white">
               <a href={currentApp.jobUrl} target="_blank" rel="noopener noreferrer">
@@ -318,6 +319,34 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
               </a>
             </Button>
           )}
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs rounded-xl border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 hover:text-white shadow-xs"
+          >
+            <Link href={`/cms/job-outreaches/new?jobAppId=${currentApp.id}`}>
+              <SendHorizontal className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Outreach Recruiter</span>
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs rounded-xl border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 hover:text-white shadow-xs"
+          >
+            <Link
+              href={`/cms/frontend-mastery?tab=mock-generator&company=${encodeURIComponent(
+                currentApp.companyName
+              )}&role=${encodeURIComponent(currentApp.jobTitle)}`}
+            >
+              <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
+              <span>Practice Mock Arena</span>
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -611,6 +640,7 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
       {/* Post-Mortem Reflection Dialog */}
       <PostMortemDialog
         isOpen={isPostMortemOpen}
+        applicationId={currentApp.id}
         companyName={currentApp.companyName}
         jobTitle={currentApp.jobTitle}
         onClose={() => {
