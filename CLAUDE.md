@@ -31,9 +31,11 @@ All user-facing public and CMS interfaces must conform to the **Electric Obsidia
 ## Commands
 
 ```bash
-pnpm dev          # dev server with Neon development DB (port 7000)
-pnpm dev --prod   # dev server with Neon production DB / main branch (alias: pnpm dev:prod)
-pnpm build        # runs drizzle-kit migrate FIRST, then next build — needs DATABASE_URL
+pnpm dev                  # dev server with Neon development DB (port 7000)
+pnpm dev --prod           # dev server with Neon production DB / main branch (alias: pnpm dev:prod)
+pnpm dev:cloudflared      # dev server with Neon dev DB + Cloudflare Quick Tunnel
+pnpm dev:cloudflared:prod # dev server with Neon prod DB + Cloudflare Quick Tunnel
+pnpm build                # runs drizzle-kit migrate FIRST, then next build — needs DATABASE_URL
 pnpm lint         # eslint
 pnpm exec tsc --noEmit   # typecheck (always verify before finalizing tasks)
 
