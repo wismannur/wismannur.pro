@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import {
+  AlertTriangle,
   Building2,
   ExternalLink,
+  Loader2,
   MoreHorizontal,
   Pencil,
+  Send,
   Sparkles,
   Trash2,
   Users,
@@ -31,6 +34,7 @@ import {
   JOB_PLATFORM_CONFIG,
   JOB_STATUS_CONFIG,
   WORKPLACE_CONFIG,
+  checkIsStagnant,
   formatSalary,
   getAtsScoreColor,
 } from "@/lib/job-tracker";
@@ -42,6 +46,8 @@ interface ApplicationTableProps {
   isLoading: boolean;
   onStatusChange: (id: string, newStatus: JobApplicationStatus) => void;
   onDelete: (id: string) => void;
+  onAnalyzeAts?: (id: string) => Promise<void>;
+  analyzingAppId?: string | null;
 }
 
 export function ApplicationTable({
@@ -49,6 +55,8 @@ export function ApplicationTable({
   isLoading,
   onStatusChange,
   onDelete,
+  onAnalyzeAts,
+  analyzingAppId,
 }: ApplicationTableProps) {
   const columns: ColumnDef<JobApplication>[] = [
     {
@@ -115,6 +123,27 @@ export function ApplicationTable({
             </div>
           );
         }
+        if (onAnalyzeAts) {
+          const isAnalyzing = analyzingAppId === app.id;
+          return (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={isAnalyzing}
+              onClick={() => onAnalyzeAts(app.id)}
+              className="h-6 px-2 py-0 text-[11px] text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded-md border border-amber-500/30 gap-1 font-semibold transition-all"
+              title="Quickly run AI ATS match with candidate master profile"
+            >
+              {isAnalyzing ? (
+                <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+              ) : (
+                <Sparkles className="w-3 h-3 text-amber-400" />
+              )}
+              <span>{isAnalyzing ? "Matching..." : "⚡ Quick Fit"}</span>
+            </Button>
+          );
+        }
         return (
           <Link
             href={`/cms/job-tracker/${app.id}?tab=tailor`}
@@ -129,37 +158,54 @@ export function ApplicationTable({
     },
     {
       header: "Stage / Status",
-      cell: (app) => (
-        <Select
-          value={app.status}
-          onValueChange={(val) => onStatusChange(app.id, val as JobApplicationStatus)}
-        >
-          <SelectTrigger className="h-8 text-xs w-[160px] bg-[#131726] border-white/[0.08] rounded-lg text-white">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-xs">
-            {(
-              [
-                "wishlist",
-                "applied",
-                "screening",
-                "interview_hr",
-                "interview_tech",
-                "interview_user",
-                "offering",
-                "accepted",
-                "rejected",
-                "withdrawn",
-                "ghosted",
-              ] as JobApplicationStatus[]
-            ).map((st) => (
-              <SelectItem key={st} value={st} className="text-xs">
-                {JOB_STATUS_CONFIG[st].label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ),
+      cell: (app) => {
+        const upcoming = app.interviews?.some((i) => i.status === "scheduled" && new Date(i.scheduledAt) >= new Date());
+        const { isStagnant, daysInactive: stagnantDays } = checkIsStagnant(
+          app.status,
+          app.appliedAt || app.createdAt,
+          Boolean(upcoming)
+        );
+
+        return (
+          <div className="flex flex-col items-start gap-1">
+            <Select
+              value={app.status}
+              onValueChange={(val) => onStatusChange(app.id, val as JobApplicationStatus)}
+            >
+              <SelectTrigger className="h-8 text-xs w-[160px] bg-[#131726] border-white/[0.08] rounded-lg text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-xs">
+                {(
+                  [
+                    "wishlist",
+                    "applied",
+                    "screening",
+                    "interview_hr",
+                    "interview_tech",
+                    "interview_user",
+                    "offering",
+                    "accepted",
+                    "rejected",
+                    "withdrawn",
+                    "ghosted",
+                  ] as JobApplicationStatus[]
+                ).map((st) => (
+                  <SelectItem key={st} value={st} className="text-xs">
+                    {JOB_STATUS_CONFIG[st].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {isStagnant && (
+              <span className="text-[10px] text-amber-400 flex items-center gap-1 font-mono font-medium">
+                <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+                Follow-up Due ({stagnantDays}d)
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: "Applied Date",
@@ -200,6 +246,41 @@ export function ApplicationTable({
                   <span>Interview Copilot</span>
                 </Link>
               </DropdownMenuItem>
+              {(() => {
+                const upcoming = app.interviews?.some((i) => i.status === "scheduled" && new Date(i.scheduledAt) >= new Date());
+                const { isStagnant } = checkIsStagnant(
+                  app.status,
+                  app.appliedAt || app.createdAt,
+                  Boolean(upcoming)
+                );
+
+                if (!isStagnant) return null;
+                return (
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href={`/cms/job-outreaches/new?company=${encodeURIComponent(app.companyName)}&role=${encodeURIComponent(app.jobTitle)}&purpose=follow_up&type=follow_up&jobAppId=${app.id}`}
+                      className="flex items-center gap-2 cursor-pointer text-amber-300 focus:text-amber-200 focus:bg-amber-500/10 font-medium"
+                    >
+                      <Send className="h-4 w-4 text-amber-400" />
+                      <span>⚡ Send Follow-Up Outreach</span>
+                    </Link>
+                  </DropdownMenuItem>
+                );
+              })()}
+              {onAnalyzeAts && (app.atsScore === undefined || app.atsScore === null) && (
+                <DropdownMenuItem
+                  onClick={() => onAnalyzeAts(app.id)}
+                  disabled={analyzingAppId === app.id}
+                  className="flex items-center gap-2 cursor-pointer text-amber-300 focus:text-amber-200 focus:bg-amber-500/10"
+                >
+                  {analyzingAppId === app.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-amber-400" />
+                  )}
+                  <span>⚡ Quick ATS Match</span>
+                </DropdownMenuItem>
+              )}
               {app.jobUrl && (
                 <DropdownMenuItem asChild>
                   <a href={app.jobUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 cursor-pointer">

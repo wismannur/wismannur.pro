@@ -317,3 +317,27 @@ export function downloadIcsFile(params: CalendarEventParams): void {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Evaluates whether an application has become stagnant (>14 days inactive without an interview).
+ */
+export function checkIsStagnant(
+  status: JobApplicationStatus,
+  baseDate: Date | string | undefined | null,
+  hasUpcomingInterview = false,
+  thresholdDays = 14
+): { isStagnant: boolean; daysInactive: number } {
+  if (status !== "applied" && status !== "screening") {
+    return { isStagnant: false, daysInactive: 0 };
+  }
+  if (hasUpcomingInterview || !baseDate) {
+    return { isStagnant: false, daysInactive: 0 };
+  }
+  const dateObj = typeof baseDate === "string" ? new Date(baseDate) : baseDate;
+  const timeDiff = new Date().getTime() - dateObj.getTime();
+  const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+  return {
+    isStagnant: days >= thresholdDays,
+    daysInactive: Math.max(0, days),
+  };
+}

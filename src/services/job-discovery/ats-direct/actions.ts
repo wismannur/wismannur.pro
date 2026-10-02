@@ -20,17 +20,49 @@ import { parseLeverJob, type LeverRawJob } from "./adapters/lever";
 const { atsTargetCompanies, skills } = schema;
 
 /**
+ * Seeds preset ATS companies into the database if not present.
+ */
+export async function seedPresetTargetCompanies(): Promise<void> {
+  const db = getDb();
+  for (const preset of PRESET_ATS_COMPANIES) {
+    await db
+      .insert(atsTargetCompanies)
+      .values({
+        id: preset.id,
+        name: preset.name,
+        platform: preset.platform,
+        slug: preset.slug,
+        websiteUrl: preset.websiteUrl || null,
+        logoUrl: preset.logoUrl || null,
+        isActive: preset.isActive,
+      })
+      .onConflictDoNothing()
+      .catch((err) => console.warn(`[ATS Seed] Skipped ${preset.name}:`, err));
+  }
+}
+
+/**
  * Gets all active ATS target companies (database custom + default presets).
  */
 export async function getTargetCompanies(): Promise<AtsTargetCompany[]> {
   await assertAdmin();
   try {
     const db = getDb();
-    const rows = await db
+    let rows = await db
       .select()
       .from(atsTargetCompanies)
       .orderBy(desc(atsTargetCompanies.createdAt))
       .catch(() => []);
+
+    // Auto-seed presets into DB if table is empty
+    if (rows.length === 0) {
+      await seedPresetTargetCompanies();
+      rows = await db
+        .select()
+        .from(atsTargetCompanies)
+        .orderBy(desc(atsTargetCompanies.createdAt))
+        .catch(() => []);
+    }
 
     const dbCompanies: AtsTargetCompany[] = rows.map((r) => ({
       id: r.id,
@@ -40,7 +72,7 @@ export async function getTargetCompanies(): Promise<AtsTargetCompany[]> {
       websiteUrl: r.websiteUrl || undefined,
       logoUrl: r.logoUrl || undefined,
       isActive: r.isActive,
-      isCustom: true,
+      isCustom: !PRESET_ATS_COMPANIES.some((p) => p.id === r.id),
       createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : undefined,
     }));
 
@@ -182,10 +214,29 @@ export async function toggleTargetCompany(
 
   try {
     const db = getDb();
-    await db
-      .update(atsTargetCompanies)
-      .set({ isActive, updatedAt: new Date() })
-      .where(eq(atsTargetCompanies.id, id));
+    const preset = PRESET_ATS_COMPANIES.find((p) => p.id === id);
+    if (preset) {
+      await db
+        .insert(atsTargetCompanies)
+        .values({
+          id: preset.id,
+          name: preset.name,
+          platform: preset.platform,
+          slug: preset.slug,
+          websiteUrl: preset.websiteUrl || null,
+          logoUrl: preset.logoUrl || null,
+          isActive,
+        })
+        .onConflictDoUpdate({
+          target: atsTargetCompanies.id,
+          set: { isActive, updatedAt: new Date() },
+        });
+    } else {
+      await db
+        .update(atsTargetCompanies)
+        .set({ isActive, updatedAt: new Date() })
+        .where(eq(atsTargetCompanies.id, id));
+    }
     revalidatePath("/cms/job-hunter");
     atsMemoryCache.clear();
     return { success: true };

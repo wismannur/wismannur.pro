@@ -34,6 +34,13 @@ import {
   deleteInterview,
   updateApplication,
 } from "../../job-tracker/actions";
+import {
+  getFrontendMasteryOverview,
+  startOrGetChallengeSession,
+  submitChallengeSession,
+} from "../../frontend-mastery/actions";
+import { CURRICULUM_TOPICS } from "../../frontend-mastery/curriculum-data";
+import type { FrontendDifficulty } from "../../frontend-mastery/types";
 
 const { jobApplications, jobInterviews } = schema;
 
@@ -639,6 +646,79 @@ export const CAREER_HUB_TOOL_DECLARATIONS = [
         },
       },
       required: ["id"],
+    },
+  },
+  {
+    name: "get_frontend_mastery_overview",
+    description:
+      "Fetch summary statistics of Frontend Mastery gym: total topics, topics mastered, practicing count, average score, and active session.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {},
+    },
+  },
+  {
+    name: "list_frontend_curriculum",
+    description:
+      "Browse frontend curriculum topics. Can filter by pillar ('concepts', 'javascript', 'react', 'system_design') or difficulty ('mid', 'senior', 'lead') or search keyword.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        pillar: {
+          type: Type.STRING,
+          description: "Optional pillar filter: concepts, javascript, react, or system_design",
+        },
+        difficulty: {
+          type: Type.STRING,
+          description: "Optional difficulty filter: mid, senior, or lead",
+        },
+        search: {
+          type: Type.STRING,
+          description: "Optional keyword to search in title, category, or description",
+        },
+      },
+    },
+  },
+  {
+    name: "start_frontend_mastery_challenge",
+    description:
+      "Start or resume an interview practice drill for a curriculum topic ID (e.g., 'concept-data-structures', 'concept-css-box-flex-grid', 'js-event-emitter', 'react-virtualized-list', 'sys-figma-canvas').",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        topicId: {
+          type: Type.STRING,
+          description: "The unique topic ID from the curriculum",
+        },
+        difficulty: {
+          type: Type.STRING,
+          description: "mid, senior, or lead (default: senior)",
+        },
+      },
+      required: ["topicId"],
+    },
+  },
+  {
+    name: "evaluate_frontend_mastery_submission",
+    description:
+      "Submit candidate code solution for an active Frontend Mastery challenge session to receive Big Tech Staff-level evaluation (rubric scores, strengths, edge case flaws, and model answer).",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        sessionId: {
+          type: Type.STRING,
+          description: "The Frontend Mastery session ID",
+        },
+        userCode: {
+          type: Type.STRING,
+          description: "Candidate's code or architectural solution submission",
+        },
+        timeSpentSeconds: {
+          type: Type.INTEGER,
+          description: "Optional time spent in seconds (default: 600)",
+        },
+      },
+      required: ["sessionId", "userCode"],
     },
   },
 ];
@@ -1247,6 +1327,75 @@ export async function executeCareerHubTool(
         success: true,
         message: `Job outreach (ID: ${id}) deleted successfully.`,
         data: { id, deleted: true },
+      };
+    }
+
+    case "get_frontend_mastery_overview": {
+      const overview = await getFrontendMasteryOverview();
+      return {
+        success: true,
+        message: `Frontend Mastery stats: ${overview.stats.totalMastered}/${overview.stats.totalTopics} mastered, ${overview.stats.totalPracticing} practicing. Average score: ${overview.stats.averageScore}%. Active session: ${overview.activeSession?.topicTitle || "None"}.`,
+        data: overview,
+      };
+    }
+
+    case "list_frontend_curriculum": {
+      const pillar = args.pillar as string | undefined;
+      const difficulty = args.difficulty as string | undefined;
+      const search = (args.search as string | undefined)?.toLowerCase();
+
+      let topics = CURRICULUM_TOPICS;
+      if (pillar && pillar !== "all") {
+        topics = topics.filter((t) => t.pillar === pillar);
+      }
+      if (difficulty && difficulty !== "all") {
+        topics = topics.filter((t) => t.difficulty === difficulty);
+      }
+      if (search) {
+        topics = topics.filter(
+          (t) =>
+            t.title.toLowerCase().includes(search) ||
+            t.description.toLowerCase().includes(search) ||
+            t.category.toLowerCase().includes(search)
+        );
+      }
+
+      return {
+        success: true,
+        message: `Found ${topics.length} frontend curriculum topics.`,
+        data: topics.map((t) => ({
+          id: t.id,
+          title: t.title,
+          pillar: t.pillar,
+          category: t.category,
+          difficulty: t.difficulty,
+          keyConcepts: t.keyConcepts,
+          bigTechContext: t.bigTechContext,
+        })),
+      };
+    }
+
+    case "start_frontend_mastery_challenge": {
+      const topicId = args.topicId as string;
+      const difficulty = (args.difficulty as FrontendDifficulty) || "senior";
+      const session = await startOrGetChallengeSession(topicId, difficulty);
+      return {
+        success: true,
+        message: `Challenge loaded: "${session.topicTitle}" (${session.difficulty.toUpperCase()} level). Session ID: ${session.id}.`,
+        data: session,
+      };
+    }
+
+    case "evaluate_frontend_mastery_submission": {
+      const sessionId = args.sessionId as string;
+      const userCode = args.userCode as string;
+      const timeSpentSeconds = (args.timeSpentSeconds as number) || 600;
+
+      const evaluated = await submitChallengeSession(sessionId, userCode, timeSpentSeconds);
+      return {
+        success: true,
+        message: `Challenge evaluated! Score: ${evaluated.score}/100. Status: ${evaluated.status}. Overall verdict: ${evaluated.evaluationResult?.verdict || "evaluated"}.`,
+        data: evaluated,
       };
     }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   BookOpen,
@@ -11,6 +12,7 @@ import {
   HeartHandshake,
   Lightbulb,
   Loader2,
+  Send,
   Sparkles,
   TrendingUp,
 } from "lucide-react";
@@ -46,6 +48,7 @@ export interface PostMortemData {
 
 interface PostMortemDialogProps {
   isOpen: boolean;
+  applicationId?: string;
   companyName: string;
   jobTitle: string;
   initialData?: Partial<PostMortemData>;
@@ -55,12 +58,14 @@ interface PostMortemDialogProps {
 
 export function PostMortemDialog({
   isOpen,
+  applicationId,
   companyName,
   jobTitle,
   initialData,
   onClose,
   onSave,
 }: PostMortemDialogProps) {
+  const router = useRouter();
   const [stageFailedAt, setStageFailedAt] = useState(
     initialData?.stageFailedAt || "technical_interview"
   );
@@ -291,19 +296,39 @@ export function PostMortemDialog({
                     <HeartHandshake className="w-3.5 h-3.5 text-sky-400" />
                     Graceful &quot;Stay on Talent Bench&quot; Email Draft
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      handleCopyText(
-                        `Subject: ${diagnostic.gracefulClosureEmail.subject}\n\n${diagnostic.gracefulClosureEmail.body}`,
-                        "Closure Email"
-                      )
-                    }
-                    className="h-6 text-[10px] gap-1 px-2 bg-[#0C0E18] border-sky-500/30 text-sky-400 hover:bg-sky-500/10"
-                  >
-                    <Copy className="w-2.5 h-2.5" /> Copy Email
-                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        handleCopyText(
+                          `Subject: ${diagnostic.gracefulClosureEmail.subject}\n\n${diagnostic.gracefulClosureEmail.body}`,
+                          "Closure Email"
+                        )
+                      }
+                      className="h-6 text-[10px] gap-1 px-2 bg-[#0C0E18] border-sky-500/30 text-sky-400 hover:bg-sky-500/10"
+                    >
+                      <Copy className="w-2.5 h-2.5" /> Copy Email
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const searchParams = new URLSearchParams({
+                          company: companyName,
+                          role: jobTitle,
+                          purpose: "rejection_closure",
+                          type: "follow_up",
+                          subject: diagnostic.gracefulClosureEmail.subject,
+                          message: diagnostic.gracefulClosureEmail.body,
+                          ...(applicationId ? { jobAppId: applicationId } : {}),
+                        });
+                        router.push(`/cms/job-outreaches/new?${searchParams.toString()}`);
+                      }}
+                      className="h-6 text-[10px] gap-1 px-2 bg-sky-600 hover:bg-sky-500 text-white font-medium shadow-sm shadow-sky-600/20"
+                    >
+                      <Send className="w-2.5 h-2.5" /> Send via Outreach CRM
+                    </Button>
+                  </div>
                 </div>
                 <div className="text-[11px] font-semibold text-muted-foreground">
                   Subject: {diagnostic.gracefulClosureEmail.subject}

@@ -61,7 +61,9 @@ export type NewJobOutreach = Omit<
   "id" | "createdAt" | "updatedAt" | "messages" | "jobApplication"
 >;
 
-export type UpdateJobOutreach = Partial<NewJobOutreach>;
+export type UpdateJobOutreach = Partial<NewJobOutreach> & {
+  jobApplicationId?: string | null;
+};
 
 export interface OutreachAnalytics {
   totalOutreaches: number;

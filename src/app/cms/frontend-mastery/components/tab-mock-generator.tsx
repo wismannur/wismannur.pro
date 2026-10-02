@@ -22,6 +22,8 @@ interface TabMockGeneratorProps {
     customScenario: string
   ) => Promise<void>;
   isGenerating?: boolean;
+  targetCompany?: string;
+  targetRole?: string;
 }
 
 const PRESET_MOCKS = [
@@ -54,10 +56,17 @@ const PRESET_MOCKS = [
 export function TabMockGenerator({
   onGenerateMock,
   isGenerating,
+  targetCompany,
+  targetRole,
 }: TabMockGeneratorProps) {
-  const [pillar, setPillar] = useState<FrontendPillar>("javascript");
+  const [pillar, setPillar] = useState<FrontendPillar>("system_design");
   const [difficulty, setDifficulty] = useState<FrontendDifficulty>("staff");
-  const [scenarioPrompt, setScenarioPrompt] = useState<string>("");
+  const [scenarioPrompt, setScenarioPrompt] = useState<string>(() => {
+    if (targetCompany) {
+      return `Simulate a comprehensive Senior/Staff Frontend Technical Loop tailored for ${targetCompany}. Target role: ${targetRole || "Senior Frontend Engineer"}. Focus on high-scale frontend architecture, state synchronization, reactive streaming performance, and production fault tolerance.`;
+    }
+    return "";
+  });
 
   const handleApplyPreset = (preset: (typeof PRESET_MOCKS)[0]) => {
     setPillar(preset.pillar);
@@ -77,6 +86,32 @@ export function TabMockGenerator({
     <div className="space-y-6">
       {/* Introduction Card */}
       <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18] p-6">
+        {targetCompany && (
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-xs text-purple-200">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-400 shrink-0" />
+              <span>
+                Simulating tailored interview for <strong className="text-white font-semibold">{targetCompany}</strong>
+                {targetRole ? ` (${targetRole})` : ""}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setScenarioPrompt(
+                  `Simulate a comprehensive Senior/Staff Frontend Technical Loop tailored for ${targetCompany}. Target role: ${targetRole || "Senior Frontend Engineer"}. Focus on high-scale frontend architecture, state synchronization, reactive streaming performance, and production fault tolerance.`
+                );
+                toast.success(`Prompt seeded for ${targetCompany}!`);
+              }}
+              className="h-7 text-xs px-2.5 rounded-lg border-purple-500/40 text-purple-200 bg-[#131726] hover:bg-purple-500/20"
+            >
+              Reset to {targetCompany} Scenario
+            </Button>
+          </div>
+        )}
+
         <div className="flex items-center gap-3">
           <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-2.5 text-indigo-400">
             <BrainCircuit className="h-6 w-6" />

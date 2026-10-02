@@ -69,6 +69,18 @@ const toJobOutreachMessage = (row: JobOutreachMessageRow): JobOutreachMessage =>
   createdAt: row.createdAt,
 });
 
+const computeEffectiveStatus = (row: JobOutreachRow): OutreachStatus => {
+  if (
+    row.status === "sent" &&
+    row.followUpDueDate &&
+    new Date(row.followUpDueDate).getTime() <= Date.now() &&
+    !row.lastRepliedAt
+  ) {
+    return "follow_up_due";
+  }
+  return row.status;
+};
+
 const toJobOutreach = (
   row: JobOutreachRow,
   messages: JobOutreachMessage[] = [],
@@ -84,7 +96,7 @@ const toJobOutreach = (
   contactEmail: row.contactEmail,
   contactLinkedin: row.contactLinkedin ?? undefined,
   outreachType: row.outreachType,
-  status: row.status,
+  status: computeEffectiveStatus(row),
   subject: row.subject,
   body: row.body,
   notes: row.notes ?? undefined,
@@ -117,6 +129,23 @@ export async function getJobOutreaches(filters?: {
 }): Promise<JobOutreach[]> {
   await assertAdmin();
   const db = getDb();
+
+  // Auto-transition overdue 'sent' outreaches to 'follow_up_due' in the database
+  try {
+    await db
+      .update(jobOutreaches)
+      .set({ status: "follow_up_due", updatedAt: new Date() })
+      .where(
+        and(
+          eq(jobOutreaches.status, "sent"),
+          sql`${jobOutreaches.followUpDueDate} IS NOT NULL`,
+          sql`${jobOutreaches.followUpDueDate} <= NOW()`,
+          sql`${jobOutreaches.lastRepliedAt} IS NULL`
+        )
+      );
+  } catch (err) {
+    console.warn("[Job Outreaches] Failed to auto-transition overdue follow-ups:", err);
+  }
 
   const conditions = [];
 
@@ -549,6 +578,23 @@ export async function convertOutreachToJobApplication(
 export async function getOutreachAnalytics(): Promise<OutreachAnalytics> {
   await assertAdmin();
   const db = getDb();
+
+  // Auto-transition overdue 'sent' outreaches to 'follow_up_due' in the database
+  try {
+    await db
+      .update(jobOutreaches)
+      .set({ status: "follow_up_due", updatedAt: new Date() })
+      .where(
+        and(
+          eq(jobOutreaches.status, "sent"),
+          sql`${jobOutreaches.followUpDueDate} IS NOT NULL`,
+          sql`${jobOutreaches.followUpDueDate} <= NOW()`,
+          sql`${jobOutreaches.lastRepliedAt} IS NULL`
+        )
+      );
+  } catch (err) {
+    console.warn("[Job Outreaches] Failed to auto-transition overdue follow-ups in analytics:", err);
+  }
 
   const rows = await db.select().from(jobOutreaches);
 

@@ -1,4 +1,13 @@
-export type EntityIdPrefix = "outreach" | "contact" | "service" | "hire";
+export type EntityIdPrefix =
+  | "outreach"
+  | "contact"
+  | "service"
+  | "hire"
+  | "job"
+  | "interview"
+  | "outmsg"
+  | "fms"
+  | "fmp";
 
 /**
  * Generates a timestamp-based human-friendly ID in Asia/Jakarta (WIB) timezone.

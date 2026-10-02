@@ -183,6 +183,13 @@
       "when": 1789897960521,
       "tag": "0025_tidy_cannonball",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790301639759,
+      "tag": "0026_loving_mantis",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,7 @@ import {
   FileText,
   Linkedin,
   Loader2,
+  Link2,
   Mail,
   Maximize2,
   Minimize2,
@@ -25,6 +26,7 @@ import {
   Sparkles,
   StickyNote,
   Trash2,
+  Unlink,
   User,
 } from "lucide-react";
 
@@ -60,7 +62,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { jobOutreachService, type OutreachStatus } from "@/services";
+import { jobOutreachService, jobTrackerService, type OutreachStatus } from "@/services";
 
 const STATUS_CONFIG: Record<OutreachStatus, { label: string; className: string }> = {
   draft: {
@@ -103,6 +105,15 @@ export default function JobOutreachDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+  const [selectedExistingAppId, setSelectedExistingAppId] = useState<string>("");
+  const [isLinkingApp, setIsLinkingApp] = useState(false);
+  const [isUnlinkingApp, setIsUnlinkingApp] = useState(false);
+
+  // Fetch existing job applications to allow linking
+  const { data: jobApplications = [] } = useQuery({
+    queryKey: ["jobApplicationsForOutreachDetail"],
+    queryFn: () => jobTrackerService.getAll(),
+  });
 
   // Private Internal Notes editable states & resize handlers
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -305,6 +316,43 @@ export default function JobOutreachDetailPage() {
       toast.error("Failed to convert to Job Tracker.");
     } finally {
       setIsConverting(false);
+    }
+  };
+
+  const handleLinkExistingApp = async () => {
+    if (!outreach || !selectedExistingAppId) return;
+    setIsLinkingApp(true);
+    try {
+      await jobOutreachService.convertToJobApplication(outreach.id, selectedExistingAppId);
+      toast.success("Successfully linked outreach to existing Job Application!");
+      setSelectedExistingAppId("");
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
+      queryClient.invalidateQueries({ queryKey: ["jobOutreachDetail", outreachId] });
+      queryClient.invalidateQueries({ queryKey: ["jobTrackerApplications"] });
+    } catch (err) {
+      console.error("Link application error:", err);
+      toast.error("Failed to link application.");
+    } finally {
+      setIsLinkingApp(false);
+    }
+  };
+
+  const handleUnlinkApp = async () => {
+    if (!outreach) return;
+    setIsUnlinkingApp(true);
+    try {
+      await jobOutreachService.update(outreach.id, { jobApplicationId: null });
+      toast.success("Outreach unlinked from Job Application.");
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
+      queryClient.invalidateQueries({ queryKey: ["jobOutreachDetail", outreachId] });
+      queryClient.invalidateQueries({ queryKey: ["jobTrackerApplications"] });
+    } catch (err) {
+      console.error("Unlink application error:", err);
+      toast.error("Failed to unlink application.");
+    } finally {
+      setIsUnlinkingApp(false);
     }
   };
 
@@ -622,6 +670,55 @@ export default function JobOutreachDetailPage() {
                   </Button>
                 </div>
 
+                {/* Follow-up Playbook Presets */}
+                <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-[#131726]/60 border border-white/[0.06] text-xs">
+                  <span className="font-semibold text-slate-400 text-[11px] flex items-center gap-1 px-1">
+                    ⚡ Playbook:
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFollowUpMessage(
+                        `Hi ${outreach.contactName},\n\nI hope you're having a productive week! Just following up on my previous note regarding the ${outreach.jobTitle} opportunity at ${outreach.companyName}.\n\nI understand your schedule is packed, so just wanted to check if there is an update on the hiring timeline or if any extra details are needed from my side.\n\nBest regards,\nWisman Nur\nhttps://wismannur.pro`
+                      );
+                      toast.info("Playbook 1: Gentle Nudge loaded");
+                    }}
+                    className="h-6 text-[11px] px-2 rounded-md bg-white/[0.04] border-white/[0.08] hover:bg-indigo-500/20 text-slate-300 hover:text-white"
+                  >
+                    1️⃣ Gentle Nudge (3-5d)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFollowUpMessage(
+                        `Hi ${outreach.contactName},\n\nFollowing up on my previous email regarding the ${outreach.jobTitle} position at ${outreach.companyName}.\n\nI recently published some deep-dive architectural work on resilient Next.js / TypeScript frontend systems (accessible at https://wismannur.pro), which directly maps to the challenges your team solves. I would love 15 minutes to share how I can hit the ground running.\n\nBest regards,\nWisman Nur`
+                      );
+                      toast.info("Playbook 2: Value-Add & Portfolio loaded");
+                    }}
+                    className="h-6 text-[11px] px-2 rounded-md bg-white/[0.04] border-white/[0.08] hover:bg-purple-500/20 text-slate-300 hover:text-white"
+                  >
+                    2️⃣ Value-Add & Work (7-10d)
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setFollowUpMessage(
+                        `Hi ${outreach.contactName},\n\nSince I haven't heard back, I assume priorities have shifted or the ${outreach.jobTitle} role has been filled. No worries at all!\n\nI will continue following ${outreach.companyName}'s engineering milestones from afar. If our paths cross in the future, please feel free to reconnect anytime on LinkedIn or via email.\n\nWishing you and the team continued success,\nWisman Nur\nhttps://wismannur.pro`
+                      );
+                      toast.info("Playbook 3: Graceful Breakup loaded");
+                    }}
+                    className="h-6 text-[11px] px-2 rounded-md bg-white/[0.04] border-white/[0.08] hover:bg-rose-500/20 text-slate-300 hover:text-white"
+                  >
+                    3️⃣ Graceful Breakup (14d+)
+                  </Button>
+                </div>
+
                 <Textarea
                   rows={5}
                   placeholder={`Write a reply or follow-up message for ${outreach.contactName}...`}
@@ -875,36 +972,100 @@ export default function JobOutreachDetailPage() {
                   </div>
                   <div className="text-xs text-slate-400">{outreach.jobApplication.jobTitle}</div>
 
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs h-8 gap-1.5 mt-2 rounded-lg border-white/[0.08] bg-[#0C0E18] hover:bg-[#1C2237] text-slate-200"
-                  >
-                    <Link href={`/cms/job-tracker/${outreach.jobApplication.id}`}>
-                      <Briefcase className="h-3.5 w-3.5 text-indigo-400" /> Open in Job Tracker
-                    </Link>
-                  </Button>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 text-xs h-8 gap-1.5 rounded-lg border-white/[0.08] bg-[#0C0E18] hover:bg-[#1C2237] text-slate-200"
+                    >
+                      <Link href={`/cms/job-tracker/${outreach.jobApplication.id}`}>
+                        <Briefcase className="h-3.5 w-3.5 text-indigo-400" /> Open Tracker
+                      </Link>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleUnlinkApp}
+                      disabled={isUnlinkingApp}
+                      title="Unlink from this application"
+                      className="h-8 px-2 text-xs text-slate-400 hover:text-rose-400 hover:bg-rose-950/20 rounded-lg"
+                    >
+                      {isUnlinkingApp ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Unlink className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-3 text-xs text-slate-400">
-                  <p>
-                    This outreach is not linked to Job Tracker yet. If the recruiter responds
-                    positively, you can convert it directly to an active job application or
-                    interview.
-                  </p>
-                  <Button
-                    onClick={handleConvertToJobTracker}
-                    disabled={isConverting}
-                    className="w-full text-xs h-9 gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-md border border-indigo-400/30"
-                  >
-                    {isConverting ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3.5 w-3.5" />
-                    )}
-                    Convert / Create in Job Tracker
-                  </Button>
+                <div className="space-y-3.5 text-xs">
+                  {/* Option A: Link Existing Application */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                      <Link2 className="h-3 w-3 text-indigo-400" />
+                      Link to Existing Application:
+                    </label>
+                    <Select
+                      value={selectedExistingAppId}
+                      onValueChange={setSelectedExistingAppId}
+                    >
+                      <SelectTrigger className="h-8 text-xs bg-[#131726] border-white/[0.08] text-slate-200">
+                        <SelectValue placeholder="Select from Job Tracker..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#0C0E18] border-white/[0.1] text-slate-200 max-h-56">
+                        {jobApplications.map((app) => (
+                          <SelectItem key={app.id} value={app.id} className="text-xs">
+                            {app.companyName} — {app.jobTitle}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleLinkExistingApp}
+                      disabled={isLinkingApp || !selectedExistingAppId}
+                      className="w-full text-xs h-7.5 gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+                    >
+                      {isLinkingApp ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" /> Linking...
+                        </>
+                      ) : (
+                        <>
+                          <Link2 className="h-3 w-3" /> Connect to Selected Application
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-[10px] text-slate-500 uppercase tracking-wider font-semibold">
+                    <div className="h-px bg-white/[0.06] flex-1" />
+                    <span>OR</span>
+                    <div className="h-px bg-white/[0.06] flex-1" />
+                  </div>
+
+                  {/* Option B: Create Brand New in Tracker */}
+                  <div className="space-y-2">
+                    <p className="text-slate-400 leading-relaxed text-[11px]">
+                      Create a fresh application entry in your Job Tracker pipeline initialized with this role.
+                    </p>
+                    <Button
+                      onClick={handleConvertToJobTracker}
+                      disabled={isConverting}
+                      className="w-full text-xs h-8 gap-2 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold shadow-md border border-indigo-400/30"
+                    >
+                      {isConverting ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5" />
+                      )}
+                      Create as New in Job Tracker
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>

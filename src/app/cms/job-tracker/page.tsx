@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
+  AlertTriangle,
   Briefcase,
   Compass,
   Filter,
@@ -43,24 +44,26 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { checkIsStagnant } from "@/lib/job-tracker";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import { jobTrackerService } from "@/services";
 import type {
   JobApplicationStatus,
 } from "@/services/job-tracker/types";
+import { useRouter } from "next/navigation";
 import { KanbanBoard } from "./components/kanban-board";
 import { ApplicationTable } from "./components/application-table";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
-import { SmartJobImporterDialog } from "./components/smart-job-importer-dialog";
 import { WeeklyGoalTracker } from "./components/weekly-goal-tracker";
 
 export default function JobTrackerPage() {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<"kanban" | "table" | "analytics">("kanban");
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isImporterOpen, setIsImporterOpen] = useState(false);
   const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
+  const [analyzingAppId, setAnalyzingAppId] = useState<string | null>(null);
 
   const {
     data: applications = [],
@@ -80,6 +83,23 @@ export default function JobTrackerPage() {
   const handleRefresh = async () => {
     await Promise.all([refetch(), refetchAnalytics()]);
     toast.success("Job tracker refreshed");
+  };
+
+  const handleQuickAnalyzeAts = async (id: string) => {
+    try {
+      setAnalyzingAppId(id);
+      const app = applications.find((a) => a.id === id);
+      const targetLabel = app ? `${app.jobTitle} at ${app.companyName}` : "Job application";
+      toast.info(`Running ATS Match & Tailoring with Gemini for ${targetLabel}...`);
+      await jobTrackerService.aiAnalyzeResumeMatch(id);
+      await Promise.all([refetch(), refetchAnalytics()]);
+      toast.success(`ATS Analysis completed for ${targetLabel}!`);
+    } catch (error) {
+      console.error("ATS analysis error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to run ATS analysis");
+    } finally {
+      setAnalyzingAppId(null);
+    }
   };
 
   const handleStatusChange = async (id: string, newStatus: JobApplicationStatus) => {
@@ -111,7 +131,15 @@ export default function JobTrackerPage() {
       if (platformFilter !== "all" && app.platform !== platformFilter) {
         return false;
       }
-      if (statusFilter !== "all" && app.status !== statusFilter) {
+      if (statusFilter === "stagnant") {
+        const upcoming = app.interviews?.some((i) => i.status === "scheduled" && new Date(i.scheduledAt) >= new Date());
+        const { isStagnant } = checkIsStagnant(
+          app.status,
+          app.appliedAt || app.createdAt,
+          Boolean(upcoming)
+        );
+        if (!isStagnant) return false;
+      } else if (statusFilter !== "all" && app.status !== statusFilter) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -163,8 +191,16 @@ export default function JobTrackerPage() {
     const offers = applications.filter((a) => a.status === "offering" || a.status === "accepted").length;
     const atsScores = applications.filter((a) => typeof a.atsScore === "number").map((a) => a.atsScore as number);
     const avgAts = atsScores.length > 0 ? Math.round(atsScores.reduce((acc, curr) => acc + curr, 0) / atsScores.length) : null;
+    const stagnantCount = applications.filter((a) => {
+      const upcoming = a.interviews?.some((i) => i.status === "scheduled" && new Date(i.scheduledAt) >= new Date());
+      return checkIsStagnant(
+        a.status,
+        a.appliedAt || a.createdAt,
+        Boolean(upcoming)
+      ).isStagnant;
+    }).length;
 
-    return { total, active, interviews, offers, avgAts };
+    return { total, active, interviews, offers, avgAts, stagnantCount };
   }, [applications]);
 
   return (
@@ -219,6 +255,21 @@ export default function JobTrackerPage() {
                   <span><strong className="text-white font-bold">{summaryMetrics.avgAts}%</strong> Avg ATS Fit</span>
                 </div>
               )}
+              {summaryMetrics.stagnantCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter(statusFilter === "stagnant" ? "all" : "stagnant")}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+                    statusFilter === "stagnant"
+                      ? "bg-amber-500/20 border-amber-500/50 text-amber-300 ring-1 ring-amber-500/40"
+                      : "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+                  }`}
+                  title="Filter applications stagnant >14 days without interview"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  <span><strong className="text-amber-300 font-bold">{summaryMetrics.stagnantCount}</strong> Stagnant (&gt;14d)</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -245,13 +296,14 @@ export default function JobTrackerPage() {
               </Button>
             </Link>
 
-            <Button
-              onClick={() => setIsImporterOpen(true)}
-              className="rounded-full gap-2 px-5 h-10 bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all text-xs"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Add & Import Job</span>
-            </Button>
+            <Link href="/cms/job-tracker/new">
+              <Button
+                className="rounded-full gap-2 px-5 h-10 bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all text-xs"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Add & Import Job</span>
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -259,7 +311,7 @@ export default function JobTrackerPage() {
       {/* Weekly Goal & Motivation Gamification Tracker */}
       <WeeklyGoalTracker
         applications={applications}
-        onAddJobClick={() => setIsImporterOpen(true)}
+        onAddJobClick={() => router.push("/cms/job-tracker/new")}
       />
 
       {/* View Switcher & Search / Filters Toolbar */}
@@ -366,6 +418,9 @@ export default function JobTrackerPage() {
                 </SelectTrigger>
                 <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-xs">
                   <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="stagnant" className="text-amber-400 font-semibold">
+                    ⚠️ Stagnant (&gt;14d)
+                  </SelectItem>
                   <SelectItem value="wishlist">Wishlist</SelectItem>
                   <SelectItem value="applied">Applied</SelectItem>
                   <SelectItem value="screening">Screening</SelectItem>
@@ -382,13 +437,37 @@ export default function JobTrackerPage() {
         )}
       </div>
 
+      {/* Stagnant Filter Alert Banner */}
+      {statusFilter === "stagnant" && (
+        <div className="flex items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-300">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              Showing <strong>{filteredApplications.length}</strong> applications inactive for &gt;14 days without an active interview. Use the quick outreach actions to nudge recruiters.
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setStatusFilter("all")}
+            className="h-7 text-xs text-amber-300 hover:text-white hover:bg-amber-500/20 rounded-lg"
+          >
+            Clear Stagnant Filter
+          </Button>
+        </div>
+      )}
+
       {/* Views Content */}
       {viewMode === "kanban" && (
         <KanbanBoard
           applications={filteredApplications}
           onStatusChange={handleStatusChange}
           onDelete={(id) => setApplicationToDelete(id)}
-          onAddNew={() => setIsImporterOpen(true)}
+          onAddNew={(status) =>
+            router.push(status ? `/cms/job-tracker/new?status=${status}` : "/cms/job-tracker/new")
+          }
+          onAnalyzeAts={handleQuickAnalyzeAts}
+          analyzingAppId={analyzingAppId}
         />
       )}
 
@@ -398,22 +477,14 @@ export default function JobTrackerPage() {
           isLoading={isLoading}
           onStatusChange={handleStatusChange}
           onDelete={(id) => setApplicationToDelete(id)}
+          onAnalyzeAts={handleQuickAnalyzeAts}
+          analyzingAppId={analyzingAppId}
         />
       )}
 
       {viewMode === "analytics" && (
         <AnalyticsDashboard analytics={analytics} applications={applications} />
       )}
-
-      {/* Smart Job Importer Dialog */}
-      <SmartJobImporterDialog
-        open={isImporterOpen}
-        onOpenChange={setIsImporterOpen}
-        onSuccess={() => {
-          refetch();
-          refetchAnalytics();
-        }}
-      />
 
       {/* Delete Confirmation Alert */}
       <AlertDialog

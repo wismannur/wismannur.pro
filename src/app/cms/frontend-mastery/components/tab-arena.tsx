@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
   ArrowLeft,
@@ -10,12 +10,17 @@ import {
   Eye,
   GripHorizontal,
   Lightbulb,
+  Loader2,
+  Play,
   RotateCcw,
   Send,
   ShieldAlert,
   Sparkles,
+  Terminal,
+  Trash2,
   Trophy,
   Wand2,
+  X,
   Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +76,16 @@ export function TabArena(props: TabArenaProps) {
   return <ArenaInner key={props.session.id} {...props} session={props.session} />;
 }
 
+function stripTypeScriptForSandbox(code: string): string {
+  return code
+    .replace(/^\s*import\s+[^;]+;?/gm, "")
+    .replace(/^\s*export\s+(default\s+)?/gm, "")
+    .replace(/^\s*interface\s+[\w\d_]+[^{=]*\{[^}]*\};?/gm, "")
+    .replace(/^\s*type\s+[\w\d_]+\s*=[^;]+;/gm, "")
+    .replace(/\s+as\s+[A-Za-z0-9_<>[\]|&]+/g, "")
+    .replace(/<[A-Za-z0-9_,\s<>]+>(?=\s*\()/g, "");
+}
+
 function ArenaInner({
   session,
   onSubmitAnswer,
@@ -93,6 +108,124 @@ function ArenaInner({
   const isDraggingEditorRef = useRef(false);
   const dragStartYRef = useRef(0);
   const startHeightRef = useRef(450);
+
+  // Sandbox Runner State
+  const [isRunningSandbox, setIsRunningSandbox] = useState<boolean>(false);
+  const [sandboxLogs, setSandboxLogs] = useState<
+    { id: string; type: "log" | "error" | "warn" | "info"; content: string; time: string }[]
+  >([]);
+  const [sandboxResult, setSandboxResult] = useState<{
+    success: boolean;
+    returnedValue?: string;
+    executionTimeMs?: number;
+    error?: string;
+  } | null>(null);
+  const [isConsoleOpen, setIsConsoleOpen] = useState<boolean>(false);
+
+  const handleRunSandbox = useCallback(async () => {
+    if (!codeAnswer.trim()) return;
+    setIsRunningSandbox(true);
+    setIsConsoleOpen(true);
+    setSandboxLogs([]);
+    setSandboxResult(null);
+
+    const logs: { id: string; type: "log" | "error" | "warn" | "info"; content: string; time: string }[] = [];
+    const pushLog = (type: "log" | "error" | "warn" | "info", ...args: unknown[]) => {
+      const content = args
+        .map((a) => {
+          if (typeof a === "object" && a !== null) {
+            try {
+              return JSON.stringify(a, null, 2);
+            } catch {
+              return String(a);
+            }
+          }
+          return String(a);
+        })
+        .join(" ");
+      logs.push({
+        id: Math.random().toString(36).slice(2),
+        type,
+        content,
+        time: new Date().toLocaleTimeString("en-US", {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      });
+    };
+
+    const startTime = performance.now();
+    try {
+      const runnableJs = stripTypeScriptForSandbox(codeAnswer);
+      const runner = new Function(
+        "console",
+        `return (async () => {
+          ${runnableJs}
+        })();`
+      );
+
+      const customConsole = {
+        log: (...args: unknown[]) => pushLog("log", ...args),
+        info: (...args: unknown[]) => pushLog("info", ...args),
+        warn: (...args: unknown[]) => pushLog("warn", ...args),
+        error: (...args: unknown[]) => pushLog("error", ...args),
+      };
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Execution timeout: Exceeded 5000ms limit")), 5000)
+      );
+
+      const returnedValue = await Promise.race([runner(customConsole), timeoutPromise]);
+      const executionTimeMs = Math.round((performance.now() - startTime) * 100) / 100;
+
+      let formattedResult: string | undefined;
+      if (returnedValue !== undefined) {
+        try {
+          formattedResult =
+            typeof returnedValue === "object"
+              ? JSON.stringify(returnedValue, null, 2)
+              : String(returnedValue);
+        } catch {
+          formattedResult = String(returnedValue);
+        }
+      }
+
+      setSandboxLogs([...logs]);
+      setSandboxResult({
+        success: true,
+        returnedValue: formattedResult,
+        executionTimeMs,
+      });
+      toast.success(`Sandbox executed in ${executionTimeMs}ms`);
+    } catch (err: unknown) {
+      const executionTimeMs = Math.round((performance.now() - startTime) * 100) / 100;
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      pushLog("error", `Runtime Error: ${errorMsg}`);
+      setSandboxLogs([...logs]);
+      setSandboxResult({
+        success: false,
+        error: errorMsg,
+        executionTimeMs,
+      });
+      toast.error(`Execution error: ${errorMsg}`);
+    } finally {
+      setIsRunningSandbox(false);
+    }
+  }, [codeAnswer]);
+
+  // Keyboard shortcut listener: Cmd+Enter / Ctrl+Enter to execute sandbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleRunSandbox();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleRunSandbox]);
 
   const handlePrettierFormat = async () => {
     if (!codeAnswer.trim()) return;
@@ -489,6 +622,26 @@ function ArenaInner({
                   variant="outline"
                   size="sm"
                   type="button"
+                  disabled={isRunningSandbox || !codeAnswer.trim()}
+                  onClick={handleRunSandbox}
+                  className="h-7 border-emerald-500/30 bg-emerald-500/10 text-[11px] text-emerald-300 hover:border-emerald-500/50 hover:bg-emerald-500/20 hover:text-white transition-all shadow-sm"
+                  title="Run code in local browser sandbox (Cmd+Enter or Ctrl+Enter)"
+                >
+                  {isRunningSandbox ? (
+                    <Loader2 className="mr-1.5 h-3 w-3 animate-spin text-emerald-400" />
+                  ) : (
+                    <Play className="mr-1.5 h-3 w-3 fill-emerald-400 text-emerald-400" />
+                  )}
+                  {isRunningSandbox ? "Running..." : "Run Sandbox"}
+                  <kbd className="ml-1.5 hidden sm:inline-block rounded bg-emerald-950/60 px-1 py-0.2 text-[9px] font-mono text-emerald-400 border border-emerald-500/20">
+                    ⌘↵
+                  </kbd>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  type="button"
                   disabled={isFormatting || !codeAnswer.trim()}
                   onClick={handlePrettierFormat}
                   className="h-7 border-[#22283E] bg-[#08090C] text-[11px] text-zinc-300 hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-white transition-all shadow-sm"
@@ -561,6 +714,136 @@ function ArenaInner({
                 <div className="h-1 w-12 rounded-full bg-white/20 transition-all duration-200 group-hover:w-20 group-hover:bg-indigo-400" />
               </div>
             </div>
+
+            {/* Sandbox Execution Terminal Drawer */}
+            {isConsoleOpen && (
+              <div className="mt-3 overflow-hidden rounded-xl border border-[#22283E] bg-[#050608] shadow-2xl transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* Drawer Header */}
+                <div className="flex items-center justify-between border-b border-[#1A1F33] bg-[#0A0D14] px-3.5 py-2">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="h-3.5 w-3.5 text-emerald-400" />
+                    <span className="text-xs font-semibold text-zinc-200 font-mono tracking-tight">
+                      Sandbox Terminal (Browser JS Engine)
+                    </span>
+                    {isRunningSandbox ? (
+                      <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/20">
+                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        Executing...
+                      </span>
+                    ) : sandboxResult?.error ? (
+                      <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-mono text-rose-400 border border-rose-500/20">
+                        Failed
+                      </span>
+                    ) : sandboxResult ? (
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/20">
+                        Success {sandboxResult.executionTimeMs !== undefined ? `(${sandboxResult.executionTimeMs}ms)` : ""}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {(sandboxLogs.length > 0 || sandboxResult) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSandboxLogs([]);
+                          setSandboxResult(null);
+                        }}
+                        className="rounded p-1 text-zinc-400 hover:bg-white/5 hover:text-zinc-200 transition-colors"
+                        title="Clear console output"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsConsoleOpen(false)}
+                      className="rounded p-1 text-zinc-400 hover:bg-white/5 hover:text-zinc-200 transition-colors"
+                      title="Close sandbox drawer"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Drawer Body */}
+                <div className="max-h-56 min-h-[80px] overflow-y-auto p-3.5 font-mono text-xs select-text">
+                  {isRunningSandbox ? (
+                    <div className="flex items-center gap-2 text-zinc-400 py-4 justify-center">
+                      <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
+                      <span>Executing sandbox runtime...</span>
+                    </div>
+                  ) : sandboxLogs.length === 0 && !sandboxResult ? (
+                    <div className="py-4 text-center text-zinc-500">
+                      No console logs yet. Click <span className="text-emerald-400 font-medium">Run Sandbox</span> or press <kbd className="px-1 py-0.5 bg-zinc-800 rounded text-zinc-300">⌘↵</kbd> to execute.
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {sandboxLogs.length === 0 && !sandboxResult?.error && sandboxResult?.returnedValue === undefined && (
+                        <div className="text-zinc-500 italic py-1">
+                          Code executed successfully with no console output or return value.
+                        </div>
+                      )}
+
+                      {sandboxLogs.map((log) => (
+                        <div
+                          key={log.id}
+                          className={`flex items-start gap-2 rounded px-2 py-1 leading-relaxed ${
+                            log.type === "error"
+                              ? "bg-rose-500/10 text-rose-300 border-l-2 border-rose-500"
+                              : log.type === "warn"
+                              ? "bg-amber-500/10 text-amber-300 border-l-2 border-amber-500"
+                              : log.type === "info"
+                              ? "bg-sky-500/10 text-sky-300 border-l-2 border-sky-500"
+                              : "text-zinc-300 hover:bg-white/[0.02]"
+                          }`}
+                        >
+                          <span
+                            className={`shrink-0 select-none text-[10px] uppercase font-bold tracking-wider px-1 py-0.5 rounded ${
+                              log.type === "error"
+                                ? "bg-rose-500/20 text-rose-400"
+                                : log.type === "warn"
+                                ? "bg-amber-500/20 text-amber-400"
+                                : log.type === "info"
+                                ? "bg-sky-500/20 text-sky-400"
+                                : "text-zinc-500 bg-white/5"
+                            }`}
+                          >
+                            {log.type}
+                          </span>
+                          <span className="whitespace-pre-wrap break-all font-mono">
+                            {log.content}
+                          </span>
+                        </div>
+                      ))}
+
+                      {sandboxResult?.returnedValue !== undefined && (
+                        <div className="mt-2 flex items-start gap-2 rounded border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1.5 text-emerald-300">
+                          <span className="shrink-0 select-none text-[10px] uppercase font-bold text-emerald-400">
+                            Return ➜
+                          </span>
+                          <span className="whitespace-pre-wrap break-all font-mono font-semibold">
+                            {sandboxResult.returnedValue}
+                          </span>
+                        </div>
+                      )}
+
+                      {sandboxResult?.error && (
+                        <div className="mt-2 rounded border border-rose-500/40 bg-rose-500/10 p-2.5 text-rose-300">
+                          <div className="flex items-center gap-1.5 font-semibold text-rose-400">
+                            <ShieldAlert className="h-4 w-4" />
+                            <span>Runtime Error</span>
+                          </div>
+                          <p className="mt-1 font-mono text-[11px] whitespace-pre-wrap leading-relaxed text-rose-200">
+                            {sandboxResult.error}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Submission Action Bar */}
             <div className="mt-4 flex items-center justify-between">

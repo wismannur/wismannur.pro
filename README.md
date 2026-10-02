@@ -442,6 +442,10 @@ pnpm dev
 
 # Connects to Neon PRODUCTION branch (with interactive confirmation banner)
 pnpm dev:prod
+
+# Starts local dev server + public Cloudflare Quick Tunnel (copied to clipboard)
+pnpm dev:cloudflared
+pnpm dev:cloudflared:prod # with production DB
 ```
 
 ```
@@ -527,6 +531,7 @@ NEXT_PUBLIC_UMAMI_SCRIPT_URL="https://cloud.umami.is/script.js"
 | :--- | :--- | :--- |
 | `pnpm dev` | `node scripts/dev.mjs` | Spawns Next dev server targeting `DATABASE_URL_DEV` on port **7000** |
 | `pnpm dev:prod` | `node scripts/dev.mjs --prod` | Spawns Next dev server targeting `DATABASE_URL_PROD` with safety guards |
+| `pnpm dev:cloudflared` | `node scripts/dev.mjs --cloudflared` | Spawns Next dev server + Cloudflare Quick Tunnel (auto-copies URL to clipboard) |
 | `pnpm build` | `drizzle-kit migrate && next build` | Applies pending migrations in order, then executes Next.js production build |
 | `pnpm start` | `next start` | Runs the compiled production server |
 | `pnpm lint` | `eslint` | Executes ESLint checks across TypeScript and React files |
