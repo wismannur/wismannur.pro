@@ -294,15 +294,16 @@ export function ElectricObsidian({ className = "" }: ElectricObsidianProps) {
 
     // --- Animation Loop ---
     let animationFrameId: number;
-    const clock = new THREE.Clock();
+    const timer = new THREE.Timer();
     let frameCount = 0;
 
-    const animate = () => {
+    const animate = (timestamp?: number) => {
       animationFrameId = requestAnimationFrame(animate);
 
       if (!isVisible) return;
 
-      const elapsedTime = clock.getElapsedTime();
+      timer.update(timestamp);
+      const elapsedTime = timer.getElapsed();
       frameCount++;
 
       // Smooth damped rotation towards cursor
@@ -370,6 +371,7 @@ export function ElectricObsidian({ className = "" }: ElectricObsidianProps) {
     // --- Cleanup & Memory Disposal ---
     return () => {
       cancelAnimationFrame(animationFrameId);
+      timer.dispose();
       window.removeEventListener("pointermove", onPointerMove);
       resizeObserver.disconnect();
       intersectionObserver.disconnect();
