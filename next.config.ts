@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: "5mb" },
   },
+  allowedDevOrigins: [
+    "*.trycloudflare.com",
+    "*.wismannur.pro",
+    "local-dev.wismannur.pro",
+    "local-prod.wismannur.pro",
+  ],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },

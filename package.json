@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:prod": "node scripts/dev.mjs --prod",
+    "dev:cloudflared": "node scripts/dev.mjs --cloudflared",
+    "dev:cloudflared:prod": "node scripts/dev.mjs --cloudflared --prod",
     "build": "drizzle-kit migrate && next build",
     "start": "next start",
     "lint": "eslint",
