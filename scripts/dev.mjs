@@ -66,9 +66,12 @@ async function findAvailablePort(startPort, maxAttempts = 10) {
   return Number(startPort);
 }
 
-// Extract port or default to 7000
+// Default port: 7000 for development, 7001 for production.
+// Segregating ports prevents accidental cross-environment traffic in Cloudflare Tunnel
+// and enables running both environments concurrently if needed.
+const defaultPort = isProd ? 7001 : 7000;
 let explicitPort = false;
-let port = 7000;
+let port = defaultPort;
 const pIndex = forwardedArgs.indexOf("-p");
 const portIndex = forwardedArgs.indexOf("--port");
 
@@ -228,13 +231,15 @@ if (isProd) {
 }
 console.log(`${cyan}└─────────────────────────────────────────────────────────────┘\n${reset}`);
 
-if (portSwitched && originalPort === 7000) {
+if (portSwitched && originalPort === defaultPort) {
   console.log(
-    `  ${yellow}ℹ Note: Port 7000 is occupied by macOS ControlCenter (AirPlay Receiver).${reset}\n` +
+    `  ${yellow}ℹ Note: Port ${defaultPort} is occupied${defaultPort === 7000 ? " by macOS ControlCenter (AirPlay Receiver)" : ""}.${reset}\n` +
     `  ${green}➜ Server automatically switched to port ${port}.${reset}\n` +
-    `  ${yellow}⚠️ Cloudflare route Anda diarahkan ke port 7000!${reset}\n` +
-    `  ${dim}Agar https://local-dev.wismannur.pro terhubung ke Next.js, matikan AirPlay Receiver:${reset}\n` +
-    `  ${dim}System Settings > General > AirDrop & Handoff > nonaktifkan AirPlay Receiver.${reset}\n`
+    `  ${yellow}⚠️ Cloudflare route Anda diarahkan ke port ${defaultPort}!${reset}\n` +
+    `  ${dim}Agar ${customDomain} terhubung ke Next.js, pastikan port ${defaultPort} bebas.${reset}\n` +
+    (defaultPort === 7000
+      ? `  ${dim}System Settings > General > AirDrop & Handoff > nonaktifkan AirPlay Receiver jika dipakai ControlCenter.${reset}\n`
+      : "")
   );
 }
 
