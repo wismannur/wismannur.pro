@@ -124,6 +124,11 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
           icon: <LayoutDashboard className="h-4 w-4" />,
           path: "/cms/dashboard",
         },
+        {
+          label: "My Second Brain",
+          icon: <Brain className="h-4 w-4" />,
+          path: "/cms/ai-knowledge",
+        },
       ],
     },
     {
@@ -174,11 +179,6 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
     {
       group: "AI Assistant",
       items: [
-        {
-          label: "AI Knowledge Hub",
-          icon: <Brain className="h-4 w-4" />,
-          path: "/cms/ai-knowledge",
-        },
         {
           label: "AI English Fluency Hub",
           icon: <Languages className="h-4 w-4" />,

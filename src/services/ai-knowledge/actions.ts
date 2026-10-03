@@ -1,6 +1,6 @@
 "use server";
 
-import { asc, desc, eq, ilike, or } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb, schema } from "@/db";
 import { assertAdmin } from "../core/auth-guard";
@@ -38,7 +38,7 @@ export async function getAiKnowledgeItems(
     .orderBy(asc(aiKnowledgeItems.sortOrder), desc(aiKnowledgeItems.createdAt));
 
   if (conditions.length > 0) {
-    return query.where(conditions.length === 1 ? conditions[0] : or(...conditions));
+    return query.where(conditions.length === 1 ? conditions[0] : and(...conditions));
   }
 
   return query;
