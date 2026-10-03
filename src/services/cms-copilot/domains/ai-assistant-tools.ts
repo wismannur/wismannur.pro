@@ -3,7 +3,11 @@ import { revalidatePath } from "next/cache";
 import { and, desc, eq, ilike, or } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { CopilotToolExecutionResult } from "../types";
-import { deleteAiKnowledgeItem } from "../../ai-knowledge/actions";
+import {
+  getAiKnowledgeItemById,
+  deleteAiKnowledgeItem,
+} from "../../ai-knowledge/actions";
+import { invalidateKnowledgeCache } from "../../ai-chat/knowledge-context";
 import {
   getEnglishFluencyStreak,
   getRecentSessions,
@@ -37,14 +41,14 @@ export const AI_ASSISTANT_TOOL_DECLARATIONS = [
   {
     name: "list_ai_knowledge_items",
     description:
-      "Search and list AI Knowledge Hub items used to ground Wisman's portfolio AI assistant.",
+      "Search and list knowledge items from 'My Second Brain' (Wisman's Digital Twin / Persona Engine) used across portfolio AI assistant, AI CV Tailor, Resume polish, Blog drafting, and Project case studies.",
     parameters: {
       type: Type.OBJECT,
       properties: {
         category: {
           type: Type.STRING,
           description:
-            "Filter category: general, bio, tech-stack, projects, experience, contact, faqs, or all",
+            "Filter category: career-impact, tech-opinions, case-studies, writing-voice, technical, philosophy, screening, projects, hiring, general, or all",
         },
         search: {
           type: Type.STRING,
@@ -54,19 +58,35 @@ export const AI_ASSISTANT_TOOL_DECLARATIONS = [
     },
   },
   {
+    name: "get_ai_knowledge_item",
+    description:
+      "Retrieve full details, complete markdown/text content, tags, and metadata of a specific Second Brain knowledge item by its ID.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        id: {
+          type: Type.STRING,
+          description: "ID of the Second Brain knowledge item",
+        },
+      },
+      required: ["id"],
+    },
+  },
+  {
     name: "create_ai_knowledge_item",
     description:
-      "Add a new knowledge entry to Wisman's AI Knowledge Hub so the public assistant knows about it.",
+      "Add a new knowledge entry to Wisman's My Second Brain so that all AI features (Chat, CV Tailor, Resume, Blogs, Projects) are grounded in it.",
     parameters: {
       type: Type.OBJECT,
       properties: {
         category: {
           type: Type.STRING,
-          description: "Category: general, bio, tech-stack, projects, experience, contact, faqs",
+          description:
+            "Category: career-impact, tech-opinions, case-studies, writing-voice, technical, philosophy, screening, projects, hiring, general",
         },
         title: {
           type: Type.STRING,
-          description: "Title of the knowledge document or FAQ",
+          description: "Title of the knowledge document or insight",
         },
         content: {
           type: Type.STRING,
@@ -77,19 +97,24 @@ export const AI_ASSISTANT_TOOL_DECLARATIONS = [
           items: { type: Type.STRING },
           description: "Optional list of keyword tags",
         },
+        sortOrder: {
+          type: Type.INTEGER,
+          description: "Display sort order (default: 0)",
+        },
       },
       required: ["category", "title", "content"],
     },
   },
   {
     name: "update_ai_knowledge_item",
-    description: "Update an existing AI knowledge item title, content, or published status.",
+    description:
+      "Update an existing Second Brain knowledge item title, content, category, tags, sortOrder, or published status.",
     parameters: {
       type: Type.OBJECT,
       properties: {
         id: {
           type: Type.STRING,
-          description: "ID of the AI knowledge item",
+          description: "ID of the Second Brain knowledge item",
         },
         title: {
           type: Type.STRING,
@@ -101,7 +126,17 @@ export const AI_ASSISTANT_TOOL_DECLARATIONS = [
         },
         category: {
           type: Type.STRING,
-          description: "Updated category",
+          description:
+            "Updated category: career-impact, tech-opinions, case-studies, writing-voice, technical, philosophy, screening, projects, hiring, general",
+        },
+        tags: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
+          description: "Updated list of keyword tags",
+        },
+        sortOrder: {
+          type: Type.INTEGER,
+          description: "Updated display sort order",
         },
         isPublished: {
           type: Type.BOOLEAN,
@@ -113,7 +148,7 @@ export const AI_ASSISTANT_TOOL_DECLARATIONS = [
   },
   {
     name: "delete_ai_knowledge_item",
-    description: "Permanently delete an AI knowledge item by its ID.",
+    description: "Permanently delete an AI knowledge item from My Second Brain by its ID.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -429,9 +464,22 @@ export async function executeAiAssistantTool(
             title: i.title,
             contentSnippet: i.content.slice(0, 200),
             tags: i.tags,
+            sortOrder: i.sortOrder,
             isPublished: i.isPublished,
           })),
         },
+      };
+    }
+
+    case "get_ai_knowledge_item": {
+      const id = args.id as string;
+      const item = await getAiKnowledgeItemById(id);
+      if (!item) {
+        return { success: false, error: `Second Brain knowledge item '${id}' not found.` };
+      }
+      return {
+        success: true,
+        data: item,
       };
     }
 
@@ -440,6 +488,7 @@ export async function executeAiAssistantTool(
       const title = String(args.title || "").trim();
       const content = String(args.content || "").trim();
       const tags = Array.isArray(args.tags) ? (args.tags as string[]) : [];
+      const sortOrder = typeof args.sortOrder === "number" ? args.sortOrder : 0;
 
       const [{ id }] = await db
         .insert(aiKnowledgeItems)
@@ -448,15 +497,17 @@ export async function executeAiAssistantTool(
           title,
           content,
           tags,
+          sortOrder,
           isPublished: true,
         })
         .returning({ id: aiKnowledgeItems.id });
 
+      invalidateKnowledgeCache();
       revalidatePath("/cms/ai-knowledge");
 
       return {
         success: true,
-        message: `AI Knowledge item '${title}' created successfully.`,
+        message: `Second Brain knowledge item '${title}' created successfully.`,
         data: { id, title, category },
       };
     }
@@ -466,6 +517,8 @@ export async function executeAiAssistantTool(
       const title = args.title as string | undefined;
       const content = args.content as string | undefined;
       const category = args.category as string | undefined;
+      const tags = Array.isArray(args.tags) ? (args.tags as string[]) : undefined;
+      const sortOrder = typeof args.sortOrder === "number" ? args.sortOrder : undefined;
       const isPublished = typeof args.isPublished === "boolean" ? args.isPublished : undefined;
 
       const [existing] = await db
@@ -475,7 +528,7 @@ export async function executeAiAssistantTool(
         .limit(1);
 
       if (!existing) {
-        return { success: false, error: `Knowledge item '${id}' not found.` };
+        return { success: false, error: `Second Brain knowledge item '${id}' not found.` };
       }
 
       await db
@@ -484,16 +537,19 @@ export async function executeAiAssistantTool(
           ...(title ? { title: title.trim() } : {}),
           ...(content ? { content: content.trim() } : {}),
           ...(category ? { category: category.trim() } : {}),
+          ...(tags !== undefined ? { tags } : {}),
+          ...(sortOrder !== undefined ? { sortOrder } : {}),
           ...(isPublished !== undefined ? { isPublished } : {}),
           updatedAt: new Date(),
         })
         .where(eq(aiKnowledgeItems.id, id));
 
+      invalidateKnowledgeCache();
       revalidatePath("/cms/ai-knowledge");
 
       return {
         success: true,
-        message: `AI Knowledge item '${existing.title}' updated successfully.`,
+        message: `Second Brain knowledge item '${existing.title}' updated successfully.`,
       };
     }
 
@@ -506,14 +562,14 @@ export async function executeAiAssistantTool(
         .limit(1);
 
       if (!existing) {
-        return { success: false, error: `AI Knowledge item '${id}' not found.` };
+        return { success: false, error: `Second Brain knowledge item '${id}' not found.` };
       }
 
       await deleteAiKnowledgeItem(id);
 
       return {
         success: true,
-        message: `AI Knowledge item '${existing.title}' (ID: ${id}) deleted successfully.`,
+        message: `Second Brain knowledge item '${existing.title}' (ID: ${id}) deleted successfully.`,
         data: { id, deleted: true },
       };
     }

@@ -18,8 +18,12 @@ import {
   Layers,
   BookOpen,
   Briefcase,
+  Compass,
   Cpu,
   FileQuestion,
+  Flame,
+  PenTool,
+  TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -64,12 +68,29 @@ import {
 } from "@/services/ai-knowledge/types";
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  hiring: <Briefcase className="w-3.5 h-3.5 text-blue-400" />,
+  "career-impact": <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />,
+  "tech-opinions": <Compass className="w-3.5 h-3.5 text-cyan-400" />,
+  "case-studies": <Flame className="w-3.5 h-3.5 text-amber-400" />,
+  "writing-voice": <PenTool className="w-3.5 h-3.5 text-pink-400" />,
   technical: <Cpu className="w-3.5 h-3.5 text-indigo-400" />,
   philosophy: <Brain className="w-3.5 h-3.5 text-purple-400" />,
   screening: <FileQuestion className="w-3.5 h-3.5 text-amber-400" />,
-  projects: <Layers className="w-3.5 h-3.5 text-emerald-400" />,
+  projects: <Layers className="w-3.5 h-3.5 text-teal-400" />,
+  hiring: <Briefcase className="w-3.5 h-3.5 text-blue-400" />,
   general: <BookOpen className="w-3.5 h-3.5 text-gray-400" />,
+};
+
+const CATEGORY_STYLES: Record<string, string> = {
+  "career-impact": "bg-emerald-500/10 text-emerald-300 border-emerald-500/25",
+  "tech-opinions": "bg-cyan-500/10 text-cyan-300 border-cyan-500/25",
+  "case-studies": "bg-amber-500/10 text-amber-300 border-amber-500/25",
+  "writing-voice": "bg-pink-500/10 text-pink-300 border-pink-500/25",
+  technical: "bg-indigo-500/10 text-indigo-300 border-indigo-500/25",
+  philosophy: "bg-purple-500/10 text-purple-300 border-purple-500/25",
+  screening: "bg-amber-500/10 text-amber-300 border-amber-500/25",
+  projects: "bg-teal-500/10 text-teal-300 border-teal-500/25",
+  hiring: "bg-blue-500/10 text-blue-300 border-blue-500/25",
+  general: "bg-muted/60 text-muted-foreground border-border/50",
 };
 
 export default function CmsAiKnowledgePage() {
@@ -172,10 +193,11 @@ export default function CmsAiKnowledgePage() {
         const cat = item.category;
         const icon = CATEGORY_ICONS[cat] || <BookOpen className="w-3.5 h-3.5" />;
         const catObj = AI_KNOWLEDGE_CATEGORIES.find((c) => c.value === cat);
+        const style = CATEGORY_STYLES[cat] || "bg-muted/60 text-muted-foreground border-border/50";
         return (
           <Badge
             variant="secondary"
-            className="flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium capitalize bg-muted/60 border border-border/50"
+            className={cn("flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium capitalize border", style)}
           >
             {icon}
             <span>{catObj?.label || cat}</span>
@@ -279,13 +301,13 @@ export default function CmsAiKnowledgePage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">AI Knowledge Hub</h1>
+            <h1 className="text-2xl font-bold tracking-tight">My Second Brain</h1>
             <Badge variant="secondary" className="bg-primary/10 text-primary font-semibold text-xs">
-              Wisman&apos;s Second Brain
+              Wisman&apos;s Digital Twin
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Manage deep knowledge, screening answers, philosophies, and background context for Wisman&apos;s AI Assistant
+            Central knowledge repository, engineering philosophies, career impact, and authentic persona for all AI generators
           </p>
         </div>
 
@@ -314,7 +336,7 @@ export default function CmsAiKnowledgePage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-xl border border-border/60 bg-card/50 p-3.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Total Knowledge Items</span>
+            <span className="text-xs font-medium text-muted-foreground">Total Brain Documents</span>
             <Brain className="h-4 w-4 text-primary/70" />
           </div>
           <div className="text-2xl font-bold mt-1.5 tracking-tight">{items.length}</div>

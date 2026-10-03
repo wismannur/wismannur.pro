@@ -20,6 +20,11 @@ import {
   FileQuestion,
   Layers,
   Info,
+  Compass,
+  Flame,
+  PenTool,
+  TrendingUp,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -55,6 +60,102 @@ import {
   updateAiKnowledgeItem,
 } from "@/services/ai-knowledge/actions";
 import { AI_KNOWLEDGE_CATEGORIES } from "@/services/ai-knowledge/types";
+
+const KNOWLEDGE_TEMPLATES: Record<string, { title: string; tags: string; content: string }> = {
+  "career-impact": {
+    title: "Performance & Scale Optimization at [Company/Role]",
+    tags: "metrics, performance, scale, optimization, leadership",
+    content: `### 🎯 Context & Challenge
+- **Role / Company:** Senior Fullstack Engineer at [Company]
+- **Baseline Situation:** [e.g. Page load latency was 3.8s, causing high bounce rates during peak campaign periods.]
+
+### 🚀 Technical Implementation & Actions
+- Implemented [e.g. Next.js Partial Prerendering, optimized database indexes on PostgreSQL, and edge caching].
+- Refactored [e.g. client bundle size by lazy-loading heavy libraries and eliminating duplicate dependencies].
+
+### 📈 Measurable Engineering & Business Impact
+- **Performance:** Reduced LCP / P99 latency by **[e.g. 68% (from 3.8s to 1.2s)]**.
+- **Scale:** Handled **[e.g. 50,000+ DAU and 1,200 req/sec]** with 99.99% uptime.
+- **Cost / Efficiency:** Reduced cloud compute cost by **[e.g. 35%]**.`,
+  },
+  "tech-opinions": {
+    title: "Architecture Philosophy: [e.g. AI Agent Tool-Calling Boundaries vs Deterministic Logic]",
+    tags: "architecture, philosophy, decision-making, best-practices",
+    content: `### 💡 Core Opinion & Stance
+[e.g. AI Agents should not replace deterministic business logic; they must be orchestrated with explicit schemas (Structured Outputs) and narrow tool-calling boundaries.]
+
+### ⚖️ The Engineering Trade-offs
+- **Why I Advocate for This:** [e.g. Predictability and type safety are critical for mission-critical apps. Hallucinations in financial or core state can be catastrophic.]
+- **When to Apply:** [e.g. Unstructured text analysis, multi-step research, semantic routing.]
+- **When NOT to Apply:** [e.g. CRUD mutations, auth verification, accounting calculations.]
+
+### 🛠️ Preferred Tech Stack & Patterns
+- [e.g. Google Gemini 3.8 Flash for fast function calling, Zod for runtime schema validation, TypeScript for end-to-end type soundness.]`,
+  },
+  "case-studies": {
+    title: "Mission-Critical Incident & Recovery: [e.g. Resolving Database Connection Pool Exhaustion]",
+    tags: "incident, post-mortem, scalability, postgresql, debugging",
+    content: `### 🚨 Incident Summary & Symptoms
+- **System:** [e.g. Production Next.js serverless functions connected to PostgreSQL.]
+- **Symptom:** [e.g. P99 latency spiked to 15s during flash sale; database max connection limit was exhausted.]
+
+### 🔍 Root Cause Analysis (RCA)
+- Discovered that serverless instances were spawning separate unpooled database connections on every warm lambda without reusing connection pools.
+
+### 🛠️ Remediation & Architectural Fix
+- Switched to connection pooling via WebSocket connection manager.
+- Configured client connection caching and implemented in-memory TTL caching for read-heavy lookup queries.
+
+### 🏆 Outcome & Prevention
+- Database connections dropped from maxed-out to a steady ~15 connections under 3x previous peak traffic.`,
+  },
+  "writing-voice": {
+    title: "Persona & Writing Guidelines for Wisman's Second Brain",
+    tags: "persona, tone-of-voice, style-guide, communication",
+    content: `### 🎙️ Identity & Persona
+- **Role:** Senior Fullstack Software Engineer & AI Agent Architect.
+- **Demeanor:** Professional, humble yet deeply confident, pragmatic, and grounded in real production engineering.
+
+### ✍️ Tone of Voice & Style
+- **Clarity over Jargon:** Explain complex distributed systems and AI architectures in clear, concise terms without unnecessary buzzwords.
+- **Evidence-Driven:** Always substantiate claims with specific tech stacks (Next.js 16, React 19, TypeScript), real metrics, or architectural trade-offs.
+- **Tone:** Constructive, collaborative, and friendly.
+
+### 🚫 Habits to Avoid
+- Avoid generic marketing hype ("rockstar", "ninja", "10x").
+- Never promise impossible timelines without stating assumptions.
+- Avoid vague answers; prefer concrete code or architecture examples.`,
+  },
+  technical: {
+    title: "Tech Stack Mastery & Architectural Standards: [Technology]",
+    tags: "typescript, nextjs, react, database, clean-architecture",
+    content: `### 🛠️ Technology Overview & Seniority Level
+- **Core Technology:** [e.g. TypeScript & Next.js App Router]
+- **Depth:** Senior / Staff level architectural mastery.
+
+### 🏛️ Architectural Standards I Enforce
+- Strict type safety across client-server boundaries (Server Actions + Zod).
+- Server Components by default; push Client Components to leaf nodes.
+- Modular domain-driven service architecture with clear separation of concerns (UI, Actions, DB Schema, LLM Clients).`,
+  },
+  screening: {
+    title: "Screening FAQ: [e.g. Experience with High-Traffic Cloud Architectures]",
+    tags: "screening, recruiter, interview, system-design",
+    content: `### ❓ Recruiter Question
+[e.g. Can you describe your experience with high-traffic distributed cloud architectures?]
+
+### 🎯 Direct High-Impact Answer
+[e.g. Over the past 6+ years, I have architected and scaled multiple production cloud platforms serving tens of thousands of active users. My focus is on resilient serverless architectures, edge caching with Cloudflare, relational schema design with PostgreSQL, and integrating modern AI agent tool-calling pipelines.]`,
+  },
+  hiring: {
+    title: "Hiring FAQ: Timezone, Contract Type & Availability",
+    tags: "hiring, contract, b2b, timezone, availability",
+    content: `### 💼 Engagement Terms
+- **Preferred Contract:** B2B / Independent Contractor (via Deel, Remote.com, or direct invoice).
+- **Timezone Overlap:** Based in UTC+7 (Jakarta), comfortable providing 4–5 hours daily overlap with US Pacific/Eastern or EU business hours.
+- **Notice Period:** [e.g. Available immediately or 2 weeks notice].`,
+  },
+};
 
 const knowledgeFormSchema = z.object({
   category: z.string().min(1, { message: "Category is required" }),
@@ -139,6 +240,14 @@ export function AiKnowledgeForm() {
 
   const getCategoryIcon = (categoryValue: string) => {
     switch (categoryValue) {
+      case "career-impact":
+        return <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />;
+      case "tech-opinions":
+        return <Compass className="w-3.5 h-3.5 text-cyan-400" />;
+      case "case-studies":
+        return <Flame className="w-3.5 h-3.5 text-amber-400" />;
+      case "writing-voice":
+        return <PenTool className="w-3.5 h-3.5 text-pink-400" />;
       case "hiring":
         return <Briefcase className="w-3.5 h-3.5 text-primary" />;
       case "technical":
@@ -152,6 +261,30 @@ export function AiKnowledgeForm() {
       default:
         return <Sparkles className="w-3.5 h-3.5 text-purple-400" />;
     }
+  };
+
+  const handleApplyTemplate = () => {
+    const template = KNOWLEDGE_TEMPLATES[watchedCategory];
+    if (!template) {
+      toast.info(`No starter template available for ${currentCategoryObj.label}`);
+      return;
+    }
+
+    const currentContent = form.getValues("content");
+    if (currentContent && currentContent.trim().length > 10) {
+      if (!confirm("This will replace current editor content with the category starter template. Continue?")) {
+        return;
+      }
+    }
+
+    if (!form.getValues("title")) {
+      form.setValue("title", template.title);
+    }
+    if (!form.getValues("tagsString")) {
+      form.setValue("tagsString", template.tags);
+    }
+    form.setValue("content", template.content);
+    toast.success(`Loaded starter template for ${currentCategoryObj.label}!`);
   };
 
   const onSubmit = async (values: KnowledgeFormValues) => {
@@ -215,7 +348,7 @@ export function AiKnowledgeForm() {
           className="gap-2 -ml-2 text-slate-400 hover:text-white hover:bg-[#131726] text-xs font-medium rounded-lg"
         >
           <Link href="/cms/ai-knowledge">
-            <ArrowLeft className="h-4 w-4" /> Back to AI Knowledge Base
+            <ArrowLeft className="h-4 w-4" /> Back to My Second Brain
           </Link>
         </Button>
       </div>
@@ -230,7 +363,7 @@ export function AiKnowledgeForm() {
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wide">
                 <Brain size={13} className="text-primary" />
-                <span>SYNTHETIC INTELLIGENCE KNOWLEDGE BASE</span>
+                <span>MY SECOND BRAIN STUDIO</span>
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
@@ -492,7 +625,7 @@ export function AiKnowledgeForm() {
 
           {/* Card 2: Detailed Insight & Context Studio (Markdown Editor) */}
           <Card className="border border-white/[0.08] bg-[#0C0E18] shadow-2xl rounded-2xl overflow-hidden">
-            <CardHeader className="p-6 pb-4 border-b border-white/[0.06] flex flex-row items-center justify-between">
+            <CardHeader className="p-6 pb-4 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-base font-bold text-white flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
@@ -502,9 +635,21 @@ export function AiKnowledgeForm() {
                   Full-width Monaco editor with real-time markdown preview, side-by-side split, and bottom nested resizer
                 </p>
               </div>
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[11px] text-slate-400">
-                <CheckCircle2 className="h-3 w-3 text-emerald-400" />
-                <span>Injected into Gemini AI Prompt</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleApplyTemplate}
+                  className="rounded-lg gap-1.5 text-xs h-8 border-dashed border-purple-500/30 bg-purple-500/10 text-purple-300 hover:text-white hover:bg-purple-500/20"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <span>Load {currentCategoryObj.label} Template</span>
+                </Button>
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[11px] text-slate-400">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                  <span>Live Prompt Sync</span>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
@@ -531,20 +676,20 @@ export function AiKnowledgeForm() {
               <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] space-y-2.5 text-xs text-slate-400">
                 <div className="flex items-center gap-2 text-slate-200 font-semibold text-xs">
                   <Info className="h-3.5 w-3.5 text-primary" />
-                  <span>Prompt Knowledge Engineering Tips</span>
+                  <span>My Second Brain Knowledge Engineering Guidelines</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px] leading-relaxed">
                   <div>
-                    <strong className="text-slate-200">&bull; Direct Screening Answers:</strong> Notice period, timezone overlap (e.g. 4 hrs US EST), preferred contract type (B2B/Deel), target compensation.
+                    <strong className="text-slate-200">&bull; Career Impact & Metrics:</strong> Document quantifiable outcomes (e.g. 68% LCP boost, scaling to 50k DAU, $1,400/mo cloud cost reduction). This directly elevates AI CV Tailoring!
                   </div>
                   <div>
-                    <strong className="text-slate-200">&bull; Architecture Decisions:</strong> Explain why you choose specific tech (e.g. Next.js App Router vs Pages, Serverless vs Docker, Drizzle vs Prisma).
+                    <strong className="text-slate-200">&bull; Architecture & Tech Opinions:</strong> Explain WHY you prefer specific stacks and trade-offs (e.g. Server Components vs Client Components, AI tool-calling boundaries). Used for blogs and interviews.
                   </div>
                   <div>
-                    <strong className="text-slate-200">&bull; Measurable Outcomes:</strong> Scale handled (e.g., 50k DAU), performance metrics (e.g. 40% latency reduction), cloud cost savings.
+                    <strong className="text-slate-200">&bull; Incident Case Studies:</strong> Outline hard technical obstacles, root causes (RCA), and elegant resolutions. Demonstrates staff-level maturity to recruiters.
                   </div>
                   <div>
-                    <strong className="text-slate-200">&bull; Instant Cache Sync:</strong> Saving here automatically flushes the server prompt cache so your next chat query reflects changes immediately.
+                    <strong className="text-slate-200">&bull; Persona & Writing Tone:</strong> Define your voice, preferred vocabulary, and phrasing guidelines to keep blogs, cold outreaches, and AI responses authentically you.
                   </div>
                 </div>
               </div>

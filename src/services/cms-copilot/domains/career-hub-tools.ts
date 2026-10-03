@@ -33,6 +33,7 @@ import {
   updateInterview,
   deleteInterview,
   updateApplication,
+  aiAnalyzeResumeMatch,
 } from "../../job-tracker/actions";
 import {
   getFrontendMasteryOverview,
@@ -260,6 +261,21 @@ export const CAREER_HUB_TOOL_DECLARATIONS = [
         },
       },
       required: ["id"],
+    },
+  },
+  {
+    name: "tailor_resume_for_job_application",
+    description:
+      "Run the AI CV Tailor on a job application by ID. Compares role requirements against Wisman's master resume and Second Brain (career-impact, tech opinions, case studies) to calculate ATS match score and generate tailored bullet points.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        applicationId: {
+          type: Type.STRING,
+          description: "Job application ID to tailor resume for",
+        },
+      },
+      required: ["applicationId"],
     },
   },
   {
@@ -1006,6 +1022,16 @@ export async function executeCareerHubTool(
         success: true,
         message: `Job application for '${existing.jobTitle}' at '${existing.companyName}' (ID: ${id}) deleted successfully.`,
         data: { id, deleted: true },
+      };
+    }
+
+    case "tailor_resume_for_job_application": {
+      const applicationId = args.applicationId as string;
+      const atsResult = await aiAnalyzeResumeMatch(applicationId);
+      return {
+        success: true,
+        message: `Resume tailored successfully for application ${applicationId}. Match Score: ${atsResult.score}%`,
+        data: atsResult,
       };
     }
 

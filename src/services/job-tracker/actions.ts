@@ -39,7 +39,7 @@ import type {
   UpdateJobInterview,
 } from "./types";
 
-const { jobApplications, jobInterviews, resumeEntries, skills } = schema;
+const { jobApplications, jobInterviews, resumeEntries, skills, aiKnowledgeItems } = schema;
 
 function revalidateTrackerPaths(id?: string) {
   revalidatePath("/cms/job-tracker");
@@ -545,6 +545,18 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
     .where(eq(schema.projects.isPublished, true))
     .limit(6);
 
+  const secondBrainKnowledge = await db
+    .select({
+      id: aiKnowledgeItems.id,
+      category: aiKnowledgeItems.category,
+      title: aiKnowledgeItems.title,
+      content: aiKnowledgeItems.content,
+      tags: aiKnowledgeItems.tags,
+    })
+    .from(aiKnowledgeItems)
+    .where(eq(aiKnowledgeItems.isPublished, true))
+    .orderBy(asc(aiKnowledgeItems.sortOrder));
+
   const masterResume = {
     experiences: allResumeRows
       .filter((r) => r.kind === "experience")
@@ -573,6 +585,7 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
     masterResume,
     skills: allSkills.map((s) => ({ name: s.name })),
     featuredProjects: topProjects,
+    secondBrainKnowledge,
   });
 
   // Deterministic Keyword Match Calculation
@@ -598,6 +611,7 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
 
   result.atsAnalysis.deterministicScore = deterministicScore;
   result.atsAnalysis.matchedKeywords = matchedSkills;
+  result.atsAnalysis.secondBrainInsightsCount = secondBrainKnowledge.length;
 
   await db
     .update(jobApplications)

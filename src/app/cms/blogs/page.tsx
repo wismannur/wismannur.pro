@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  Brain,
   CalendarArrowUp,
   CalendarCog,
   Check,
@@ -172,6 +173,31 @@ export default function CmsBlogs() {
     }
   };
 
+  const [syncingBlogId, setSyncingBlogId] = useState<string | null>(null);
+
+  const handleQuickSyncToSecondBrain = async (blog: Blog) => {
+    setSyncingBlogId(blog.id);
+    try {
+      await blogService.syncToSecondBrain({
+        title: blog.title,
+        summary: blog.summary,
+        content: blog.content,
+        tags: blog.tags,
+      });
+      toast.success(`Synced "${blog.title}" to My Second Brain (Tech Opinions)!`, {
+        action: {
+          label: "View Brain",
+          onClick: () => router.push("/cms/ai-knowledge"),
+        },
+      });
+    } catch (error) {
+      console.error("Error syncing blog to Second Brain:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to sync to Second Brain.");
+    } finally {
+      setSyncingBlogId(null);
+    }
+  };
+
   // Define columns for DataTable
   const columns: ColumnDef<Blog>[] = [
     {
@@ -269,6 +295,15 @@ export default function CmsBlogs() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
+                  onClick={() => handleQuickSyncToSecondBrain(blog)}
+                  disabled={syncingBlogId === blog.id}
+                  className="hover:bg-purple-500/10 text-purple-300 hover:text-purple-200 cursor-pointer"
+                >
+                  <Brain className="h-4 w-4 mr-2 text-purple-400" />
+                  {syncingBlogId === blog.id ? "Syncing..." : "Sync to Second Brain"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/[0.08]" />
+                <DropdownMenuItem
                   onClick={() => handlePublishToggle(blog.id, blog.isPublished)}
                   className={blog.isPublished ? "text-amber-400 focus:bg-amber-500/10" : "text-emerald-400 focus:bg-emerald-500/10"}
                 >
@@ -327,7 +362,7 @@ export default function CmsBlogs() {
       <CmsPageHeader
         icon={FileText}
         title="Blog Posts"
-        description="Write, publish, and manage engineering articles, tutorials, and thought leadership."
+        description="Write, publish, and manage engineering articles • Powered by My Second Brain"
         onRefresh={() => refetch()}
         isRefreshing={isRefetching}
         actions={

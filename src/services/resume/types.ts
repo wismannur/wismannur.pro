@@ -27,3 +27,25 @@ export type ResumeSections = {
   experiences: ResumeEntry[];
   education: ResumeEntry[];
 };
+
+export interface PolishResumeParams {
+  title: string;
+  organization: string;
+  location?: string;
+  currentDescription?: string;
+  period?: string;
+}
+
+export interface PolishResumeResult {
+  polishedDescription: string;
+  highlights: string[];
+  matchedSecondBrainTopics: string[];
+}
+
+export interface SyncToSecondBrainParams {
+  title: string;
+  organization: string;
+  description: string;
+  category?: string;
+  tags?: string[];
+}
