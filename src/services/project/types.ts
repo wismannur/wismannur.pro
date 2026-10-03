@@ -27,3 +27,26 @@ export type UpdateProject = Partial<Omit<Project, "id" | "createdAt" | "updatedA
 // In the legacy code this was the Date-based "read" shape vs the Timestamp-based
 // "store" shape. With everything on `Date` now they're identical.
 export type TProjectResponse = Project;
+
+export interface DraftProjectWithSecondBrainParams {
+  projectTitle?: string;
+  technologies?: string;
+  existingSummary?: string;
+  existingDescription?: string;
+}
+
+export interface DraftProjectResult {
+  title: string;
+  summary: string;
+  description: string;
+  technologies: string;
+  matchedSecondBrainTopics: string[];
+}
+
+export interface SyncProjectToSecondBrainParams {
+  title: string;
+  summary: string;
+  description: string;
+  technologies?: string[];
+  category?: string;
+}

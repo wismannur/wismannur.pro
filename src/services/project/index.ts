@@ -20,4 +20,8 @@ export const projectService = {
   getByPage: actions.getByPage,
   getAllTechnologies: actions.getAllTechnologies,
   getAllForCms: actions.getAllForCms,
+  draftWithSecondBrain: actions.draftProjectCaseStudyWithSecondBrain,
+  syncToSecondBrain: actions.syncProjectToSecondBrain,
 };
+
+export * from "./types";
