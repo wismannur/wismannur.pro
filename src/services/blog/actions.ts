@@ -1,14 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { desc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import { assertAdmin } from "../core/auth-guard";
 import { countRows, descNullsLast } from "@/db/sort";
-import type { Blog, NewBlog, UpdateBlog } from "./types";
+import { getGeminiClient, getGeminiModel } from "@/lib/gemini";
+import { invalidateKnowledgeCache } from "../ai-chat/knowledge-context";
+import type {
+  Blog,
+  DraftBlogResult,
+  DraftBlogWithSecondBrainParams,
+  NewBlog,
+  SyncBlogToSecondBrainParams,
+  UpdateBlog,
+} from "./types";
 
-const { blogs } = schema;
+const { blogs, aiKnowledgeItems } = schema;
 
 async function withRetry<T>(fn: () => Promise<T>, retries = 3): Promise<T> {
   for (let i = 0; i < retries; i++) {
@@ -163,3 +172,142 @@ export async function getAllTags(): Promise<string[]> {
     return Array.from(new Set(rows.flatMap((r) => r.tags))).sort();
   });
 }
+
+/**
+ * Drafts a comprehensive technical blog article in MDX format
+ * grounded in My Second Brain knowledge items using Gemini AI.
+ */
+export async function draftBlogWithSecondBrain(
+  params: DraftBlogWithSecondBrainParams
+): Promise<DraftBlogResult> {
+  await assertAdmin();
+
+  const db = getDb();
+  const knowledgeRows = await db
+    .select({
+      id: aiKnowledgeItems.id,
+      category: aiKnowledgeItems.category,
+      title: aiKnowledgeItems.title,
+      content: aiKnowledgeItems.content,
+      tags: aiKnowledgeItems.tags,
+    })
+    .from(aiKnowledgeItems)
+    .where(eq(aiKnowledgeItems.isPublished, true))
+    .orderBy(asc(aiKnowledgeItems.sortOrder));
+
+  // Filter if specific category requested
+  const filteredRows =
+    params.categoryFilter && params.categoryFilter !== "all"
+      ? knowledgeRows.filter((k) => k.category === params.categoryFilter)
+      : knowledgeRows;
+
+  const knowledgeContext =
+    filteredRows.length > 0
+      ? filteredRows
+          .map(
+            (k) =>
+              `• [${k.category.toUpperCase()}] ${k.title}:\n  ${k.content}${
+                k.tags && k.tags.length ? `\n  Tags: ${k.tags.join(", ")}` : ""
+              }`
+          )
+          .join("\n\n")
+      : "No Second Brain documents available.";
+
+  const ai = getGeminiClient();
+  const model = getGeminiModel();
+
+  const prompt = `You are the personal AI clone (Digital Twin) of Wisman, an experienced Staff / Lead Software Engineer, architect, and technical writer.
+Your role is to author an authoritative, deep-dive technical engineering article formatted in clean MDX for Wisman's personal tech blog.
+
+Target Topic or Direction:
+${params.topicPrompt?.trim() || params.existingTitle?.trim() || "A modern software engineering architecture or technical decision deep dive based on your authentic expertise."}
+
+${params.existingTitle ? `Existing Working Title: "${params.existingTitle}"` : ""}
+
+Wisman's Verified Second Brain (Authentic Opinions, Architecture Decisions, Production Incidents & Voice):
+"""
+${knowledgeContext}
+"""
+
+WRITING & FORMATTING GUIDELINES:
+1. Ground the core philosophies, architectural patterns, and engineering opinions directly in Wisman's Second Brain entries. Never fabricate irrelevant details.
+2. Tone: Pragmatic, authoritative, lucid, senior engineering leader voice (not generic boilerplate or buzzword soup).
+3. Format the content in clean MDX:
+   - Engaging introduction highlighting real production pain points or trade-offs.
+   - Deep architectural breakdown with code snippets (\`\`\`typescript, \`\`\`tsx, or \`\`\`go), or ASCII/Mermaid diagrams where helpful.
+   - Concrete lessons learned, benchmarks, or trade-off evaluation.
+   - Actionable conclusion summarizing key takeaways.
+4. Summary: 1-2 punchy, executive sentences (under 250 characters).
+5. Tags: 3-5 comma-separated tags (e.g. "Next.js, System Architecture, Distributed Systems, Performance").
+
+Return a JSON object conforming strictly to this structure:
+{
+  "title": "string (Compelling engineering title)",
+  "summary": "string (Crisp executive summary)",
+  "tags": "string (Comma-separated tags)",
+  "content": "string (Full MDX content article)",
+  "matchedSecondBrainTopics": ["string (titles of Second Brain items referenced)"]
+}`;
+
+  const response = await ai.models.generateContent({
+    model,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  const responseText = response.text;
+  if (!responseText) {
+    throw new Error("Failed to generate blog article draft from Gemini AI.");
+  }
+
+  let clean = responseText.trim();
+  if (clean.startsWith("```")) {
+    clean = clean.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  }
+
+  try {
+    return JSON.parse(clean);
+  } catch (err) {
+    console.error("Failed to parse Gemini blog draft JSON:", responseText, err);
+    throw new Error("Failed to parse drafted blog article response.");
+  }
+}
+
+/**
+ * Syncs a blog article's key insights and takeaways to My Second Brain
+ * as a new active knowledge item (category: tech-opinions).
+ */
+export async function syncBlogToSecondBrain(
+  params: SyncBlogToSecondBrainParams
+): Promise<string> {
+  await assertAdmin();
+
+  const db = getDb();
+  const category = params.category || "tech-opinions";
+  const title = `${params.title} — Technical Synthesis & Opinion`;
+  const tags =
+    params.tags && params.tags.length > 0
+      ? params.tags
+      : ["blog", "tech-opinion", "engineering-insights"];
+
+  const content = `${params.summary}\n\nCore Discussion & Insights:\n${params.content.slice(0, 1500)}${params.content.length > 1500 ? "\n..." : ""}`;
+
+  const [{ id }] = await db
+    .insert(aiKnowledgeItems)
+    .values({
+      category,
+      title,
+      content,
+      tags,
+      isPublished: true,
+      sortOrder: 0,
+    })
+    .returning({ id: aiKnowledgeItems.id });
+
+  revalidatePath("/cms/ai-knowledge");
+  invalidateKnowledgeCache();
+  return id;
+}
+

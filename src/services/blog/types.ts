@@ -20,3 +20,25 @@ export interface Blog {
 
 export type NewBlog = Omit<Blog, "id" | "createdAt" | "updatedAt">;
 export type UpdateBlog = Partial<Omit<Blog, "id" | "createdAt" | "updatedAt">>;
+
+export interface DraftBlogWithSecondBrainParams {
+  topicPrompt?: string;
+  categoryFilter?: string;
+  existingTitle?: string;
+}
+
+export interface DraftBlogResult {
+  title: string;
+  summary: string;
+  tags: string;
+  content: string;
+  matchedSecondBrainTopics: string[];
+}
+
+export interface SyncBlogToSecondBrainParams {
+  title: string;
+  summary: string;
+  content: string;
+  tags?: string[];
+  category?: string;
+}
