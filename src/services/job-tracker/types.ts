@@ -61,6 +61,15 @@ export interface AtsAnalysis {
   recommendations: string[];
   summaryFeedback: string;
   tailoredProjects?: TailoredProjectHighlight[];
+  secondBrainInsightsCount?: number;
+}
+
+export interface SecondBrainKnowledgeSnippet {
+  id?: string;
+  category: string;
+  title: string;
+  content: string;
+  tags?: string[];
 }
 
 export interface TailoredBullet {
