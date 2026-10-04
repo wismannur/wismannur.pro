@@ -13,14 +13,37 @@ import { cn } from "@/lib/utils";
 interface NavbarV2Props {
   copyrightName?: string;
   enableBlog?: boolean;
+  isChatOpen?: boolean;
 }
 
-export function NavbarV2({ enableBlog = true }: NavbarV2Props) {
+export function NavbarV2({ enableBlog = true, isChatOpen = false }: NavbarV2Props) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
+  const [internalChatOpen, setInternalChatOpen] = useState(false);
   const { user } = useAuth();
+
+  // Listen for public-chat-open event as reliable fallback
+  useEffect(() => {
+    const handleChatToggle = (e: Event) => {
+      const customEvent = e as CustomEvent<{ isOpen?: boolean }>;
+      setInternalChatOpen(Boolean(customEvent.detail?.isOpen));
+    };
+    window.addEventListener("public-chat-open", handleChatToggle);
+    return () => window.removeEventListener("public-chat-open", handleChatToggle);
+  }, []);
+
+  const isHiddenOnMobile = isChatOpen || internalChatOpen;
+
+  // Adjust state during render when chat opens on mobile
+  const [prevIsHiddenOnMobile, setPrevIsHiddenOnMobile] = useState(isHiddenOnMobile);
+  if (isHiddenOnMobile !== prevIsHiddenOnMobile) {
+    setPrevIsHiddenOnMobile(isHiddenOnMobile);
+    if (isHiddenOnMobile) {
+      setIsOpen(false);
+    }
+  }
 
   // Adjust state during render when pathname changes
   if (pathname !== prevPathname) {
@@ -73,7 +96,12 @@ export function NavbarV2({ enableBlog = true }: NavbarV2Props) {
   }, [isOpen]);
 
   return (
-    <header className="fixed top-3 sm:top-5 inset-x-0 z-50 flex justify-center px-3 sm:px-4 pointer-events-none">
+    <header
+      className={cn(
+        "fixed top-3 sm:top-5 inset-x-0 z-50 flex justify-center px-3 sm:px-4 pointer-events-none transition-all duration-300",
+        isHiddenOnMobile && "hidden sm:flex"
+      )}
+    >
       <div
         className={cn(
           "relative z-50 pointer-events-auto w-full max-w-5xl rounded-full transition-all duration-300 flex items-center justify-between px-3.5 sm:px-5 py-2 sm:py-2.5",
