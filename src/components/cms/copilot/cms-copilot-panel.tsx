@@ -57,6 +57,7 @@ import {
 import type { CmsCopilotSessionRow } from "@/db/schema";
 import type { ToolCallInfo, ToolResultInfo } from "@/services/cms-copilot/types";
 import { getCmsPageContext, type CmsActivePageContext } from "@/lib/cms-page-context";
+import { useCopilotDraft, getInitialDraft, INPUT_HEIGHT_KEY } from "@/hooks/use-copilot-draft";
 import { CopilotMarkdown } from "./copilot-markdown";
 
 interface MessageUI {
@@ -211,7 +212,10 @@ export function CmsCopilotPanel() {
   const [viewMode, setViewMode] = useState<"chat" | "history">("chat");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [messages, setMessages] = useState<MessageUI[]>([INITIAL_GREETING]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState<string>(() => getInitialDraft());
+  const [draftRestored, setDraftRestored] = useState<boolean>(() => Boolean(getInitialDraft()));
+  const { saveDraft, clearDraft, getDraft } = useCopilotDraft(currentSessionId);
+
   const [isLoading, setIsLoading] = useState(false);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
@@ -219,7 +223,23 @@ export function CmsCopilotPanel() {
   const [sessionToRename, setSessionToRename] = useState<{ id: string; title: string } | null>(null);
   const [renameTitleInput, setRenameTitleInput] = useState("");
   const [isRenamingSession, setIsRenamingSession] = useState(false);
-  const [inputHeight, setInputHeight] = useState<number>(64);
+  const [inputHeight, setInputHeight] = useState<number>(() => {
+    if (typeof window === "undefined") return 64;
+    try {
+      const saved = localStorage.getItem(INPUT_HEIGHT_KEY);
+      if (saved) {
+        const val = parseInt(saved, 10);
+        if (!isNaN(val) && val >= 56 && val <= 400) return val;
+      }
+      const initDraft = getInitialDraft();
+      if (initDraft && (initDraft.includes("\n") || initDraft.length > 80)) {
+        return 96;
+      }
+    } catch {
+      // ignore
+    }
+    return 64;
+  });
   const isDraggingRef = useRef(false);
   const dragStartYRef = useRef(0);
   const startHeightRef = useRef(64);
@@ -301,6 +321,14 @@ export function CmsCopilotPanel() {
       isDraggingRef.current = false;
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      setInputHeight((finalHeight) => {
+        try {
+          localStorage.setItem(INPUT_HEIGHT_KEY, String(finalHeight));
+        } catch {
+          // ignore
+        }
+        return finalHeight;
+      });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -368,7 +396,20 @@ export function CmsCopilotPanel() {
   const handleSelectSession = async (session: CmsCopilotSessionRow) => {
     try {
       setIsLoading(true);
+      // Save pending draft for current session before switching
+      if (input.trim()) {
+        saveDraft(input, currentSessionId);
+      }
       setCurrentSessionId(session.id);
+
+      // Restore draft for target session (if any)
+      const targetDraft = getDraft(session.id);
+      setInput(targetDraft || "");
+      setDraftRestored(Boolean(targetDraft));
+      if (targetDraft && (targetDraft.includes("\n") || targetDraft.length > 80)) {
+        setInputHeight((prev) => Math.max(prev, 96));
+      }
+
       setViewMode("chat");
       const rows = await getCmsCopilotSessionMessages(session.id);
       if (rows && rows.length > 0) {
@@ -417,6 +458,8 @@ export function CmsCopilotPanel() {
     setCurrentSessionId(freshId);
     setMessages([INITIAL_GREETING]);
     setInput("");
+    clearDraft();
+    setDraftRestored(false);
     setActiveTool(null);
     setViewMode("chat");
     setTimeout(() => {
@@ -728,7 +771,11 @@ export function CmsCopilotPanel() {
     if (!promptToSend.trim() || isLoading) return;
 
     const userMessageText = promptToSend.trim();
-    setInput("");
+    if (!customPrompt) {
+      setInput("");
+      clearDraft(currentSessionId);
+      setDraftRestored(false);
+    }
 
     const userMessageId = createUniqueId("user");
     const assistantMessageId = createUniqueId("asst");
@@ -1363,7 +1410,14 @@ export function CmsCopilotPanel() {
                 ref={inputRef}
                 value={input}
                 style={{ height: `${inputHeight}px` }}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setInput(newVal);
+                  saveDraft(newVal, currentSessionId);
+                  if (draftRestored && !newVal.trim()) {
+                    setDraftRestored(false);
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -1377,8 +1431,29 @@ export function CmsCopilotPanel() {
 
               {/* Bottom toolbar inside input box */}
               <div className="flex items-center justify-between pt-2 border-t border-white/[0.05] mt-1">
-                <div className="flex items-center gap-1 text-[10px] text-gray-500 font-mono">
+                <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono">
                   <span>Enter kirim • Shift+Enter baris baru</span>
+                  {input.trim().length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 animate-in fade-in duration-150">
+                      <Check className="h-2.5 w-2.5" />
+                      <span>Draft tersimpan</span>
+                    </span>
+                  )}
+                  {input.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInput("");
+                        clearDraft(currentSessionId);
+                        setDraftRestored(false);
+                      }}
+                      className="inline-flex items-center gap-1 text-[9px] text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                      title="Buang draft ini"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                      <span>Buang</span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -1390,9 +1465,15 @@ export function CmsCopilotPanel() {
                     onClick={() => {
                       if (inputHeight > 100) {
                         setInputHeight(64);
+                        try {
+                          localStorage.setItem(INPUT_HEIGHT_KEY, "64");
+                        } catch {}
                       } else {
                         const target = Math.min(260, Math.floor(window.innerHeight * 0.45));
                         setInputHeight(target);
+                        try {
+                          localStorage.setItem(INPUT_HEIGHT_KEY, String(target));
+                        } catch {}
                       }
                     }}
                     className="h-7 w-7 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
