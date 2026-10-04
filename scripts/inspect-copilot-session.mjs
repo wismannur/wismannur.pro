@@ -123,8 +123,66 @@ async function inspectSession(query) {
     `;
 
     if (sessions.length === 0) {
-      console.log(`${red}Session not found for query: "${query}".${reset}`);
-      console.log(`${dim}Use --list to view all available sessions.${reset}\n`);
+      // Fallback: check ai_chat_sessions (Public Portfolio AI Chat Logs)
+      const visitorSessions = await sql`
+        SELECT id, title, visitor_id, ip_address, user_agent, message_count, created_at, updated_at
+        FROM ai_chat_sessions
+        WHERE id = ${query} OR id ILIKE ${query + "%"}
+        LIMIT 1
+      `;
+
+      if (visitorSessions.length === 0) {
+        console.log(`${red}Session not found for query: "${query}".${reset}`);
+        console.log(`${dim}Use --list to view all available sessions.${reset}\n`);
+        return;
+      }
+
+      const vSession = visitorSessions[0];
+      console.log(`${bold}╔══════════════════════════════════════════════════════════════════════════════╗${reset}`);
+      console.log(`${bold}║ AI CHAT LOG SESSION (Visitor Portfolio Assistant)                           ║${reset}`);
+      console.log(`${bold}╚══════════════════════════════════════════════════════════════════════════════╝${reset}`);
+      console.log(`${bold}ID:${reset}           ${magenta}${vSession.id}${reset}`);
+      console.log(`${bold}Title:${reset}        ${vSession.title}`);
+      console.log(`${bold}Visitor ID:${reset}   ${cyan}${vSession.visitor_id || "N/A"}${reset}`);
+      console.log(`${bold}IP Address:${reset}   ${vSession.ip_address || "N/A"}`);
+      console.log(`${bold}User Agent:${reset}   ${dim}${vSession.user_agent || "N/A"}${reset}`);
+      console.log(`${bold}Messages:${reset}     ${vSession.message_count}`);
+      console.log(`${bold}Created At:${reset}   ${new Date(vSession.created_at).toLocaleString()}`);
+      console.log(`${bold}Updated At:${reset}   ${new Date(vSession.updated_at).toLocaleString()}`);
+      console.log(`${dim}${"═".repeat(80)}${reset}\n`);
+
+      const vMessages = await sql`
+        SELECT id, role, content, tool_call_name, tool_call_args, tool_call_result, created_at
+        FROM ai_chat_messages
+        WHERE session_id = ${vSession.id}
+        ORDER BY created_at ASC
+      `;
+
+      if (vMessages.length === 0) {
+        console.log(`${yellow}No messages recorded for this session.${reset}\n`);
+        return;
+      }
+
+      for (let i = 0; i < vMessages.length; i++) {
+        const m = vMessages[i];
+        const isUser = m.role === "user";
+        const timeStr = new Date(m.created_at).toLocaleTimeString();
+
+        if (isUser) {
+          console.log(`${bold}${green}▶ VISITOR (User)${reset} ${dim}[${timeStr}]${reset}`);
+          console.log(`${m.content.trim()}\n`);
+        } else {
+          console.log(`${bold}${blue}🤖 WISMAN AI ASSISTANT${reset} ${dim}[${timeStr}]${reset}`);
+          if (m.tool_call_name) {
+            console.log(`  ${yellow}⚡ Tool Call Executed: ${bold}${m.tool_call_name}${reset}`);
+            if (m.tool_call_args) {
+              console.log(`${dim}${JSON.stringify(m.tool_call_args, null, 2)}${reset}`);
+            }
+          }
+          console.log(`${m.content.trim()}`);
+          console.log(`\n${dim}${"─".repeat(80)}${reset}\n`);
+        }
+      }
       return;
     }
 

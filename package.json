@@ -20,7 +20,9 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "copilot:inspect": "node scripts/inspect-copilot-session.mjs",
-    "copilot:list": "node scripts/inspect-copilot-session.mjs --list"
+    "copilot:list": "node scripts/inspect-copilot-session.mjs --list",
+    "aichat:inspect": "node scripts/inspect-ai-chat-session.mjs",
+    "aichat:list": "node scripts/inspect-ai-chat-session.mjs --list"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",
