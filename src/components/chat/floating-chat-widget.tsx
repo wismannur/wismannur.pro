@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/services/ai-chat/types";
+import { CopilotMarkdown } from "@/components/cms/copilot/copilot-markdown";
 
 const ALL_SUGGESTED_PROMPTS = [
   // Tech Stack & Architecture
@@ -463,67 +464,6 @@ export function FloatingChatWidget() {
     }
   };
 
-  // Helper to format basic markdown (bold, links, bullet points)
-  const renderFormattedContent = (content: string) => {
-    const lines = content.split("\n");
-
-    return (
-      <div className="space-y-1.5 leading-relaxed text-sm">
-        {lines.map((line, idx) => {
-          if (!line.trim()) {
-            return <div key={idx} className="h-1.5" />;
-          }
-
-          const isBullet = line.trim().startsWith("- ") || line.trim().startsWith("* ");
-          const cleanLine = isBullet ? line.trim().slice(2) : line;
-
-          const parts = cleanLine.split(/(\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
-
-          const formatted = parts.map((part, pIdx) => {
-            if (part.startsWith("**") && part.endsWith("**")) {
-              return (
-                <strong key={pIdx} className="font-semibold text-white">
-                  {part.slice(2, -2)}
-                </strong>
-              );
-            }
-            const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
-            if (linkMatch) {
-              const [, text, url] = linkMatch;
-              return (
-                <a
-                  key={pIdx}
-                  href={url}
-                  target={url.startsWith("http") ? "_blank" : undefined}
-                  rel="noreferrer"
-                  className="text-primary hover:text-indigo-400 underline underline-offset-2 font-medium transition-colors inline-flex items-center gap-0.5"
-                >
-                  {text}
-                  {url.startsWith("http") && <ArrowUpRight className="w-3 h-3" />}
-                </a>
-              );
-            }
-            return part;
-          });
-
-          if (isBullet) {
-            return (
-              <div key={idx} className="flex items-start gap-2 pl-1">
-                <span className="text-primary font-black mt-1 text-xs">•</span>
-                <span className="flex-1 text-gray-200">{formatted}</span>
-              </div>
-            );
-          }
-
-          return (
-            <p key={idx} className="text-gray-200">
-              {formatted}
-            </p>
-          );
-        })}
-      </div>
-    );
-  };
 
   return (
     <TooltipProvider>
@@ -704,7 +644,11 @@ export function FloatingChatWidget() {
                       )}
                     >
                       {msg.content ? (
-                        renderFormattedContent(msg.content)
+                        isUser ? (
+                          <div className="whitespace-pre-wrap">{msg.content}</div>
+                        ) : (
+                          <CopilotMarkdown content={msg.content} />
+                        )
                       ) : msg.status === "streaming" ? (
                         <div className="flex items-center gap-1.5 py-1 text-gray-400">
                           <Loader2 className="w-4 h-4 animate-spin text-primary" />
