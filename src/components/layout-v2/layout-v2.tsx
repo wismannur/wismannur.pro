@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { DEFAULT_SITE_SETTINGS } from "@/services/site-settings/defaults";
 import type { SiteSettings } from "@/services/site-settings/types";
@@ -17,6 +17,8 @@ interface LayoutV2Props {
 }
 
 export function LayoutV2({ children, settings = DEFAULT_SITE_SETTINGS, className }: LayoutV2Props) {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   return (
     <div
       className={cn(
@@ -24,11 +26,15 @@ export function LayoutV2({ children, settings = DEFAULT_SITE_SETTINGS, className
         className
       )}
     >
-      <NavbarV2 copyrightName={settings.copyrightName} enableBlog={settings.enableBlog} />
+      <NavbarV2
+        copyrightName={settings.copyrightName}
+        enableBlog={settings.enableBlog}
+        isChatOpen={isChatOpen}
+      />
       <main className="flex-1 pt-24 sm:pt-28">{children}</main>
       <FooterV2 settings={settings} />
       <ScrollToTop />
-      {settings.enableAiChat && <FloatingChatWidget />}
+      {settings.enableAiChat && <FloatingChatWidget onOpenChange={setIsChatOpen} />}
       <CommandPalette publicEmail={settings.publicEmail} enableBlog={settings.enableBlog} />
     </div>
   );

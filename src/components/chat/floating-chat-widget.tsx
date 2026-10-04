@@ -86,10 +86,39 @@ function getOrCreateClientSessionId(): string {
   }
 }
 
-export function FloatingChatWidget() {
+export interface FloatingChatWidgetProps {
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function FloatingChatWidget({ onOpenChange }: FloatingChatWidgetProps = {}) {
   const pathname = usePathname();
   const isShowcase = pathname?.startsWith("/showcase");
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+    if (typeof document !== "undefined") {
+      if (isOpen) {
+        document.body.setAttribute("data-floating-chat-open", "true");
+        if (window.innerWidth < 640) {
+          document.body.style.overflow = "hidden";
+        }
+      } else {
+        document.body.removeAttribute("data-floating-chat-open");
+        document.body.style.overflow = "";
+      }
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("public-chat-open", { detail: { isOpen } })
+      );
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.style.overflow = "";
+      }
+    };
+  }, [isOpen, onOpenChange]);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (typeof window === "undefined") {
       return [INITIAL_MESSAGE];
@@ -116,7 +145,18 @@ export function FloatingChatWidget() {
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const [inputHeight, setInputHeight] = useState<number>(56);
+  const INPUT_HEIGHT_KEY = "floating_ai_input_height";
+  const [inputHeight, setInputHeight] = useState<number>(() => {
+    if (typeof window === "undefined") return 56;
+    try {
+      const saved = localStorage.getItem(INPUT_HEIGHT_KEY);
+      if (saved) {
+        const val = parseInt(saved, 10);
+        if (!isNaN(val) && val >= 44 && val <= 350) return val;
+      }
+    } catch {}
+    return 56;
+  });
   const isDraggingInputRef = useRef(false);
   const dragStartYRef = useRef(0);
   const startHeightRef = useRef(56);
@@ -130,7 +170,7 @@ export function FloatingChatWidget() {
     const handleMouseMove = (moveEvent: MouseEvent) => {
       if (!isDraggingInputRef.current) return;
       const deltaY = dragStartYRef.current - moveEvent.clientY;
-      const maxHeight = 260;
+      const maxHeight = Math.floor(window.innerHeight * 0.45);
       const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 44), maxHeight);
       setInputHeight(newHeight);
     };
@@ -139,10 +179,46 @@ export function FloatingChatWidget() {
       isDraggingInputRef.current = false;
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      setInputHeight((finalHeight) => {
+        try {
+          localStorage.setItem(INPUT_HEIGHT_KEY, String(finalHeight));
+        } catch {}
+        return finalHeight;
+      });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleTouchStartOnResize = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    isDraggingInputRef.current = true;
+    dragStartYRef.current = e.touches[0].clientY;
+    startHeightRef.current = inputHeight;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!isDraggingInputRef.current || moveEvent.touches.length !== 1) return;
+      const deltaY = dragStartYRef.current - moveEvent.touches[0].clientY;
+      const maxHeight = Math.floor(window.innerHeight * 0.45);
+      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 44), maxHeight);
+      setInputHeight(newHeight);
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingInputRef.current = false;
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      setInputHeight((finalHeight) => {
+        try {
+          localStorage.setItem(INPUT_HEIGHT_KEY, String(finalHeight));
+        } catch {}
+        return finalHeight;
+      });
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd);
   };
 
   // Floating Window Resizing (Left, Top, Top-Left Corner)
@@ -272,6 +348,68 @@ export function FloatingChatWidget() {
       return () => clearTimeout(timer);
     }
   }, [isOpen, scrollToBottom]);
+
+  // Mobile Hardware / Browser Back Button Interceptor
+  // Intercepts phone back gesture/button so it closes the floating chat widget
+  // instead of navigating away from the underlying public portfolio page!
+  const isHistoryPushedRef = useRef(false);
+
+  const handleClose = useCallback(() => {
+    if (isHistoryPushedRef.current) {
+      isHistoryPushedRef.current = false;
+      if (typeof window !== "undefined" && window.history.state?.__publicChatWidgetOpen) {
+        window.history.back();
+      }
+    }
+    setIsOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!isOpen) {
+      if (isHistoryPushedRef.current) {
+        isHistoryPushedRef.current = false;
+        if (window.history.state?.__publicChatWidgetOpen) {
+          window.history.back();
+        }
+      }
+      return;
+    }
+
+    if (!isHistoryPushedRef.current) {
+      const currentState = window.history.state || {};
+      window.history.pushState(
+        { ...currentState, __publicChatWidgetOpen: true },
+        "",
+        window.location.href
+      );
+      isHistoryPushedRef.current = true;
+    }
+
+    const handlePopState = () => {
+      if (!isHistoryPushedRef.current) return;
+      isHistoryPushedRef.current = false;
+      setIsOpen(false);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isOpen]);
+
+  // Global Escape key listener to close widget
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        e.preventDefault();
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, handleClose]);
 
   const handleReset = () => {
     const fresh = [INITIAL_MESSAGE];
@@ -505,102 +643,115 @@ export function FloatingChatWidget() {
 
       {/* Floating Chat Window */}
       {isOpen && (
-        <div
-          style={
-            {
-              "--widget-width": `${widgetWidth}px`,
-              "--widget-height": `${widgetHeight}px`,
-              maxWidth: "calc(100vw - 24px)",
-              maxHeight: "calc(100vh - 24px)",
-            } as React.CSSProperties
-          }
-          className={cn(
-            "fixed z-50 flex flex-col shadow-2xl shadow-black/90 border border-white/[0.12] bg-[#090A0F]/95 backdrop-blur-2xl overflow-hidden",
-            "inset-x-3 bottom-3 top-16 sm:inset-auto sm:bottom-6 sm:w-[var(--widget-width)] sm:h-[var(--widget-height)] sm:rounded-2xl rounded-2xl",
-            isShowcase ? "sm:left-6 sm:right-auto" : "sm:right-6",
-            !isResizingWidget && "transition-all duration-300 ease-out",
-            isResizingWidget && "select-none"
-          )}
-        >
-          {/* Left Resize Drag Handle (Desktop) */}
+        <>
+          {/* Mobile Backdrop Overlay (for xs view) */}
           <div
-            onMouseDown={(e) => handleMouseDownResizeWidget(e, "left")}
-            className="hidden sm:flex group absolute left-0 top-3 bottom-3 w-2.5 -translate-x-1/2 cursor-col-resize z-40 items-center justify-center hover:bg-primary/20 active:bg-primary/30 transition-colors select-none"
-            title="Drag left/right to resize width"
-          >
-            <div className="w-1 h-10 rounded-full bg-white/20 group-hover:bg-primary group-hover:h-16 group-active:bg-primary transition-all duration-200" />
-          </div>
+            onClick={handleClose}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[55] sm:hidden animate-in fade-in"
+            aria-hidden="true"
+          />
 
-          {/* Top Resize Drag Handle (Desktop) */}
           <div
-            onMouseDown={(e) => handleMouseDownResizeWidget(e, "top")}
-            className="hidden sm:flex group absolute top-0 left-3 right-3 h-2.5 -translate-y-1/2 cursor-row-resize z-40 items-center justify-center hover:bg-primary/20 active:bg-primary/30 transition-colors select-none"
-            title="Drag up/down to resize height"
+            style={
+              {
+                "--widget-width": `${widgetWidth}px`,
+                "--widget-height": `${widgetHeight}px`,
+                maxWidth: "100vw",
+                maxHeight: "100dvh",
+              } as React.CSSProperties
+            }
+            className={cn(
+              "fixed z-[60] flex flex-col shadow-2xl shadow-black/90 bg-[#090A0F] sm:bg-[#090A0F]/95 backdrop-blur-2xl overflow-hidden overscroll-contain",
+              // Mobile (< 640px / sm): True Full Screen edge-to-edge
+              "inset-0 w-full h-[100dvh] max-h-[100dvh] rounded-none border-none",
+              // Desktop (>= 640px / sm): Bottom corner floating box
+              "sm:inset-auto sm:bottom-6 sm:w-[var(--widget-width)] sm:h-[var(--widget-height)] sm:rounded-2xl sm:border sm:border-white/[0.12]",
+              isShowcase ? "sm:left-6 sm:right-auto" : "sm:right-6",
+              !isResizingWidget && "transition-all duration-300 ease-out",
+              isResizingWidget && "select-none"
+            )}
           >
-            <div className="h-1 w-10 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 group-active:bg-primary transition-all duration-200" />
-          </div>
+            {/* Left Resize Drag Handle (Desktop) */}
+            <div
+              onMouseDown={(e) => handleMouseDownResizeWidget(e, "left")}
+              className="hidden sm:flex group absolute left-0 top-3 bottom-3 w-2.5 -translate-x-1/2 cursor-col-resize z-40 items-center justify-center hover:bg-primary/20 active:bg-primary/30 transition-colors select-none"
+              title="Drag left/right to resize width"
+            >
+              <div className="w-1 h-10 rounded-full bg-white/20 group-hover:bg-primary group-hover:h-16 group-active:bg-primary transition-all duration-200" />
+            </div>
 
-          {/* Top-Left Corner Resize Drag Handle (Desktop) */}
-          <div
-            onMouseDown={(e) => handleMouseDownResizeWidget(e, "top-left")}
-            className="hidden sm:flex group absolute -top-1 -left-1 w-5 h-5 cursor-nwse-resize z-50 items-center justify-center hover:bg-primary/30 rounded-tl-xl transition-colors select-none"
-            title="Drag corner to resize width and height"
-          >
-            <div className="w-2 h-2 rounded-full bg-white/30 group-hover:bg-primary group-hover:scale-125 transition-all duration-200" />
-          </div>
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.08] bg-[#0B0D14]/80 backdrop-blur-md">
-            <div className="flex items-center gap-2.5">
-              <div className="relative p-2 rounded-xl bg-primary/15 border border-primary/25 text-primary">
-                <Bot className="w-5 h-5" />
-                <span className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-emerald-400 rounded-full ring-1 ring-[#0B0D14]" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h3 className="font-semibold text-sm leading-tight text-white">
-                    Wisman&apos;s AI Assistant
-                  </h3>
-                  <Badge
-                    variant="secondary"
-                    className="text-[9px] px-1.5 py-0 h-4 font-semibold text-primary bg-primary/15 border border-primary/25"
-                  >
-                    AI
-                  </Badge>
+            {/* Top Resize Drag Handle (Desktop) */}
+            <div
+              onMouseDown={(e) => handleMouseDownResizeWidget(e, "top")}
+              className="hidden sm:flex group absolute top-0 left-3 right-3 h-2.5 -translate-y-1/2 cursor-row-resize z-40 items-center justify-center hover:bg-primary/20 active:bg-primary/30 transition-colors select-none"
+              title="Drag up/down to resize height"
+            >
+              <div className="h-1 w-10 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 group-active:bg-primary transition-all duration-200" />
+            </div>
+
+            {/* Top-Left Corner Resize Drag Handle (Desktop) */}
+            <div
+              onMouseDown={(e) => handleMouseDownResizeWidget(e, "top-left")}
+              className="hidden sm:flex group absolute -top-1 -left-1 w-5 h-5 cursor-nwse-resize z-50 items-center justify-center hover:bg-primary/30 rounded-tl-xl transition-colors select-none"
+              title="Drag corner to resize width and height"
+            >
+              <div className="w-2 h-2 rounded-full bg-white/30 group-hover:bg-primary group-hover:scale-125 transition-all duration-200" />
+            </div>
+            {/* Header */}
+            <div className="flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 pt-[max(0.65rem,env(safe-area-inset-top))] border-b border-white/[0.08] bg-[#0B0D14]/85 backdrop-blur-md shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="relative p-2 rounded-xl bg-primary/15 border border-primary/25 text-primary shrink-0">
+                  <Bot className="w-4.5 h-4.5 sm:w-5 sm:h-5" />
+                  <span className="absolute bottom-0.5 right-0.5 w-2 h-2 bg-emerald-400 rounded-full ring-1 ring-[#0B0D14]" />
                 </div>
-                <p className="text-[11px] text-gray-400 leading-none mt-0.5 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                  Active 24/7 • Represents Wisman Nur
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <h3 className="font-semibold text-xs sm:text-sm leading-tight text-white truncate">
+                      Wisman&apos;s AI Assistant
+                    </h3>
+                    <Badge
+                      variant="secondary"
+                      className="text-[9px] px-1.5 py-0 h-4 font-semibold text-primary bg-primary/15 border border-primary/25 shrink-0"
+                    >
+                      AI
+                    </Badge>
+                  </div>
+                  <p className="text-[10.5px] sm:text-[11px] text-gray-400 leading-none mt-0.5 flex items-center gap-1 truncate">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block shrink-0" />
+                    <span className="truncate">Active 24/7 • Represents Wisman Nur</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-lg cursor-pointer"
+                      onClick={handleReset}
+                      aria-label="Reset conversation"
+                      title="Reset percakapan"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Reset Conversation</TooltipContent>
+                </Tooltip>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-lg cursor-pointer"
+                  onClick={handleClose}
+                  aria-label="Close chat"
+                  title="Tutup chat"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
               </div>
             </div>
-
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
-                    onClick={handleReset}
-                    aria-label="Reset conversation"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Reset Conversation</TooltipContent>
-              </Tooltip>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
-                onClick={() => setIsOpen(false)}
-                aria-label="Close chat"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
 
           {/* Message Feed */}
           <div
@@ -708,14 +859,15 @@ export function FloatingChatWidget() {
           </div>
 
           {/* Input Footer with Top Resize Handle */}
-          <div className="p-3 border-t border-white/[0.08] bg-[#0B0D14]/80 backdrop-blur-md relative flex flex-col">
-            {/* Top Drag Handle Bar to Resize Upwards */}
+          <div className="p-2.5 sm:p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-white/[0.08] bg-[#0B0D14]/85 backdrop-blur-md relative flex flex-col shrink-0">
+            {/* Top Drag Handle Bar to Resize Upwards (Works on both Mobile Touch & Desktop Mouse) */}
             <div
               onMouseDown={handleMouseDownOnResize}
-              className="group w-full h-3 cursor-row-resize flex items-center justify-center hover:bg-white/[0.04] transition-colors select-none -mt-2 mb-1 z-10"
-              title="Drag up to resize input height"
+              onTouchStart={handleTouchStartOnResize}
+              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center hover:bg-white/[0.04] transition-colors select-none -mt-1 mb-1 z-10 touch-none"
+              title="Drag up/down to resize input height"
             >
-              <div className="w-8 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-14 transition-all duration-200" />
+              <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 transition-all duration-200" />
             </div>
 
             <form
@@ -723,12 +875,16 @@ export function FloatingChatWidget() {
                 e.preventDefault();
                 handleSendMessage(input);
               }}
-              className="relative flex flex-col bg-[#121524]/80 border border-white/[0.1] rounded-xl p-2 focus-within:ring-1 focus-within:ring-primary/50 focus-within:border-primary/50 transition-all font-sans"
+              className="relative flex flex-col bg-[#121524]/80 border border-white/[0.1] rounded-xl p-2 sm:p-2.5 focus-within:ring-1 focus-within:ring-primary/50 focus-within:border-primary/50 transition-all font-sans"
             >
               <textarea
                 ref={inputRef}
                 value={input}
-                style={{ height: `${inputHeight}px` }}
+                style={{
+                  height: `${inputHeight}px`,
+                  minHeight: "44px",
+                  maxHeight: "45vh",
+                }}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -745,6 +901,7 @@ export function FloatingChatWidget() {
               <div className="flex items-center justify-between pt-1.5 border-t border-white/[0.05] mt-1">
                 <div className="flex items-center gap-1 text-[10px] text-gray-400 font-mono">
                   <span className="hidden sm:inline">Enter send • Shift+Enter new line</span>
+                  <span className="sm:hidden">Gemini 3.8 Flash</span>
                 </div>
 
                 <div className="flex items-center gap-1.5">
@@ -755,12 +912,20 @@ export function FloatingChatWidget() {
                     size="icon"
                     onClick={() => {
                       if (inputHeight > 80) {
-                        setInputHeight(56);
+                        const h = 56;
+                        setInputHeight(h);
+                        try {
+                          localStorage.setItem(INPUT_HEIGHT_KEY, String(h));
+                        } catch {}
                       } else {
-                        setInputHeight(190);
+                        const h = 140;
+                        setInputHeight(h);
+                        try {
+                          localStorage.setItem(INPUT_HEIGHT_KEY, String(h));
+                        } catch {}
                       }
                     }}
-                    className="h-7 w-7 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
+                    className="h-7 w-7 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
                     title={inputHeight > 80 ? "Perkecil input" : "Perbesar input"}
                   >
                     {inputHeight > 80 ? (
@@ -774,8 +939,9 @@ export function FloatingChatWidget() {
                     type="submit"
                     size="icon"
                     disabled={!input.trim() || isLoading}
-                    className="h-7 w-7 rounded-lg shadow-md shadow-primary/20 bg-primary hover:bg-primary/90 text-white shrink-0 disabled:opacity-40"
+                    className="h-7 w-7 rounded-lg shadow-md shadow-primary/20 bg-primary hover:bg-primary/90 text-white shrink-0 disabled:opacity-40 cursor-pointer"
                     aria-label="Send message"
+                    title="Kirim pesan"
                   >
                     {isLoading ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -786,11 +952,12 @@ export function FloatingChatWidget() {
                 </div>
               </div>
             </form>
-            <p className="text-[10px] text-center text-gray-400 mt-2 leading-none font-medium">
+            <p className="text-[10px] text-center text-gray-400 mt-1.5 leading-none font-medium">
               Powered by Gemini 3.8 Flash • Instant responses 24/7
             </p>
           </div>
         </div>
+        </>
       )}
     </TooltipProvider>
   );

@@ -3,6 +3,7 @@ import tailwindcssAnimate from "tailwindcss-animate";
 import typography from "@tailwindcss/typography";
 
 const customScreens = {
+  xs: "425px",
   sm: "640px",
   md: "768px",
   lg: "1024px",
@@ -24,6 +25,12 @@ export default {
       screens: customScreens,
     },
     extend: {
+      screens: {
+        xs: "425px",
+        "3xl": "1920px",
+        "4xl": "2560px",
+        "5xl": "3200px",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
