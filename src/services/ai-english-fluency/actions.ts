@@ -58,6 +58,12 @@ function getDaysDifference(currentDateStr: string, pastDateStr: string): number 
   return Math.round((currentUtc - pastUtc) / (1000 * 60 * 60 * 24));
 }
 
+function revalidateEnglishHubs(): void {
+  revalidatePath("/cms/ai-english-gym");
+  revalidatePath("/cms/ai-english-academy");
+  revalidatePath("/cms/ai-english-fluency");
+}
+
 /**
  * Gets or initializes the user's daily English streak and stats.
  */
@@ -195,7 +201,7 @@ export async function deleteSession(id: string): Promise<void> {
     }
   }
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
 }
 
 /**
@@ -235,7 +241,7 @@ export async function retryDrillSession(sessionId: string): Promise<AiEnglishSes
     })
     .returning();
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
   return newSession as AiEnglishSession;
 }
 
@@ -316,7 +322,7 @@ export async function toggleVocabMastery(
     })
     .where(eq(aiEnglishStreaks.userId, "wisman-primary"));
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
 }
 
 /**
@@ -327,7 +333,7 @@ export async function deleteVocab(id: string): Promise<void> {
   const db = getDb();
 
   await db.delete(aiEnglishVocabularies).where(eq(aiEnglishVocabularies.id, id));
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
 }
 
 /**
@@ -436,7 +442,7 @@ Return a JSON object conforming strictly to this structure:
     })
     .returning();
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
   return session as AiEnglishSession;
 }
 
@@ -620,7 +626,7 @@ Return a JSON object conforming strictly to this format:
     .where(eq(aiEnglishStreaks.id, streak.id))
     .returning();
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
 
   return {
     session: updatedSession as AiEnglishSession,
@@ -704,7 +710,7 @@ Return a JSON array conforming strictly to:
     }
   }
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
   return inserted;
 }
 
@@ -737,7 +743,7 @@ export async function saveCustomVocab(data: {
     })
     .returning();
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
   return row as AiEnglishVocabulary;
 }
 
@@ -1103,7 +1109,7 @@ Return a JSON object conforming strictly to this format:
     })
     .where(eq(aiEnglishVocabularies.id, vocabId));
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
 
   return {
     success: true,
@@ -1472,7 +1478,7 @@ export async function submitCurriculumLessonProgress(params: {
     }
   }
 
-  revalidatePath("/cms/ai-english-fluency");
+  revalidateEnglishHubs();
   return { success: true, completed: true };
 }
 

@@ -49,7 +49,8 @@ You possess full Database Query, Mutation, and Deletion capabilities across ALL 
    - Project Outreaches (/cms/project-outreaches): Cold client pitching and outreach campaigns for modernization projects.
 
 4. 🧠 AI ASSISTANT:
-   - AI English Fluency Hub (/cms/ai-english-fluency): Personal executive English training suite. Streak & habit metrics (get_english_fluency_overview), speech session drill logs and feedback, technical/executive vocabulary decks (list, save, toggle mastery, delete), and CEFR curriculum progress (track, reset).
+   - AI English Gym (/cms/ai-english-gym): High-intensity speaking simulator with AI Senior Staff pushback, speech evaluation, and sparring recording archives. Habit metrics (get_english_fluency_overview), session logs, and retry sparring.
+   - AI English Academy (/cms/ai-english-academy): Structured career tracks (A2/B1/B2 units), Lexicon Vault with SRS flashcards (list, save, toggle mastery, delete), and CEFR milestone diagnostics (track, reset).
    - AI Chat Logs (/cms/ai-chat-logs): Monitor incoming visitor conversations with the public portfolio AI. View full dialogue turns, questions asked, tool calls, and delete spam/test sessions.
 
 5. 📬 INBOX & LEADS:

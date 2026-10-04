@@ -563,11 +563,18 @@ export function CmsCopilotPanel() {
     }
 
     // 4. AI Assistant
-    if (pathname.includes("/cms/ai-english-fluency")) {
+    if (pathname.includes("/cms/ai-english-gym") || pathname.includes("/cms/ai-english-fluency")) {
       return [
         { label: "🔥 Habit Streak", prompt: "Berapa hari streak latihan berbicara bahasa Inggris saya dan total menit latihan?" },
         { label: "🎙️ Sesi Terakhir", prompt: "Tampilkan ringkasan hasil latihan speaking terakhir dan skor evaluasinya" },
+        { label: "🥊 Pushback Challenge", prompt: "Berikan saya skenario tech drill pushback tingkat Staff Engineer sekarang" },
+      ];
+    }
+    if (pathname.includes("/cms/ai-english-academy")) {
+      return [
+        { label: "🎓 Career Tracks", prompt: "Bagaimana progres unit dan lesson kurikulum developer English saya?" },
         { label: "📚 Vocabulary Deck", prompt: "Tampilkan daftar kosakata executive & technical English yang sedang saya pelajari" },
+        { label: "🎯 CEFR Diagnostics", prompt: "Analisis estimasi CEFR standing saya dan area grammar/fluency yang perlu ditingkatkan" },
       ];
     }
     if (pathname.includes("/cms/ai-chat-logs")) {

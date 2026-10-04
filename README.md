@@ -27,7 +27,7 @@
   - [3.4 24/7 Visitor AI Assistant & RAG Engine](#34-247-visitor-ai-assistant--rag-engine)
   - [3.5 Finder Project Hub & E-Commerce Modernization Showcases](#35-finder-project-hub--e-commerce-modernization-showcases)
   - [3.6 Career Hub & ATS Intelligence](#36-career-hub--ats-intelligence)
-  - [3.7 AI English Fluency Hub](#37-ai-english-fluency-hub)
+  - [3.7 AI English Gym & AI English Academy](#37-ai-english-gym--ai-english-academy)
   - [3.8 Resend Communications Engine & RFC 5322 Threading](#38-resend-communications-engine--rfc-5322-threading)
   - [3.9 Secure Asset Streaming & Proxy Route](#39-secure-asset-streaming--proxy-route)
 - [4. Database Architecture (33 PostgreSQL Models)](#4-database-architecture-33-postgresql-models)
@@ -160,7 +160,7 @@ A high-density single-tenant cockpit organized into 8 distinct operational domai
 | **1. General** | `/cms/dashboard` | Aggregated executive command center: publication stats, unread inquiries, pending client briefs, upcoming interviews, and system alerts. |
 | **2. Career Hub** | `/cms/job-hunter`<br>`/cms/job-tracker`<br>`/cms/job-outreaches` | Direct ATS feeds (Ashby, Greenhouse, Lever, etc.), 11-stage Kanban application tracker, interview stages, RFC 5545 `.ics` calendar sync, and cold email outreach engine with dynamic reply routing. |
 | **3. Finder Project Hub** | `/cms/project-hunter`<br>`/cms/project-tracker`<br>`/cms/project-outreaches` | High-value e-commerce modernization sourcing (EU, NA, ANZ), instant legacy tech audit (Magento 1, PHP, jQuery), conversion lift ROI pitch generator, prospect pipeline, and showcase URL generator (`/showcase/[slug]`). |
-| **4. AI Assistant** | `/cms/ai-knowledge`<br>`/cms/ai-english-fluency`<br>`/cms/ai-chat-logs` | RAG knowledge base curation, English fluency practice hub with CEFR scoring & TTS, and visitor conversation transcript inspector. |
+| **4. AI Assistant** | `/cms/ai-knowledge`<br>`/cms/ai-english-gym`<br>`/cms/ai-english-academy`<br>`/cms/ai-chat-logs` | RAG knowledge base curation, AI English Gym (interactive speaking drills & pushback), AI English Academy (career tracks, SRS Lexicon Vault & CEFR roadmap), and visitor conversation transcript inspector. |
 | **5. Inbox & Leads** | `/cms/contacts`<br>`/cms/services`<br>`/cms/hire-requests` | 2-way threaded email management for general contacts, commercial project briefs, and talent recruitment inquiries. |
 | **6. Site Architecture** | `/cms/site`<br>`/cms/pages`<br>`/cms/legal` | Global metadata, SEO tags, footer social links, per-page hero copy/CTA overrides, and MDX legal policy document editor. |
 | **7. Content & Catalog** | `/cms/blogs`<br>`/cms/projects`<br>`/cms/resume`<br>`/cms/skills`<br>`/cms/service-catalog`<br>`/cms/faqs`<br>`/cms/process-steps`<br>`/cms/testimonials`<br>`/cms/availability` | Complete CRUD & publishing workflow for Articles, Case Studies, Career History, Skills Matrix, Commercial Services, FAQs, How-It-Works Steps, Testimonials, and Consultation Booking Slots. |
@@ -265,15 +265,21 @@ Designed for international senior technical leadership and engineering recruitme
 
 ---
 
-### 3.7 AI English Fluency Hub
+### 3.7 AI English Gym & AI English Academy
 
-An autonomous conversational fluency training environment for global technical communications:
+An autonomous technical communication and executive English suite split into two focused environments:
 
-- **CEFR Level Progression**: Structured learning units targeting B2 (Professional), C1 (Advanced Technical), and C2 (Mastery/Executive).
-- **Interactive Practice Sessions**: AI audio and text scenarios simulating architecture reviews, salary negotiations, and executive presentations.
-- **Speech Synthesis (TTS)**: Built-in text-to-speech engine (`src/services/ai-english-fluency/tts.ts`) providing natural native voice models.
-- **Vocabulary Bank & Mastery**: Real-time extraction of technical idioms, phrasal verbs, and collocation tracking.
-- **Streak & Analytics**: Daily streak tracking and retention metrics.
+1. **AI English Gym (`/cms/ai-english-gym`)**:
+   - **Daily Speaking Sparring**: Interactive ad-hoc technical scenarios with 2-turn pushback from an AI Senior Staff Engineer.
+   - **Real-Time Speech Processing**: Speech-to-Text (STT) recording, audio level visualizer, and Gemini audio evaluation with Git-diff grammar refinements.
+   - **Sparring Archives**: Past audio recordings, transcript logs, and instant scenario re-attempts.
+   - **Daily Habit Loop**: Streak tracking (🔥), speaking minutes, and CEFR target selection.
+
+2. **AI English Academy (`/cms/ai-english-academy`)**:
+   - **Guided Developer Career Tracks**: Structured modules inspired by freeCodeCamp across A2 (Junior), B1 (Autonomous), and B2 (Lead/Staff).
+   - **Interactive Dialogue Audio**: Multi-turn dialogue synthesis with native Google Cloud Neural Journey voices (`tts.ts`), comprehension micro-checks, and spoken role-play challenges.
+   - **Lexicon Vault (SRS)**: Curated high-impact technical collocations, executive idioms, and Spaced Repetition flashcards.
+   - **CEFR Roadmap & Diagnostics**: Objective competency tracking across Fluency, Grammar, and Vocabulary against international CEFR benchmarks.
 
 ---
 

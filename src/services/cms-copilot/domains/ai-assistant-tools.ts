@@ -805,6 +805,8 @@ export async function executeAiAssistantTool(
           .where(eq(aiEnglishStreaks.userId, "wisman-primary"));
       }
 
+      revalidatePath("/cms/ai-english-gym");
+      revalidatePath("/cms/ai-english-academy");
       revalidatePath("/cms/ai-english-fluency");
 
       return {
