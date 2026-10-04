@@ -19,8 +19,10 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
+import { CopilotMarkdown } from "@/components/cms/copilot/copilot-markdown";
 
 import {
   AlertDialog,
@@ -399,7 +401,7 @@ export default function CmsAiChatLogsPage() {
                     <div
                       key={msg.id || idx}
                       className={cn(
-                        "flex gap-3 max-w-[90%]",
+                        "flex gap-3 max-w-[90%] group",
                         isUser ? "ml-auto flex-row-reverse" : "mr-auto"
                       )}
                     >
@@ -420,16 +422,20 @@ export default function CmsAiChatLogsPage() {
                       </div>
 
                       {/* Bubble */}
-                      <div className="space-y-1.5">
+                      <div className="space-y-1.5 flex-1 min-w-0">
                         <div
                           className={cn(
-                            "p-4 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-xs",
+                            "p-4 rounded-2xl text-sm leading-relaxed shadow-xs",
                             isUser
-                              ? "bg-primary text-primary-foreground rounded-tr-xs"
+                              ? "bg-primary text-primary-foreground rounded-tr-xs whitespace-pre-wrap"
                               : "bg-muted/70 dark:bg-muted/30 border border-border/60 text-foreground rounded-tl-xs"
                           )}
                         >
-                          {msg.content}
+                          {isUser ? (
+                            msg.content
+                          ) : (
+                            <CopilotMarkdown content={msg.content} />
+                          )}
                         </div>
 
                         {/* Tool Call Info */}
@@ -447,9 +453,28 @@ export default function CmsAiChatLogsPage() {
                           </div>
                         )}
 
-                        <span className="text-[10px] text-muted-foreground px-1">
-                          {format(new Date(msg.createdAt), "HH:mm")}
-                        </span>
+                        <div
+                          className={cn(
+                            "flex items-center gap-2 text-[10px] text-muted-foreground px-1",
+                            isUser ? "justify-end" : "justify-between"
+                          )}
+                        >
+                          <span>{format(new Date(msg.createdAt), "HH:mm")}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.content);
+                              toast.success(
+                                isUser ? "User message copied" : "AI Markdown response copied"
+                              );
+                            }}
+                            className="opacity-0 group-hover:opacity-100 hover:text-foreground transition-opacity flex items-center gap-1 text-[10px] cursor-pointer"
+                            title="Copy message content"
+                          >
+                            <Copy className="w-3 h-3" />
+                            <span>Copy</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );

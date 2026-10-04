@@ -24,9 +24,19 @@ import {
   Copy,
   Terminal,
   ChevronDown,
+  MoreVertical,
+  Clock,
+  Compass,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   AlertDialog,
@@ -57,6 +67,7 @@ import {
 import type { CmsCopilotSessionRow } from "@/db/schema";
 import type { ToolCallInfo, ToolResultInfo } from "@/services/cms-copilot/types";
 import { getCmsPageContext, type CmsActivePageContext } from "@/lib/cms-page-context";
+import { useCopilotDraft, getInitialDraft, INPUT_HEIGHT_KEY } from "@/hooks/use-copilot-draft";
 import { CopilotMarkdown } from "./copilot-markdown";
 
 interface MessageUI {
@@ -105,6 +116,12 @@ function formatRelativeTime(dateInput?: string | Date | null): string {
     month: "short",
     year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
   });
+}
+
+function formatSessionPath(path?: string | null): string | null {
+  if (!path) return null;
+  const clean = path.replace(/^\/cms\/?/, "").replace(/\/+/g, " › ").trim();
+  return clean || "dashboard";
 }
 
 interface StreamCallbacks {
@@ -211,7 +228,10 @@ export function CmsCopilotPanel() {
   const [viewMode, setViewMode] = useState<"chat" | "history">("chat");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [messages, setMessages] = useState<MessageUI[]>([INITIAL_GREETING]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState<string>(() => getInitialDraft());
+  const [draftRestored, setDraftRestored] = useState<boolean>(() => Boolean(getInitialDraft()));
+  const { saveDraft, clearDraft, getDraft } = useCopilotDraft(currentSessionId);
+
   const [isLoading, setIsLoading] = useState(false);
   const [activeTool, setActiveTool] = useState<string | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
@@ -219,7 +239,23 @@ export function CmsCopilotPanel() {
   const [sessionToRename, setSessionToRename] = useState<{ id: string; title: string } | null>(null);
   const [renameTitleInput, setRenameTitleInput] = useState("");
   const [isRenamingSession, setIsRenamingSession] = useState(false);
-  const [inputHeight, setInputHeight] = useState<number>(64);
+  const [inputHeight, setInputHeight] = useState<number>(() => {
+    if (typeof window === "undefined") return 64;
+    try {
+      const saved = localStorage.getItem(INPUT_HEIGHT_KEY);
+      if (saved) {
+        const val = parseInt(saved, 10);
+        if (!isNaN(val) && val >= 56 && val <= 400) return val;
+      }
+      const initDraft = getInitialDraft();
+      if (initDraft && (initDraft.includes("\n") || initDraft.length > 80)) {
+        return 96;
+      }
+    } catch {
+      // ignore
+    }
+    return 64;
+  });
   const isDraggingRef = useRef(false);
   const dragStartYRef = useRef(0);
   const startHeightRef = useRef(64);
@@ -301,10 +337,50 @@ export function CmsCopilotPanel() {
       isDraggingRef.current = false;
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      setInputHeight((finalHeight) => {
+        try {
+          localStorage.setItem(INPUT_HEIGHT_KEY, String(finalHeight));
+        } catch {
+          // ignore
+        }
+        return finalHeight;
+      });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleTouchStartOnResize = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    isDraggingRef.current = true;
+    dragStartYRef.current = e.touches[0].clientY;
+    startHeightRef.current = inputHeight;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!isDraggingRef.current || moveEvent.touches.length !== 1) return;
+      const deltaY = dragStartYRef.current - moveEvent.touches[0].clientY;
+      const maxHeight = Math.floor(window.innerHeight * 0.55);
+      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 48), maxHeight);
+      setInputHeight(newHeight);
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingRef.current = false;
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      setInputHeight((finalHeight) => {
+        try {
+          localStorage.setItem(INPUT_HEIGHT_KEY, String(finalHeight));
+        } catch {
+          // ignore
+        }
+        return finalHeight;
+      });
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd);
   };
 
   const scrollToBottom = useCallback(() => {
@@ -317,12 +393,35 @@ export function CmsCopilotPanel() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Global Keyboard Shortcut (Cmd+J / Ctrl+J) & Custom Event
+  // Multi-Level History Controller for Mobile Hardware / Browser Back Navigation
+  // Level 0: Closed / Page level
+  // Level 1: Open in "chat" mode
+  // Level 2: In "history" mode
+  const pushedLevelRef = useRef<number>(0);
+  const isProgrammaticPopRef = useRef<boolean>(false);
+
+  const handleBackToChat = useCallback(() => {
+    if (pushedLevelRef.current === 2) {
+      window.history.back();
+    } else {
+      setViewMode("chat");
+    }
+  }, []);
+
+  // Global Keyboard Shortcut (Cmd+J / Ctrl+J, Esc) & Custom Event
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "j") {
         e.preventDefault();
         setIsOpen((prev) => !prev);
+      }
+      if (e.key === "Escape" && isOpen) {
+        e.preventDefault();
+        if (viewMode === "history") {
+          handleBackToChat();
+        } else {
+          setIsOpen(false);
+        }
       }
     };
     const handleCustomToggle = () => {
@@ -335,7 +434,93 @@ export function CmsCopilotPanel() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("toggle-cms-copilot", handleCustomToggle);
     };
-  }, []);
+  }, [isOpen, viewMode, handleBackToChat]);
+
+  // Mobile Hardware / Browser Back Button Interceptor
+  // Supports multi-level back navigation:
+  // - In "history" mode -> hardware back returns to active chat session
+  // - In "chat" mode -> hardware back dismisses Copilot drawer without navigating away from page!
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!isOpen) {
+      if (pushedLevelRef.current > 0) {
+        const levelsToPop = pushedLevelRef.current;
+        pushedLevelRef.current = 0;
+        isProgrammaticPopRef.current = true;
+        window.history.go(-levelsToPop);
+        setTimeout(() => {
+          isProgrammaticPopRef.current = false;
+        }, 300);
+      }
+      return;
+    }
+
+    // Copilot is Open: synchronize pushedLevel with viewMode
+    if (viewMode === "chat") {
+      if (pushedLevelRef.current === 0) {
+        const currentState = window.history.state || {};
+        window.history.pushState(
+          { ...currentState, __cmsCopilotLevel: 1 },
+          "",
+          window.location.href
+        );
+        pushedLevelRef.current = 1;
+      } else if (pushedLevelRef.current === 2) {
+        pushedLevelRef.current = 1;
+      }
+    } else if (viewMode === "history") {
+      if (pushedLevelRef.current === 0) {
+        const currentState = window.history.state || {};
+        window.history.pushState(
+          { ...currentState, __cmsCopilotLevel: 1 },
+          "",
+          window.location.href
+        );
+        window.history.pushState(
+          { ...currentState, __cmsCopilotLevel: 2 },
+          "",
+          window.location.href
+        );
+        pushedLevelRef.current = 2;
+      } else if (pushedLevelRef.current === 1) {
+        const currentState = window.history.state || {};
+        window.history.pushState(
+          { ...currentState, __cmsCopilotLevel: 2 },
+          "",
+          window.location.href
+        );
+        pushedLevelRef.current = 2;
+      }
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (isProgrammaticPopRef.current) return;
+
+      const targetLevel = (e.state?.__cmsCopilotLevel as number | undefined) ?? 0;
+
+      if (targetLevel === 2) {
+        pushedLevelRef.current = 2;
+        setViewMode("history");
+        setIsOpen(true);
+      } else if (targetLevel === 1) {
+        // Returning back from history to active chat session!
+        pushedLevelRef.current = 1;
+        setViewMode("chat");
+        setIsOpen(true);
+      } else {
+        // Target level is 0 -> dismiss Copilot back to page
+        pushedLevelRef.current = 0;
+        setIsOpen(false);
+        setViewMode("chat");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isOpen, viewMode]);
 
   // Fetch session history when panel opens
   useEffect(() => {
@@ -368,8 +553,25 @@ export function CmsCopilotPanel() {
   const handleSelectSession = async (session: CmsCopilotSessionRow) => {
     try {
       setIsLoading(true);
+      // Save pending draft for current session before switching
+      if (input.trim()) {
+        saveDraft(input, currentSessionId);
+      }
       setCurrentSessionId(session.id);
-      setViewMode("chat");
+
+      // Restore draft for target session (if any)
+      const targetDraft = getDraft(session.id);
+      setInput(targetDraft || "");
+      setDraftRestored(Boolean(targetDraft));
+      if (targetDraft && (targetDraft.includes("\n") || targetDraft.length > 80)) {
+        setInputHeight((prev) => Math.max(prev, 96));
+      }
+
+      if (pushedLevelRef.current === 2) {
+        window.history.back();
+      } else {
+        setViewMode("chat");
+      }
       const rows = await getCmsCopilotSessionMessages(session.id);
       if (rows && rows.length > 0) {
         setMessages(
@@ -417,8 +619,14 @@ export function CmsCopilotPanel() {
     setCurrentSessionId(freshId);
     setMessages([INITIAL_GREETING]);
     setInput("");
+    clearDraft();
+    setDraftRestored(false);
     setActiveTool(null);
-    setViewMode("chat");
+    if (pushedLevelRef.current === 2) {
+      window.history.back();
+    } else {
+      setViewMode("chat");
+    }
     setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
@@ -728,7 +936,11 @@ export function CmsCopilotPanel() {
     if (!promptToSend.trim() || isLoading) return;
 
     const userMessageText = promptToSend.trim();
-    setInput("");
+    if (!customPrompt) {
+      setInput("");
+      clearDraft(currentSessionId);
+      setDraftRestored(false);
+    }
 
     const userMessageId = createUniqueId("user");
     const assistantMessageId = createUniqueId("asst");
@@ -840,91 +1052,113 @@ export function CmsCopilotPanel() {
   };
 
 
-  const filteredSessions = sessions.filter((s) =>
-    s.title.toLowerCase().includes(historySearchQuery.toLowerCase())
-  );
+  const filteredSessions = sessions.filter((s) => {
+    const q = historySearchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      s.title.toLowerCase().includes(q) ||
+      (s.lastMessage && s.lastMessage.toLowerCase().includes(q)) ||
+      (s.currentPath && s.currentPath.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <>
+      {/* Backdrop Overlay (focus & dismiss on tap) */}
+      {isOpen && (
+        <div
+          onClick={() => setIsOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 transition-opacity duration-300 animate-in fade-in"
+          aria-hidden="true"
+        />
+      )}
+
       {/* Slide-over Panel (Right Drawer with Left Resize Handle) */}
       <div
-        style={{ width: `min(100vw, ${panelWidth}px)` }}
+        style={{
+          "--panel-width": `${panelWidth}px`,
+        } as React.CSSProperties}
         className={cn(
-          "fixed top-0 right-0 h-screen z-50",
+          "fixed top-0 right-0 h-[100dvh] max-h-[100dvh] z-50",
+          "w-full sm:w-[min(100vw,var(--panel-width))]",
           "bg-[#090A10]/95 backdrop-blur-2xl border-l border-white/[0.08] shadow-[0_0_60px_rgba(0,0,0,0.85)]",
-          "flex flex-col",
+          "flex flex-col overscroll-contain",
           !isDraggingWidth && "transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "translate-x-full pointer-events-none",
           isDraggingWidth && "select-none"
         )}
       >
-        {/* Left Resize Drag Handle */}
+        {/* Left Resize Drag Handle (Hidden on Mobile) */}
         <div
           onMouseDown={handleMouseDownOnWidthResize}
-          className="group absolute -left-1.5 top-0 bottom-0 w-3 cursor-col-resize z-50 flex items-center justify-center hover:bg-indigo-500/20 active:bg-indigo-500/40 transition-colors select-none"
+          className="group absolute -left-1.5 top-0 bottom-0 w-3 cursor-col-resize z-50 hidden sm:flex items-center justify-center hover:bg-indigo-500/20 active:bg-indigo-500/40 transition-colors select-none"
           title="Drag left/right to resize panel width"
         >
           <div className="w-1 h-12 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:h-20 group-active:bg-indigo-300 transition-all duration-200" />
         </div>
         {/* Panel Header */}
-        <div className="p-4 border-b border-white/[0.08] flex items-center justify-between bg-[#0C0E18]/80 backdrop-blur-md">
+        <div className="p-3 sm:p-4 border-b border-white/[0.08] flex items-center justify-between bg-[#0C0E18]/85 backdrop-blur-md gap-2">
           {viewMode === "history" ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setViewMode("chat")}
-                className="h-8 w-8 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.08]"
+                onClick={handleBackToChat}
+                className="h-8 w-8 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.08] shrink-0"
                 title="Kembali ke percakapan"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
-                <h3 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
+              <div className="min-w-0">
+                <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide flex items-center gap-1.5 sm:gap-2 truncate">
                   <span>Riwayat Percakapan</span>
                   <Badge
                     variant="outline"
-                    className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[10px] px-1.5 py-0 font-mono font-normal"
+                    className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[9px] sm:text-[10px] px-1.5 py-0 font-mono font-normal shrink-0"
                   >
                     {sessions.length} sesi
                   </Badge>
                 </h3>
-                <p className="text-[11px] text-gray-400 font-mono mt-0.5">Pilih atau cari percakapan sebelumnya</p>
+                <p className="text-[10px] sm:text-[11px] text-gray-400 font-mono mt-0.5 truncate">Pilih atau cari percakapan sebelumnya</p>
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-                <Bot className="h-5 w-5" />
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+                <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white tracking-wide">CMS Staff Copilot</h3>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <h3 className="text-xs sm:text-sm font-bold text-white tracking-wide truncate">
+                    <span className="sm:hidden">Staff Copilot</span>
+                    <span className="hidden sm:inline">CMS Staff Copilot</span>
+                  </h3>
                   <Badge
                     variant="outline"
-                    className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0 font-mono font-normal"
+                    className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px] sm:text-[10px] px-1.5 py-0 font-mono font-normal shrink-0"
                   >
-                    Gemini 3.8 Flash
+                    <span className="sm:hidden">3.8 Flash</span>
+                    <span className="hidden sm:inline">Gemini 3.8 Flash</span>
                   </Badge>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-gray-400 font-mono mt-0.5">
-                  <div className="flex items-center gap-1">
-                    <span className="text-indigo-400">Context:</span>
-                    <span className="truncate max-w-[120px] text-gray-300">{pathname}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-[11px] text-gray-400 font-mono mt-0.5 min-w-0">
+                  <div className="flex items-center gap-1 min-w-0 truncate">
+                    <span className="text-indigo-400 shrink-0">Context:</span>
+                    <span className="truncate max-w-[120px] xs:max-w-[160px] sm:max-w-[200px] text-gray-300">{pathname}</span>
                   </div>
                   {currentSessionId && (
                     <>
-                      <span className="text-white/20">•</span>
+                      <span className="hidden sm:inline-flex text-white/20 shrink-0">•</span>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
                               type="button"
                               onClick={(e) => handleCopySessionId(currentSessionId, e)}
-                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.05] hover:bg-indigo-500/20 text-gray-300 hover:text-indigo-300 border border-white/[0.08] hover:border-indigo-500/30 transition-all text-[10px] font-mono cursor-pointer"
+                              className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.05] hover:bg-indigo-500/20 text-gray-300 hover:text-indigo-300 border border-white/[0.08] hover:border-indigo-500/30 transition-all text-[9.5px] sm:text-[10px] font-mono cursor-pointer shrink-0"
                             >
                               <Terminal className="h-2.5 w-2.5 text-indigo-400" />
-                              <span>ref:{currentSessionId.slice(0, 8)}</span>
+                              <span>ref:{currentSessionId.slice(0, 6)}</span>
                               {copiedSessionId === currentSessionId ? (
                                 <Check className="h-2.5 w-2.5 text-emerald-400" />
                               ) : (
@@ -933,7 +1167,7 @@ export function CmsCopilotPanel() {
                             </button>
                           </TooltipTrigger>
                           <TooltipContent side="bottom" className="bg-[#0C0E18] text-white border-white/[0.1] text-xs font-mono">
-                            Klik untuk salin Session ID ({currentSessionId}) untuk sesi terminal Antigravity
+                            Klik untuk salin Session ID ({currentSessionId})
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -944,116 +1178,224 @@ export function CmsCopilotPanel() {
             </div>
           )}
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {viewMode === "chat" ? (
               <>
-                {/* Switch to History Screen */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setViewMode("history")}
-                        className="h-8 px-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] text-xs font-mono gap-1.5"
-                      >
-                        <History className="h-3.5 w-3.5 text-indigo-400" />
-                        <span>Riwayat</span>
-                        {sessions.length > 0 && (
-                          <span className="px-1.5 py-0.2 rounded-full bg-white/[0.08] text-[10px] text-gray-300">
-                            {sessions.length}
-                          </span>
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
-                      Buka Riwayat Percakapan
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                {/* Desktop-only Direct Action Buttons (Riwayat, Rename, Delete, Chat Baru) */}
+                <div className="hidden sm:flex items-center gap-1">
+                  {/* Switch to History Screen */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setViewMode("history")}
+                          className="h-8 px-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] text-xs font-mono gap-1.5"
+                          title="Riwayat Percakapan"
+                        >
+                          <History className="h-3.5 w-3.5 text-indigo-400" />
+                          <span>Riwayat</span>
+                          {sessions.length > 0 && (
+                            <span className="px-1.5 py-0.2 rounded-full bg-white/[0.08] text-[10px] text-gray-300">
+                              {sessions.length}
+                            </span>
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
+                        Buka Riwayat Percakapan
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
-                {/* Rename Current Session Button (when a session is active) */}
-                {currentSessionId && (
+                  {/* Rename & Delete for Active Session */}
+                  {currentSessionId && (
+                    <>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const active = sessions.find((s) => s.id === currentSessionId);
+                                handleOpenRenameDialog({
+                                  id: currentSessionId,
+                                  title: active?.title || "Sesi saat ini",
+                                });
+                              }}
+                              className="h-8 w-8 rounded-lg text-gray-400 hover:text-indigo-300 hover:bg-white/[0.06]"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
+                            Ubah Judul Sesi
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                const active = sessions.find((s) => s.id === currentSessionId);
+                                setSessionToDelete({
+                                  id: currentSessionId,
+                                  title: active?.title || "Sesi saat ini",
+                                });
+                              }}
+                              className="h-8 w-8 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-500/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
+                            Hapus Sesi Ini
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </>
+                  )}
+
+                  {/* Desktop New Chat Button */}
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
-                            const active = sessions.find((s) => s.id === currentSessionId);
-                            handleOpenRenameDialog({
-                              id: currentSessionId,
-                              title: active?.title || "Sesi saat ini",
-                            });
-                          }}
-                          className="h-8 w-8 rounded-lg text-gray-400 hover:text-indigo-300 hover:bg-white/[0.06]"
+                          onClick={handleNewChat}
+                          className="h-8 w-8 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
+                          title="Chat Baru"
                         >
-                          <Pencil className="h-3.5 w-3.5" />
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
-                        Ubah Judul Sesi
+                        Chat Baru
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                )}
+                </div>
 
-                {/* Delete Current Session Button (when a session is active) */}
-                {currentSessionId && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            const active = sessions.find((s) => s.id === currentSessionId);
-                            setSessionToDelete({
-                              id: currentSessionId,
-                              title: active?.title || "Sesi saat ini",
-                            });
-                          }}
-                          className="h-8 w-8 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-500/10"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
-                        Hapus Sesi Ini
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-
-                {/* New Chat Button */}
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+                {/* Mobile Unified Three-Dots Menu (Consolidates Chat Baru, Riwayat, Rename, Delete into a spacious, ultra-clean header) */}
+                <div className="sm:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={handleNewChat}
-                        className="h-8 w-8 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
+                        className="h-8 w-8 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] relative"
+                        title="Menu Sesi Copilot"
                       >
-                        <Plus className="h-4 w-4" />
+                        <MoreVertical className="h-4 w-4" />
+                        {sessions.length > 0 && (
+                          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-indigo-500 ring-2 ring-[#0C0E18]" />
+                        )}
                       </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
-                      New Conversation
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      className="bg-[#0C0E18] border-white/[0.1] text-white text-xs w-52 shadow-2xl p-1.5 z-[60]"
+                    >
+                      <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider text-gray-500">
+                        Menu Copilot
+                      </div>
+
+                      {/* Chat Baru */}
+                      <DropdownMenuItem
+                        onClick={handleNewChat}
+                        className="cursor-pointer gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.08] focus:bg-white/[0.08]"
+                      >
+                        <Plus className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium text-white">Chat Baru</span>
+                          <span className="text-[10px] text-gray-400">Mulai sesi percakapan baru</span>
+                        </div>
+                      </DropdownMenuItem>
+
+                      {/* Riwayat Percakapan */}
+                      <DropdownMenuItem
+                        onClick={() => setViewMode("history")}
+                        className="cursor-pointer gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.08] focus:bg-white/[0.08] flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 w-full">
+                          <History className="h-4 w-4 text-indigo-400 shrink-0" />
+                          <div className="flex flex-col min-w-0 w-full">
+                            <span className="font-medium text-white">Riwayat Percakapan</span>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="text-[10px] text-gray-400">Buka arsip percakapan</span>
+                              {sessions.length > 0 && (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[9px] px-1.5 py-0 font-mono shrink-0 ml-1"
+                                >
+                                  {sessions.length}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+
+                      {currentSessionId && (
+                        <>
+                          <DropdownMenuSeparator className="bg-white/[0.08] my-1" />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const active = sessions.find((s) => s.id === currentSessionId);
+                              handleOpenRenameDialog({
+                                id: currentSessionId,
+                                title: active?.title || "Sesi saat ini",
+                              });
+                            }}
+                            className="cursor-pointer gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.08] focus:bg-white/[0.08]"
+                          >
+                            <Pencil className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                            <span>Ubah Judul Sesi</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => handleCopySessionId(currentSessionId, e)}
+                            className="cursor-pointer gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.08] focus:bg-white/[0.08]"
+                          >
+                            <Terminal className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                            <span>Salin ID Sesi</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator className="bg-white/[0.08] my-1" />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const active = sessions.find((s) => s.id === currentSessionId);
+                              setSessionToDelete({
+                                id: currentSessionId,
+                                title: active?.title || "Sesi saat ini",
+                              });
+                            }}
+                            className="cursor-pointer gap-2.5 px-2.5 py-2 rounded-lg text-rose-400 hover:bg-rose-500/10 focus:bg-rose-500/10 hover:text-rose-300 focus:text-rose-300"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 shrink-0" />
+                            <span>Hapus Sesi Ini</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </>
             ) : (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleNewChat}
-                className="h-8 px-2.5 rounded-lg border-indigo-500/30 bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/30 hover:text-white text-xs gap-1.5"
+                className="h-8 px-2 sm:px-2.5 rounded-lg border-indigo-500/30 bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/30 hover:text-white text-xs gap-1 sm:gap-1.5"
+                title="Chat Baru"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>Chat Baru</span>
+                <span className="hidden sm:inline">Chat Baru</span>
               </Button>
             )}
 
@@ -1062,7 +1404,8 @@ export function CmsCopilotPanel() {
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
+              className="h-8 w-8 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06] shrink-0"
+              title="Tutup Copilot"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -1072,15 +1415,15 @@ export function CmsCopilotPanel() {
         {viewMode === "history" ? (
           /* Full-View History Screen */
           <div className="flex-1 flex flex-col overflow-hidden bg-[#090A10]">
-            {/* Search Bar */}
-            <div className="p-4 pb-2 border-b border-white/[0.04]">
+            {/* Search Bar & Summary Header */}
+            <div className="p-3.5 sm:p-4 pb-2.5 border-b border-white/[0.04] bg-[#0C0E18]/50">
               <div className="relative flex items-center">
                 <Search className="absolute left-3 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
                 <input
                   type="text"
                   value={historySearchQuery}
                   onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  placeholder="Cari topik riwayat percakapan..."
+                  placeholder="Cari topik, isi pesan, atau halaman..."
                   className="w-full bg-[#121624] border border-white/[0.08] rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all font-sans"
                 />
                 {historySearchQuery && (
@@ -1093,32 +1436,53 @@ export function CmsCopilotPanel() {
                   </button>
                 )}
               </div>
+
+              {/* Counter / Meta Info */}
+              <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono mt-2 px-0.5">
+                <span>
+                  {filteredSessions.length} sesi {historySearchQuery ? "ditemukan" : "tersimpan"}
+                </span>
+                {currentSessionId && (
+                  <span className="text-[10px] text-emerald-400 flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    1 sesi aktif
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Sessions List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2.5 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 scrollbar-thin">
               {filteredSessions.length === 0 ? (
                 <div className="h-full min-h-[320px] flex flex-col items-center justify-center text-center p-6 text-gray-400">
-                  <div className="h-12 w-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-gray-500 mb-3">
+                  <div className="h-12 w-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center text-gray-500 mb-3 shadow-inner">
                     <History className="h-6 w-6" />
                   </div>
                   {historySearchQuery ? (
                     <>
                       <p className="text-xs font-semibold text-white">Tidak ada sesi ditemukan</p>
-                      <p className="text-[11px] text-gray-500 mt-1 max-w-xs leading-relaxed">
+                      <p className="text-[11px] text-gray-400 mt-1 max-w-xs leading-relaxed">
                         Tidak ada percakapan dengan kata kunci &quot;{historySearchQuery}&quot;
                       </p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setHistorySearchQuery("")}
+                        className="mt-3.5 border-white/[0.1] bg-white/[0.03] text-gray-300 hover:text-white text-xs rounded-xl"
+                      >
+                        Reset Pencarian
+                      </Button>
                     </>
                   ) : (
                     <>
                       <p className="text-xs font-semibold text-white">Belum ada riwayat sesi</p>
-                      <p className="text-[11px] text-gray-500 mt-1 max-w-xs leading-relaxed">
+                      <p className="text-[11px] text-gray-400 mt-1 max-w-xs leading-relaxed">
                         Percakapan Anda dengan Gemini Copilot akan otomatis tersimpan di sini.
                       </p>
                       <Button
                         size="sm"
                         onClick={handleNewChat}
-                        className="mt-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-xl"
+                        className="mt-4 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-xl shadow-md shadow-indigo-600/20"
                       >
                         <Plus className="h-3.5 w-3.5 mr-1" />
                         Mulai Chat Sekarang
@@ -1129,90 +1493,143 @@ export function CmsCopilotPanel() {
               ) : (
                 filteredSessions.map((sess) => {
                   const isActive = currentSessionId === sess.id;
+                  const pathLabel = formatSessionPath(sess.currentPath);
+
                   return (
                     <div
                       key={sess.id}
                       onClick={() => handleSelectSession(sess)}
                       className={cn(
-                        "group relative p-3.5 rounded-xl border transition-all cursor-pointer flex items-start gap-3",
+                        "group relative p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col gap-2.5",
+                        "active:scale-[0.99] select-none",
                         isActive
-                          ? "bg-indigo-950/30 border-indigo-500/40 shadow-sm shadow-indigo-500/10"
-                          : "bg-[#121624]/60 border-white/[0.07] hover:bg-[#161b2d] hover:border-white/[0.15]"
+                          ? "bg-gradient-to-r from-indigo-950/50 via-[#131728]/90 to-[#101322]/80 border-indigo-500/40 shadow-sm shadow-indigo-500/10"
+                          : "bg-[#111422]/65 border-white/[0.07] hover:bg-[#15192b]/85 hover:border-white/[0.16] hover:shadow-xs"
                       )}
                     >
-                      <div
-                        className={cn(
-                          "h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 border",
-                          isActive
-                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                            : "bg-white/[0.04] text-gray-400 border-white/[0.06] group-hover:text-indigo-300 group-hover:border-indigo-500/30"
-                        )}
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                      </div>
+                      {/* Active Indicator Accent Bar on Left */}
+                      {isActive && (
+                        <div className="absolute left-0 top-3 bottom-3 w-1 bg-gradient-to-b from-indigo-400 to-purple-500 rounded-r-full shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+                      )}
 
-                      <div className="flex-1 min-w-0 pr-14">
-                        <div className="flex items-center gap-2">
-                          <h4
-                            className={cn(
-                              "text-xs leading-snug line-clamp-2",
-                              isActive
-                                ? "text-white font-semibold"
-                                : "text-gray-200 group-hover:text-white font-medium"
-                            )}
-                          >
-                            {sess.title}
-                          </h4>
-                          {isActive && (
-                            <Badge
-                              variant="outline"
-                              className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[9px] px-1 py-0 font-mono shrink-0"
-                            >
-                              Aktif
-                            </Badge>
+                      {/* Header Row: Icon + Title + Context Badge + Action Buttons */}
+                      <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                        {/* Session Avatar / Icon */}
+                        <div
+                          className={cn(
+                            "h-8.5 w-8.5 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-200",
+                            isActive
+                              ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40 shadow-xs"
+                              : "bg-white/[0.03] text-gray-400 border-white/[0.07] group-hover:text-indigo-300 group-hover:border-indigo-500/30 group-hover:bg-indigo-500/10"
+                          )}
+                        >
+                          {isActive ? (
+                            <Sparkles className="h-4 w-4 text-indigo-300 animate-pulse" />
+                          ) : (
+                            <MessageSquare className="h-4 w-4" />
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between gap-2 mt-2 pt-1.5 border-t border-white/[0.04] text-[10px] text-gray-500 font-mono">
-                          <span>{formatRelativeTime(sess.createdAt || sess.updatedAt)}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => handleCopySessionId(sess.id, e)}
-                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-indigo-500/20 text-gray-400 hover:text-indigo-300 border border-white/[0.06] transition-colors cursor-pointer"
-                            title={`Salin Session ID: ${sess.id}`}
-                          >
-                            <Terminal className="h-2.5 w-2.5 text-indigo-400" />
-                            <span>ref:{sess.id.slice(0, 8)}</span>
-                            {copiedSessionId === sess.id ? (
-                              <Check className="h-2.5 w-2.5 text-emerald-400" />
-                            ) : (
-                              <Copy className="h-2.5 w-2.5 text-gray-400" />
-                            )}
-                          </button>
+                        {/* Title & Preview Body */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap min-w-0 flex-1">
+                              <h4
+                                className={cn(
+                                  "text-xs sm:text-[13px] leading-snug font-medium line-clamp-1 break-words",
+                                  isActive
+                                    ? "text-white font-semibold"
+                                    : "text-gray-200 group-hover:text-white"
+                                )}
+                                title={sess.title}
+                              >
+                                {sess.title}
+                              </h4>
+
+                              {isActive && (
+                                <span className="inline-flex items-center gap-1 text-[9.5px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-medium shrink-0">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                  Aktif
+                                </span>
+                              )}
+
+                              {pathLabel && (
+                                <span
+                                  className="inline-flex items-center gap-1 text-[9px] font-mono text-gray-400 bg-white/[0.03] border border-white/[0.06] px-1.5 py-0.5 rounded max-w-[120px] truncate shrink-0"
+                                  title={`Konteks Halaman: ${sess.currentPath}`}
+                                >
+                                  <Compass className="h-2.5 w-2.5 text-indigo-400/80 shrink-0" />
+                                  <span className="truncate">{pathLabel}</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Integrated Action Buttons (Rename & Delete) */}
+                            <div
+                              className="flex items-center gap-0.5 shrink-0 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                type="button"
+                                onClick={(e) =>
+                                  handleOpenRenameDialog({ id: sess.id, title: sess.title }, e)
+                                }
+                                className="p-1 sm:p-1.5 rounded-lg text-gray-400 hover:text-indigo-300 hover:bg-white/[0.08] active:bg-white/[0.12] transition-colors cursor-pointer"
+                                title="Ubah judul sesi"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) =>
+                                  handleRequestDeleteSession(e, { id: sess.id, title: sess.title })
+                                }
+                                className="p-1 sm:p-1.5 rounded-lg text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 active:bg-rose-500/20 transition-colors cursor-pointer"
+                                title="Hapus sesi"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Snippet Preview of Last Message */}
+                          {sess.lastMessage && (
+                            <p className="text-[11px] sm:text-xs text-gray-400 line-clamp-1 mt-1 font-normal leading-relaxed group-hover:text-gray-300 transition-colors">
+                              {sess.lastMessage}
+                            </p>
+                          )}
                         </div>
                       </div>
 
-                      {/* Action buttons on card (Rename & Delete) */}
-                      <div className="opacity-0 group-hover:opacity-100 transition-all absolute right-2 top-2 flex items-center gap-1 bg-[#090A10]/95 backdrop-blur-sm p-0.5 rounded-lg border border-white/[0.1] shadow-md z-10">
+                      {/* Card Footer: Timestamp + Message Count + Session Reference Pill */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/[0.05] text-[10px] sm:text-[10.5px] text-gray-400 font-mono">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="inline-flex items-center gap-1 shrink-0 text-gray-400">
+                            <Clock className="h-3 w-3 text-gray-400" />
+                            <span>{formatRelativeTime(sess.updatedAt || sess.createdAt)}</span>
+                          </span>
+
+                          {sess.messageCount > 0 && (
+                            <span className="hidden xs:inline-flex items-center gap-1 text-gray-400 border-l border-white/[0.08] pl-2 shrink-0">
+                              <MessageSquare className="h-2.5 w-2.5 text-gray-400" />
+                              <span>{sess.messageCount} pesan</span>
+                            </span>
+                          )}
+                        </div>
+
                         <button
                           type="button"
-                          onClick={(e) =>
-                            handleOpenRenameDialog({ id: sess.id, title: sess.title }, e)
-                          }
-                          className="hover:text-indigo-300 hover:bg-white/[0.08] p-1.5 rounded-md text-gray-400 transition-colors cursor-pointer"
-                          title="Ubah judul sesi"
+                          onClick={(e) => handleCopySessionId(sess.id, e)}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/[0.03] hover:bg-indigo-500/20 text-gray-400 hover:text-indigo-300 border border-white/[0.06] hover:border-indigo-500/30 transition-all cursor-pointer shrink-0"
+                          title={`Salin Session ID: ${sess.id}`}
                         >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) =>
-                            handleRequestDeleteSession(e, { id: sess.id, title: sess.title })
-                          }
-                          className="hover:text-rose-400 hover:bg-rose-500/10 p-1.5 rounded-md text-gray-400 transition-colors cursor-pointer"
-                          title="Hapus sesi"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Terminal className="h-2.5 w-2.5 text-indigo-400" />
+                          <span>ref:{sess.id.slice(0, 8)}</span>
+                          {copiedSessionId === sess.id ? (
+                            <Check className="h-2.5 w-2.5 text-emerald-400" />
+                          ) : (
+                            <Copy className="h-2.5 w-2.5 text-gray-400" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -1227,41 +1644,42 @@ export function CmsCopilotPanel() {
         {/* Messages Scroll Area */}
         <div
           ref={scrollViewportRef}
-          className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth text-gray-200"
+          className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 space-y-3 sm:space-y-4 scroll-smooth text-gray-200"
         >
           {messages.map((msg) => (
             <div
               key={msg.id}
               className={cn(
-                "flex gap-3 text-sm",
+                "flex gap-2 sm:gap-3 text-xs sm:text-sm",
                 msg.role === "user" ? "justify-end" : "justify-start"
               )}
             >
               {msg.role === "assistant" && (
-                <div className="h-7 w-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
-                  <Bot size={15} />
+                <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
+                  <Bot size={13} className="sm:hidden" />
+                  <Bot size={15} className="hidden sm:block" />
                 </div>
               )}
 
               <div
                 className={cn(
-                  "rounded-2xl p-3.5 transition-all",
+                  "rounded-2xl p-3 sm:p-3.5 transition-all",
                   msg.role === "user"
-                    ? "max-w-[85%] bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-tr-sm shadow-md"
-                    : "max-w-[92%] min-w-0 bg-[#111422] border border-white/[0.08] text-gray-200 rounded-tl-sm shadow-sm"
+                    ? "max-w-[88%] sm:max-w-[85%] bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-tr-sm shadow-md"
+                    : "w-full max-w-full sm:max-w-[92%] min-w-0 bg-[#111422] border border-white/[0.08] text-gray-200 rounded-tl-sm shadow-sm"
                 )}
               >
                 {/* Active Tool Execution Indicator */}
                 {msg.toolCalls && msg.toolCalls.length > 0 && (
-                  <div className="mb-2.5 pb-2 border-b border-white/[0.08] space-y-1">
+                  <div className="mb-2 pb-2 border-b border-white/[0.08] space-y-1">
                     {msg.toolCalls.map((tc, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center gap-1.5 text-[11px] font-mono text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md border border-indigo-500/20"
+                        className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono text-indigo-300 bg-indigo-500/10 px-2 py-1 rounded-md border border-indigo-500/20"
                       >
-                        <CheckCircle2 size={12} className="text-emerald-400 shrink-0" />
+                        <CheckCircle2 size={11} className="text-emerald-400 shrink-0" />
                         <span className="text-gray-400 font-medium">DB Action:</span>
-                        <span className="font-semibold text-white">{tc.name}</span>
+                        <span className="font-semibold text-white truncate max-w-[180px] sm:max-w-[280px]">{tc.name}</span>
                       </div>
                     ))}
                   </div>
@@ -1271,7 +1689,7 @@ export function CmsCopilotPanel() {
                   msg.role === "assistant" ? (
                     <CopilotMarkdown content={msg.content} />
                   ) : (
-                    <div className="whitespace-pre-wrap text-[13px] leading-relaxed select-text">
+                    <div className="whitespace-pre-wrap text-[12.5px] sm:text-[13px] leading-relaxed select-text">
                       {msg.content}
                     </div>
                   )
@@ -1284,8 +1702,9 @@ export function CmsCopilotPanel() {
               </div>
 
               {msg.role === "user" && (
-                <div className="h-7 w-7 rounded-lg bg-white/[0.08] border border-white/[0.1] flex items-center justify-center text-gray-300 shrink-0 mt-0.5">
-                  <User size={14} />
+                <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-white/[0.08] border border-white/[0.1] flex items-center justify-center text-gray-300 shrink-0 mt-0.5">
+                  <User size={13} className="sm:hidden" />
+                  <User size={14} className="hidden sm:block" />
                 </div>
               )}
             </div>
@@ -1300,8 +1719,8 @@ export function CmsCopilotPanel() {
           )}
         </div>
 
-        {/* Contextual Quick Suggestions with Show/Hide Toggle */}
-        <div className="px-4 py-1.5 border-t border-white/[0.06] bg-[#0C0E18]/70 flex flex-col gap-1.5 transition-all">
+        {/* Contextual Quick Suggestions with Mobile Swipeable Carousel */}
+        <div className="px-3 sm:px-4 py-1.5 border-t border-white/[0.06] bg-[#0C0E18]/80 flex flex-col gap-1.5 transition-all">
           <button
             type="button"
             onClick={toggleQuickPrompts}
@@ -1315,7 +1734,8 @@ export function CmsCopilotPanel() {
                 {getContextualPrompts().length} saran
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-gray-400 group-hover:text-indigo-300 font-sans normal-case">
+            <div className="flex items-center gap-1.5 text-[10px] text-gray-400 group-hover:text-indigo-300 font-sans normal-case">
+              <span className="text-[9px] text-gray-500 sm:hidden">Geser ↔</span>
               <span>{showQuickPrompts ? "Sembunyikan" : "Tampilkan"}</span>
               <ChevronDown
                 className={cn(
@@ -1327,16 +1747,16 @@ export function CmsCopilotPanel() {
           </button>
 
           {showQuickPrompts && (
-            <div className="flex flex-wrap gap-1.5 pt-0.5 pb-0.5 animate-in fade-in duration-200">
+            <div className="flex overflow-x-auto sm:flex-wrap gap-1.5 pt-0.5 pb-1 no-scrollbar scroll-smooth touch-pan-x -mx-1 px-1 animate-in fade-in duration-200">
               {getContextualPrompts().map((item, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSubmit(undefined, item.prompt)}
                   disabled={isLoading}
-                  className="text-[11px] px-2.5 py-1 rounded-lg bg-white/[0.04] hover:bg-indigo-600/20 hover:text-indigo-300 hover:border-indigo-500/40 border border-white/[0.08] text-gray-300 text-left transition-all disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+                  className="shrink-0 sm:shrink text-[11px] px-2.5 py-1.5 rounded-lg bg-white/[0.04] hover:bg-indigo-600/20 active:bg-indigo-600/30 hover:text-indigo-300 hover:border-indigo-500/40 border border-white/[0.08] text-gray-300 text-left transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap sm:whitespace-normal"
                 >
                   <span className="font-semibold text-white mr-0.5">{item.label}:</span>
-                  <span className="text-gray-400 truncate max-w-[280px]">{item.prompt}</span>
+                  <span className="text-gray-400 max-w-[200px] sm:max-w-[280px] truncate">{item.prompt}</span>
                 </button>
               ))}
             </div>
@@ -1344,44 +1764,78 @@ export function CmsCopilotPanel() {
         </div>
 
         {/* Input Form with Top Resize Handle */}
-        <div className="border-t border-white/[0.08] bg-[#0C0E18]/95 relative flex flex-col">
+        <div className="border-t border-white/[0.08] bg-[#0C0E18]/95 relative flex flex-col pb-[max(0.6rem,env(safe-area-inset-bottom))]">
           {/* Top Drag Handle Bar to Resize Upwards */}
           <div
             onMouseDown={handleMouseDownOnResize}
-            className="group w-full h-3.5 cursor-row-resize flex items-center justify-center hover:bg-white/[0.04] transition-colors select-none -mt-1 z-10"
-            title="Drag up to resize input height"
+            onTouchStart={handleTouchStartOnResize}
+            className="group w-full h-3.5 cursor-row-resize flex items-center justify-center hover:bg-white/[0.04] transition-colors select-none -mt-1 z-10 touch-none"
+            title="Drag up/down to resize input height"
           >
             <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
           </div>
 
-          <div className="p-3 pt-1">
+          <div className="p-2.5 sm:p-3 pt-0.5 sm:pt-1">
             <form
               onSubmit={(e) => handleSubmit(e)}
-              className="relative flex flex-col bg-[#131726] border border-white/[0.1] rounded-xl p-2 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all shadow-inner"
+              className="relative flex flex-col bg-[#131726] border border-white/[0.1] rounded-xl p-2 sm:p-2.5 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all shadow-inner"
             >
               <textarea
                 ref={inputRef}
                 value={input}
-                style={{ height: `${inputHeight}px` }}
-                onChange={(e) => setInput(e.target.value)}
+                style={{
+                  height: `${inputHeight}px`,
+                  maxHeight: "45vh",
+                  minHeight: "44px",
+                }}
+                onChange={(e) => {
+                  const newVal = e.target.value;
+                  setInput(newVal);
+                  saveDraft(newVal, currentSessionId);
+                  if (draftRestored && !newVal.trim()) {
+                    setDraftRestored(false);
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
-                placeholder="Ketik instruksi untuk Gemini (mis: 'Tampilkan summary lamaran aktif' atau 'Mark contact terbaru as read')..."
+                placeholder="Tanyakan apapun tentang CMS atau berikan perintah..."
                 className="w-full bg-transparent text-xs text-white placeholder-gray-500 resize-none outline-none px-1 py-1 scrollbar-thin overflow-y-auto leading-relaxed"
                 disabled={isLoading}
               />
 
               {/* Bottom toolbar inside input box */}
-              <div className="flex items-center justify-between pt-2 border-t border-white/[0.05] mt-1">
-                <div className="flex items-center gap-1 text-[10px] text-gray-500 font-mono">
-                  <span>Enter kirim • Shift+Enter baris baru</span>
+              <div className="flex items-center justify-between pt-1.5 sm:pt-2 border-t border-white/[0.05] mt-1">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] text-gray-500 font-mono min-w-0">
+                  <span className="hidden sm:inline">Enter kirim • Shift+Enter baris baru</span>
+                  {input.trim().length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
+                      <Check className="h-2.5 w-2.5" />
+                      <span className="hidden xs:inline">Draft tersimpan</span>
+                      <span className="xs:hidden">Draft</span>
+                    </span>
+                  )}
+                  {input.trim().length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInput("");
+                        clearDraft(currentSessionId);
+                        setDraftRestored(false);
+                      }}
+                      className="inline-flex items-center gap-1 text-[9px] text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer shrink-0"
+                      title="Buang draft ini"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                      <span>Buang</span>
+                    </button>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                   {/* Quick Expand / Collapse Button */}
                   <Button
                     type="button"
@@ -1390,9 +1844,15 @@ export function CmsCopilotPanel() {
                     onClick={() => {
                       if (inputHeight > 100) {
                         setInputHeight(64);
+                        try {
+                          localStorage.setItem(INPUT_HEIGHT_KEY, "64");
+                        } catch {}
                       } else {
-                        const target = Math.min(260, Math.floor(window.innerHeight * 0.45));
+                        const target = Math.min(240, Math.floor(window.innerHeight * 0.4));
                         setInputHeight(target);
+                        try {
+                          localStorage.setItem(INPUT_HEIGHT_KEY, String(target));
+                        } catch {}
                       }
                     }}
                     className="h-7 w-7 rounded-lg text-gray-400 hover:text-white hover:bg-white/[0.06]"
@@ -1410,6 +1870,7 @@ export function CmsCopilotPanel() {
                     size="icon"
                     disabled={!input.trim() || isLoading}
                     className="h-7 w-7 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 disabled:opacity-40 shadow-sm"
+                    title="Kirim instruksi"
                   >
                     {isLoading ? (
                       <Loader2 size={13} className="animate-spin" />
@@ -1421,11 +1882,15 @@ export function CmsCopilotPanel() {
               </div>
             </form>
 
-            <div className="flex items-center justify-between text-[10px] text-gray-500 font-mono mt-1.5 px-1">
+            <div className="hidden sm:flex items-center justify-between text-[10px] text-gray-500 font-mono mt-1.5 px-1">
               <span className="text-[10px] text-gray-500 flex items-center gap-1">
                 <GripHorizontal className="h-3 w-3 opacity-60" /> Drag to resize
               </span>
               <span>Tekan ⌘J untuk sembunyikan</span>
+            </div>
+            <div className="sm:hidden flex items-center justify-between text-[9.5px] text-gray-500 font-mono mt-1 px-1">
+              <span>Gemini 3.8 Flash • Copilot</span>
+              <span>Tarik handle untuk resize</span>
             </div>
           </div>
         </div>

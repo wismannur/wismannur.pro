@@ -50,19 +50,19 @@ function CopilotPreBlock({ children, ...props }: React.HTMLAttributes<HTMLPreEle
   };
 
   return (
-    <div className="relative my-3 rounded-xl overflow-hidden border border-white/[0.1] bg-[#070913] shadow-md group">
+    <div className="relative my-2 sm:my-3 rounded-xl overflow-hidden border border-white/[0.1] bg-[#070913] shadow-md group">
       {/* Codeblock Header */}
-      <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#0e1220] border-b border-white/[0.06] text-[11px] font-mono text-gray-400">
+      <div className="flex items-center justify-between px-3 sm:px-3.5 py-1.5 bg-[#0e1220] border-b border-white/[0.06] text-[10.5px] sm:text-[11px] font-mono text-gray-400">
         <div className="flex items-center gap-1.5">
-          <Terminal size={12} className="text-indigo-400" />
-          <span className="font-medium text-gray-300 lowercase">
+          <Terminal size={12} className="text-indigo-400 shrink-0" />
+          <span className="font-medium text-gray-300 lowercase truncate max-w-[120px]">
             {language || "code"}
           </span>
         </div>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] text-gray-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+          className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[9.5px] sm:text-[10px] text-gray-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer shrink-0"
           title="Salin kode"
         >
           {copied ? (
@@ -81,7 +81,7 @@ function CopilotPreBlock({ children, ...props }: React.HTMLAttributes<HTMLPreEle
 
       {/* Code content */}
       <pre
-        className="p-3.5 overflow-x-auto text-xs font-mono leading-relaxed text-indigo-100 scrollbar-thin"
+        className="p-2.5 sm:p-3.5 overflow-x-auto text-[11.5px] sm:text-xs font-mono leading-relaxed text-indigo-100 scrollbar-thin"
         {...props}
       >
         {children}
@@ -157,7 +157,7 @@ const markdownComponents: Components = {
   // Paragraph
   p: ({ children, ...props }) => (
     <p
-      className="mb-2 last:mb-0 leading-relaxed text-[13px] text-gray-200"
+      className="mb-1.5 sm:mb-2 last:mb-0 leading-relaxed text-xs sm:text-[13px] text-gray-200"
       {...props}
     >
       {children}
@@ -167,7 +167,7 @@ const markdownComponents: Components = {
   // Lists
   ul: ({ children, ...props }) => (
     <ul
-      className="list-disc list-outside pl-4 space-y-1 my-2 text-[13px] marker:text-indigo-400"
+      className="list-disc list-outside pl-3.5 sm:pl-4 space-y-0.5 sm:space-y-1 my-1.5 sm:my-2 text-xs sm:text-[13px] marker:text-indigo-400"
       {...props}
     >
       {children}
@@ -175,14 +175,14 @@ const markdownComponents: Components = {
   ),
   ol: ({ children, ...props }) => (
     <ol
-      className="list-decimal list-outside pl-4 space-y-1 my-2 text-[13px] marker:text-indigo-400"
+      className="list-decimal list-outside pl-3.5 sm:pl-4 space-y-0.5 sm:space-y-1 my-1.5 sm:my-2 text-xs sm:text-[13px] marker:text-indigo-400"
       {...props}
     >
       {children}
     </ol>
   ),
   li: ({ children, ...props }) => (
-    <li className="text-gray-200 pl-0.5 leading-relaxed" {...props}>
+    <li className="text-gray-200 pl-0.5 leading-relaxed text-xs sm:text-[13px]" {...props}>
       {children}
     </li>
   ),
@@ -202,7 +202,7 @@ const markdownComponents: Components = {
   // Blockquote
   blockquote: ({ children, ...props }) => (
     <blockquote
-      className="border-l-2 border-indigo-500/70 pl-3 py-1.5 my-2.5 italic text-gray-300 text-xs bg-indigo-500/[0.04] rounded-r-md border-y border-r border-indigo-500/10"
+      className="border-l-2 border-indigo-500/70 pl-2.5 sm:pl-3 py-1.5 my-2 italic text-gray-300 text-[11px] sm:text-xs bg-indigo-500/[0.04] rounded-r-md border-y border-r border-indigo-500/10"
       {...props}
     >
       {children}
@@ -228,12 +228,12 @@ const markdownComponents: Components = {
 
   // Horizontal Divider
   hr: ({ ...props }) => (
-    <hr className="my-3 border-t border-white/[0.08]" {...props} />
+    <hr className="my-2.5 sm:my-3 border-t border-white/[0.08]" {...props} />
   ),
 
   // Tables (GFM Table Support)
   table: ({ children, ...props }) => (
-    <div className="overflow-x-auto my-3 rounded-xl border border-white/[0.1] bg-[#0c0e18]/90 shadow-md">
+    <div className="overflow-x-auto my-2.5 sm:my-3 rounded-xl border border-white/[0.1] bg-[#0c0e18]/90 shadow-md no-scrollbar">
       <table
         className="min-w-full text-left text-xs border-collapse divide-y divide-white/[0.08]"
         {...props}
@@ -259,14 +259,14 @@ const markdownComponents: Components = {
   ),
   th: ({ children, ...props }) => (
     <th
-      className="py-2.5 px-3 text-left text-[11px] font-semibold text-gray-200 tracking-wider uppercase border-b border-white/[0.08] whitespace-nowrap"
+      className="py-2 sm:py-2.5 px-2.5 sm:px-3 text-left text-[10px] sm:text-[11px] font-semibold text-gray-200 tracking-wider uppercase border-b border-white/[0.08] whitespace-nowrap"
       {...props}
     >
       {children}
     </th>
   ),
   td: ({ children, ...props }) => (
-    <td className="py-2.5 px-3 text-xs text-gray-300 align-top" {...props}>
+    <td className="py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs text-gray-300 align-top" {...props}>
       {children}
     </td>
   ),
