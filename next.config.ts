@@ -26,6 +26,11 @@ const nextConfig: NextConfig = {
         destination: "/cv",
         permanent: true,
       },
+      {
+        source: "/cms/ai-english-fluency",
+        destination: "/cms/ai-english-gym",
+        permanent: false,
+      },
     ];
   },
   async rewrites() {

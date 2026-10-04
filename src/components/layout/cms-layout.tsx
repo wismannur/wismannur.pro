@@ -15,6 +15,7 @@ import {
   Code2,
   Compass,
   Crosshair,
+  Dumbbell,
   ExternalLink,
   FileText,
   Folder,
@@ -180,9 +181,14 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
       group: "AI Assistant",
       items: [
         {
-          label: "AI English Fluency Hub",
-          icon: <Languages className="h-4 w-4" />,
-          path: "/cms/ai-english-fluency",
+          label: "AI English Gym",
+          icon: <Dumbbell className="h-4 w-4" />,
+          path: "/cms/ai-english-gym",
+        },
+        {
+          label: "AI English Academy",
+          icon: <GraduationCap className="h-4 w-4" />,
+          path: "/cms/ai-english-academy",
         },
         {
           label: "AI Chat Logs",
