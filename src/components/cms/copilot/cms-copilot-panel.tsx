@@ -73,7 +73,7 @@ const INITIAL_GREETING: MessageUI = {
   id: "copilot-welcome",
   role: "assistant",
   content:
-    "Halo Wisman! 👋 Saya adalah **CMS Executive Copilot** Anda yang ditenagai oleh **Gemini 3.8 Flash**.\n\nSaya terintegrasi penuh ke database Anda dengan kapabilitas **Query, Analisis, Mutasi, & Hapus Data** di seluruh menu CMS kita:\n- 📊 **Dashboard & General**: Health check metrik & performa situs\n- 🎯 **Career Hub**: Job Hunter (ATS Feeds & Target Companies), Job Tracker (Pipeline & Interviews), Job Outreaches (Cold Pitches & Threads), Frontend Mastery (Big Tech Interview Gym & Curriculum)\n- 🚀 **Finder Project Hub**: Project Hunter (Site Audits), Project Tracker (Prospect Pipeline), Project Outreaches (Modernization Pitches)\n- 🧠 **AI Assistant**: AI Knowledge Hub, AI English Fluency Hub (Habit Streak, Speech drills, Vocab decks), AI Chat Logs\n- 📬 **Inbox & Leads**: Contacts, Service Orders & Consulting Inquiries, Recruiter Hire Requests\n- 🌐 **Site Architecture**: Site Settings, Page Copy, Legal Pages\n- 📁 **Content & Catalog**: Blog Posts, Portfolio Projects, Resume, Skills, Service Catalog, FAQs, Process Steps, Testimonials, Availability\n- ⚙️ **Account & System**: Admin Profile & Preferences Settings\n\nAda modul yang ingin Anda query, kelola, atau perbarui sekarang?",
+    "Halo Wisman! 👋 Saya adalah **CMS Executive Copilot** Anda yang ditenagai oleh **Gemini 3.8 Flash**.\n\nSaya terintegrasi penuh ke database Anda dengan kapabilitas **Query, Analisis, Mutasi, & Hapus Data** di seluruh menu CMS kita:\n- 📊 **General**: Dashboard KPI metrik situs & **My Second Brain** (Central SSOT Persona Engine untuk AI CV Tailor, Resume Google XYZ, Blog MDX & Project Case Study Generator)\n- 🎯 **Career Hub**: Job Hunter (ATS Feeds & Target Companies), Job Tracker (Pipeline, Interviews, & AI CV Tailor), Job Outreaches (Cold Pitches & Threads), Frontend Mastery (Big Tech Interview Gym & Curriculum)\n- 🚀 **Finder Project Hub**: Project Hunter (Site Audits), Project Tracker (Prospect Pipeline), Project Outreaches (Modernization Pitches)\n- 🧠 **AI Assistant**: AI English Fluency Hub (Habit Streak, Speech drills, Vocab decks), AI Chat Logs (Monitoring interaksi visitor)\n- 📬 **Inbox & Leads**: Contacts, Service Orders & Consulting Inquiries, Recruiter Hire Requests\n- 🌐 **Site Architecture**: Site Settings, Page Copy, Legal Pages\n- 📁 **Content & Catalog**: Blog Posts (Drafting & Sync via Second Brain), Projects (Case Study Generator & Sync), Resume (Google XYZ Polish & Sync), Skills, Service Catalog, FAQs, Process Steps, Testimonials, Availability\n- ⚙️ **Account & System**: Admin Profile & Preferences Settings\n\nAda modul yang ingin Anda query, kelola, atau perbarui sekarang?",
   status: "done",
 };
 
@@ -501,6 +501,13 @@ export function CmsCopilotPanel() {
         { label: "📝 Content Drafts", prompt: "Berapa banyak draft blog dan portfolio project yang belum dipublish?" },
       ];
     }
+    if (pathname.includes("/cms/ai-knowledge")) {
+      return [
+        { label: "🧠 My Second Brain", prompt: "Tampilkan ringkasan seluruh dokumen knowledge aktif di My Second Brain per kategori" },
+        { label: "➕ Tambah Persona / Impact", prompt: "Bantu saya tambahkan knowledge item baru ke kategori 'career-impact' dengan metrik terukur" },
+        { label: "🏷️ 10 Kategori Knowledge", prompt: "Apa saja 10 kategori knowledge yang tersedia di My Second Brain dan bagaimana penggunaannya?" },
+      ];
+    }
 
     // 2. Career Hub
     if (pathname.includes("/cms/job-hunter")) {
@@ -520,7 +527,7 @@ export function CmsCopilotPanel() {
     if (pathname.includes("/cms/job-tracker")) {
       return [
         { label: "📊 Analytics", prompt: "Tampilkan analytics ringkasan Career Hub dan status lamaran saya saat ini" },
-        { label: "💼 Status Update", prompt: "Tampilkan daftar 5 lamaran terakhir yang statusnya masih 'applied' atau 'screening'" },
+        { label: "🎯 AI CV Tailor", prompt: "Jalankan AI CV Tailor untuk lamaran terbaru dan hitung ATS match score menggunakan Second Brain" },
         { label: "📅 Interviews", prompt: "Apakah ada interview yang terjadwal dalam waktu dekat?" },
       ];
     }
@@ -556,18 +563,18 @@ export function CmsCopilotPanel() {
     }
 
     // 4. AI Assistant
-    if (pathname.includes("/cms/ai-english-fluency")) {
+    if (pathname.includes("/cms/ai-english-gym") || pathname.includes("/cms/ai-english-fluency")) {
       return [
         { label: "🔥 Habit Streak", prompt: "Berapa hari streak latihan berbicara bahasa Inggris saya dan total menit latihan?" },
         { label: "🎙️ Sesi Terakhir", prompt: "Tampilkan ringkasan hasil latihan speaking terakhir dan skor evaluasinya" },
-        { label: "📚 Vocabulary Deck", prompt: "Tampilkan daftar kosakata executive & technical English yang sedang saya pelajari" },
+        { label: "🥊 Pushback Challenge", prompt: "Berikan saya skenario tech drill pushback tingkat Staff Engineer sekarang" },
       ];
     }
-    if (pathname.includes("/cms/ai-knowledge")) {
+    if (pathname.includes("/cms/ai-english-academy")) {
       return [
-        { label: "🧠 AI Knowledge", prompt: "Tampilkan daftar knowledge item AI yang saat ini aktif di database" },
-        { label: "➕ Tambah Knowledge", prompt: "Bantu saya buatkan knowledge item baru untuk kategori 'tech-stack'" },
-        { label: "🏷️ Knowledge Categories", prompt: "Apa saja kategori knowledge item yang sudah terdaftar?" },
+        { label: "🎓 Career Tracks", prompt: "Bagaimana progres unit dan lesson kurikulum developer English saya?" },
+        { label: "📚 Vocabulary Deck", prompt: "Tampilkan daftar kosakata executive & technical English yang sedang saya pelajari" },
+        { label: "🎯 CEFR Diagnostics", prompt: "Analisis estimasi CEFR standing saya dan area grammar/fluency yang perlu ditingkatkan" },
       ];
     }
     if (pathname.includes("/cms/ai-chat-logs")) {
@@ -628,22 +635,22 @@ export function CmsCopilotPanel() {
     if (pathname.includes("/cms/blogs")) {
       return [
         { label: "📝 Blog Articles", prompt: "Tampilkan daftar artikel blog, jumlah views, dan status publikasinya" },
-        { label: "✍️ Draft Article", prompt: "Bantu saya buatkan outline artikel blog baru tentang arsitektur software modern" },
-        { label: "📊 Top Viewed", prompt: "Artikel blog mana yang memiliki pembaca / views terbanyak?" },
+        { label: "✍️ Draft via Second Brain", prompt: "Buatkan draft artikel blog MDX baru yang digrounding opini arsitektur di My Second Brain" },
+        { label: "🔄 Sync ke Second Brain", prompt: "Sinkronkan wawasan dan opini teknis dari artikel blog terbaru ke My Second Brain" },
       ];
     }
     if (pathname.includes("/cms/projects")) {
       return [
         { label: "💼 Portfolio Projects", prompt: "Tampilkan daftar portfolio projects dan teknologi yang digunakan" },
-        { label: "⭐ Featured Projects", prompt: "Project apa saja yang saat ini diset sebagai featured di homepage?" },
-        { label: "➕ Tambah Project", prompt: "Bantu saya siapkan draft portfolio project baru lengkap dengan summary & tech stack" },
+        { label: "🚀 Draft Case Study", prompt: "Bantu buatkan case study arsitektur proyek MDX mendalam berdasarkan verified Second Brain" },
+        { label: "🔄 Sync ke Second Brain", prompt: "Sinkronkan tantangan arsitektur dan trade-off project terpilih ke My Second Brain" },
       ];
     }
     if (pathname.includes("/cms/resume")) {
       return [
         { label: "🎓 Resume Timeline", prompt: "Tampilkan seluruh riwayat work experience dan education yang terdaftar" },
-        { label: "💼 Current Role", prompt: "Tampilkan pekerjaan saya yang saat ini statusnya isCurrent: true" },
-        { label: "➕ Tambah Experience", prompt: "Bantu saya tambahkan riwayat pekerjaan baru ke daftar resume" },
+        { label: "✨ Polish via Second Brain", prompt: "Poles deskripsi pengalaman kerja terbaru saya menggunakan formula Google XYZ dan pencapaian Second Brain" },
+        { label: "🔄 Sync ke Second Brain", prompt: "Sinkronkan pencapaian peran kerja saat ini ke My Second Brain kategori career-impact" },
       ];
     }
     if (pathname.includes("/cms/skills")) {
@@ -707,6 +714,7 @@ export function CmsCopilotPanel() {
 
     return [
       { label: "📊 CMS Overview", prompt: "Tampilkan health check metrik dan ringkasan seluruh modul di CMS" },
+      { label: "🧠 My Second Brain", prompt: "Tampilkan ringkasan status persona dan dokumen knowledge di My Second Brain" },
       { label: "🎯 Career Hub", prompt: "Berapa banyak total lamaran aktif dan status pipeline saya di Career Hub?" },
       { label: "🚀 Project Hub", prompt: "Tampilkan ringkasan prospect client di Finder Project Hub" },
       { label: "📬 Inbox Leads", prompt: "Cek apakah ada kontak atau hire request baru yang belum saya review?" },
@@ -1215,34 +1223,6 @@ export function CmsCopilotPanel() {
           </div>
         ) : (
           <>
-        {/* Session Reference Bar for Terminal Handoff */}
-        {currentSessionId && (
-          <div className="px-4 py-1.5 bg-[#0b0e1b] border-b border-white/[0.05] flex items-center justify-between text-[11px] font-mono">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="text-gray-400 shrink-0">Terminal Ref:</span>
-              <span className="text-indigo-300 font-medium truncate select-all">{currentSessionId}</span>
-            </div>
-            <button
-              type="button"
-              onClick={(e) => handleCopySessionId(currentSessionId, e)}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-[10px] transition-colors shrink-0 ml-2 cursor-pointer"
-              title="Salin ID sesi ini untuk chat terminal Antigravity"
-            >
-              {copiedSessionId === currentSessionId ? (
-                <>
-                  <Check className="h-3 w-3 text-emerald-400" />
-                  <span className="text-emerald-300 font-medium">Tersalin!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3 w-3 text-indigo-400" />
-                  <span>Salin ID Terminal</span>
-                </>
-              )}
-            </button>
-          </div>
-        )}
 
         {/* Messages Scroll Area */}
         <div

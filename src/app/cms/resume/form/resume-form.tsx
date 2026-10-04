@@ -7,6 +7,8 @@ import {
   Briefcase,
   Calendar,
   Check,
+  CheckCircle2,
+  Copy,
   GraduationCap,
   GripHorizontal,
   Info,
@@ -16,6 +18,7 @@ import {
   Minimize2,
   Save,
   Send,
+  Share2,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +31,14 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -47,8 +58,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { MonthPicker } from "@/components/ui/month-picker";
+import { Brain } from "lucide-react";
 import { formatResumePeriod } from "@/lib/resume";
-import { resumeService, type ResumeKind } from "@/services";
+import { resumeService, type PolishResumeResult, type ResumeKind } from "@/services";
 
 // The `date` columns hold ISO days; the month inputs speak "YYYY-MM".
 const MONTH_PATTERN = /^\d{4}-\d{2}$/;
@@ -257,6 +269,92 @@ export function ResumeForm() {
       toast.error("Failed to save entry. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Second Brain Polish & Sync states
+  const [isPolishing, setIsPolishing] = useState(false);
+  const [polishResult, setPolishResult] = useState<PolishResumeResult | null>(null);
+  const [showPolishDialog, setShowPolishDialog] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handlePolish = async () => {
+    const currentTitle = form.getValues("title")?.trim();
+    const currentOrg = form.getValues("organization")?.trim();
+    const currentDesc = form.getValues("description")?.trim();
+
+    if (!currentTitle || !currentOrg) {
+      toast.error("Please enter Job Title and Organization first so Second Brain knows what experience to synthesize.");
+      return;
+    }
+
+    setIsPolishing(true);
+    try {
+      const result = await resumeService.polishWithSecondBrain({
+        title: currentTitle,
+        organization: currentOrg,
+        location: form.getValues("location")?.trim() || undefined,
+        currentDescription: currentDesc,
+        period: periodPreview || undefined,
+      });
+      setPolishResult(result);
+      setShowPolishDialog(true);
+      toast.success("Synthesized accomplishments with My Second Brain!");
+    } catch (error) {
+      console.error("Error polishing resume:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to polish resume entry.");
+    } finally {
+      setIsPolishing(false);
+    }
+  };
+
+  const handleApplyPolish = (mode: "replace" | "append") => {
+    if (!polishResult) return;
+    const current = form.getValues("description") || "";
+    if (mode === "replace") {
+      form.setValue("description", polishResult.polishedDescription, { shouldDirty: true });
+      toast.success("Applied Second Brain polished bullets!");
+    } else {
+      const merged = current.trim()
+        ? `${current.trim()}\n\n${polishResult.polishedDescription}`
+        : polishResult.polishedDescription;
+      form.setValue("description", merged, { shouldDirty: true });
+      toast.success("Appended Second Brain polished bullets!");
+    }
+    setShowPolishDialog(false);
+  };
+
+  const handleSyncToSecondBrain = async () => {
+    const currentTitle = form.getValues("title")?.trim();
+    const currentOrg = form.getValues("organization")?.trim();
+    const currentDesc = form.getValues("description")?.trim();
+
+    if (!currentTitle || !currentOrg || !currentDesc) {
+      toast.error("Please fill in Job Title, Organization, and Accomplishments Description before syncing.");
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      await resumeService.syncToSecondBrain({
+        title: currentTitle,
+        organization: currentOrg,
+        description: currentDesc,
+        category: "career-impact",
+        tags: ["resume", "career-impact", currentOrg.toLowerCase().replace(/[^a-z0-9]/g, "-")],
+      });
+      queryClient.invalidateQueries({ queryKey: ["aiKnowledgeItems"] });
+      toast.success("Synced to My Second Brain as a Career Impact item!", {
+        action: {
+          label: "Open Brain",
+          onClick: () => router.push("/cms/ai-knowledge"),
+        },
+      });
+    } catch (error) {
+      console.error("Error syncing to Second Brain:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to sync to Second Brain.");
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -715,6 +813,72 @@ export function ResumeForm() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4 p-6">
+              {/* My Second Brain Persona Assistant Bar */}
+              {isExperience && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-4 rounded-xl bg-gradient-to-r from-purple-950/30 via-indigo-950/20 to-slate-900/40 border border-purple-500/25 shadow-lg shadow-purple-950/10">
+                  <div className="flex items-center gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-purple-500/15 border border-purple-500/30 flex items-center justify-center shrink-0">
+                      <Brain className="h-4.5 w-4.5 text-purple-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-white">My Second Brain Co-Pilot</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium border border-purple-500/30">
+                          Digital Twin SSOT
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Synthesize verified XYZ impact bullets or export this role directly to your knowledge base.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSyncToSecondBrain}
+                      disabled={isSyncing || isPolishing}
+                      className="h-8 text-xs border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 hover:text-white rounded-lg transition-colors"
+                      title="Export current accomplishments to My Second Brain as a Career Impact item"
+                    >
+                      {isSyncing ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                          <span>Syncing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="h-3.5 w-3.5 mr-1.5 text-indigo-400" />
+                          <span>Sync to Brain</span>
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handlePolish}
+                      disabled={isPolishing || isSyncing}
+                      className="h-8 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold shadow-md shadow-purple-600/20 rounded-lg transition-all"
+                    >
+                      {isPolishing ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                          <span>Consulting Brain...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5 mr-1.5 text-amber-300" />
+                          <span>Polish with Second Brain</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <FormField
                 control={form.control}
                 name="description"
@@ -838,6 +1002,112 @@ export function ResumeForm() {
           </div>
         </form>
       </Form>
+
+      {/* Polish with Second Brain Preview Dialog */}
+      <Dialog open={showPolishDialog} onOpenChange={setShowPolishDialog}>
+        <DialogContent className="max-w-2xl bg-[#0C0E18] border-white/[0.08] text-slate-200">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-purple-400 text-xs font-semibold uppercase tracking-wider">
+              <Brain className="h-4 w-4" />
+              <span>Second Brain Experience Synthesis</span>
+            </div>
+            <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <span>Grounded XYZ Accomplishment Bullets</span>
+              <Sparkles className="h-4 w-4 text-amber-400" />
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Synthesized from your verified Second Brain knowledge entries and role coordinates using Google&apos;s XYZ formula.
+            </DialogDescription>
+          </DialogHeader>
+
+          {polishResult && (
+            <div className="space-y-4 py-2">
+              {/* Matched Second Brain Topics */}
+              {polishResult.matchedSecondBrainTopics.length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-purple-400" />
+                    <span>Referenced Second Brain Knowledge:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {polishResult.matchedSecondBrainTopics.map((topic, idx) => (
+                      <Badge
+                        key={idx}
+                        variant="secondary"
+                        className="bg-purple-500/10 text-purple-300 border-purple-500/20 text-[10px] px-2 py-0.5 rounded-md"
+                      >
+                        {topic}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Highlights */}
+              {polishResult.highlights.length > 0 && (
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-1.5">
+                  <span className="text-[11px] font-semibold text-amber-300">Executive Highlights:</span>
+                  <ul className="text-xs text-slate-300 space-y-1 pl-4 list-disc">
+                    {polishResult.highlights.map((highlight, idx) => (
+                      <li key={idx}>{highlight}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Generated Polished Description */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  <span>Synthesized XYZ Bullets:</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-[10px] text-slate-400 hover:text-white"
+                    onClick={() => {
+                      navigator.clipboard.writeText(polishResult.polishedDescription);
+                      toast.success("Copied to clipboard!");
+                    }}
+                  >
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                </div>
+                <div className="p-4 rounded-xl bg-[#131726] border border-purple-500/30 text-xs text-slate-100 font-mono sm:font-sans whitespace-pre-wrap leading-relaxed max-h-[280px] overflow-y-auto custom-scrollbar">
+                  {polishResult.polishedDescription}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowPolishDialog(false)}
+              className="border-white/[0.08] bg-white/[0.04] text-slate-300 hover:text-white text-xs h-9 rounded-xl"
+            >
+              Discard
+            </Button>
+            {form.getValues("description")?.trim() && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => handleApplyPolish("append")}
+                className="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-xs h-9 rounded-xl"
+              >
+                Append to Existing
+              </Button>
+            )}
+            <Button
+              type="button"
+              onClick={() => handleApplyPolish("replace")}
+              className="bg-primary hover:bg-primary/90 text-white font-semibold text-xs h-9 rounded-xl shadow-lg shadow-primary/20"
+            >
+              Replace Description
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

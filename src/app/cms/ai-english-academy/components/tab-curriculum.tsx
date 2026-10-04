@@ -31,7 +31,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { useSpeechRecognition, useTextToSpeech } from "../hooks/use-speech";
+import { useSpeechRecognition, useTextToSpeech } from "@/hooks/use-speech";
 import {
   getCurriculumTracksWithProgress,
   evaluateCurriculumRolePlay,

@@ -4,10 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  Brain,
   Briefcase,
   Check,
+  CheckCircle2,
   Clock,
   Code,
+  Copy,
   FileText,
   FolderGit2,
   Github,
@@ -20,7 +23,9 @@ import {
   Minimize2,
   Save,
   Send,
+  Share2,
   Sparkles,
+  Wand2,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -33,6 +38,14 @@ import { z } from "zod";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -47,7 +60,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/auth-context";
 import { calculateReadingTime } from "@/lib/mdx";
 import { slugify } from "@/lib/utils";
-import { projectService, type TProjectResponse } from "@/services";
+import { type DraftProjectResult, projectService, type TProjectResponse } from "@/services";
 
 const MDXEditor = lazy(() => import("@/components/mdx/mdx-editor"));
 
@@ -277,6 +290,83 @@ export function ProjectForm() {
     }
   };
 
+  // Second Brain Case Study Drafting & Sync states
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [draftResult, setDraftResult] = useState<DraftProjectResult | null>(null);
+  const [showDraftDialog, setShowDraftDialog] = useState(false);
+  const [projectTitlePrompt, setProjectTitlePrompt] = useState("");
+  const [technologiesPrompt, setTechnologiesPrompt] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleDraftCaseStudyWithSecondBrain = async () => {
+    setIsDrafting(true);
+    try {
+      const result = await projectService.draftWithSecondBrain({
+        projectTitle: projectTitlePrompt.trim() || form.getValues("title")?.trim() || undefined,
+        technologies: technologiesPrompt.trim() || form.getValues("technologies")?.trim() || undefined,
+        existingSummary: form.getValues("summary")?.trim() || undefined,
+        existingDescription: form.getValues("description")?.trim() || undefined,
+      });
+      setDraftResult(result);
+      toast.success("Project case study synthesized from My Second Brain!");
+    } catch (error) {
+      console.error("Error drafting project with Second Brain:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to draft project case study.");
+    } finally {
+      setIsDrafting(false);
+    }
+  };
+
+  const handleApplyDraft = () => {
+    if (!draftResult) return;
+    form.setValue("title", draftResult.title, { shouldDirty: true });
+    form.setValue("summary", draftResult.summary, { shouldDirty: true });
+    form.setValue("technologies", draftResult.technologies, { shouldDirty: true });
+    form.setValue("description", draftResult.description, { shouldDirty: true });
+    setShowDraftDialog(false);
+    toast.success("Applied Second Brain case study into Project Studio!");
+  };
+
+  const handleSyncProjectToSecondBrain = async () => {
+    const title = form.getValues("title")?.trim();
+    const summary = form.getValues("summary")?.trim();
+    const description = form.getValues("description")?.trim();
+
+    if (!title || !summary || !description) {
+      toast.error("Please fill in Title, Summary, and Description before syncing to Second Brain.");
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const technologies = form
+        .getValues("technologies")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      await projectService.syncToSecondBrain({
+        title,
+        summary,
+        description,
+        technologies,
+        category: "case-studies",
+      });
+      queryClient.invalidateQueries({ queryKey: ["aiKnowledgeItems"] });
+      toast.success("Synced case study to My Second Brain (Case Studies)!", {
+        action: {
+          label: "Open Brain",
+          onClick: () => router.push("/cms/ai-knowledge"),
+        },
+      });
+    } catch (error) {
+      console.error("Error syncing to Second Brain:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to sync to Second Brain.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
@@ -409,6 +499,61 @@ export function ProjectForm() {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* My Second Brain Case Study Assistant */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-4 rounded-2xl bg-gradient-to-r from-purple-950/30 via-indigo-950/20 to-slate-900/40 border border-purple-500/25 shadow-lg shadow-purple-950/10">
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center shrink-0">
+                <Brain className="h-5 w-5 text-purple-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white">My Second Brain Case Study Architect</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium border border-purple-500/30">
+                    Digital Twin SSOT
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Synthesize an executive case study (STAR & XYZ impact) grounded in your Second Brain project architecture and metrics.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSyncProjectToSecondBrain}
+                disabled={isSyncing || isDrafting}
+                className="h-8 text-xs border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 hover:text-white rounded-lg transition-colors"
+                title="Export this project's case study into My Second Brain"
+              >
+                {isSyncing ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    <span>Syncing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-3.5 w-3.5 mr-1.5 text-indigo-400" />
+                    <span>Sync to Brain</span>
+                  </>
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setShowDraftDialog(true)}
+                disabled={isDrafting || isSyncing}
+                className="h-8 text-xs bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold shadow-md shadow-purple-600/20 rounded-lg transition-all"
+              >
+                <Sparkles className="h-3.5 w-3.5 mr-1.5 text-amber-300" />
+                <span>Draft Case Study</span>
+              </Button>
+            </div>
+          </div>
+
           {/* Card 1: Project Essentials & Architecture Metadata */}
           <Card className="border border-white/[0.08] bg-[#0C0E18] shadow-2xl rounded-2xl overflow-hidden">
             <CardHeader className="p-6 pb-4 border-b border-white/[0.06]">
@@ -832,6 +977,132 @@ export function ProjectForm() {
           </div>
         </form>
       </Form>
+
+      {/* Draft Project Case Study Dialog */}
+      <Dialog open={showDraftDialog} onOpenChange={setShowDraftDialog}>
+        <DialogContent className="max-w-2xl bg-[#0C0E18] border-white/[0.08] text-slate-200">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-purple-400 text-xs font-semibold uppercase tracking-wider">
+              <Brain className="h-4 w-4" />
+              <span>Second Brain Portfolio Architect</span>
+            </div>
+            <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <span>Synthesize Project Case Study</span>
+              <Sparkles className="h-4 w-4 text-amber-400" />
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Formulate a structured engineering case study (Architecture, Implementation, STAR Challenges, XYZ Metrics) grounded in your verified Second Brain knowledge entries.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-200">Project Focus / Name (Optional)</label>
+                <Input
+                  placeholder="e.g. Real-Time Distributed Analytics Engine"
+                  value={projectTitlePrompt}
+                  onChange={(e) => setProjectTitlePrompt(e.target.value)}
+                  className="h-9 bg-[#131726] border-white/[0.08] text-xs text-white"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-200">Technologies / Stack (Optional)</label>
+                <Input
+                  placeholder="e.g. Next.js, Go, PostgreSQL, Redis, Kafka"
+                  value={technologiesPrompt}
+                  onChange={(e) => setTechnologiesPrompt(e.target.value)}
+                  className="h-9 bg-[#131726] border-white/[0.08] text-xs text-white"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={handleDraftCaseStudyWithSecondBrain}
+              disabled={isDrafting}
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs h-9 rounded-xl shadow-md"
+            >
+              {isDrafting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span>Synthesizing Architectural Case Study...</span>
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 mr-2 text-amber-300" />
+                  <span>{draftResult ? "Re-generate Case Study" : "Generate Case Study from Second Brain"}</span>
+                </>
+              )}
+            </Button>
+
+            {/* Generated Result Preview */}
+            {draftResult && (
+              <div className="space-y-3 pt-2 border-t border-white/[0.08]">
+                {draftResult.matchedSecondBrainTopics.length > 0 && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-semibold text-purple-400">Referenced Second Brain Knowledge:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {draftResult.matchedSecondBrainTopics.map((topic, i) => (
+                        <Badge key={i} variant="secondary" className="bg-purple-500/10 text-purple-300 border-purple-500/20 text-[10px] px-2 py-0.5">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-1.5">
+                  <div className="text-xs font-bold text-white">{draftResult.title}</div>
+                  <div className="text-[11px] text-slate-300 italic">{draftResult.summary}</div>
+                  <div className="text-[10px] text-slate-400 font-mono">Technologies: {draftResult.technologies}</div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                    <span>Generated Case Study (MDX):</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-[10px] text-slate-400 hover:text-white"
+                      onClick={() => {
+                        navigator.clipboard.writeText(draftResult.description);
+                        toast.success("Case study copied to clipboard!");
+                      }}
+                    >
+                      <Copy className="h-3 w-3 mr-1" /> Copy MDX
+                    </Button>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-[#131726] border border-purple-500/30 text-xs text-slate-200 font-mono whitespace-pre-wrap leading-relaxed max-h-[220px] overflow-y-auto custom-scrollbar">
+                    {draftResult.description}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDraftDialog(false)}
+              className="border-white/[0.08] bg-white/[0.04] text-slate-300 hover:text-white text-xs h-9 rounded-xl"
+            >
+              Close
+            </Button>
+            {draftResult && (
+              <Button
+                type="button"
+                onClick={handleApplyDraft}
+                className="bg-primary hover:bg-primary/90 text-white font-semibold text-xs h-9 rounded-xl shadow-lg shadow-primary/20"
+              >
+                Apply Case Study to Studio
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  Brain,
   CalendarArrowUp,
   CalendarCog,
   Check,
@@ -179,6 +180,32 @@ export default function CmsProjectsPage() {
     }
   };
 
+  const [syncingProjectId, setSyncingProjectId] = useState<string | null>(null);
+
+  const handleQuickSyncToSecondBrain = async (project: Project) => {
+    setSyncingProjectId(project.id);
+    try {
+      await projectService.syncToSecondBrain({
+        title: project.title,
+        summary: project.summary,
+        description: project.description,
+        technologies: project.technologies,
+        category: "case-studies",
+      });
+      toast.success(`Synced "${project.title}" to My Second Brain (Case Studies)!`, {
+        action: {
+          label: "View Brain",
+          onClick: () => router.push("/cms/ai-knowledge"),
+        },
+      });
+    } catch (error) {
+      console.error("Error syncing project to Second Brain:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to sync to Second Brain.");
+    } finally {
+      setSyncingProjectId(null);
+    }
+  };
+
   // Define columns for DataTable
   const columns: ColumnDef<Project>[] = [
     {
@@ -327,6 +354,15 @@ export default function CmsProjectsPage() {
                   <Pencil className="h-4 w-4 mr-2 text-amber-400" />
                   Edit Project
                 </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-white/[0.08]" />
+                <DropdownMenuItem
+                  onClick={() => handleQuickSyncToSecondBrain(project)}
+                  disabled={syncingProjectId === project.id}
+                  className="hover:bg-purple-500/10 text-purple-300 hover:text-purple-200 cursor-pointer"
+                >
+                  <Brain className="h-4 w-4 mr-2 text-purple-400" />
+                  {syncingProjectId === project.id ? "Syncing..." : "Sync to Second Brain"}
+                </DropdownMenuItem>
                 {project.demoUrl && (
                   <DropdownMenuItem asChild className="hover:bg-white/[0.06] cursor-pointer">
                     <a href={project.demoUrl} target="_blank" rel="noopener noreferrer">
@@ -407,7 +443,7 @@ export default function CmsProjectsPage() {
       <CmsPageHeader
         icon={Folder}
         title="Projects"
-        description="Manage and showcase your engineering portfolio and production case studies."
+        description="Manage and showcase your engineering portfolio • Powered by My Second Brain"
         onRefresh={() => refetch()}
         isRefreshing={isRefetching}
         actions={

@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  Brain,
   Briefcase,
   CalendarCog,
   Check,
@@ -181,6 +182,35 @@ export default function CmsResumePage() {
     }
   };
 
+  const [syncingEntryId, setSyncingEntryId] = useState<string | null>(null);
+
+  const handleQuickSyncToSecondBrain = async (entry: ResumeEntry) => {
+    if (!entry.description?.trim()) {
+      toast.error("This entry has no description to sync to Second Brain.");
+      return;
+    }
+    setSyncingEntryId(entry.id);
+    try {
+      await resumeService.syncToSecondBrain({
+        title: entry.title,
+        organization: entry.organization,
+        description: entry.description,
+        category: "career-impact",
+      });
+      toast.success(`Synced "${entry.title}" at ${entry.organization} to My Second Brain!`, {
+        action: {
+          label: "View Brain",
+          onClick: () => router.push("/cms/ai-knowledge"),
+        },
+      });
+    } catch (error) {
+      console.error("Error syncing to Second Brain:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to sync to Second Brain.");
+    } finally {
+      setSyncingEntryId(null);
+    }
+  };
+
   // Define columns for DataTable
   const columns: ColumnDef<ResumeEntry>[] = [
     {
@@ -280,6 +310,19 @@ export default function CmsResumePage() {
                   <Pencil className="h-4 w-4 mr-2 text-amber-400" />
                   Edit Entry
                 </DropdownMenuItem>
+                {entry.kind === "experience" && (
+                  <>
+                    <DropdownMenuSeparator className="bg-white/[0.08]" />
+                    <DropdownMenuItem
+                      onClick={() => handleQuickSyncToSecondBrain(entry)}
+                      disabled={syncingEntryId === entry.id}
+                      className="hover:bg-purple-500/10 text-purple-300 hover:text-purple-200 cursor-pointer"
+                    >
+                      <Brain className="h-4 w-4 mr-2 text-purple-400" />
+                      {syncingEntryId === entry.id ? "Syncing..." : "Sync to Second Brain"}
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator className="bg-white/[0.08]" />
                 <DropdownMenuItem
                   onClick={() => handlePublishToggle(entry.id, entry.isPublished)}
@@ -343,7 +386,7 @@ export default function CmsResumePage() {
       <CmsPageHeader
         icon={GraduationCap}
         title="Resume & Credentials"
-        description="Manage work experience and education shown on your public profile"
+        description="Manage work experience and education • Synchronized with My Second Brain"
         badge={stats.expCount + stats.eduCount > 0 ? `${stats.expCount + stats.eduCount} total` : undefined}
         onRefresh={() => refetch()}
         isRefreshing={isLoading || isRefetching}

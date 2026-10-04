@@ -15,4 +15,8 @@ export const blogService = {
   getAllTags: actions.getAllTags,
   getAllForCms: actions.getAllForCms,
   delete: actions.deleteBlog,
+  draftWithSecondBrain: actions.draftBlogWithSecondBrain,
+  syncToSecondBrain: actions.syncBlogToSecondBrain,
 };
+
+export * from "./types";

@@ -8,6 +8,7 @@ import type {
   ParsedInterviewInvitation,
   ParsedJobPosting,
   RejectionDiagnosticResult,
+  SecondBrainKnowledgeSnippet,
   TailoredBullet,
 } from "./types";
 
@@ -143,6 +144,7 @@ export async function analyzeResumeMatchWithGemini(params: {
   };
   skills: { name: string; category?: string }[];
   featuredProjects?: { title: string; summary: string; technologies: string[] }[];
+  secondBrainKnowledge?: SecondBrainKnowledgeSnippet[];
 }): Promise<{
   atsAnalysis: AtsAnalysis;
   tailoredSummary: string;
@@ -162,6 +164,18 @@ export async function analyzeResumeMatchWithGemini(params: {
     2
   );
 
+  const secondBrainContext =
+    params.secondBrainKnowledge && params.secondBrainKnowledge.length > 0
+      ? params.secondBrainKnowledge
+          .map(
+            (k) =>
+              `• [${k.category.toUpperCase()}] ${k.title}:\n  ${k.content}${
+                k.tags && k.tags.length ? `\n  Tags: ${k.tags.join(", ")}` : ""
+              }`
+          )
+          .join("\n\n")
+      : "No additional Second Brain documents provided.";
+
   const prompt = `You are a Senior Staff Engineer and expert Technical Recruiter specializing in high-level engineering talent and ATS optimization.
 Analyze the candidate's authentic master profile against the target job posting.
 
@@ -175,15 +189,19 @@ ${params.requirements.join("\n- ")}
 Candidate's Real Master Profile:
 ${resumeContext}
 
+Candidate's Second Brain (Deep Engineering Principles, Metrics, Technical Opinions & Proven Track Record):
+${secondBrainContext}
+
 CRITICAL ANTI-HALLUCINATION & AUTHENTICITY GUARDRAILS:
-1. Ground all achievements, metrics, and bullet points strictly in the candidate's real experiences, projects, and skills.
-2. DO NOT fabricate wild numbers, exaggerated revenue figures, or ungrounded claims that have no basis in the candidate's actual responsibilities.
-3. DO NOT invent employers, job titles, degrees, or certifications the candidate never held.
-4. For the XYZ Formula ("Accomplished [X] as measured by [Y], by doing [Z]"), formulate realistic, defensible engineering outcomes based on their tech stack, architectural scope, and responsibilities described in their profile.
+1. Ground all achievements, metrics, and bullet points strictly in the candidate's real experiences, projects, skills, and verified Second Brain knowledge.
+2. Synthesize deep technical details, architectural decisions, and tangible outcomes recorded in the candidate's Second Brain with their work experiences to provide authentic, defensible engineering substance.
+3. DO NOT fabricate wild numbers, exaggerated revenue figures, or ungrounded claims that have no basis in the candidate's actual responsibilities or Second Brain records.
+4. DO NOT invent employers, job titles, degrees, or certifications the candidate never held.
+5. For the XYZ Formula ("Accomplished [X] as measured by [Y], by doing [Z]"), synthesize real engineering scope, tech stack, and impact documented in their Master Profile and Second Brain.
 
 IN-PLACE EXPERIENCE MAPPING:
 - Generate tailored bullet points mapped directly to the candidate's actual work experiences via "experienceId" and "roleContext" (e.g. "<title> at <organization>").
-- Each tailored bullet point must serve as an in-place improvement for that specific role, re-framing real past accomplishments to align directly with the target job's tech stack and priorities.
+- Each tailored bullet point must serve as an in-place improvement for that specific role, re-framing real past accomplishments and infusing relevant architectural and problem-solving depth from the Second Brain to align directly with the target job's tech stack and priorities.
 - Provide 2 to 4 high-impact bullets per relevant experience.
 
 Tasks:

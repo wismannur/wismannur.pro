@@ -42,7 +42,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTextToSpeech } from "../hooks/use-speech";
+import { useTextToSpeech } from "@/hooks/use-speech";
 import {
   getEnglishVocabularies,
   toggleVocabMastery,

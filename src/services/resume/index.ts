@@ -8,4 +8,8 @@ export const resumeService = {
   update: actions.update,
   delete: actions.deleteResumeEntry,
   getAllForCms: actions.getAllForCms,
+  polishWithSecondBrain: actions.polishResumeExperienceWithSecondBrain,
+  syncToSecondBrain: actions.syncResumeExperienceToSecondBrain,
 };
+
+export * from "./types";

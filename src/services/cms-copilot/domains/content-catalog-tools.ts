@@ -7,6 +7,8 @@ import {
   create as createBlogAction,
   update as updateBlogAction,
   deleteBlog,
+  draftBlogWithSecondBrain,
+  syncBlogToSecondBrain,
 } from "../../blog/actions";
 import type { NewBlog, UpdateBlog } from "../../blog/types";
 import {
@@ -16,6 +18,8 @@ import {
   create as createProjectAction,
   update as updateProjectAction,
   deleteProject,
+  draftProjectCaseStudyWithSecondBrain,
+  syncProjectToSecondBrain,
 } from "../../project/actions";
 import type { NewProject, UpdateProject } from "../../project/types";
 import {
@@ -24,6 +28,8 @@ import {
   create as createResumeAction,
   update as updateResumeAction,
   deleteResumeEntry,
+  polishResumeExperienceWithSecondBrain,
+  syncResumeExperienceToSecondBrain,
 } from "../../resume/actions";
 import type { NewResumeEntry, ResumeKind, UpdateResumeEntry } from "../../resume/types";
 import {
@@ -143,6 +149,44 @@ export const CONTENT_CATALOG_TOOL_DECLARATIONS = [
       required: ["id"],
     },
   },
+  {
+    name: "draft_blog_with_second_brain",
+    description:
+      "Draft an authoritative technical blog post formatted in MDX grounded in Wisman's Second Brain persona, tech opinions, and architecture decisions.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        topicPrompt: {
+          type: Type.STRING,
+          description: "Core topic, technical thesis, or instructions for the blog article",
+        },
+        existingTitle: {
+          type: Type.STRING,
+          description: "Optional existing working title to refine",
+        },
+        categoryFilter: {
+          type: Type.STRING,
+          description: "Optional Second Brain category filter (e.g. 'tech-opinions', 'architecture-principles', 'case-studies')",
+        },
+      },
+    },
+  },
+  {
+    name: "sync_blog_to_second_brain",
+    description:
+      "Extract and sync key technical insights, opinions, and architecture takeaways from a blog article into My Second Brain as a new knowledge item.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: "Article title" },
+        summary: { type: Type.STRING, description: "Article summary or key takeaway" },
+        content: { type: Type.STRING, description: "Full or snippet of the blog content to synthesize" },
+        tags: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Tags list" },
+        category: { type: Type.STRING, description: "Second Brain category (default: 'tech-opinions')" },
+      },
+      required: ["title", "summary", "content"],
+    },
+  },
 
   // 2. Portfolio Projects
   {
@@ -222,6 +266,37 @@ export const CONTENT_CATALOG_TOOL_DECLARATIONS = [
       required: ["id"],
     },
   },
+  {
+    name: "draft_project_case_study_with_second_brain",
+    description:
+      "Draft an in-depth engineering project case study and architecture breakdown in MDX grounded in Wisman's verified Second Brain.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        projectTitle: { type: Type.STRING, description: "Project title or focus" },
+        technologies: { type: Type.STRING, description: "Key technology stack (comma-separated, e.g. 'Next.js, Go, Redis')" },
+        existingSummary: { type: Type.STRING, description: "Brief overview or existing summary of the project" },
+        existingDescription: { type: Type.STRING, description: "Optional existing rough description or draft notes" },
+      },
+      required: ["projectTitle"],
+    },
+  },
+  {
+    name: "sync_project_to_second_brain",
+    description:
+      "Sync a portfolio project's architecture decisions, challenges, and solutions into My Second Brain as a case-study knowledge item.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: "Project title" },
+        summary: { type: Type.STRING, description: "Project summary" },
+        description: { type: Type.STRING, description: "Full project description / case study content" },
+        technologies: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Tech stack list" },
+        category: { type: Type.STRING, description: "Second Brain category (default: 'case-studies')" },
+      },
+      required: ["title", "summary", "description"],
+    },
+  },
 
   // 3. Resume (Experience & Education)
   {
@@ -294,6 +369,38 @@ export const CONTENT_CATALOG_TOOL_DECLARATIONS = [
         id: { type: Type.STRING, description: "Resume entry ID to delete" },
       },
       required: ["id"],
+    },
+  },
+  {
+    name: "polish_resume_experience_with_second_brain",
+    description:
+      "Polish and upgrade a work experience role description into high-impact Google XYZ bullet points ('Accomplished [X] as measured by [Y], by doing [Z]') grounded in Wisman's verified Second Brain achievements.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: "Role or job title (e.g. 'Lead Software Engineer')" },
+        organization: { type: Type.STRING, description: "Company or organization name" },
+        location: { type: Type.STRING, description: "Location or Remote" },
+        period: { type: Type.STRING, description: "Time period (e.g. '2023 - Present')" },
+        currentDescription: { type: Type.STRING, description: "Current draft bullet points or role description to upgrade" },
+      },
+      required: ["title", "organization"],
+    },
+  },
+  {
+    name: "sync_resume_to_second_brain",
+    description:
+      "Export an engineering role's verified accomplishments from Resume directly into My Second Brain as a 'career-impact' knowledge item.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: "Role title" },
+        organization: { type: Type.STRING, description: "Company name" },
+        description: { type: Type.STRING, description: "Impact accomplishments / bullet points to save" },
+        tags: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Optional tags list" },
+        category: { type: Type.STRING, description: "Second Brain category (default: 'career-impact')" },
+      },
+      required: ["title", "organization", "description"],
     },
   },
 
@@ -761,6 +868,46 @@ export async function executeContentCatalogTool(
       };
     }
 
+    case "draft_blog_with_second_brain": {
+      const topicPrompt = args.topicPrompt as string | undefined;
+      const existingTitle = args.existingTitle as string | undefined;
+      const categoryFilter = args.categoryFilter as string | undefined;
+
+      const draftResult = await draftBlogWithSecondBrain({
+        topicPrompt,
+        existingTitle,
+        categoryFilter,
+      });
+
+      return {
+        success: true,
+        message: `Blog article drafted successfully using Second Brain. Title: "${draftResult.title}"`,
+        data: draftResult,
+      };
+    }
+
+    case "sync_blog_to_second_brain": {
+      const title = String(args.title).trim();
+      const summary = String(args.summary).trim();
+      const content = String(args.content).trim();
+      const tags = Array.isArray(args.tags) ? (args.tags as string[]) : undefined;
+      const category = args.category ? String(args.category).trim() : undefined;
+
+      const knowledgeId = await syncBlogToSecondBrain({
+        title,
+        summary,
+        content,
+        tags,
+        category,
+      });
+
+      return {
+        success: true,
+        message: `Blog article insights synced to My Second Brain successfully. (Knowledge ID: ${knowledgeId})`,
+        data: { knowledgeId, title },
+      };
+    }
+
     // ----------------------------------------------------
     // Portfolio Projects
     // ----------------------------------------------------
@@ -897,6 +1044,53 @@ export async function executeContentCatalogTool(
       };
     }
 
+    case "draft_project_case_study_with_second_brain": {
+      const projectTitle = String(args.projectTitle || args.title || "").trim();
+      const technologies =
+        typeof args.technologies === "string"
+          ? args.technologies.trim()
+          : Array.isArray(args.technologies)
+            ? (args.technologies as string[]).join(", ")
+            : undefined;
+      const existingSummary = args.existingSummary ? String(args.existingSummary).trim() : undefined;
+      const existingDescription = args.existingDescription ? String(args.existingDescription).trim() : undefined;
+
+      const draftResult = await draftProjectCaseStudyWithSecondBrain({
+        projectTitle,
+        technologies,
+        existingSummary,
+        existingDescription,
+      });
+
+      return {
+        success: true,
+        message: `Project case study drafted successfully using Second Brain for "${projectTitle}".`,
+        data: draftResult,
+      };
+    }
+
+    case "sync_project_to_second_brain": {
+      const title = String(args.title).trim();
+      const summary = String(args.summary).trim();
+      const description = String(args.description).trim();
+      const technologies = Array.isArray(args.technologies) ? (args.technologies as string[]) : undefined;
+      const category = args.category ? String(args.category).trim() : undefined;
+
+      const knowledgeId = await syncProjectToSecondBrain({
+        title,
+        summary,
+        description,
+        technologies,
+        category,
+      });
+
+      return {
+        success: true,
+        message: `Project case study synced to My Second Brain successfully. (Knowledge ID: ${knowledgeId})`,
+        data: { knowledgeId, title },
+      };
+    }
+
     // ----------------------------------------------------
     // Resume (Experience & Education)
     // ----------------------------------------------------
@@ -996,6 +1190,50 @@ export async function executeContentCatalogTool(
         success: true,
         message: `Resume entry (ID: ${id}) deleted successfully.`,
         data: { id, deleted: true },
+      };
+    }
+
+    case "polish_resume_experience_with_second_brain": {
+      const title = String(args.title).trim();
+      const organization = String(args.organization).trim();
+      const location = args.location ? String(args.location).trim() : undefined;
+      const period = args.period ? String(args.period).trim() : undefined;
+      const currentDescription = args.currentDescription ? String(args.currentDescription).trim() : undefined;
+
+      const polishResult = await polishResumeExperienceWithSecondBrain({
+        title,
+        organization,
+        location,
+        period,
+        currentDescription,
+      });
+
+      return {
+        success: true,
+        message: `Resume experience for "${title} at ${organization}" polished using Google XYZ formula and Second Brain.`,
+        data: polishResult,
+      };
+    }
+
+    case "sync_resume_to_second_brain": {
+      const title = String(args.title).trim();
+      const organization = String(args.organization).trim();
+      const description = String(args.description).trim();
+      const tags = Array.isArray(args.tags) ? (args.tags as string[]) : undefined;
+      const category = args.category ? String(args.category).trim() : undefined;
+
+      const knowledgeId = await syncResumeExperienceToSecondBrain({
+        title,
+        organization,
+        description,
+        tags,
+        category,
+      });
+
+      return {
+        success: true,
+        message: `Resume experience accomplishments synced to My Second Brain successfully. (Knowledge ID: ${knowledgeId})`,
+        data: { knowledgeId, title, organization },
       };
     }
 
