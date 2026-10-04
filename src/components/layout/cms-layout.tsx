@@ -548,6 +548,14 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
         </div>
         <ScrollToTop />
         <CmsCopilotPanel />
+        {/* Floating AI Copilot Launcher Button for Mobile Screen */}
+        <Button
+          onClick={() => window.dispatchEvent(new CustomEvent("toggle-cms-copilot"))}
+          className="fixed bottom-5 right-4 h-11 w-11 rounded-full bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-xl shadow-indigo-500/30 border border-white/20 sm:hidden z-30 flex items-center justify-center p-0 hover:scale-105 active:scale-95 transition-transform"
+          aria-label="Buka CMS Staff Copilot"
+        >
+          <Sparkles className="h-5 w-5 text-white" />
+        </Button>
       </div>
     </SidebarProvider>
   );
