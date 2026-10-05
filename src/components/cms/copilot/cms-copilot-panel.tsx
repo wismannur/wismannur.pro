@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Sparkles,
   X,
@@ -27,6 +28,7 @@ import {
   MoreVertical,
   Clock,
   Compass,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -194,14 +196,24 @@ async function streamCopilotChat(
   return fullText;
 }
 
+const LAST_SESSION_STORAGE_KEY = "cms_copilot_last_session_id";
+
 export function CmsCopilotPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [sessions, setSessions] = useState<CmsCopilotSessionRow[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string>(() =>
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+  const [currentSessionId, setCurrentSessionId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(LAST_SESSION_STORAGE_KEY);
+        if (saved && saved.trim()) return saved.trim();
+      } catch {
+        // ignore
+      }
+    }
+    return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
       ? crypto.randomUUID()
-      : `copilot-${Date.now()}`
-  );
+      : `copilot-${Date.now()}`;
+  });
   const [copiedSessionId, setCopiedSessionId] = useState<string | null>(null);
   const [showQuickPrompts, setShowQuickPrompts] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
@@ -261,8 +273,20 @@ export function CmsCopilotPanel() {
   const startHeightRef = useRef(64);
 
   const pathname = usePathname();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const currentSessionIdRef = useRef(currentSessionId);
+  const messagesRef = useRef(messages);
+
+  useEffect(() => {
+    currentSessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // Panel Width Resize (Left Drag Handle)
   const [panelWidth, setPanelWidth] = useState<number>(() => {
@@ -522,14 +546,55 @@ export function CmsCopilotPanel() {
     };
   }, [isOpen, viewMode]);
 
-  // Fetch session history when panel opens
+  // Fetch session history when panel opens & auto-restore active conversation if needed
   useEffect(() => {
     if (!isOpen) return;
 
     let isMounted = true;
     getCmsCopilotSessions()
-      .then((data) => {
-        if (isMounted) setSessions(data);
+      .then(async (data) => {
+        if (!isMounted) return;
+        setSessions(data);
+
+        // Auto-restore active session messages if panel currently only holds initial greeting
+        const savedSessionId =
+          typeof window !== "undefined"
+            ? localStorage.getItem(LAST_SESSION_STORAGE_KEY)
+            : null;
+        let targetId = savedSessionId || currentSessionIdRef.current;
+        if (!data.some((s) => s.id === targetId) && data.length > 0 && !savedSessionId) {
+          targetId = data[0].id;
+        }
+
+        if (targetId && data.some((s) => s.id === targetId)) {
+          const currentMsgs = messagesRef.current;
+          if (currentMsgs.length <= 1 && currentMsgs[0]?.id === INITIAL_GREETING.id) {
+            try {
+              const rows = await getCmsCopilotSessionMessages(targetId);
+              if (isMounted && rows && rows.length > 0) {
+                setCurrentSessionId(targetId);
+                try {
+                  localStorage.setItem(LAST_SESSION_STORAGE_KEY, targetId);
+                } catch {
+                  // ignore
+                }
+                setMessages(
+                  rows.map((r) => ({
+                    id: r.id,
+                    role: r.role === "assistant" ? "assistant" : "user",
+                    content: r.content,
+                    toolCalls: (r.toolCalls as ToolCallInfo[] | null) ?? undefined,
+                    toolResults: (r.toolResults as ToolResultInfo[] | null) ?? undefined,
+                    status: "done",
+                    createdAt: r.createdAt,
+                  }))
+                );
+              }
+            } catch (loadErr) {
+              console.error("Failed to auto-restore active session messages:", loadErr);
+            }
+          }
+        }
       })
       .catch((err) => console.error("Failed to load sessions:", err));
 
@@ -549,6 +614,39 @@ export function CmsCopilotPanel() {
       .catch((err) => console.error("Failed to reload sessions:", err));
   }, []);
 
+  const [isRefreshingSession, setIsRefreshingSession] = useState(false);
+
+  const handleRefreshCurrentSession = useCallback(async () => {
+    if (!currentSessionId || isRefreshingSession) return;
+    setIsRefreshingSession(true);
+    try {
+      const rows = await getCmsCopilotSessionMessages(currentSessionId);
+      if (rows && rows.length > 0) {
+        setMessages(
+          rows.map((r) => ({
+            id: r.id,
+            role: r.role === "assistant" ? "assistant" : "user",
+            content: r.content,
+            toolCalls: (r.toolCalls as ToolCallInfo[] | null) ?? undefined,
+            toolResults: (r.toolResults as ToolResultInfo[] | null) ?? undefined,
+            status: "done",
+            createdAt: r.createdAt,
+          }))
+        );
+        toast.success("Percakapan berhasil disinkronkan dari database.");
+      } else {
+        setMessages([INITIAL_GREETING]);
+        toast.info("Tidak ada riwayat pesan tersimpan untuk sesi ini.");
+      }
+      reloadSessions();
+    } catch (err) {
+      console.error("Failed to refresh session messages:", err);
+      toast.error("Gagal menyinkronkan pesan.");
+    } finally {
+      setIsRefreshingSession(false);
+    }
+  }, [currentSessionId, isRefreshingSession, reloadSessions]);
+
   // Load selected session messages
   const handleSelectSession = async (session: CmsCopilotSessionRow) => {
     try {
@@ -558,6 +656,11 @@ export function CmsCopilotPanel() {
         saveDraft(input, currentSessionId);
       }
       setCurrentSessionId(session.id);
+      try {
+        localStorage.setItem(LAST_SESSION_STORAGE_KEY, session.id);
+      } catch {
+        // ignore
+      }
 
       // Restore draft for target session (if any)
       const targetDraft = getDraft(session.id);
@@ -617,6 +720,11 @@ export function CmsCopilotPanel() {
         ? crypto.randomUUID()
         : `copilot-${Date.now()}`;
     setCurrentSessionId(freshId);
+    try {
+      localStorage.setItem(LAST_SESSION_STORAGE_KEY, freshId);
+    } catch {
+      // ignore
+    }
     setMessages([INITIAL_GREETING]);
     setInput("");
     clearDraft();
@@ -968,7 +1076,14 @@ export function CmsCopilotPanel() {
             .map((m) => ({ role: m.role, content: m.content })),
         },
         {
-          onSessionId: (sid) => setCurrentSessionId(sid),
+          onSessionId: (sid) => {
+            setCurrentSessionId(sid);
+            try {
+              localStorage.setItem(LAST_SESSION_STORAGE_KEY, sid);
+            } catch {
+              // ignore
+            }
+          },
           onToolCall: (name, args) => {
             setActiveTool(`Executing: ${name}`);
             setMessages((prev) =>
@@ -984,6 +1099,14 @@ export function CmsCopilotPanel() {
           },
           onToolResult: (name, result) => {
             setActiveTool(null);
+            // Real-time background sync: Invalidate active TanStack queries & refresh router
+            queryClient.invalidateQueries();
+            router.refresh();
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("cms-data-mutated", { detail: { tool: name, result } })
+              );
+            }
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === assistantMessageId
@@ -1030,6 +1153,9 @@ export function CmsCopilotPanel() {
       );
 
       reloadSessions();
+      // Ensure all background page queries are completely synchronized
+      queryClient.invalidateQueries();
+      router.refresh();
     } catch (err: unknown) {
       console.error("Chat Error:", err);
       const errMsg = err instanceof Error ? err.message : "Terjadi kendala saat memproses percakapan.";
@@ -1209,6 +1335,34 @@ export function CmsCopilotPanel() {
                     </Tooltip>
                   </TooltipProvider>
 
+                  {/* Sync / Refresh Active Session Messages */}
+                  {currentSessionId && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleRefreshCurrentSession}
+                            disabled={isRefreshingSession || isLoading}
+                            className="h-8 w-8 rounded-lg text-gray-400 hover:text-indigo-300 hover:bg-white/[0.06]"
+                            title="Sinkronkan pesan dari database"
+                          >
+                            <RefreshCw
+                              className={cn(
+                                "h-3.5 w-3.5",
+                                isRefreshingSession && "animate-spin text-indigo-400"
+                              )}
+                            />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
+                          Sinkronkan Pesan dari Database
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
                   {/* Rename & Delete for Active Session */}
                   {currentSessionId && (
                     <>
@@ -1346,6 +1500,22 @@ export function CmsCopilotPanel() {
                       {currentSessionId && (
                         <>
                           <DropdownMenuSeparator className="bg-white/[0.08] my-1" />
+                          <DropdownMenuItem
+                            onClick={handleRefreshCurrentSession}
+                            disabled={isRefreshingSession || isLoading}
+                            className="cursor-pointer gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.08] focus:bg-white/[0.08]"
+                          >
+                            <RefreshCw
+                              className={cn(
+                                "h-4 w-4 text-indigo-400 shrink-0",
+                                isRefreshingSession && "animate-spin"
+                              )}
+                            />
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-medium text-white">Sinkronkan Pesan</span>
+                              <span className="text-[10px] text-gray-400">Muat ulang pesan dari database</span>
+                            </div>
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => {
                               const active = sessions.find((s) => s.id === currentSessionId);

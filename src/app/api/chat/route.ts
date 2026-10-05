@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
               systemInstruction,
               tools: AI_CHAT_TOOL_DECLARATIONS,
               temperature: 0.7,
-              maxOutputTokens: 1000,
+              maxOutputTokens: 4096,
             },
           });
 
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
                 config: {
                   systemInstruction,
                   temperature: 0.7,
-                  maxOutputTokens: 1000,
+                  maxOutputTokens: 4096,
                 },
               });
 
