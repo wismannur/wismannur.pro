@@ -107,10 +107,15 @@ Executive Guidelines:
     2. Confirm & Structure Draft: Konfirmasi pemahaman Anda dengan menyusun draft wawasan Second Brain yang siap pakai:
        - Judul yang diusulkan (Compelling & Executive)
        - Rekomendasi Kategori (pilih dari 10 kategori: career-impact, tech-opinions, case-studies, writing-voice, technical, philosophy, screening, projects, hiring, general)
-       - Draft Konten Markdown (terstruktur dengan latar belakang, tantangan, tindakan nyata, metrik terukur, dan trade-off)
+       - Draft Konten Markdown (terstruktur dengan latar belakang, tantangan, tindakan nyata, dampak terverifikasi, dan trade-off)
        - Rekomendasi Tags yang relevan
     3. Solicit Confirmation: Tanyakan kepada Wisman apakah intisari draft tersebut sudah akurat atau ada detail yang ingin diubah sebelum disimpan ke database.
-    4. Execute on Instruction: Ketika Wisman menyetujui ("oke simpan", "tambahin X lalu save", atau minta modifikasi), segera jalankan tool create_ai_knowledge_item atau update_ai_knowledge_item dan berikan konfirmasi bahwa wawasan telah tersimpan ke My Second Brain.`;
+    4. Execute on Instruction: Ketika Wisman menyetujui ("oke simpan", "tambahin X lalu save", atau minta modifikasi), segera jalankan tool create_ai_knowledge_item atau update_ai_knowledge_item dan berikan konfirmasi bahwa wawasan telah tersimpan ke My Second Brain.
+       - Efisiensi & Pencegahan Timeout: Jika menyimpan beberapa draft sekaligus (misalnya 2–4 draft), panggil SEMUA function call create_ai_knowledge_item secara serentak/paralel dalam 1 langkah (turn), jangan satu per satu di setiap hop!
+    5. ⚠️ STRICT GROUNDING & ZERO-FABRICATION RULE:
+       - DILARANG KERAS mengarang, memalsukan, atau membuat metrik angka fiktif yang tidak pernah disebutkan oleh Kang Wisman (seperti "50-page back-office", "diselesaikan dalam 6 bulan", "dokumentasi warisan yang tidak lengkap", atau statistik buatan lainnya).
+       - Semua fakta, timeline, nama perusahaan, stack teknologi, kendala, dan peran HARUS 100% berakar murni dari cerita nyata Wisman.
+       - Jika metrik spesifik tidak disebutkan oleh Wisman, gambarkan dampaknya secara kualitatif, arsitektural, atau fokus pada trade-off teknis riil yang dihadapi.`;
 }
 
 export async function POST(req: NextRequest) {
@@ -325,6 +330,21 @@ export async function POST(req: NextRequest) {
             type: "error",
             content: `Error during copilot processing: ${errorMessage}`,
           });
+
+          // Preserve conversation turn even if streaming encountered an error or timeout
+          if (lastUserText) {
+            await saveCmsCopilotTurn({
+              sessionId,
+              userMessage: lastUserText,
+              assistantMessage:
+                fullAssistantText || `Operasi data terhenti: ${errorMessage}`,
+              currentPath,
+              toolCalls: executedToolCalls,
+              toolResults: executedToolResults,
+            }).catch((turnErr) => {
+              console.error("[saveCmsCopilotTurn Error on stream catch]:", turnErr);
+            });
+          }
         } finally {
           controller.close();
         }
