@@ -505,6 +505,7 @@ export default function ProjectTrackerPage() {
       ) : (
         <ProspectTable
           prospects={filteredProspects}
+          isLoading={isLoading}
           onOpenDetail={handleOpenDetail}
           onUpdateStatus={handleUpdateStatus}
           onDelete={(id) => setProspectToDelete(id)}
