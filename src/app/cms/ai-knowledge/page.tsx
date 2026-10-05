@@ -55,6 +55,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DataTable, type ColumnDef } from "@/components/ui/data-table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import {
@@ -188,45 +190,42 @@ export default function CmsAiKnowledgePage() {
     },
     {
       accessorKey: "category",
-      header: "Category",
+      header: "Category & Tags",
       cell: (item) => {
         const cat = item.category;
         const icon = CATEGORY_ICONS[cat] || <BookOpen className="w-3.5 h-3.5" />;
         const catObj = AI_KNOWLEDGE_CATEGORIES.find((c) => c.value === cat);
         const style = CATEGORY_STYLES[cat] || "bg-muted/60 text-muted-foreground border-border/50";
-        return (
-          <Badge
-            variant="secondary"
-            className={cn("flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium capitalize border", style)}
-          >
-            {icon}
-            <span>{catObj?.label || cat}</span>
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "tags",
-      header: "Tags",
-      cell: (item) => {
         const tags = item.tags || [];
-        if (tags.length === 0) {
-          return <span className="text-xs text-muted-foreground">-</span>;
-        }
         return (
-          <div className="flex flex-wrap gap-1 max-w-[160px]">
-            {tags.slice(0, 3).map((tag, idx) => (
-              <span
-                key={idx}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border/40 font-mono"
+          <div className="space-y-1.5 min-w-[150px] max-w-[220px]">
+            <div>
+              <Badge
+                variant="secondary"
+                className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium capitalize border", style)}
               >
-                #{tag}
-              </span>
-            ))}
-            {tags.length > 3 && (
-              <span className="text-[10px] text-muted-foreground">
-                +{tags.length - 3}
-              </span>
+                {icon}
+                <span>{catObj?.label || cat}</span>
+              </Badge>
+            </div>
+            {tags.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {tags.slice(0, 3).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-muted/80 text-muted-foreground border border-border/40 font-mono"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+                {tags.length > 3 && (
+                  <span className="text-[10px] text-muted-foreground font-mono self-center">
+                    +{tags.length - 3}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <span className="text-[11px] text-muted-foreground/50 italic">No tags</span>
             )}
           </div>
         );
@@ -404,8 +403,172 @@ export default function CmsAiKnowledgePage() {
         </div>
       </div>
 
-      {/* Data Table */}
-      <div className="rounded-xl border border-border/70 bg-card/40 overflow-hidden shadow-xs">
+      {/* Mobile / Tablet Cards View (Screen <= 768px) */}
+      <div className="block min-[769px]:hidden space-y-3">
+        {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={`card-skeleton-${index}`}
+                className="rounded-2xl border border-border/60 bg-card/40 p-4 space-y-3 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-6 w-28 rounded-full" />
+                    <Skeleton className="h-5 w-12 rounded-md" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-5 w-3/4 rounded-md" />
+                <Skeleton className="h-12 w-full rounded-md" />
+                <div className="pt-2 border-t border-border/40 flex items-center justify-between">
+                  <Skeleton className="h-4 w-32 rounded-md" />
+                  <Skeleton className="h-7 w-16 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <EmptyState
+            title="No AI knowledge items found"
+            description="Click 'New Knowledge Item' to add your first deep insight or screening answer."
+            action={{
+              label: "New Knowledge Item",
+              href: "/cms/ai-knowledge/form",
+              icon: Plus,
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-3.5">
+            {items.map((item) => {
+              const cat = item.category;
+              const icon = CATEGORY_ICONS[cat] || <BookOpen className="w-3.5 h-3.5" />;
+              const catObj = AI_KNOWLEDGE_CATEGORIES.find((c) => c.value === cat);
+              const style = CATEGORY_STYLES[cat] || "bg-muted/60 text-muted-foreground border-border/50";
+              const tags = item.tags || [];
+
+              return (
+                <div
+                  key={item.id}
+                  className="group relative rounded-2xl border border-border/70 bg-card/60 backdrop-blur-xs hover:border-primary/40 hover:bg-card/90 transition-all duration-200 p-4 space-y-3 shadow-xs"
+                >
+                  {/* Header: Category Badge + Order pill & Status Switch + Action Menu */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      <Badge
+                        variant="secondary"
+                        className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium capitalize border", style)}
+                      >
+                        {icon}
+                        <span className="truncate max-w-[150px]">{catObj?.label || cat}</span>
+                      </Badge>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-muted/70 text-muted-foreground border border-border/40">
+                        #{item.sortOrder}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5">
+                        <Switch
+                          checked={item.isPublished}
+                          onCheckedChange={(checked) => handleTogglePublished(item, checked)}
+                          aria-label={`Toggle active status for ${item.title}`}
+                          className="scale-90"
+                        />
+                        <span
+                          className={cn(
+                            "text-xs font-medium",
+                            item.isPublished ? "text-emerald-500" : "text-muted-foreground"
+                          )}
+                        >
+                          {item.isPublished ? "Active" : "Draft"}
+                        </span>
+                      </div>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 -mr-1">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => router.push(`/cms/ai-knowledge/form/${item.id}`)}
+                            className="cursor-pointer gap-2"
+                          >
+                            <Pencil className="h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setItemToDelete(item)}
+                            className="cursor-pointer text-destructive focus:text-destructive gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+
+                  {/* Body: Title & Content Preview */}
+                  <div className="space-y-1">
+                    <Link
+                      href={`/cms/ai-knowledge/form/${item.id}`}
+                      className="font-semibold text-sm sm:text-base hover:text-primary transition-colors line-clamp-2 block leading-snug"
+                    >
+                      {item.title}
+                    </Link>
+                    <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
+                      {item.content}
+                    </p>
+                  </div>
+
+                  {/* Footer: Tags & Quick Edit Link */}
+                  <div className="pt-2 border-t border-border/40 flex items-center justify-between gap-2">
+                    <div className="flex flex-wrap gap-1 items-center flex-1 min-w-0">
+                      {tags.length > 0 ? (
+                        <>
+                          {tags.slice(0, 3).map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="text-[10px] px-1.5 py-0.5 rounded bg-muted/80 text-muted-foreground border border-border/40 font-mono"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                          {tags.length > 3 && (
+                            <span className="text-[10px] text-muted-foreground font-mono self-center">
+                              +{tags.length - 3}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground/50 italic">No tags</span>
+                      )}
+                    </div>
+
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2.5 text-xs gap-1 rounded-lg border-border/60 hover:bg-muted/80 shrink-0"
+                    >
+                      <Link href={`/cms/ai-knowledge/form/${item.id}`}>
+                        <Pencil className="h-3 w-3" />
+                        <span>Edit</span>
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Data Table (Screen > 768px) */}
+      <div className="hidden min-[769px]:block rounded-xl border border-border/70 bg-card/40 overflow-hidden shadow-xs">
         <DataTable
           columns={columns}
           data={items}
