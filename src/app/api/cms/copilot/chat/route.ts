@@ -171,9 +171,16 @@ export async function POST(req: NextRequest) {
                 systemInstruction,
                 tools: CMS_COPILOT_TOOL_DECLARATIONS,
                 temperature: 0.5,
-                maxOutputTokens: 1500,
+                maxOutputTokens: 16384,
               },
             });
+
+            const candidate = response.candidates?.[0];
+            if (candidate?.finishReason === "MAX_TOKENS") {
+              console.warn(
+                `[CMS Copilot Warn]: Generation hit MAX_TOKENS limit (session: ${sessionId}, hop: ${hop})`
+              );
+            }
 
             const functionCalls = response.functionCalls;
 
@@ -272,9 +279,15 @@ export async function POST(req: NextRequest) {
               config: {
                 systemInstruction,
                 temperature: 0.5,
-                maxOutputTokens: 1500,
+                maxOutputTokens: 16384,
               },
             });
+
+            if (finalSynthesis.candidates?.[0]?.finishReason === "MAX_TOKENS") {
+              console.warn(
+                `[CMS Copilot Warn]: Final synthesis hit MAX_TOKENS limit (session: ${sessionId})`
+              );
+            }
 
             const responseText = finalSynthesis.text || "";
             fullAssistantText = responseText;
