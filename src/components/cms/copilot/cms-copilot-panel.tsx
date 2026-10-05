@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Sparkles,
   X,
@@ -261,6 +262,8 @@ export function CmsCopilotPanel() {
   const startHeightRef = useRef(64);
 
   const pathname = usePathname();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const scrollViewportRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -984,6 +987,14 @@ export function CmsCopilotPanel() {
           },
           onToolResult: (name, result) => {
             setActiveTool(null);
+            // Real-time background sync: Invalidate active TanStack queries & refresh router
+            queryClient.invalidateQueries();
+            router.refresh();
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(
+                new CustomEvent("cms-data-mutated", { detail: { tool: name, result } })
+              );
+            }
             setMessages((prev) =>
               prev.map((msg) =>
                 msg.id === assistantMessageId
@@ -1030,6 +1041,9 @@ export function CmsCopilotPanel() {
       );
 
       reloadSessions();
+      // Ensure all background page queries are completely synchronized
+      queryClient.invalidateQueries();
+      router.refresh();
     } catch (err: unknown) {
       console.error("Chat Error:", err);
       const errMsg = err instanceof Error ? err.message : "Terjadi kendala saat memproses percakapan.";
