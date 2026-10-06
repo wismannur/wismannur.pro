@@ -1,6 +1,6 @@
 "use server";
 
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, ilike, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { assertAdmin } from "../core/auth-guard";
 import type { CmsCopilotMessageRow, CmsCopilotSessionRow } from "@/db/schema";
@@ -30,6 +30,72 @@ export async function getCmsCopilotSessionMessages(
     .from(cmsCopilotMessages)
     .where(eq(cmsCopilotMessages.sessionId, sessionId))
     .orderBy(cmsCopilotMessages.createdAt);
+}
+
+export async function getCmsCopilotSessionDetails(
+  sessionId: string
+): Promise<{
+  session: CmsCopilotSessionRow;
+  messages: CmsCopilotMessageRow[];
+} | null> {
+  await assertAdmin();
+  const db = getDb();
+
+  const cleanId = sessionId.trim().replace(/^ref:/i, "").trim();
+  if (!cleanId) return null;
+
+  // 1. Try exact UUID match
+  let [session] = await db
+    .select()
+    .from(cmsCopilotSessions)
+    .where(eq(cmsCopilotSessions.id, cleanId))
+    .limit(1);
+
+  // 2. If not found, try prefix match (if input is at least 6 characters, e.g. ref:e1b3e334)
+  if (!session && cleanId.length >= 6) {
+    const [matching] = await db
+      .select()
+      .from(cmsCopilotSessions)
+      .where(ilike(cmsCopilotSessions.id, `${cleanId}%`))
+      .limit(1);
+    session = matching;
+  }
+
+  if (!session) return null;
+
+  const messages = await db
+    .select()
+    .from(cmsCopilotMessages)
+    .where(eq(cmsCopilotMessages.sessionId, session.id))
+    .orderBy(cmsCopilotMessages.createdAt);
+
+  return { session, messages };
+}
+
+export async function searchCmsCopilotSessions(
+  query?: string,
+  limit = 10
+): Promise<CmsCopilotSessionRow[]> {
+  await assertAdmin();
+  const db = getDb();
+
+  const maxLimit = Math.min(Math.max(limit || 10, 1), 30);
+
+  if (query && query.trim()) {
+    const q = `%${query.trim()}%`;
+    return db
+      .select()
+      .from(cmsCopilotSessions)
+      .where(or(ilike(cmsCopilotSessions.title, q), ilike(cmsCopilotSessions.lastMessage, q)))
+      .orderBy(desc(cmsCopilotSessions.updatedAt))
+      .limit(maxLimit);
+  }
+
+  return db
+    .select()
+    .from(cmsCopilotSessions)
+    .orderBy(desc(cmsCopilotSessions.updatedAt))
+    .limit(maxLimit);
 }
 
 export async function createCmsCopilotSession(
