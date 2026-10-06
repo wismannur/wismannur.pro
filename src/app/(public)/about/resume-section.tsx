@@ -10,11 +10,12 @@ import {
   FileText,
   GraduationCap,
   MapPin,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
-import { formatResumePeriod } from "@/lib/resume";
+import { formatResumePeriod, formatEmploymentType, formatLocationType } from "@/lib/resume";
 import { trackEvent } from "@/lib/umami";
 import type { ResumeEntry } from "@/services/resume/types";
 
@@ -115,12 +116,26 @@ export function ResumeSection({ experiences, education }: ResumeSectionProps) {
                                 <span>{formatResumePeriod(exp)}</span>
                               </div>
 
-                              {exp.location && (
-                                <div className="inline-flex items-center gap-1 text-xs text-gray-400">
-                                  <MapPin size={12} className="text-primary" />
-                                  <span>{exp.location}</span>
-                                </div>
-                              )}
+                              <div className="flex flex-wrap items-center gap-2">
+                                {exp.location && (
+                                  <div className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                    <MapPin size={12} className="text-primary" />
+                                    <span>{exp.location}</span>
+                                  </div>
+                                )}
+                                {exp.employmentType && (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/[0.04] text-gray-300 border border-white/[0.08]">
+                                    <BriefcaseIcon size={11} className="text-primary/80" />
+                                    {formatEmploymentType(exp.employmentType)}
+                                  </span>
+                                )}
+                                {exp.locationType && (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-white/[0.04] text-emerald-400/90 border border-emerald-500/20">
+                                    <Building2 size={11} className="text-emerald-400" />
+                                    {formatLocationType(exp.locationType)}
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
                             {/* Role & Org */}

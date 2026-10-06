@@ -20,6 +20,7 @@ import {
   Send,
   Share2,
   Sparkles,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -59,7 +60,12 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { Brain } from "lucide-react";
-import { formatResumePeriod } from "@/lib/resume";
+import {
+  formatResumePeriod,
+  formatExperienceMeta,
+  EMPLOYMENT_TYPE_OPTIONS,
+  LOCATION_TYPE_OPTIONS,
+} from "@/lib/resume";
 import { resumeService, type PolishResumeResult, type ResumeKind } from "@/services";
 
 // The `date` columns hold ISO days; the month inputs speak "YYYY-MM".
@@ -73,6 +79,8 @@ const resumeSchema = z
     title: z.string().min(2, { message: "Title must be at least 2 characters" }),
     organization: z.string().min(2, { message: "Organization must be at least 2 characters" }),
     location: z.string().optional(),
+    employmentType: z.string().optional(),
+    locationType: z.string().optional(),
     startMonth: z.string().regex(MONTH_PATTERN, { message: "Pick a start month" }),
     endMonth: z.string().optional(),
     isCurrent: z.boolean().default(false),
@@ -173,6 +181,8 @@ export function ResumeForm() {
       title: "",
       organization: "",
       location: "",
+      employmentType: "",
+      locationType: "",
       startMonth: "",
       endMonth: "",
       isCurrent: false,
@@ -189,6 +199,9 @@ export function ResumeForm() {
   const endMonth = useWatch({ control: form.control, name: "endMonth" });
   const watchedTitle = useWatch({ control: form.control, name: "title" }) ?? "";
   const watchedOrganization = useWatch({ control: form.control, name: "organization" }) ?? "";
+  const watchedLocation = useWatch({ control: form.control, name: "location" }) ?? "";
+  const watchedEmploymentType = useWatch({ control: form.control, name: "employmentType" }) ?? "";
+  const watchedLocationType = useWatch({ control: form.control, name: "locationType" }) ?? "";
   const watchedIsPublished = useWatch({ control: form.control, name: "isPublished" }) ?? true;
   const watchedSortOrder = useWatch({ control: form.control, name: "sortOrder" }) ?? 0;
 
@@ -215,6 +228,8 @@ export function ResumeForm() {
             title: entry.title,
             organization: entry.organization,
             location: entry.location ?? "",
+            employmentType: entry.employmentType ?? "",
+            locationType: entry.locationType ?? "",
             startMonth: toMonthInput(entry.startDate),
             endMonth: toMonthInput(entry.endDate),
             isCurrent: entry.isCurrent,
@@ -244,8 +259,10 @@ export function ResumeForm() {
         kind: data.kind,
         title: data.title.trim(),
         organization: data.organization.trim(),
-        // Location only belongs to work experience.
+        // Location and work/workplace types only belong to work experience.
         location: data.kind === "experience" ? data.location?.trim() || undefined : undefined,
+        employmentType: data.kind === "experience" ? data.employmentType?.trim() || undefined : undefined,
+        locationType: data.kind === "experience" ? data.locationType?.trim() || undefined : undefined,
         startDate: toIsoDay(data.startMonth),
         endDate: data.isCurrent || !data.endMonth ? undefined : toIsoDay(data.endMonth),
         isCurrent: data.isCurrent,
@@ -294,6 +311,8 @@ export function ResumeForm() {
         title: currentTitle,
         organization: currentOrg,
         location: form.getValues("location")?.trim() || undefined,
+        employmentType: form.getValues("employmentType")?.trim() || undefined,
+        locationType: form.getValues("locationType")?.trim() || undefined,
         currentDescription: currentDesc,
         period: periodPreview || undefined,
       });
@@ -769,28 +788,120 @@ export function ResumeForm() {
                 />
               </div>
 
-              {/* Location (only for experience) */}
+              {/* Location, Work Type & Workplace Mode (only for experience) */}
               {isExperience && (
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-slate-200 text-xs font-semibold flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 text-primary" />
-                        <span>Work Location</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g. San Francisco, CA / Remote (Global)"
-                          className="h-10 rounded-xl bg-[#131726] border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-primary/40 font-medium"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-xs text-rose-400" />
-                    </FormItem>
+                <div className="space-y-4 pt-1 border-t border-white/[0.06]">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Work Location */}
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-slate-200 text-xs font-semibold flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 text-primary" />
+                            <span>Work Location</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. West Jakarta, DKI Jakarta, Indonesia"
+                              className="h-10 rounded-xl bg-[#131726] border-white/[0.08] text-slate-100 placeholder:text-slate-500 text-xs focus-visible:ring-primary/40 font-medium"
+                              {...field}
+                            />
+                          </FormControl>
+                          <div className="text-[11px] text-slate-500">City, region, or country.</div>
+                          <FormMessage className="text-xs text-rose-400" />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Work Type / Employment Type */}
+                    <FormField
+                      control={form.control}
+                      name="employmentType"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-slate-200 text-xs font-semibold flex items-center gap-1.5">
+                            <Briefcase className="h-3.5 w-3.5 text-primary" />
+                            <span>Work Type / Employment</span>
+                          </FormLabel>
+                          <Select
+                            onValueChange={(val) => field.onChange(val === "none" ? "" : val)}
+                            value={field.value || "none"}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-10 bg-[#131726] border-white/[0.08] text-slate-100 rounded-xl focus:ring-primary/40 text-xs">
+                                <SelectValue placeholder="Select work type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200 text-xs">
+                              <SelectItem value="none">Not Specified</SelectItem>
+                              {EMPLOYMENT_TYPE_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="text-[11px] text-slate-500">Contract, Full-time, Freelance, etc.</div>
+                          <FormMessage className="text-xs text-rose-400" />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Workplace / Location Type */}
+                    <FormField
+                      control={form.control}
+                      name="locationType"
+                      render={({ field }) => (
+                        <FormItem className="space-y-2">
+                          <FormLabel className="text-slate-200 text-xs font-semibold flex items-center gap-1.5">
+                            <Building2 className="h-3.5 w-3.5 text-primary" />
+                            <span>Workplace Mode</span>
+                          </FormLabel>
+                          <Select
+                            onValueChange={(val) => field.onChange(val === "none" ? "" : val)}
+                            value={field.value || "none"}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-10 bg-[#131726] border-white/[0.08] text-slate-100 rounded-xl focus:ring-primary/40 text-xs">
+                                <SelectValue placeholder="Select workplace mode" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-[#0C0E18] border-white/[0.08] text-slate-200 text-xs">
+                              <SelectItem value="none">Not Specified</SelectItem>
+                              {LOCATION_TYPE_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <div className="text-[11px] text-slate-500">Remote, Hybrid, or On-site.</div>
+                          <FormMessage className="text-xs text-rose-400" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Live Meta Preview */}
+                  {formatExperienceMeta({
+                    location: watchedLocation,
+                    employmentType: watchedEmploymentType === "none" ? undefined : watchedEmploymentType,
+                    locationType: watchedLocationType === "none" ? undefined : watchedLocationType,
+                  }) && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-xl bg-[#131726]/60 border border-white/[0.06] text-xs text-slate-300">
+                      <span className="text-slate-500 font-medium">CV Subtitle Preview:</span>
+                      <span className="text-primary font-medium">
+                        {formatExperienceMeta({
+                          location: watchedLocation,
+                          employmentType: watchedEmploymentType === "none" ? undefined : watchedEmploymentType,
+                          locationType: watchedLocationType === "none" ? undefined : watchedLocationType,
+                        })}
+                      </span>
+                    </div>
                   )}
-                />
+                </div>
               )}
             </CardContent>
           </Card>

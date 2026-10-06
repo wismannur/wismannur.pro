@@ -1,15 +1,23 @@
 import {
   Document,
+  Font,
   Page,
   Text,
   View,
   StyleSheet,
 } from "@react-pdf/renderer";
 
+import { formatExperienceMeta } from "@/lib/resume";
+
+// Prevent ugly mid-word hyphens (e.g. "verifi-cation")
+Font.registerHyphenationCallback((word) => [word]);
+
 export interface CvPdfExperience {
   title: string;
   organization: string;
   location?: string;
+  employmentType?: string;
+  locationType?: string;
   period: string;
   bullets: string[];
 }
@@ -25,6 +33,7 @@ export interface CvPdfProject {
   title: string;
   technologies?: string[];
   description: string;
+  bullets?: string[];
 }
 
 export interface CvPdfProps {
@@ -44,9 +53,9 @@ export interface CvPdfProps {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 28,
-    paddingBottom: 28,
-    paddingHorizontal: 34,
+    paddingTop: 26,
+    paddingBottom: 26,
+    paddingHorizontal: 32,
     fontFamily: "Helvetica",
     fontSize: 9,
     color: "#111827",
@@ -113,6 +122,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flex: 1,
     flexWrap: "wrap",
+    paddingRight: 8,
   },
   expTitle: {
     fontSize: 9.2,
@@ -133,13 +143,14 @@ const styles = StyleSheet.create({
     fontSize: 8.2,
     fontFamily: "Helvetica-Bold",
     color: "#4b5563",
-    marginLeft: 8,
+    flexShrink: 0,
+    textAlign: "right",
   },
   expLocation: {
     fontSize: 7.8,
     fontFamily: "Helvetica-Oblique",
     color: "#6b7280",
-    marginBottom: 2,
+    marginBottom: 2.5,
   },
   bulletRow: {
     flexDirection: "row",
@@ -157,25 +168,6 @@ const styles = StyleSheet.create({
     color: "#374151",
     lineHeight: 1.3,
   },
-  projectItem: {
-    marginBottom: 5,
-  },
-  projectHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: 1.5,
-  },
-  projectTitle: {
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    color: "#111827",
-  },
-  projectTech: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Oblique",
-    color: "#4b5563",
-  },
   skillsText: {
     fontSize: 8.5,
     color: "#374151",
@@ -191,10 +183,32 @@ const styles = StyleSheet.create({
     fontSize: 8.8,
     fontFamily: "Helvetica-Bold",
     color: "#111827",
+    flex: 1,
+    paddingRight: 8,
   },
   eduDate: {
     fontSize: 8.2,
     color: "#4b5563",
+    flexShrink: 0,
+    textAlign: "right",
+  },
+  projectItem: {
+    marginBottom: 5.5,
+  },
+  projectHeader: {
+    marginBottom: 2,
+  },
+  projectTitle: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    color: "#111827",
+    marginBottom: 1,
+  },
+  projectTech: {
+    fontSize: 7.8,
+    fontFamily: "Helvetica-Oblique",
+    color: "#4b5563",
+    lineHeight: 1.25,
   },
 });
 
@@ -247,29 +261,37 @@ export function CvPdfDocument({
         {experiences.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Work Experience</Text>
-            {experiences.map((exp, idx) => (
-              <View key={idx} style={styles.experienceItem} wrap={false}>
-                <View style={styles.expHeader}>
-                  <View style={styles.expTitleContainer}>
-                    <Text style={styles.expTitle}>{exp.title}</Text>
-                    <Text style={styles.expSeparator}>—</Text>
-                    <Text style={styles.expCompany}>{exp.organization}</Text>
+            {experiences.map((exp, idx) => {
+              const metaText = formatExperienceMeta({
+                location: exp.location,
+                employmentType: exp.employmentType,
+                locationType: exp.locationType,
+              });
+
+              return (
+                <View key={idx} style={styles.experienceItem} wrap={false}>
+                  <View style={styles.expHeader}>
+                    <View style={styles.expTitleContainer}>
+                      <Text style={styles.expTitle}>{exp.title}</Text>
+                      <Text style={styles.expSeparator}>—</Text>
+                      <Text style={styles.expCompany}>{exp.organization}</Text>
+                    </View>
+                    <Text style={styles.expDate}>{exp.period}</Text>
                   </View>
-                  <Text style={styles.expDate}>{exp.period}</Text>
+
+                  {metaText ? (
+                    <Text style={styles.expLocation}>{metaText}</Text>
+                  ) : null}
+
+                  {exp.bullets.map((bullet, bIdx) => (
+                    <View key={bIdx} style={styles.bulletRow}>
+                      <Text style={styles.bulletDot}>•</Text>
+                      <Text style={styles.bulletText}>{bullet}</Text>
+                    </View>
+                  ))}
                 </View>
-
-                {exp.location ? (
-                  <Text style={styles.expLocation}>{exp.location}</Text>
-                ) : null}
-
-                {exp.bullets.map((bullet, bIdx) => (
-                  <View key={bIdx} style={styles.bulletRow}>
-                    <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>{bullet}</Text>
-                  </View>
-                ))}
-              </View>
-            ))}
+              );
+            })}
           </View>
         ) : null}
 
@@ -277,22 +299,43 @@ export function CvPdfDocument({
         {projects.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Key Technical Projects</Text>
-            {projects.map((proj, idx) => (
-              <View key={idx} style={styles.projectItem} wrap={false}>
-                <View style={styles.projectHeader}>
-                  <Text style={styles.projectTitle}>{proj.title}</Text>
-                  {proj.technologies && proj.technologies.length > 0 ? (
-                    <Text style={styles.projectTech}>
-                      {proj.technologies.join(" • ")}
-                    </Text>
-                  ) : null}
+            {projects.map((proj, idx) => {
+              const projBullets =
+                proj.bullets && proj.bullets.length > 0
+                  ? proj.bullets
+                  : proj.description
+                    ? proj.description
+                        .split("\n")
+                        .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
+                        .filter(Boolean)
+                    : [];
+
+              return (
+                <View key={idx} style={styles.projectItem} wrap={false}>
+                  <View style={styles.projectHeader}>
+                    <Text style={styles.projectTitle}>{proj.title}</Text>
+                    {proj.technologies && proj.technologies.length > 0 ? (
+                      <Text style={styles.projectTech}>
+                        {proj.technologies.join(" • ")}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {projBullets.length > 0 ? (
+                    projBullets.map((bullet, bIdx) => (
+                      <View key={bIdx} style={styles.bulletRow}>
+                        <Text style={styles.bulletDot}>•</Text>
+                        <Text style={styles.bulletText}>{bullet}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <View style={styles.bulletRow}>
+                      <Text style={styles.bulletDot}>•</Text>
+                      <Text style={styles.bulletText}>{proj.description}</Text>
+                    </View>
+                  )}
                 </View>
-                <View style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>•</Text>
-                  <Text style={styles.bulletText}>{proj.description}</Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ) : null}
 

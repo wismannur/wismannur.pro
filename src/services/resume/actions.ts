@@ -29,13 +29,15 @@ const { resumeEntries, aiKnowledgeItems } = schema;
 // edit only shows up after a redeploy.
 function revalidateResumePaths() {
   revalidatePath("/about");
+  revalidatePath("/cv");
 }
 
-// Optional⇄nullable mapping: the contract has `location?: string`, the column
-// is `string | null`.
+// Optional⇄nullable mapping: the contract has `location?: string`, `employmentType?: string`, `locationType?: string`.
 const toResumeEntry = (row: ResumeEntryRow): ResumeEntry => ({
   ...row,
   location: row.location ?? undefined,
+  employmentType: row.employmentType ?? undefined,
+  locationType: row.locationType ?? undefined,
   endDate: row.endDate ?? undefined,
 });
 
@@ -70,6 +72,8 @@ export async function create(entry: NewResumeEntry): Promise<string> {
     .values({
       ...entry,
       endDate: entry.isCurrent ? null : (entry.endDate ?? null),
+      employmentType: entry.employmentType || null,
+      locationType: entry.locationType || null,
     })
     .returning({ id: resumeEntries.id });
   revalidateResumePaths();
@@ -85,6 +89,8 @@ export async function update(id: string, entry: UpdateResumeEntry): Promise<void
       updatedAt: new Date(),
       // An ongoing role has no end date, whatever the form last held.
       ...(entry.isCurrent ? { endDate: null } : {}),
+      ...(entry.employmentType !== undefined ? { employmentType: entry.employmentType || null } : {}),
+      ...(entry.locationType !== undefined ? { locationType: entry.locationType || null } : {}),
     })
     .where(eq(resumeEntries.id, id));
   revalidateResumePaths();
@@ -150,6 +156,8 @@ Target Role & Experience:
 - Title / Role: ${params.title}
 - Organization / Company: ${params.organization}
 - Location: ${params.location || "Not specified"}
+- Work Type: ${params.employmentType || "Not specified"}
+- Workplace Mode: ${params.locationType || "Not specified"}
 - Period: ${params.period || "Not specified"}
 
 Current Draft Description:
