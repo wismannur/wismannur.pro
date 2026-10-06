@@ -33,6 +33,10 @@ import {
   ACCOUNT_SYSTEM_TOOL_DECLARATIONS,
   executeAccountSystemTool,
 } from "./domains/account-system-tools";
+import {
+  COPILOT_SESSION_TOOL_DECLARATIONS,
+  executeCopilotSessionTool,
+} from "./domains/copilot-session-tools";
 
 export const CMS_COPILOT_TOOL_DECLARATIONS = [
   {
@@ -45,6 +49,7 @@ export const CMS_COPILOT_TOOL_DECLARATIONS = [
       ...SITE_ARCHITECTURE_TOOL_DECLARATIONS,
       ...CONTENT_CATALOG_TOOL_DECLARATIONS,
       ...ACCOUNT_SYSTEM_TOOL_DECLARATIONS,
+      ...COPILOT_SESSION_TOOL_DECLARATIONS,
     ],
   },
 ];
@@ -56,6 +61,10 @@ export async function executeCmsCopilotTool(
   await assertAdmin();
 
   try {
+    // 0. Copilot Memory & Session Continuity (prioritize session ID inspection)
+    const copilotSessionRes = await executeCopilotSessionTool(name, args);
+    if (copilotSessionRes) return copilotSessionRes;
+
     // 1. Dashboard
     const dashboardRes = await executeDashboardTool(name, args);
     if (dashboardRes) return dashboardRes;

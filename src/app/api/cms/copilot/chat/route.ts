@@ -4,6 +4,8 @@ import { assertAdmin } from "@/services/core/auth-guard";
 import { CMS_COPILOT_TOOL_DECLARATIONS, executeCmsCopilotTool } from "@/services/cms-copilot/tools";
 import { saveCmsCopilotTurn } from "@/services/cms-copilot/actions";
 import type { CopilotChatPayload, ToolCallInfo, ToolResultInfo } from "@/services/cms-copilot/types";
+import { extractSkillFromPrompt } from "@/services/cms-copilot/skills";
+import { buildSecondBrainSkillContext } from "@/services/cms-copilot/second-brain-skill";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // 60s max execution time for streaming
@@ -12,7 +14,8 @@ import type { CmsActivePageContext } from "@/lib/cms-page-context";
 
 function buildSystemInstruction(
   currentPath?: string,
-  pageContext?: CmsActivePageContext | null
+  pageContext?: CmsActivePageContext | null,
+  skillContext?: string
 ): string {
   let screenDataContext = "";
   if (pageContext) {
@@ -77,12 +80,14 @@ You possess full Database Query, Mutation, and Deletion capabilities across ALL 
 8. ⚙️ ACCOUNT & SYSTEM:
    - Profile (/cms/profile): Admin profile details (displayName, bio, website, location, social links) (get_admin_profile, update_admin_profile).
    - Settings (/cms/settings): CMS preferences (theme, color scheme, notification preferences, timezone, date format) (get_admin_settings, update_admin_settings).
+   - Copilot Memory & Session Continuity: Manage past conversation sessions, retrieve full dialogue transcripts from earlier sessions, search conversation history, and delete old sessions (list_recent_cms_copilot_sessions, get_cms_copilot_session_detail, delete_cms_copilot_session).
 
 ### Data Deletion & Mutation Protocols:
 - You are equipped with direct deletion & reset tools across all modules:
   delete_job_application, delete_job_interview, delete_target_company, delete_job_outreach,
   delete_project_prospect,
   delete_ai_knowledge_item, delete_english_session, delete_english_vocabulary, reset_english_curriculum_progress, delete_ai_chat_session,
+  delete_cms_copilot_session,
   delete_contact, delete_hire_request, delete_service_request,
   delete_legal_page,
   delete_blog_post, delete_portfolio_project, delete_resume_entry, delete_skill, delete_service_catalog_item, delete_faq, delete_process_step, delete_testimonial, delete_availability_slot.
@@ -92,6 +97,16 @@ You possess full Database Query, Mutation, and Deletion capabilities across ALL 
   - If the target is described by name/title rather than ID (e.g. "hapus blog tentang Microservices", "hapus prospect Tokopedia"), search/lookup the item first to retrieve its exact ID, then execute the deletion.
   - If multiple candidates match, list them concisely with their IDs and titles and ask for confirmation.
 - When creating or updating records, always use the dedicated tools and provide an executive-level summary of what was saved.
+
+### Session Continuity & Memory Protocol:
+- When Wisman references a past session ID or reference ID (e.g. "lanjutkan sesi e1b3e334...", "ref ID 962265ea...", "ref:e1b3e334", or UUID in prompt), or asks to resume work from an earlier chat:
+  1. IMMEDIATELY call get_cms_copilot_session_detail with that sessionId.
+  2. Do NOT call unrelated entity lookup tools (e.g. do NOT call get_ai_chat_session_detail, get_ai_knowledge_item, get_blog_post_detail, etc.) when the input is clearly a session/conversation reference!
+  3. Note: get_ai_chat_session_detail is EXCLUSIVELY for public portfolio visitor logs. For internal CMS Staff Copilot chats, ALWAYS use get_cms_copilot_session_detail.
+  4. Once get_cms_copilot_session_detail returns the transcript:
+     - Summarize briefly where the previous session left off (e.g. what parts were completed, what records were saved).
+     - Seamlessly continue the conversation and assist Wisman with the very next step without asking him to repeat or copy-paste previous context.
+- If Wisman asks about earlier Copilot chats or wants to look up past conversations, call list_recent_cms_copilot_sessions.
 
 Current Context:
 - Active CMS Route: ${currentPath || "/cms/dashboard"}.
@@ -115,7 +130,9 @@ Executive Guidelines:
     5. ⚠️ STRICT GROUNDING & ZERO-FABRICATION RULE:
        - DILARANG KERAS mengarang, memalsukan, atau membuat metrik angka fiktif yang tidak pernah disebutkan oleh Kang Wisman (seperti "50-page back-office", "diselesaikan dalam 6 bulan", "dokumentasi warisan yang tidak lengkap", atau statistik buatan lainnya).
        - Semua fakta, timeline, nama perusahaan, stack teknologi, kendala, dan peran HARUS 100% berakar murni dari cerita nyata Wisman.
-       - Jika metrik spesifik tidak disebutkan oleh Wisman, gambarkan dampaknya secara kualitatif, arsitektural, atau fokus pada trade-off teknis riil yang dihadapi.`;
+        - Jika metrik spesifik tidak disebutkan oleh Wisman, gambarkan dampaknya secara kualitatif, arsitektural, atau fokus pada trade-off teknis riil yang dihadapi.${
+          skillContext ? `\n\n${skillContext}` : ""
+        }`;
 }
 
 export async function POST(req: NextRequest) {
@@ -137,12 +154,29 @@ export async function POST(req: NextRequest) {
     const lastUserMsg = messages[messages.length - 1];
     const lastUserText = lastUserMsg?.content || "";
 
+    // Check if user prompt triggers any Skill (e.g. /my-second-brain)
+    const skillResult = extractSkillFromPrompt(lastUserText);
+    let skillContext = "";
+    let activeSkillId: string | null = null;
+
+    if (skillResult.skill?.id === "my-second-brain") {
+      activeSkillId = "my-second-brain";
+      try {
+        skillContext = await buildSecondBrainSkillContext({
+          currentSessionId: sessionId,
+          query: skillResult.cleanedPrompt,
+        });
+      } catch (err) {
+        console.error("[Second Brain Skill Context Error]:", err);
+      }
+    }
+
     // Keep reasonable history context window
     const sanitizedMessages = messages.slice(-14);
 
     const ai = getGeminiClient();
     const modelName = getGeminiModel("gemini-3.8-flash");
-    const systemInstruction = buildSystemInstruction(currentPath, pageContext);
+    const systemInstruction = buildSystemInstruction(currentPath, pageContext, skillContext);
 
     // Map conversation to Google GenAI format
     const contents = sanitizedMessages.map((m) => ({
@@ -163,6 +197,9 @@ export async function POST(req: NextRequest) {
         const executedToolResults: ToolResultInfo[] = [];
 
         sendEvent({ type: "session_id", sessionId });
+        if (activeSkillId) {
+          sendEvent({ type: "skill_activated", skillId: activeSkillId });
+        }
 
         try {
           let currentContents: unknown[] = [...contents];
