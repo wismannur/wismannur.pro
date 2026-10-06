@@ -4,6 +4,8 @@ import { assertAdmin } from "@/services/core/auth-guard";
 import { CMS_COPILOT_TOOL_DECLARATIONS, executeCmsCopilotTool } from "@/services/cms-copilot/tools";
 import { saveCmsCopilotTurn } from "@/services/cms-copilot/actions";
 import type { CopilotChatPayload, ToolCallInfo, ToolResultInfo } from "@/services/cms-copilot/types";
+import { extractSkillFromPrompt } from "@/services/cms-copilot/skills";
+import { buildSecondBrainSkillContext } from "@/services/cms-copilot/second-brain-skill";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60; // 60s max execution time for streaming
@@ -12,7 +14,8 @@ import type { CmsActivePageContext } from "@/lib/cms-page-context";
 
 function buildSystemInstruction(
   currentPath?: string,
-  pageContext?: CmsActivePageContext | null
+  pageContext?: CmsActivePageContext | null,
+  skillContext?: string
 ): string {
   let screenDataContext = "";
   if (pageContext) {
@@ -127,7 +130,9 @@ Executive Guidelines:
     5. ⚠️ STRICT GROUNDING & ZERO-FABRICATION RULE:
        - DILARANG KERAS mengarang, memalsukan, atau membuat metrik angka fiktif yang tidak pernah disebutkan oleh Kang Wisman (seperti "50-page back-office", "diselesaikan dalam 6 bulan", "dokumentasi warisan yang tidak lengkap", atau statistik buatan lainnya).
        - Semua fakta, timeline, nama perusahaan, stack teknologi, kendala, dan peran HARUS 100% berakar murni dari cerita nyata Wisman.
-       - Jika metrik spesifik tidak disebutkan oleh Wisman, gambarkan dampaknya secara kualitatif, arsitektural, atau fokus pada trade-off teknis riil yang dihadapi.`;
+        - Jika metrik spesifik tidak disebutkan oleh Wisman, gambarkan dampaknya secara kualitatif, arsitektural, atau fokus pada trade-off teknis riil yang dihadapi.${
+          skillContext ? `\n\n${skillContext}` : ""
+        }`;
 }
 
 export async function POST(req: NextRequest) {
@@ -149,12 +154,29 @@ export async function POST(req: NextRequest) {
     const lastUserMsg = messages[messages.length - 1];
     const lastUserText = lastUserMsg?.content || "";
 
+    // Check if user prompt triggers any Skill (e.g. /my-second-brain)
+    const skillResult = extractSkillFromPrompt(lastUserText);
+    let skillContext = "";
+    let activeSkillId: string | null = null;
+
+    if (skillResult.skill?.id === "my-second-brain") {
+      activeSkillId = "my-second-brain";
+      try {
+        skillContext = await buildSecondBrainSkillContext({
+          currentSessionId: sessionId,
+          query: skillResult.cleanedPrompt,
+        });
+      } catch (err) {
+        console.error("[Second Brain Skill Context Error]:", err);
+      }
+    }
+
     // Keep reasonable history context window
     const sanitizedMessages = messages.slice(-14);
 
     const ai = getGeminiClient();
     const modelName = getGeminiModel("gemini-3.8-flash");
-    const systemInstruction = buildSystemInstruction(currentPath, pageContext);
+    const systemInstruction = buildSystemInstruction(currentPath, pageContext, skillContext);
 
     // Map conversation to Google GenAI format
     const contents = sanitizedMessages.map((m) => ({
@@ -175,6 +197,9 @@ export async function POST(req: NextRequest) {
         const executedToolResults: ToolResultInfo[] = [];
 
         sendEvent({ type: "session_id", sessionId });
+        if (activeSkillId) {
+          sendEvent({ type: "skill_activated", skillId: activeSkillId });
+        }
 
         try {
           let currentContents: unknown[] = [...contents];
