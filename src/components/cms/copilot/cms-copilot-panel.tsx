@@ -29,6 +29,9 @@ import {
   Clock,
   Compass,
   RefreshCw,
+  Brain,
+  Zap,
+  CornerDownLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +73,13 @@ import type { CmsCopilotSessionRow } from "@/db/schema";
 import type { ToolCallInfo, ToolResultInfo } from "@/services/cms-copilot/types";
 import { getCmsPageContext, type CmsActivePageContext } from "@/lib/cms-page-context";
 import { useCopilotDraft, getInitialDraft, INPUT_HEIGHT_KEY } from "@/hooks/use-copilot-draft";
+import {
+  COPILOT_SKILLS,
+  extractSkillFromPrompt,
+  getSkillByCommand,
+  type CopilotSkillDefinition,
+} from "@/services/cms-copilot/skills";
+import { CopilotSlashCommandMenu } from "./copilot-slash-command-menu";
 import { CopilotMarkdown } from "./copilot-markdown";
 
 interface MessageUI {
@@ -132,6 +142,7 @@ interface StreamCallbacks {
   onToolResult: (name: string, result: Record<string, unknown>) => void;
   onTextChunk: (chunk: string) => void;
   onError: (errMsg: string) => void;
+  onSkillActivated?: (skillId: string) => void;
 }
 
 async function streamCopilotChat(
@@ -177,6 +188,8 @@ async function streamCopilotChat(
 
         if (data.type === "session_id" && data.sessionId) {
           callbacks.onSessionId(data.sessionId);
+        } else if (data.type === "skill_activated" && typeof data.skillId === "string") {
+          callbacks.onSkillActivated?.(data.skillId);
         } else if (data.type === "tool_call") {
           callbacks.onToolCall(data.toolName, data.args);
         } else if (data.type === "tool_result") {
@@ -272,6 +285,12 @@ export function CmsCopilotPanel() {
   const dragStartYRef = useRef(0);
   const startHeightRef = useRef(64);
 
+  // Slash Commands & Skills State
+  const [isSlashMenuOpen, setIsSlashMenuOpen] = useState(false);
+  const [slashSearchQuery, setSlashSearchQuery] = useState("");
+  const [highlightedSkillIndex, setHighlightedSkillIndex] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -279,6 +298,78 @@ export function CmsCopilotPanel() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const currentSessionIdRef = useRef(currentSessionId);
   const messagesRef = useRef(messages);
+
+  const filteredSkills = React.useMemo(() => {
+    if (!slashSearchQuery) return COPILOT_SKILLS;
+    const q = slashSearchQuery.toLowerCase();
+    return COPILOT_SKILLS.filter(
+      (s) =>
+        s.command.toLowerCase().includes(q) ||
+        s.label.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q)
+    );
+  }, [slashSearchQuery]);
+
+  const activeSkill = React.useMemo(() => {
+    const match = input.trim().match(/^(\/[a-zA-Z0-9_-]+)/);
+    if (match) {
+      return getSkillByCommand(match[1]);
+    }
+    return undefined;
+  }, [input]);
+
+  const handleInputChange = (newVal: string) => {
+    setInput(newVal);
+    saveDraft(newVal, currentSessionId);
+    if (draftRestored && !newVal.trim()) {
+      setDraftRestored(false);
+    }
+
+    if (newVal.startsWith("/")) {
+      const spaceIdx = newVal.indexOf(" ");
+      if (spaceIdx === -1) {
+        setSlashSearchQuery(newVal.slice(1).trim().toLowerCase());
+        setIsSlashMenuOpen(true);
+        setHighlightedSkillIndex(0);
+      } else {
+        setIsSlashMenuOpen(false);
+      }
+    } else {
+      setIsSlashMenuOpen(false);
+    }
+  };
+
+  const handleSelectSkill = (skill: CopilotSkillDefinition) => {
+    const spaceIdx = input.indexOf(" ");
+    const existingMessage = spaceIdx !== -1 ? input.slice(spaceIdx + 1) : "";
+    const nextVal = `${skill.command} ${existingMessage}`.trimStart();
+    setInput(nextVal);
+    saveDraft(nextVal, currentSessionId);
+    setIsSlashMenuOpen(false);
+
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.selectionStart = nextVal.length;
+        inputRef.current.selectionEnd = nextVal.length;
+      }
+    }, 50);
+
+    if (skill.status === "planned") {
+      toast.info(`Skill ${skill.label} akan segera aktif di fase berikutnya!`);
+    }
+  };
+
+  useEffect(() => {
+    if (!isSlashMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        setIsSlashMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSlashMenuOpen]);
 
   useEffect(() => {
     currentSessionIdRef.current = currentSessionId;
@@ -819,6 +910,7 @@ export function CmsCopilotPanel() {
     }
     if (pathname.includes("/cms/ai-knowledge")) {
       return [
+        { label: "⚡ Skill Second Brain", prompt: "/my-second-brain Cross-check wawasan persona yang ada di Second Brain dan rangkum benang merahnya" },
         { label: "🧠 My Second Brain", prompt: "Tampilkan ringkasan seluruh dokumen knowledge aktif di My Second Brain per kategori" },
         { label: "➕ Tambah Persona / Impact", prompt: "Bantu saya tambahkan knowledge item baru ke kategori 'career-impact' dengan metrik terukur" },
         { label: "🏷️ 10 Kategori Knowledge", prompt: "Apa saja 10 kategori knowledge yang tersedia di My Second Brain dan bagaimana penggunaannya?" },
@@ -1040,6 +1132,9 @@ export function CmsCopilotPanel() {
   // Submit message & handle SSE stream
   const handleSubmit = async (e?: React.FormEvent, customPrompt?: string) => {
     if (e) e.preventDefault();
+    if (isSlashMenuOpen) {
+      setIsSlashMenuOpen(false);
+    }
     const promptToSend = customPrompt || input;
     if (!promptToSend.trim() || isLoading) return;
 
@@ -1082,6 +1177,11 @@ export function CmsCopilotPanel() {
               localStorage.setItem(LAST_SESSION_STORAGE_KEY, sid);
             } catch {
               // ignore
+            }
+          },
+          onSkillActivated: (skillId) => {
+            if (skillId === "my-second-brain") {
+              setActiveTool("⚡ Skill: My Second Brain (Live Snapshot & Memory Aktif)");
             }
           },
           onToolCall: (name, args) => {
@@ -1816,7 +1916,7 @@ export function CmsCopilotPanel() {
           ref={scrollViewportRef}
           className="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 space-y-3 sm:space-y-4 scroll-smooth text-gray-200"
         >
-          {messages.map((msg) => (
+          {messages.map((msg, msgIdx) => (
             <div
               key={msg.id}
               className={cn(
@@ -1855,12 +1955,50 @@ export function CmsCopilotPanel() {
                   </div>
                 )}
 
+                {/* Assistant Skill Attribution Header */}
+                {msg.role === "assistant" && (() => {
+                  const prevMsg = messages[msgIdx - 1];
+                  if (prevMsg && prevMsg.role === "user") {
+                    const prevSkill = extractSkillFromPrompt(prevMsg.content).skill;
+                    if (prevSkill) {
+                      return (
+                        <div className="mb-2 pb-1.5 border-b border-white/[0.08] flex items-center justify-between text-[10.5px] font-mono text-indigo-300">
+                          <div className="flex items-center gap-1.5">
+                            <Sparkles className="h-3 w-3 text-indigo-400" />
+                            <span className="font-semibold text-white">Synthesized with {prevSkill.label}</span>
+                          </div>
+                          <span className="text-[9.5px] text-gray-500 hidden sm:inline">Dual-Source Memory</span>
+                        </div>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
+
                 {msg.content ? (
                   msg.role === "assistant" ? (
                     <CopilotMarkdown content={msg.content} />
                   ) : (
-                    <div className="whitespace-pre-wrap text-[12.5px] sm:text-[13px] leading-relaxed select-text">
-                      {msg.content}
+                    <div>
+                      {(() => {
+                        const extracted = extractSkillFromPrompt(msg.content);
+                        if (extracted.skill) {
+                          return (
+                            <div className="mb-1.5 flex items-center gap-1.5 bg-black/25 text-white/90 border border-white/15 px-2 py-0.5 rounded-md text-[11px] font-mono w-fit">
+                              <Brain className="h-3 w-3 text-indigo-200" />
+                              <span className="font-semibold">{extracted.skill.command}</span>
+                              <span className="text-[10px] text-indigo-200/80 hidden xs:inline">• {extracted.skill.label}</span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                      <div className="whitespace-pre-wrap text-[12.5px] sm:text-[13px] leading-relaxed select-text">
+                        {(() => {
+                          const extracted = extractSkillFromPrompt(msg.content);
+                          return extracted.skill && extracted.cleanedPrompt ? extracted.cleanedPrompt : msg.content;
+                        })()}
+                      </div>
                     </div>
                   )
                 ) : msg.status === "streaming" ? (
@@ -1947,9 +2085,64 @@ export function CmsCopilotPanel() {
 
           <div className="p-2.5 sm:p-3 pt-0.5 sm:pt-1">
             <form
+              ref={formRef}
               onSubmit={(e) => handleSubmit(e)}
               className="relative flex flex-col bg-[#131726] border border-white/[0.1] rounded-xl p-2 sm:p-2.5 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all shadow-inner"
             >
+              {/* Slash Command Autocomplete Popover */}
+              {isSlashMenuOpen && (
+                <CopilotSlashCommandMenu
+                  searchQuery={slashSearchQuery}
+                  filteredSkills={filteredSkills}
+                  highlightedIndex={highlightedSkillIndex}
+                  onSelectSkill={handleSelectSkill}
+                  onHoverIndex={setHighlightedSkillIndex}
+                  onClose={() => setIsSlashMenuOpen(false)}
+                />
+              )}
+
+              {/* Active Skill Pill/Tag if prompt starts with skill command */}
+              {activeSkill && (
+                <div className="flex items-center justify-between px-2 py-1 mb-1.5 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-xs text-indigo-200 animate-in fade-in duration-150">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Brain className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
+                    <span className="font-semibold text-white font-mono text-[11px]">{activeSkill.command}</span>
+                    <span className="text-[11px] text-indigo-300 hidden xs:inline">• {activeSkill.label}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const stripped = input.replace(new RegExp(`^${activeSkill.command}\\s*`), "");
+                      setInput(stripped);
+                      saveDraft(stripped, currentSessionId);
+                    }}
+                    className="text-gray-400 hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors cursor-pointer"
+                    title="Lepas skill ini dari prompt"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+
+              {/* Sample prompt chip if input only has the command prefix */}
+              {activeSkill && activeSkill.samplePrompt && input.trim() === activeSkill.command && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sample = `${activeSkill.command} ${activeSkill.samplePrompt}`;
+                    setInput(sample);
+                    saveDraft(sample, currentSessionId);
+                    setTimeout(() => inputRef.current?.focus(), 20);
+                  }}
+                  className="mb-1.5 text-left px-2.5 py-1 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 text-[10.5px] text-indigo-300 font-mono border border-indigo-500/20 transition-all flex items-center gap-1.5 cursor-pointer w-fit"
+                  title="Klik untuk menyisipkan prompt contoh"
+                >
+                  <Sparkles className="h-3 w-3 text-indigo-400 shrink-0" />
+                  <span className="text-gray-400">Contoh:</span>
+                  <span className="truncate italic max-w-[280px] sm:max-w-[420px]">&quot;{activeSkill.samplePrompt}&quot;</span>
+                </button>
+              )}
+
               <textarea
                 ref={inputRef}
                 value={input}
@@ -1958,21 +2151,44 @@ export function CmsCopilotPanel() {
                   maxHeight: "45vh",
                   minHeight: "44px",
                 }}
-                onChange={(e) => {
-                  const newVal = e.target.value;
-                  setInput(newVal);
-                  saveDraft(newVal, currentSessionId);
-                  if (draftRestored && !newVal.trim()) {
-                    setDraftRestored(false);
-                  }
-                }}
+                onChange={(e) => handleInputChange(e.target.value)}
                 onKeyDown={(e) => {
+                  if (isSlashMenuOpen && filteredSkills.length > 0) {
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setHighlightedSkillIndex((prev) => (prev + 1) % filteredSkills.length);
+                      return;
+                    }
+                    if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setHighlightedSkillIndex((prev) => (prev - 1 + filteredSkills.length) % filteredSkills.length);
+                      return;
+                    }
+                    if (e.key === "Enter" || e.key === "Tab") {
+                      e.preventDefault();
+                      const target = filteredSkills[highlightedSkillIndex] || filteredSkills[0];
+                      if (target) {
+                        handleSelectSkill(target);
+                      }
+                      return;
+                    }
+                    if (e.key === "Escape") {
+                      e.preventDefault();
+                      setIsSlashMenuOpen(false);
+                      return;
+                    }
+                  }
+
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
-                placeholder="Tanyakan apapun tentang CMS atau berikan perintah..."
+                placeholder={
+                  activeSkill
+                    ? `${activeSkill.placeholder}`
+                    : "Tanyakan apapun tentang CMS atau ketik / untuk daftar skill..."
+                }
                 className="w-full bg-transparent text-xs text-white placeholder-gray-500 resize-none outline-none px-1 py-1 scrollbar-thin overflow-y-auto leading-relaxed"
                 disabled={isLoading}
               />
@@ -1980,6 +2196,36 @@ export function CmsCopilotPanel() {
               {/* Bottom toolbar inside input box */}
               <div className="flex items-center justify-between pt-1.5 sm:pt-2 border-t border-white/[0.05] mt-1">
                 <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] text-gray-500 font-mono min-w-0">
+                  {/* Quick Slash Menu Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isSlashMenuOpen) {
+                        setIsSlashMenuOpen(false);
+                      } else {
+                        if (!input.startsWith("/")) {
+                          const nextVal = `/${input}`.trimStart();
+                          setInput(nextVal);
+                          saveDraft(nextVal, currentSessionId);
+                        }
+                        setIsSlashMenuOpen(true);
+                        setSlashSearchQuery("");
+                        setHighlightedSkillIndex(0);
+                        setTimeout(() => inputRef.current?.focus(), 20);
+                      }
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded transition-colors font-mono cursor-pointer border shrink-0",
+                      isSlashMenuOpen || activeSkill
+                        ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40"
+                        : "bg-white/[0.04] text-gray-400 hover:text-white hover:bg-white/[0.08] border-white/10"
+                    )}
+                    title="Pilih Copilot Skill (Ketik /)"
+                  >
+                    <Terminal className="h-2.5 w-2.5 text-indigo-400" />
+                    <span>/skills</span>
+                  </button>
+
                   <span className="hidden sm:inline">Enter kirim • Shift+Enter baris baru</span>
                   {input.trim().length > 0 && (
                     <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 shrink-0">
@@ -1995,6 +2241,7 @@ export function CmsCopilotPanel() {
                         setInput("");
                         clearDraft(currentSessionId);
                         setDraftRestored(false);
+                        setIsSlashMenuOpen(false);
                       }}
                       className="inline-flex items-center gap-1 text-[9px] text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 px-1.5 py-0.5 rounded transition-colors cursor-pointer shrink-0"
                       title="Buang draft ini"
