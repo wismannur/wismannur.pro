@@ -391,13 +391,13 @@ export const AI_ASSISTANT_TOOL_DECLARATIONS = [
   {
     name: "get_ai_chat_session_detail",
     description:
-      "Get full conversation dialogue turns and tool call logs for a specific visitor chat session.",
+      "Get dialogue turns and tool logs for a public PORTFOLIO VISITOR chat session on /api/chat. (CRITICAL: Do NOT use this for internal CMS Staff Copilot sessions or ref IDs; use get_cms_copilot_session_detail instead).",
     parameters: {
       type: Type.OBJECT,
       properties: {
         sessionId: {
           type: Type.STRING,
-          description: "The visitor chat session ID",
+          description: "The public visitor chat session ID",
         },
       },
       required: ["sessionId"],
