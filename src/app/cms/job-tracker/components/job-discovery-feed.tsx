@@ -104,9 +104,12 @@ function formatRelativeTime(dateString: string): { relative: string; exact: stri
 }
 
 function renderInlineMarkdown(text: string) {
-  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\))/g);
+  const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|\[.*?\]\(.*?\)|<br\s*\/?>)/gi);
 
   return parts.map((part, idx) => {
+    if (/<br\s*\/?>/i.test(part)) {
+      return <br key={idx} />;
+    }
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={idx} className="font-semibold text-foreground">

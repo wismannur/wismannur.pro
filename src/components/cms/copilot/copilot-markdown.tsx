@@ -266,7 +266,7 @@ const markdownComponents: Components = {
     </th>
   ),
   td: ({ children, ...props }) => (
-    <td className="py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs text-gray-300 align-top" {...props}>
+    <td className="py-2 sm:py-2.5 px-2.5 sm:px-3 text-xs text-gray-300 align-top leading-relaxed" {...props}>
       {children}
     </td>
   ),
@@ -278,6 +278,49 @@ const markdownComponents: Components = {
   code: CopilotCode,
 };
 
+interface AstNode {
+  type: string;
+  value?: string;
+  children?: AstNode[];
+  [key: string]: unknown;
+}
+
+/**
+ * Remark plugin to convert raw HTML `<br>` tags (commonly produced by LLMs inside markdown tables)
+ * into standard markdown `break` nodes so ReactMarkdown renders actual `<br/>` elements
+ * instead of escaping them as raw text `&lt;br&gt;`.
+ */
+function remarkHtmlBreaks() {
+  return (tree: AstNode) => {
+    function visit(node: AstNode) {
+      if (!node || !Array.isArray(node.children)) return;
+      const newChildren: AstNode[] = [];
+      for (const child of node.children) {
+        if (child.type === "html") {
+          const val = typeof child.value === "string" ? child.value : "";
+          if (/<br\b[^>]*\/?>/i.test(val)) {
+            const parts = val.split(/(<br\b[^>]*\/?>)/gi);
+            for (const part of parts) {
+              if (!part) continue;
+              if (/<br\b[^>]*\/?>/i.test(part)) {
+                newChildren.push({ type: "break" });
+              } else {
+                newChildren.push({ type: "html", value: part });
+              }
+            }
+            continue;
+          }
+        }
+        visit(child);
+        newChildren.push(child);
+      }
+      node.children = newChildren;
+    }
+    visit(tree);
+  };
+}
+
+
 export const CopilotMarkdown = React.memo(function CopilotMarkdown({
   content,
   className,
@@ -287,7 +330,7 @@ export const CopilotMarkdown = React.memo(function CopilotMarkdown({
   return (
     <div className={cn("copilot-markdown leading-relaxed text-[13px] text-gray-200", className)}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkHtmlBreaks]}
         components={markdownComponents}
       >
         {content}
@@ -295,3 +338,4 @@ export const CopilotMarkdown = React.memo(function CopilotMarkdown({
     </div>
   );
 });
+

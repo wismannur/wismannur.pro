@@ -438,7 +438,9 @@ export function HeroConsole() {
 
   // Helper to format basic markdown (bold, links, bullet points)
   const renderFormattedContent = (content: string) => {
-    const lines = content.split("\n");
+    // Convert any raw HTML line breaks (<br>, <br/>, <br />) into newlines
+    const normalized = content.replace(/<br\s*\/?>/gi, "\n");
+    const lines = normalized.split("\n");
 
     return (
       <div className="space-y-1.5 leading-relaxed text-xs">
