@@ -172,6 +172,7 @@ export default function CmsAiKnowledgePage() {
     {
       accessorKey: "title",
       header: "Title & Deep Insight",
+      className: "min-w-[280px] max-w-[400px]",
       cell: (item) => {
         return (
           <div className="space-y-1 max-w-[380px]">
@@ -191,6 +192,7 @@ export default function CmsAiKnowledgePage() {
     {
       accessorKey: "category",
       header: "Category & Tags",
+      className: "min-w-[300px] lg:min-w-[340px]",
       cell: (item) => {
         const cat = item.category;
         const icon = CATEGORY_ICONS[cat] || <BookOpen className="w-3.5 h-3.5" />;
@@ -198,14 +200,17 @@ export default function CmsAiKnowledgePage() {
         const style = CATEGORY_STYLES[cat] || "bg-muted/60 text-muted-foreground border-border/50";
         const tags = item.tags || [];
         return (
-          <div className="space-y-1.5 min-w-[150px] max-w-[220px]">
+          <div className="space-y-1.5 min-w-[270px]">
             <div>
               <Badge
                 variant="secondary"
-                className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium capitalize border", style)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-medium capitalize border whitespace-nowrap",
+                  style
+                )}
               >
-                {icon}
-                <span>{catObj?.label || cat}</span>
+                <span className="shrink-0">{icon}</span>
+                <span className="whitespace-nowrap">{catObj?.label || cat}</span>
               </Badge>
             </div>
             {tags.length > 0 ? (
@@ -234,6 +239,7 @@ export default function CmsAiKnowledgePage() {
     {
       accessorKey: "isPublished",
       header: "AI Active",
+      className: "w-[120px] min-w-[110px]",
       cell: (item) => {
         return (
           <div className="flex items-center gap-2">
@@ -257,6 +263,7 @@ export default function CmsAiKnowledgePage() {
     {
       accessorKey: "sortOrder",
       header: "Order",
+      className: "w-[80px] min-w-[70px]",
       cell: (item) => (
         <span className="text-xs font-mono text-muted-foreground">
           {item.sortOrder}
@@ -265,30 +272,33 @@ export default function CmsAiKnowledgePage() {
     },
     {
       header: "Actions",
+      className: "w-[80px] min-w-[70px] text-right",
       cell: (item) => {
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => router.push(`/cms/ai-knowledge/form/${item.id}`)}
-                className="cursor-pointer gap-2"
-              >
-                <Pencil className="h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setItemToDelete(item)}
-                className="cursor-pointer text-destructive focus:text-destructive gap-2"
-              >
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => router.push(`/cms/ai-knowledge/form/${item.id}`)}
+                  className="cursor-pointer gap-2"
+                >
+                  <Pencil className="h-4 w-4" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setItemToDelete(item)}
+                  className="cursor-pointer text-destructive focus:text-destructive gap-2"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         );
       },
     },
