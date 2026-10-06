@@ -8,12 +8,66 @@ import { jsx, jsxs } from "react/jsx-runtime";
 import rehypeReact from "rehype-react";
 import rehypeSanitize from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
+import remarkGfm from "remark-gfm";
 import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import CodeBlock from "./code-block";
 import ImageWithPreviewAndCaption from "./image-with-preview-and-caption";
+
+interface AstNode {
+  type: string;
+  name?: string;
+  value?: string;
+  children?: AstNode[];
+  [key: string]: unknown;
+}
+
+/**
+ * Normalizes unclosed HTML void tags (like `<br>` or `<hr>`) into self-closing versions (`<br />`)
+ * outside code fences so that MDX's JSX parser does not reject them with syntax errors.
+ */
+function normalizeVoidHtmlTags(input: string): string {
+  const codeBlockRegex = /(```[\s\S]*?```|`[^`\n]*?`)/g;
+  const parts = input.split(codeBlockRegex);
+  return parts
+    .map((part, index) => {
+      if (index % 2 === 1) return part;
+      return part
+        .replace(/<br\b([^>]*?)(?<!\/)>/gi, "<br$1 />")
+        .replace(/<hr\b([^>]*?)(?<!\/)>/gi, "<hr$1 />");
+    })
+    .join("");
+}
+
+/**
+ * Remark plugin converting HTML <br> or MDX JSX <br/> elements into standard markdown `break` nodes
+ * so they consistently render as actual HTML line break elements.
+ */
+function remarkHtmlBreaks() {
+  return (tree: AstNode) => {
+    function visit(node: AstNode) {
+      if (!node || !Array.isArray(node.children)) return;
+      const newChildren: AstNode[] = [];
+      for (const child of node.children) {
+        if (child.type === "html" || child.type === "mdxJsxTextElement" || child.type === "mdxJsxFlowElement") {
+          const isBr =
+            (child.type === "html" && /<br\b[^>]*\/?>/i.test(typeof child.value === "string" ? child.value : "")) ||
+            (typeof child.name === "string" && child.name.toLowerCase() === "br");
+          if (isBr) {
+            newChildren.push({ type: "break" });
+            continue;
+          }
+        }
+        visit(child);
+        newChildren.push(child);
+      }
+      node.children = newChildren;
+    }
+    visit(tree);
+  };
+}
 
 interface MDXPreviewProps {
   code: string;
@@ -190,8 +244,9 @@ const components = {
     <th {...props} className="px-4 py-3 text-left text-sm font-medium" />
   ),
   td: (props: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-    <td {...props} className="px-4 py-3 text-sm" />
+    <td {...props} className="px-4 py-3 text-sm leading-relaxed align-top" />
   ),
+  br: (props: React.HTMLAttributes<HTMLBRElement>) => <br {...props} />,
   hr: (props: React.HTMLAttributes<HTMLHRElement>) => (
     <hr {...props} className="my-8 border-t border-border" />
   ),
@@ -210,9 +265,12 @@ const MDXPreview = ({ code, innerRef, isLoading = false }: MDXPreviewProps) => {
     }
 
     try {
+      const normalizedCode = normalizeVoidHtmlTags(code);
       const processor = unified()
         .use(remarkParse)
+        .use(remarkGfm)
         .use(remarkMdx)
+        .use(remarkHtmlBreaks)
         .use(remarkRehype)
         .use(rehypeSanitize)
         .use(rehypeStringify)
@@ -224,7 +282,7 @@ const MDXPreview = ({ code, innerRef, isLoading = false }: MDXPreviewProps) => {
           components,
         });
 
-      const file = processor.processSync(code);
+      const file = processor.processSync(normalizedCode);
       return { result: file.result as React.ReactNode, error: null };
     } catch (err) {
       console.error("Error parsing MDX:", err);
