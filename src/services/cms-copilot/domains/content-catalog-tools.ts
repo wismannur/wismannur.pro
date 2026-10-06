@@ -330,6 +330,8 @@ export const CONTENT_CATALOG_TOOL_DECLARATIONS = [
         title: { type: Type.STRING, description: "Role title or degree/certification name" },
         organization: { type: Type.STRING, description: "Company, institution, or university" },
         location: { type: Type.STRING, description: "Location (city, country or Remote)" },
+        employmentType: { type: Type.STRING, description: "Work/employment type: 'full_time', 'contract', 'freelance', 'part_time', 'internship'" },
+        locationType: { type: Type.STRING, description: "Workplace mode: 'remote', 'hybrid', 'onsite'" },
         startDate: { type: Type.STRING, description: "Start date (YYYY-MM-DD format)" },
         endDate: { type: Type.STRING, description: "End date (YYYY-MM-DD format or null if ongoing)" },
         isCurrent: { type: Type.BOOLEAN, description: "Whether this role/study is currently ongoing" },
@@ -350,6 +352,8 @@ export const CONTENT_CATALOG_TOOL_DECLARATIONS = [
         title: { type: Type.STRING, description: "Role or degree title" },
         organization: { type: Type.STRING, description: "Organization name" },
         location: { type: Type.STRING, description: "Location" },
+        employmentType: { type: Type.STRING, description: "Work/employment type: 'full_time', 'contract', 'freelance', 'part_time', 'internship'" },
+        locationType: { type: Type.STRING, description: "Workplace mode: 'remote', 'hybrid', 'onsite'" },
         startDate: { type: Type.STRING, description: "Start date (YYYY-MM-DD)" },
         endDate: { type: Type.STRING, description: "End date (YYYY-MM-DD)" },
         isCurrent: { type: Type.BOOLEAN, description: "Is currently active" },
@@ -1112,6 +1116,8 @@ export async function executeContentCatalogTool(
             title: e.title,
             organization: e.organization,
             location: e.location,
+            employmentType: e.employmentType,
+            locationType: e.locationType,
             startDate: e.startDate,
             endDate: e.endDate,
             isCurrent: e.isCurrent,
@@ -1140,6 +1146,8 @@ export async function executeContentCatalogTool(
         title: String(args.title).trim(),
         organization: String(args.organization).trim(),
         location: args.location ? String(args.location).trim() : undefined,
+        employmentType: args.employmentType ? String(args.employmentType).trim() : undefined,
+        locationType: args.locationType ? String(args.locationType).trim() : undefined,
         startDate: String(args.startDate).trim(),
         endDate: args.isCurrent ? undefined : (args.endDate ? String(args.endDate).trim() : undefined),
         isCurrent: Boolean(args.isCurrent),
@@ -1163,6 +1171,8 @@ export async function executeContentCatalogTool(
       if (args.title) updates.title = String(args.title).trim();
       if (args.organization) updates.organization = String(args.organization).trim();
       if (args.location !== undefined) updates.location = args.location ? String(args.location).trim() : undefined;
+      if (args.employmentType !== undefined) updates.employmentType = args.employmentType ? String(args.employmentType).trim() : undefined;
+      if (args.locationType !== undefined) updates.locationType = args.locationType ? String(args.locationType).trim() : undefined;
       if (args.startDate) updates.startDate = String(args.startDate).trim();
       if (args.isCurrent !== undefined) {
         updates.isCurrent = Boolean(args.isCurrent);
