@@ -557,6 +557,37 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
     .where(eq(aiKnowledgeItems.isPublished, true))
     .orderBy(asc(aiKnowledgeItems.sortOrder));
 
+  const employerNames = allResumeRows
+    .filter((r) => r.kind === "experience")
+    .map((r) => r.organization.toLowerCase().trim())
+    .filter(Boolean);
+
+  const independentProjects = topProjects.filter((p) => {
+    const titleLower = p.title.toLowerCase();
+    return !employerNames.some((emp) => emp.length > 2 && titleLower.includes(emp));
+  });
+
+  const hasWismannurPro = independentProjects.some((p) =>
+    p.title.toLowerCase().includes("wismannur.pro")
+  );
+
+  if (!hasWismannurPro) {
+    independentProjects.unshift({
+      title: "wismannur.pro — Autonomous AI Fullstack Platform & Digital Twin",
+      summary:
+        "Autonomous digital twin and engineering operating system featuring AI agentic Copilot, multi-model LLM tool orchestration, 33 relational PostgreSQL schemas, and real-time CMS automation.",
+      technologies: [
+        "Next.js 16",
+        "React 19",
+        "TypeScript",
+        "PostgreSQL (Neon)",
+        "Drizzle ORM",
+        "Gemini 2.5",
+        "Tailwind CSS",
+      ],
+    });
+  }
+
   const masterResume = {
     experiences: allResumeRows
       .filter((r) => r.kind === "experience")
@@ -584,9 +615,66 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
     requirements: application.requirements || [],
     masterResume,
     skills: allSkills.map((s) => ({ name: s.name })),
-    featuredProjects: topProjects,
+    featuredProjects: independentProjects,
     secondBrainKnowledge,
   });
+
+  if (result.atsAnalysis.tailoredProjects && result.atsAnalysis.tailoredProjects.length > 0) {
+    result.atsAnalysis.tailoredProjects = result.atsAnalysis.tailoredProjects
+      .filter((proj) => {
+        const titleLower = proj.title.toLowerCase();
+        return !employerNames.some((emp) => emp.length > 2 && titleLower.includes(emp));
+      })
+      .map((proj) => {
+        if (!proj.bullets || proj.bullets.length === 0) {
+          if (proj.title.toLowerCase().includes("wismannur.pro")) {
+            return {
+              ...proj,
+              bullets: [
+                "Architected 33 relational PostgreSQL schemas with Drizzle ORM and Neon serverless driver, implementing strict domain separation, transactions, and automated schema migrations.",
+                "Engineered autonomous AI Staff Copilot engine integrated with Model Context Protocol (MCP) and 110+ deterministic tools, utilizing Gemini 2.5 structured output and Zod runtime validation.",
+                "Optimized frontend performance with Next.js 16 App Router, React 19 Server Components, and zero-CLS streaming layouts, achieving 98+ Lighthouse scores and sub-second LCP.",
+              ],
+            };
+          }
+          if (proj.description) {
+            return {
+              ...proj,
+              bullets: proj.description.includes("\n")
+                ? proj.description.split("\n").map((s) => s.trim().replace(/^[•\-\*]\s*/, "")).filter(Boolean)
+                : [proj.description],
+            };
+          }
+        }
+        return proj;
+      });
+
+    if (result.atsAnalysis.tailoredProjects.length === 0) {
+      result.atsAnalysis.tailoredProjects = [
+        {
+          title: "wismannur.pro — Autonomous AI Fullstack Platform & Digital Twin",
+          technologies: [
+            "Next.js 16",
+            "React 19",
+            "TypeScript",
+            "PostgreSQL (Neon)",
+            "Drizzle ORM",
+            "Gemini 2.5 Flash",
+            "Tailwind CSS",
+          ],
+          description:
+            "Autonomous digital twin and engineering operating system featuring AI agentic Copilot, multi-model LLM tool orchestration, and real-time CMS automation.",
+          bullets: [
+            "Architected 33 relational PostgreSQL schemas with Drizzle ORM and Neon serverless driver, implementing strict domain separation, transactions, and automated schema migrations.",
+            "Engineered autonomous AI Staff Copilot engine integrated with Model Context Protocol (MCP) and 110+ deterministic tools, utilizing Gemini 2.5 structured output and Zod runtime validation.",
+            "Optimized frontend performance with Next.js 16 App Router, React 19 Server Components, and zero-CLS streaming layouts, achieving 98+ Lighthouse scores and sub-second LCP.",
+          ],
+          relevanceRationale:
+            "Demonstrates end-to-end Senior Staff system architecture, AI agent tooling, and production-grade fullstack engineering.",
+        },
+      ];
+    }
+  }
 
   // Deterministic Keyword Match Calculation
   const jdTextLower = `${application.jobTitle} ${application.jobDescriptionRaw || ""} ${(application.requirements || []).join(" ")}`.toLowerCase();

@@ -212,7 +212,15 @@ Tasks:
 5. Tailored Professional Summary highlighting the most relevant accomplishments and architectural leadership for this specific role.
 6. Tailored Experience Bullet Points using the XYZ Formula, mapped to each relevant work experience.
 7. High-impact, concise Cover Letter / Cold outreach message addressed to the hiring team.
-8. Relevant Projects: Select 2 to 3 most relevant projects from the Candidate's Featured Projects that best prove technical depth and architecture for this target job. Formulate a concise impact description.
+8. Relevant Independent Projects (Key Technical Projects):
+- CRITICAL SENIOR-STAFF ATS RULE (NO EMPLOYER DUPLICATION): In executive/senior-staff CVs, the "Key Technical Projects" section MUST ONLY highlight independent engineering platforms, open-source architectures, or personal flagship systems (e.g., "wismannur.pro — Autonomous AI Fullstack Platform & Digital Twin").
+- NEVER select, mention, or duplicate past employers or companies from Candidate's Work Experience (e.g. NEVER include Kick Avenue, Rumah Siap Kerja, or any employer under projects).
+- For each selected independent project, provide:
+  * "title": Project title
+  * "technologies": Array of technologies relevant to the target job
+  * "description": High-level architecture summary
+  * "bullets": Array of 2 to 4 structured, deep architectural bullet points focusing on system design, database architecture, AI agentic copilot / MCP tools, or frontend performance tailored to the target role
+  * "relevanceRationale": Why this project directly proves engineering mastery for this specific role
 
 Return a JSON object conforming strictly to this format:
 {
@@ -224,10 +232,15 @@ Return a JSON object conforming strictly to this format:
     "summaryFeedback": "string",
     "tailoredProjects": [
       {
-        "title": "string (project title from featured projects)",
+        "title": "string (independent project title, e.g. wismannur.pro)",
         "technologies": ["string"],
-        "description": "string (1-2 sentences on architectural impact and engineering outcome)",
-        "relevanceRationale": "string (why this project directly aligns with the target job)"
+        "description": "string (high-level system overview)",
+        "bullets": [
+          "string (architectural bullet 1: system design, relational DB & schemas)",
+          "string (architectural bullet 2: autonomous AI Copilot / MCP tool engine)",
+          "string (architectural bullet 3: performance, sub-second LCP, reliability)"
+        ],
+        "relevanceRationale": "string (why this proves fit for the target job)"
       }
     ]
   },

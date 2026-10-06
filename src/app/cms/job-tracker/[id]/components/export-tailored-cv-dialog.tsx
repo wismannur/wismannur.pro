@@ -34,7 +34,68 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { resumeService, skillsService, userService } from "@/services";
+import { formatResumePeriod, formatExperienceMeta } from "@/lib/resume";
 import type { JobApplication, TailoredBullet, TailoredProjectHighlight } from "@/services/job-tracker/types";
+
+export const DEFAULT_FLAGSHIP_PROJECT: TailoredProjectHighlight = {
+  title: "wismannur.pro — Autonomous AI Fullstack Platform & Digital Twin",
+  technologies: [
+    "Next.js 16",
+    "React 19",
+    "TypeScript",
+    "PostgreSQL (Neon)",
+    "Drizzle ORM",
+    "Gemini 2.5 Flash",
+    "Tailwind CSS",
+  ],
+  description:
+    "Autonomous digital twin and engineering operating system featuring AI agentic Copilot, multi-model LLM tool orchestration, and real-time CMS automation.",
+  bullets: [
+    "Architected 33 relational PostgreSQL schemas with Drizzle ORM and Neon serverless driver, implementing strict domain separation, transactions, and automated schema migrations.",
+    "Engineered autonomous AI Staff Copilot engine integrated with Model Context Protocol (MCP) and 110+ deterministic tools, utilizing Gemini 2.5 structured output and Zod runtime validation.",
+    "Optimized frontend performance with Next.js 16 App Router, React 19 Server Components, and zero-CLS streaming layouts, achieving 98+ Lighthouse scores and sub-second LCP.",
+  ],
+  relevanceRationale:
+    "Demonstrates end-to-end Senior Staff system architecture, AI agent tooling, and production-grade fullstack engineering.",
+};
+
+function initializeTailoredProjects(
+  existingProjects?: TailoredProjectHighlight[],
+  employerNames: string[] = []
+): TailoredProjectHighlight[] {
+  const employersLower = employerNames.map((e) => e.toLowerCase().trim()).filter(Boolean);
+
+  const filtered = (existingProjects || []).filter((proj) => {
+    const titleLower = proj.title.toLowerCase();
+    return !employersLower.some((emp) => emp.length > 2 && titleLower.includes(emp));
+  });
+
+  if (filtered.length === 0) {
+    return [DEFAULT_FLAGSHIP_PROJECT];
+  }
+
+  return filtered.map((proj) => {
+    let bullets = proj.bullets;
+    if (!bullets || bullets.length === 0) {
+      if (proj.title.toLowerCase().includes("wismannur.pro")) {
+        bullets = DEFAULT_FLAGSHIP_PROJECT.bullets;
+      } else if (proj.description) {
+        bullets = proj.description.includes("\n")
+          ? proj.description
+              .split("\n")
+              .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
+              .filter(Boolean)
+          : [proj.description];
+      } else {
+        bullets = [];
+      }
+    }
+    return {
+      ...proj,
+      bullets,
+    };
+  });
+}
 
 interface ExportTailoredCvDialogProps {
   open: boolean;
@@ -62,11 +123,28 @@ export function ExportTailoredCvDialog({
   // Live editing state inside the export dialog
   const [activeSummary, setActiveSummary] = useState(application.tailoredSummary || "");
   const [activeBullets, setActiveBullets] = useState<TailoredBullet[]>(application.tailoredBulletPoints || []);
-  const [activeProjects, setActiveProjects] = useState<TailoredProjectHighlight[]>(
-    application.atsAnalysis?.tailoredProjects || []
-  );
+  const [customProjects, setCustomProjects] = useState<TailoredProjectHighlight[] | null>(null);
   const [isSavingDialog, setIsSavingDialog] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+
+  // Fetch candidate master resume, skills, and profile
+  const { data: resumeData } = useQuery({
+    queryKey: ["resumePublished"],
+    queryFn: () => resumeService.getPublished(),
+    enabled: open,
+  });
+
+  const employerNames = useMemo(
+    () => resumeData?.experiences?.map((e) => e.organization) || [],
+    [resumeData?.experiences]
+  );
+
+  const activeProjects = useMemo(() => {
+    if (customProjects !== null) {
+      return customProjects;
+    }
+    return initializeTailoredProjects(application.atsAnalysis?.tailoredProjects, employerNames);
+  }, [customProjects, application.atsAnalysis?.tailoredProjects, employerNames]);
 
   const handleSaveDialogChanges = async () => {
     if (!onUpdate) return;
@@ -90,18 +168,86 @@ export function ExportTailoredCvDialog({
     }
   };
 
+  const handleAddDialogProject = () => {
+    setCustomProjects([
+      ...activeProjects,
+      {
+        title: "",
+        technologies: [],
+        description: "",
+        bullets: [""],
+      },
+    ]);
+  };
+
   const handleUpdateDialogProject = (
     index: number,
     field: keyof TailoredProjectHighlight,
     value: string | string[]
   ) => {
-    setActiveProjects((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    setCustomProjects(
+      activeProjects.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     );
   };
 
   const handleDeleteDialogProject = (index: number) => {
-    setActiveProjects((prev) => prev.filter((_, i) => i !== index));
+    setCustomProjects(activeProjects.filter((_, i) => i !== index));
+  };
+
+  const handleAddProjectBullet = (projIndex: number) => {
+    setCustomProjects(
+      activeProjects.map((item, i) => {
+        if (i !== projIndex) return item;
+        const currentBullets =
+          item.bullets && item.bullets.length > 0
+            ? item.bullets
+            : item.description
+              ? [item.description]
+              : [];
+        return {
+          ...item,
+          bullets: [...currentBullets, ""],
+        };
+      })
+    );
+  };
+
+  const handleUpdateProjectBullet = (
+    projIndex: number,
+    bulletIndex: number,
+    val: string
+  ) => {
+    setCustomProjects(
+      activeProjects.map((item, i) => {
+        if (i !== projIndex) return item;
+        const currentBullets =
+          item.bullets && item.bullets.length > 0
+            ? [...item.bullets]
+            : item.description
+              ? [item.description]
+              : [""];
+        currentBullets[bulletIndex] = val;
+        return {
+          ...item,
+          bullets: currentBullets,
+          description: currentBullets[0] || "",
+        };
+      })
+    );
+  };
+
+  const handleDeleteProjectBullet = (projIndex: number, bulletIndex: number) => {
+    setCustomProjects(
+      activeProjects.map((item, i) => {
+        if (i !== projIndex) return item;
+        const currentBullets = (item.bullets || []).filter((_, bIdx) => bIdx !== bulletIndex);
+        return {
+          ...item,
+          bullets: currentBullets,
+          description: currentBullets[0] || "",
+        };
+      })
+    );
   };
 
   const handleUpdateDialogBullet = (index: number, field: keyof TailoredBullet, value: string) => {
@@ -125,13 +271,6 @@ export function ExportTailoredCvDialog({
     ]);
   };
 
-  // Fetch candidate master resume, skills, and profile
-  const { data: resumeData } = useQuery({
-    queryKey: ["resumePublished"],
-    queryFn: () => resumeService.getPublished(),
-    enabled: open,
-  });
-
   const { data: skillsData = [] } = useQuery({
     queryKey: ["skillsPublished"],
     queryFn: () => skillsService.getPublished(),
@@ -151,13 +290,6 @@ export function ExportTailoredCvDialog({
   const candidateLocation = userData?.location || "Jakarta, Indonesia";
   const candidateWebsite = "https://wismannur.pro";
 
-  const formatResumePeriod = (entry: { startDate: string; endDate?: string; isCurrent?: boolean }) => {
-    if (!entry.startDate) return "";
-    const startYear = new Date(entry.startDate).getFullYear();
-    if (entry.isCurrent) return `${startYear} - Present`;
-    if (entry.endDate) return `${startYear} - ${new Date(entry.endDate).getFullYear()}`;
-    return `${startYear}`;
-  };
 
   const splitDescriptionToBullets = (description?: string): string[] => {
     if (!description) return [];
@@ -229,7 +361,8 @@ export function ExportTailoredCvDialog({
       resumeData.experiences.forEach((exp) => {
         const period = formatResumePeriod(exp);
         lines.push(`### ${exp.title} — ${exp.organization} ${period ? `(${period})` : ""}`);
-        if (exp.location) lines.push(`*${exp.location}*`);
+        const meta = formatExperienceMeta(exp);
+        if (meta) lines.push(`*${meta}*`);
 
         const tailored = includeTailoredBullets
           ? getTailoredBulletsForExperience(exp, activeBullets)
@@ -272,7 +405,18 @@ export function ExportTailoredCvDialog({
       activeProjects.forEach((proj) => {
         const techStr = proj.technologies?.length ? ` (${proj.technologies.join(", ")})` : "";
         lines.push(`### ${proj.title}${techStr}`);
-        lines.push(`- ${proj.description}`);
+        const bullets =
+          proj.bullets && proj.bullets.length > 0
+            ? proj.bullets
+            : proj.description
+              ? proj.description
+                  .split("\n")
+                  .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
+                  .filter(Boolean)
+              : [proj.description];
+        bullets.forEach((b) => {
+          lines.push(`- ${b}`);
+        });
         lines.push("");
       });
     }
@@ -360,6 +504,8 @@ export function ExportTailoredCvDialog({
             title: exp.title,
             organization: exp.organization,
             location: exp.location,
+            employmentType: exp.employmentType,
+            locationType: exp.locationType,
             period,
             bullets,
           };
@@ -385,11 +531,23 @@ export function ExportTailoredCvDialog({
 
       const pdfProjects =
         includeProjects && activeProjects.length > 0
-          ? activeProjects.map((p) => ({
-              title: p.title,
-              technologies: p.technologies,
-              description: p.description,
-            }))
+          ? activeProjects.map((p) => {
+              const bullets =
+                p.bullets && p.bullets.length > 0
+                  ? p.bullets
+                  : p.description
+                    ? p.description
+                        .split("\n")
+                        .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
+                        .filter(Boolean)
+                    : [];
+              return {
+                title: p.title,
+                technologies: p.technologies,
+                description: p.description || bullets.join(" "),
+                bullets: bullets.length > 0 ? bullets : [p.description],
+              };
+            })
           : [];
 
       const doc = (
@@ -460,6 +618,7 @@ export function ExportTailoredCvDialog({
             bulletsHtml = `<p class="summary-text">${exp.description}</p>`;
           }
 
+          const meta = formatExperienceMeta(exp);
           return `
             <div class="experience-item">
               <div class="exp-header">
@@ -469,7 +628,7 @@ export function ExportTailoredCvDialog({
                 </div>
                 <div class="exp-date">${period}</div>
               </div>
-              ${exp.location ? `<div class="exp-location">${exp.location}</div>` : ""}
+              ${meta ? `<div class="exp-location">${meta}</div>` : ""}
               ${bulletsHtml}
             </div>
           `;
@@ -500,19 +659,28 @@ export function ExportTailoredCvDialog({
         <div class="section-block">
           <div class="section-title">Key Technical Projects</div>
           ${activeProjects
-            .map(
-              (p) => `
-            <div class="experience-item">
-              <div class="exp-header">
-                <div>
-                  <span class="exp-title">${p.title}</span>
-                  ${p.technologies?.length ? ` — <span class="exp-company">${p.technologies.join(" • ")}</span>` : ""}
+            .map((p) => {
+              const bullets =
+                p.bullets && p.bullets.length > 0
+                  ? p.bullets
+                  : p.description
+                    ? p.description
+                        .split("\n")
+                        .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
+                        .filter(Boolean)
+                    : [p.description];
+              return `
+                <div class="experience-item">
+                  <div class="exp-header">
+                    <div>
+                      <span class="exp-title">${p.title}</span>
+                      ${p.technologies?.length ? ` — <span class="exp-company">${p.technologies.join(" • ")}</span>` : ""}
+                    </div>
+                  </div>
+                  <ul>${bullets.map((b) => `<li>${b}</li>`).join("")}</ul>
                 </div>
-              </div>
-              <ul><li>${p.description}</li></ul>
-            </div>
-          `
-            )
+              `;
+            })
             .join("")}
         </div>
       `;
@@ -934,11 +1102,11 @@ export function ExportTailoredCvDialog({
                                   {period}
                                 </span>
                               </div>
-                              {exp.location && (
+                              {formatExperienceMeta(exp) ? (
                                 <div className="text-[11px] text-muted-foreground italic">
-                                  {exp.location}
+                                  {formatExperienceMeta(exp)}
                                 </div>
-                              )}
+                              ) : null}
                               {tailored.length > 0 ? (
                                 <ul className="list-disc list-inside space-y-1 pt-0.5 text-xs text-slate-300">
                                   {tailored.map((b, bIdx) => (
@@ -1002,21 +1170,37 @@ export function ExportTailoredCvDialog({
                         Key Technical Projects
                       </div>
                       <div className="space-y-3 pt-1">
-                        {activeProjects.map((proj, idx) => (
-                          <div key={idx} className="space-y-1 text-xs">
-                            <div className="flex justify-between items-baseline font-bold text-slate-200">
-                              <span>{proj.title}</span>
-                              {proj.technologies && proj.technologies.length > 0 && (
-                                <span className="text-[11px] font-normal text-muted-foreground italic font-mono">
-                                  {proj.technologies.join(" • ")}
-                                </span>
-                              )}
+                        {activeProjects.map((proj, idx) => {
+                          const bullets =
+                            proj.bullets && proj.bullets.length > 0
+                              ? proj.bullets
+                              : proj.description
+                                ? proj.description
+                                    .split("\n")
+                                    .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
+                                    .filter(Boolean)
+                                : [proj.description];
+
+                          return (
+                            <div key={idx} className="space-y-1 text-xs">
+                              <div className="flex justify-between items-baseline font-bold text-slate-200">
+                                <span>{proj.title}</span>
+                                {proj.technologies && proj.technologies.length > 0 && (
+                                  <span className="text-[11px] font-normal text-muted-foreground italic font-mono">
+                                    {proj.technologies.join(" • ")}
+                                  </span>
+                                )}
+                              </div>
+                              <ul className="list-disc list-inside space-y-0.5 text-xs text-slate-300">
+                                {bullets.map((b, bIdx) => (
+                                  <li key={bIdx} className="leading-relaxed">
+                                    {b}
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
-                            <ul className="list-disc list-inside space-y-0.5 text-xs text-slate-300">
-                              <li className="leading-relaxed">{proj.description}</li>
-                            </ul>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -1181,29 +1365,48 @@ export function ExportTailoredCvDialog({
                 </div>
 
                 {/* Projects Editor */}
-                {activeProjects.length > 0 && (
-                  <div className="space-y-3 pt-2">
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between">
                     <div>
                       <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
                         <Code className="w-3.5 h-3.5 text-indigo-400" />
                         <span>Key Technical Projects</span>
                       </label>
                       <p className="text-[11px] text-muted-foreground">
-                        Showcase high-impact architecture and systems aligned with this target role
+                        Showcase independent platforms, architecture, and systems (never duplicate employer companies)
                       </p>
                     </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddDialogProject}
+                      className="text-xs h-7 gap-1 border-dashed border-white/[0.15] bg-white/[0.02] text-gray-300 hover:text-white"
+                    >
+                      <Plus className="w-3 h-3 text-primary" />
+                      <span>Add Project</span>
+                    </Button>
+                  </div>
 
-                    <div className="space-y-3">
-                      {activeProjects.map((proj, idx) => (
+                  <div className="space-y-3">
+                    {activeProjects.map((proj, idx) => {
+                      const bullets =
+                        proj.bullets && proj.bullets.length > 0
+                          ? proj.bullets
+                          : proj.description
+                            ? [proj.description]
+                            : [""];
+
+                      return (
                         <div
                           key={idx}
-                          className="p-3.5 rounded-xl border border-white/[0.08] bg-[#0C0E18] space-y-2 text-xs"
+                          className="p-3.5 rounded-xl border border-white/[0.08] bg-[#0C0E18] space-y-2.5 text-xs"
                         >
                           <div className="flex items-center justify-between gap-2">
                             <Input
                               value={proj.title}
                               onChange={(e) => handleUpdateDialogProject(idx, "title", e.target.value)}
-                              placeholder="Project Title"
+                              placeholder="Project Title (e.g. wismannur.pro — Autonomous AI Fullstack Platform)"
                               className="h-7 text-xs bg-[#08090C] border-white/[0.1] text-indigo-300 font-semibold"
                             />
                             <Button
@@ -1225,21 +1428,55 @@ export function ExportTailoredCvDialog({
                                 e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
                               )
                             }
-                            placeholder="Technologies (comma separated, e.g. React, Next.js, Redis)"
+                            placeholder="Technologies (comma separated, e.g. Next.js 16, React 19, Neon PostgreSQL)"
                             className="h-7 text-xs bg-[#08090C] border-white/[0.08] text-amber-300/90 font-mono"
                           />
-                          <Textarea
-                            value={proj.description}
-                            onChange={(e) => handleUpdateDialogProject(idx, "description", e.target.value)}
-                            rows={2}
-                            placeholder="Architecture, scale, and technical outcome..."
-                            className="text-xs bg-[#08090C] border-white/[0.08] text-white resize-y"
-                          />
+
+                          <div className="space-y-2 pt-1 border-t border-white/[0.05]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-semibold text-slate-300">
+                                Architectural Bullets ({bullets.length})
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAddProjectBullet(idx)}
+                                className="text-[10px] h-6 px-2 text-indigo-300 hover:text-white gap-1"
+                              >
+                                <Plus className="w-2.5 h-2.5" /> Add Bullet
+                              </Button>
+                            </div>
+
+                            <div className="space-y-2">
+                              {bullets.map((bullet, bIdx) => (
+                                <div key={bIdx} className="flex items-start gap-1.5">
+                                  <Textarea
+                                    value={bullet}
+                                    onChange={(e) => handleUpdateProjectBullet(idx, bIdx, e.target.value)}
+                                    rows={2}
+                                    className="text-xs bg-[#08090C] border-white/[0.08] text-white resize-y flex-1"
+                                    placeholder={`Architectural bullet ${bIdx + 1}...`}
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteProjectBullet(idx, bIdx)}
+                                    className="h-7 w-7 p-0 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 shrink-0"
+                                    title="Delete bullet"
+                                    disabled={bullets.length <= 1}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
               </div>
             </TabsContent>
 
