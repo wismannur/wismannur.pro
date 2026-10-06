@@ -29,7 +29,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatResumePeriod } from "@/lib/resume";
+import { formatResumePeriod, formatEmploymentType, formatLocationType } from "@/lib/resume";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { trackEvent } from "@/lib/umami";
 import { cn } from "@/lib/utils";
@@ -216,15 +216,22 @@ export function CVView({
         title: exp.title,
         organization: exp.organization,
         location: exp.location,
+        employmentType: exp.employmentType,
+        locationType: exp.locationType,
         period: formatResumePeriod(exp),
         bullets: splitDescriptionToBullets(exp.description),
       }));
 
-      const pdfProjects = projects.map((proj) => ({
-        title: proj.title,
-        technologies: proj.technologies,
-        description: proj.summary || proj.description,
-      }));
+      const pdfProjects = projects.map((proj) => {
+        const text = proj.summary || proj.description || "";
+        const bullets = splitDescriptionToBullets(text);
+        return {
+          title: proj.title,
+          technologies: proj.technologies,
+          description: text,
+          bullets: bullets.length > 0 ? bullets : [text],
+        };
+      });
 
       const pdfEducation = education.map((edu) => ({
         title: edu.title,
@@ -594,7 +601,7 @@ export function CVView({
                       </span>
                     </div>
 
-                    <div className="text-xs sm:text-sm font-semibold text-primary/90 print:text-zinc-800 flex items-center gap-2 print:text-xs">
+                    <div className="text-xs sm:text-sm font-semibold text-primary/90 print:text-zinc-800 flex flex-wrap items-center gap-2 print:text-xs">
                       <span>{exp.organization}</span>
                       {exp.location && (
                         <>
@@ -603,6 +610,26 @@ export function CVView({
                           </span>
                           <span className="text-gray-400 font-normal print:text-zinc-700">
                             {exp.location}
+                          </span>
+                        </>
+                      )}
+                      {exp.employmentType && (
+                        <>
+                          <span aria-hidden="true" className="text-gray-600 print:text-zinc-500">
+                            •
+                          </span>
+                          <span className="text-indigo-400 font-medium print:text-zinc-800">
+                            {formatEmploymentType(exp.employmentType)}
+                          </span>
+                        </>
+                      )}
+                      {exp.locationType && (
+                        <>
+                          <span aria-hidden="true" className="text-gray-600 print:text-zinc-500">
+                            •
+                          </span>
+                          <span className="text-emerald-400 font-medium print:text-zinc-800">
+                            {formatLocationType(exp.locationType)}
                           </span>
                         </>
                       )}

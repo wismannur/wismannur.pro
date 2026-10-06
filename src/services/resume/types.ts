@@ -10,6 +10,8 @@ export interface ResumeEntry {
   title: string;
   organization: string;
   location?: string;
+  employmentType?: string;
+  locationType?: string;
   startDate: string;
   endDate?: string;
   isCurrent: boolean;
@@ -32,6 +34,8 @@ export interface PolishResumeParams {
   title: string;
   organization: string;
   location?: string;
+  employmentType?: string;
+  locationType?: string;
   currentDescription?: string;
   period?: string;
 }
