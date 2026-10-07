@@ -6,6 +6,7 @@ import { asc, desc, eq } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import type { JobApplicationRow, JobInterviewRow } from "@/db/schema";
+import { rankSkillsForJobApplication } from "@/lib/tailored-skills";
 import { assertAdmin } from "../core/auth-guard";
 import {
   analyzeResumeMatchWithGemini,
@@ -608,11 +609,27 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
       })),
   };
 
+  // Auto-fallback for requirements if empty
+  let effectiveRequirements = (application.requirements || []).filter(Boolean);
+  if (effectiveRequirements.length === 0 && application.jobDescriptionRaw) {
+    effectiveRequirements = application.jobDescriptionRaw
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(
+        (line) =>
+          /^[•\-\*]\s+/.test(line) ||
+          /^(requirements|qualifications|must have|tech stack|skills|experience):/i.test(line)
+      )
+      .map((line) => line.replace(/^[•\-\*]\s+/, "").trim())
+      .filter((line) => line.length > 5 && line.length < 200)
+      .slice(0, 15);
+  }
+
   const result = await analyzeResumeMatchWithGemini({
     jobTitle: application.jobTitle,
     companyName: application.companyName,
     jobDescription: application.jobDescriptionRaw || "",
-    requirements: application.requirements || [],
+    requirements: effectiveRequirements,
     masterResume,
     skills: allSkills.map((s) => ({ name: s.name })),
     featuredProjects: independentProjects,
@@ -676,19 +693,14 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
     }
   }
 
-  // Deterministic Keyword Match Calculation
-  const jdTextLower = `${application.jobTitle} ${application.jobDescriptionRaw || ""} ${(application.requirements || []).join(" ")}`.toLowerCase();
-
-  const matchedSkills: string[] = [];
-  allSkills.forEach((s) => {
-    const skillName = s.name.trim();
-    if (!skillName) return;
-    const escaped = skillName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`(^|[^a-zA-Z0-9])${escaped}([^a-zA-Z0-9]|$)`, "i");
-    if (regex.test(jdTextLower)) {
-      matchedSkills.push(skillName);
-    }
+  // Smart Deterministic Keyword Match & Tailored Skills Calculation
+  const rankedSkills = rankSkillsForJobApplication(allSkills, {
+    ...application,
+    requirements: effectiveRequirements,
+    atsAnalysis: result.atsAnalysis,
   });
+
+  const matchedSkills = rankedSkills.filter((r) => r.isMatched).map((r) => r.name);
 
   const detectedMissing = result.atsAnalysis.missingKeywords || [];
   const totalKeywords = matchedSkills.length + detectedMissing.length;
@@ -700,6 +712,7 @@ export async function aiAnalyzeResumeMatch(applicationId: string): Promise<AtsAn
   result.atsAnalysis.deterministicScore = deterministicScore;
   result.atsAnalysis.matchedKeywords = matchedSkills;
   result.atsAnalysis.secondBrainInsightsCount = secondBrainKnowledge.length;
+  result.atsAnalysis.tailoredSkills = rankedSkills.map((r) => r.name);
 
   await db
     .update(jobApplications)
