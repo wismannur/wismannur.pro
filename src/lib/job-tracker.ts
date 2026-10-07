@@ -341,3 +341,52 @@ export function checkIsStagnant(
     daysInactive: Math.max(0, days),
   };
 }
+
+/**
+ * Single Source of Truth (SSOT): Checks whether an application is currently in an active interview process.
+ */
+export function isApplicationInActiveInterview(app: {
+  status: JobApplicationStatus;
+  interviews?: Array<{ status: string; scheduledAt?: Date | string }>;
+}): boolean {
+  if (
+    app.status === "interview_hr" ||
+    app.status === "interview_tech" ||
+    app.status === "interview_user"
+  ) {
+    return true;
+  }
+  return Boolean(
+    app.interviews &&
+      app.interviews.some(
+        (i) => i.status === "scheduled"
+      )
+  );
+}
+
+/**
+ * Single Source of Truth (SSOT): Checks whether an application has progressed beyond applied.
+ * Excludes wishlist, applied, rejected, withdrawn, and ghosted.
+ */
+export function hasApplicationProgressed(status: JobApplicationStatus): boolean {
+  return (
+    status !== "wishlist" &&
+    status !== "applied" &&
+    status !== "rejected" &&
+    status !== "withdrawn" &&
+    status !== "ghosted"
+  );
+}
+
+/**
+ * Returns Monday 00:00:00 for the ISO calendar week of the given date.
+ */
+export function getStartOfIsoWeek(date: Date = new Date()): Date {
+  const dayOfWeek = date.getDay(); // 0 is Sunday, 1 is Monday...
+  const distanceToMonday = (dayOfWeek + 6) % 7;
+  const monday = new Date(date);
+  monday.setDate(date.getDate() - distanceToMonday);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+

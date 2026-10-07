@@ -2,10 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { format } from "date-fns";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { getDb, schema } from "@/db";
 import type { JobApplicationRow, JobInterviewRow } from "@/db/schema";
+import {
+  getStartOfIsoWeek,
+  hasApplicationProgressed,
+  isApplicationInActiveInterview,
+} from "@/lib/job-tracker";
 import { rankSkillsForJobApplication } from "@/lib/tailored-skills";
 import { assertAdmin } from "../core/auth-guard";
 import {
@@ -149,7 +154,9 @@ export async function getApplicationById(id: string): Promise<JobApplication | n
   return toJobApplication(appRow, interviewRows.map(toJobInterview));
 }
 
-export async function createApplication(data: NewJobApplication): Promise<string> {
+export async function createApplication(
+  data: NewJobApplication
+): Promise<{ id: string; isDuplicate: boolean }> {
   await assertAdmin();
 
   const db = getDb();
@@ -163,29 +170,26 @@ export async function createApplication(data: NewJobApplication): Promise<string
       .limit(1);
 
     if (existingByUrl) {
-      return existingByUrl.id;
+      return { id: existingByUrl.id, isDuplicate: true };
     }
   }
 
-  // Deduplication check: normalized companyName and jobTitle
-  const compNorm = data.companyName.trim().toLowerCase();
-  const titleNorm = data.jobTitle.trim().toLowerCase();
-  const allApps = await db
-    .select({
-      id: jobApplications.id,
-      companyName: jobApplications.companyName,
-      jobTitle: jobApplications.jobTitle,
-    })
-    .from(jobApplications);
-
-  const existingByName = allApps.find(
-    (a) =>
-      a.companyName.trim().toLowerCase() === compNorm &&
-      a.jobTitle.trim().toLowerCase() === titleNorm
-  );
+  // Deduplication check: normalized companyName and jobTitle via SQL
+  const compNorm = data.companyName.trim();
+  const titleNorm = data.jobTitle.trim();
+  const [existingByName] = await db
+    .select({ id: jobApplications.id })
+    .from(jobApplications)
+    .where(
+      and(
+        sql`lower(trim(${jobApplications.companyName})) = lower(trim(${compNorm}))`,
+        sql`lower(trim(${jobApplications.jobTitle})) = lower(trim(${titleNorm}))`
+      )
+    )
+    .limit(1);
 
   if (existingByName) {
-    return existingByName.id;
+    return { id: existingByName.id, isDuplicate: true };
   }
 
   const [{ id }] = await db
@@ -217,7 +221,7 @@ export async function createApplication(data: NewJobApplication): Promise<string
     .returning({ id: jobApplications.id });
 
   revalidateTrackerPaths();
-  return id;
+  return { id, isDuplicate: false };
 }
 
 export async function updateApplication(id: string, data: UpdateJobApplication): Promise<void> {
@@ -358,9 +362,7 @@ export async function getAnalytics(): Promise<JobTrackerAnalytics> {
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
+  const startOfWeek = getStartOfIsoWeek(now);
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
   let appliedToday = 0;
@@ -412,25 +414,17 @@ export async function getAnalytics(): Promise<JobTrackerAnalytics> {
       totalOffers += 1;
     }
 
-    if (
-      app.status !== "wishlist" &&
-      app.status !== "applied" &&
-      app.status !== "rejected" &&
-      app.status !== "withdrawn"
-    ) {
+    if (hasApplicationProgressed(app.status)) {
       totalProgressedBeyondApplied += 1;
     }
 
-    if (
-      app.status === "interview_hr" ||
-      app.status === "interview_tech" ||
-      app.status === "interview_user"
-    ) {
+    if (isApplicationInActiveInterview(app)) {
       activeInterviews += 1;
     }
 
-    const appDate = app.appliedAt || app.createdAt;
-    if (appDate) {
+    const isSubmitted = app.status !== "wishlist";
+    const appDate = app.appliedAt || (isSubmitted ? app.createdAt : null);
+    if (isSubmitted && appDate) {
       const dateKey = format(appDate, "yyyy-MM-dd");
       activityMap.set(dateKey, (activityMap.get(dateKey) ?? 0) + 1);
 
@@ -440,12 +434,15 @@ export async function getAnalytics(): Promise<JobTrackerAnalytics> {
     }
   }
 
+  const totalSubmittedApplications = totalApplications - statusCounts.wishlist;
+
   const responseRate =
-    totalApplications > 0
-      ? Math.round((totalProgressedBeyondApplied / totalApplications) * 100)
+    totalSubmittedApplications > 0
+      ? Math.round((totalProgressedBeyondApplied / totalSubmittedApplications) * 100)
       : 0;
 
-  const offerRate = totalApplications > 0 ? Math.round((totalOffers / totalApplications) * 100) : 0;
+  const offerRate =
+    totalSubmittedApplications > 0 ? Math.round((totalOffers / totalSubmittedApplications) * 100) : 0;
 
   // Sort activity for the last 14 days
   const recentActivity: { date: string; count: number }[] = [];
@@ -467,10 +464,10 @@ export async function getAnalytics(): Promise<JobTrackerAnalytics> {
     },
     {
       stage: "Applied / Sourced",
-      count: totalApplications - statusCounts.wishlist,
+      count: totalSubmittedApplications,
       percentage:
         totalApplications > 0
-          ? Math.round(((totalApplications - statusCounts.wishlist) / totalApplications) * 100)
+          ? Math.round(((totalSubmittedApplications) / totalApplications) * 100)
           : 0,
     },
     {
@@ -879,5 +876,26 @@ export async function aiGenerateInboundReply(params: {
   replyDrafts: InboundReachoutReplyDraft[];
 }> {
   await assertAdmin();
-  return generateInboundReachoutReplyWithGemini(params);
+  const db = getDb();
+
+  const [resumeList, skillList] = await Promise.all([
+    db.select().from(resumeEntries).orderBy(desc(resumeEntries.startDate)).limit(5),
+    db.select().from(skills).limit(10),
+  ]);
+
+  const candidateHighlights: string[] = [];
+  const experiences = resumeList.filter((r) => r.kind === "experience");
+  for (const exp of experiences.slice(0, 3)) {
+    candidateHighlights.push(
+      `${exp.title} at ${exp.organization}: ${exp.description?.slice(0, 150) ?? ""}`
+    );
+  }
+  if (skillList.length > 0) {
+    candidateHighlights.push(`Core competencies: ${skillList.map((s) => s.name).join(", ")}`);
+  }
+
+  return generateInboundReachoutReplyWithGemini({
+    ...params,
+    candidateHighlights: candidateHighlights.length > 0 ? candidateHighlights : undefined,
+  });
 }

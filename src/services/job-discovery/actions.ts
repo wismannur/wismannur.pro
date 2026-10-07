@@ -1395,7 +1395,7 @@ export async function importDiscoveredJobToTracker(job: DiscoveredJob): Promise<
 
   const platform = mapJobSourceToPlatform(job.source, job.jobUrl);
 
-  const createdId = await createApplication({
+  const { id: createdId } = await createApplication({
     companyName: job.companyName,
     companyLogo: job.companyLogo,
     jobTitle: job.title,
