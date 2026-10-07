@@ -44,7 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { checkIsStagnant } from "@/lib/job-tracker";
+import { checkIsStagnant, isApplicationInActiveInterview } from "@/lib/job-tracker";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import { jobTrackerService } from "@/services";
 import type {
@@ -186,9 +186,7 @@ export default function JobTrackerPage() {
     const active = applications.filter((a) =>
       ["applied", "screening", "interview_hr", "interview_tech", "interview_user", "offering"].includes(a.status)
     ).length;
-    const interviews = applications.filter((a) =>
-      ["interview_hr", "interview_tech", "interview_user"].includes(a.status) || (a.interviews?.length ?? 0) > 0
-    ).length;
+    const interviews = applications.filter(isApplicationInActiveInterview).length;
     const offers = applications.filter((a) => a.status === "offering" || a.status === "accepted").length;
     const atsScores = applications.filter((a) => typeof a.atsScore === "number").map((a) => a.atsScore as number);
     const avgAts = atsScores.length > 0 ? Math.round(atsScores.reduce((acc, curr) => acc + curr, 0) / atsScores.length) : null;

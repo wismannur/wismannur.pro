@@ -28,7 +28,11 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { JOB_PLATFORM_CONFIG } from "@/lib/job-tracker";
+import {
+  JOB_PLATFORM_CONFIG,
+  hasApplicationProgressed,
+  isApplicationInActiveInterview,
+} from "@/lib/job-tracker";
 import type { JobApplication, JobTrackerAnalytics } from "@/services/job-tracker/types";
 
 interface AnalyticsDashboardProps {
@@ -91,9 +95,7 @@ export function AnalyticsDashboard({ analytics, applications }: AnalyticsDashboa
 
   const conversionAnalytics = useMemo(() => {
     const isConverted = (app: JobApplication) =>
-      ["screening", "interview_hr", "interview_tech", "interview_user", "offering", "accepted"].includes(
-        app.status
-      ) || ((app.interviews?.length ?? 0) > 0);
+      hasApplicationProgressed(app.status) || isApplicationInActiveInterview(app);
 
     const isOffered = (app: JobApplication) =>
       ["offering", "accepted"].includes(app.status);
