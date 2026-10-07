@@ -1,9 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Plus, Inbox, Send, Search, Users, Gift, Archive } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Inbox, Send, Search, Users, Gift, Archive, PartyPopper, XCircle, Ghost, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useDragToScroll } from "@/hooks/use-drag-to-scroll";
 import { ApplicationCard } from "./application-card";
 import type { JobApplication, JobApplicationStatus } from "@/services/job-tracker/types";
@@ -100,6 +107,7 @@ export function KanbanBoard({
   analyzingAppId,
 }: KanbanBoardProps) {
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
+  const [archiveTargetApp, setArchiveTargetApp] = useState<JobApplication | null>(null);
   const { containerRef, isDragging, events } = useDragToScroll<HTMLDivElement>();
 
   const groupedApps = useMemo(() => {
@@ -121,41 +129,55 @@ export function KanbanBoard({
   }, [applications]);
 
   return (
-    <div
-      ref={containerRef}
-      {...events}
-      className={`flex items-start gap-5 overflow-x-auto pb-8 pt-1 px-1 scroll-smooth no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-none ${
-        isDragging ? "cursor-grabbing" : "cursor-grab"
-      }`}
-    >
-      {KANBAN_COLUMNS.map((col) => {
-        const items = groupedApps.get(col.id) || [];
-        const Icon = col.icon;
-        const isDragOver = dragOverColId === col.id;
+    <>
+      <div
+        ref={containerRef}
+        {...events}
+        className={`flex items-start gap-5 overflow-x-auto pb-8 pt-1 px-1 scroll-smooth no-scrollbar scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden select-none ${
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        }`}
+      >
+        {KANBAN_COLUMNS.map((col) => {
+          const items = groupedApps.get(col.id) || [];
+          const Icon = col.icon;
+          const isDragOver = dragOverColId === col.id;
 
-        return (
-          <div
-            key={col.id}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = "move";
-              if (dragOverColId !== col.id) {
-                setDragOverColId(col.id);
-              }
-            }}
-            onDragLeave={(e) => {
-              // Prevent flickering when hovering over children
-              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
-              setDragOverColId(null);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOverColId(null);
-              const applicationId = e.dataTransfer.getData("text/plain");
-              if (applicationId) {
-                onStatusChange(applicationId, col.defaultStatus);
-              }
-            }}
+          return (
+            <div
+              key={col.id}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                if (dragOverColId !== col.id) {
+                  setDragOverColId(col.id);
+                }
+              }}
+              onDragLeave={(e) => {
+                // Prevent flickering when hovering over children
+                if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                setDragOverColId(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOverColId(null);
+                const applicationId = e.dataTransfer.getData("text/plain");
+                if (applicationId) {
+                  if (col.id === "archive") {
+                    const target = applications.find((a) => a.id === applicationId);
+                    if (target) {
+                      setArchiveTargetApp(target);
+                      return;
+                    }
+                  }
+                  if (col.id === "interviews") {
+                    const target = applications.find((a) => a.id === applicationId);
+                    if (target && ["interview_hr", "interview_tech", "interview_user"].includes(target.status)) {
+                      return;
+                    }
+                  }
+                  onStatusChange(applicationId, col.defaultStatus);
+                }
+              }}
             className={`relative flex flex-col w-[340px] min-w-[340px] max-w-[340px] shrink-0 rounded-2xl border transition-all duration-200 p-4 min-h-[580px] max-h-[calc(100vh-220px)] shadow-xl overflow-hidden backdrop-blur-md ${
               isDragOver
                 ? "border-primary ring-2 ring-primary/40 bg-[#0C0E18] scale-[1.01] shadow-2xl shadow-primary/20"
@@ -235,5 +257,99 @@ export function KanbanBoard({
         );
       })}
     </div>
-  );
+
+    {/* Archive / Outcome Stage Picker Dialog */}
+    <Dialog
+      open={Boolean(archiveTargetApp)}
+      onOpenChange={(open) => !open && setArchiveTargetApp(null)}
+    >
+      <DialogContent className="max-w-md bg-[#0C0E18] border-white/[0.12] text-white">
+        <DialogHeader>
+          <DialogTitle className="text-base font-bold flex items-center gap-2">
+            <Archive className="w-5 h-5 text-zinc-400" />
+            <span>Select Final Outcome</span>
+          </DialogTitle>
+          <DialogDescription className="text-xs text-gray-400">
+            Choose the final status for <strong className="text-white">{archiveTargetApp?.jobTitle}</strong> at{" "}
+            <strong className="text-white">{archiveTargetApp?.companyName}</strong>.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-2 gap-2.5 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (archiveTargetApp) {
+                onStatusChange(archiveTargetApp.id, "accepted");
+                setArchiveTargetApp(null);
+              }
+            }}
+            className="h-auto py-3 px-3 flex flex-col items-start gap-1 text-left bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-300"
+          >
+            <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-400">
+              <PartyPopper className="w-4 h-4" />
+              <span>Accepted 🎉</span>
+            </div>
+            <span className="text-[10px] text-gray-400">Offer signed & accepted</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (archiveTargetApp) {
+                onStatusChange(archiveTargetApp.id, "rejected");
+                setArchiveTargetApp(null);
+              }
+            }}
+            className="h-auto py-3 px-3 flex flex-col items-start gap-1 text-left bg-rose-500/10 border-rose-500/30 hover:bg-rose-500/20 text-rose-300"
+          >
+            <div className="flex items-center gap-1.5 font-bold text-xs text-rose-400">
+              <XCircle className="w-4 h-4" />
+              <span>Rejected ❌</span>
+            </div>
+            <span className="text-[10px] text-gray-400">Company decided to pass</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (archiveTargetApp) {
+                onStatusChange(archiveTargetApp.id, "ghosted");
+                setArchiveTargetApp(null);
+              }
+            }}
+            className="h-auto py-3 px-3 flex flex-col items-start gap-1 text-left bg-orange-500/10 border-orange-500/30 hover:bg-orange-500/20 text-orange-300"
+          >
+            <div className="flex items-center gap-1.5 font-bold text-xs text-orange-400">
+              <Ghost className="w-4 h-4" />
+              <span>Ghosted 👻</span>
+            </div>
+            <span className="text-[10px] text-gray-400">No response after follow-up</span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (archiveTargetApp) {
+                onStatusChange(archiveTargetApp.id, "withdrawn");
+                setArchiveTargetApp(null);
+              }
+            }}
+            className="h-auto py-3 px-3 flex flex-col items-start gap-1 text-left bg-zinc-500/10 border-zinc-500/30 hover:bg-zinc-500/20 text-zinc-300"
+          >
+            <div className="flex items-center gap-1.5 font-bold text-xs text-zinc-300">
+              <Ban className="w-4 h-4" />
+              <span>Withdrawn 🛑</span>
+            </div>
+            <span className="text-[10px] text-gray-400">Withdrew application</span>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
+);
 }
