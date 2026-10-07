@@ -1,15 +1,24 @@
 import {
   Document,
+  Font,
   Page,
   Text,
   View,
   StyleSheet,
+  Link,
 } from "@react-pdf/renderer";
+
+import { formatExperienceMeta } from "@/lib/resume";
+
+// Prevent ugly mid-word hyphens (e.g. "verifi-cation")
+Font.registerHyphenationCallback((word) => [word]);
 
 export interface CvPdfExperience {
   title: string;
   organization: string;
   location?: string;
+  employmentType?: string;
+  locationType?: string;
   period: string;
   bullets: string[];
 }
@@ -25,6 +34,7 @@ export interface CvPdfProject {
   title: string;
   technologies?: string[];
   description: string;
+  bullets?: string[];
 }
 
 export interface CvPdfProps {
@@ -44,9 +54,9 @@ export interface CvPdfProps {
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: 28,
-    paddingBottom: 28,
-    paddingHorizontal: 34,
+    paddingTop: 26,
+    paddingBottom: 26,
+    paddingHorizontal: 32,
     fontFamily: "Helvetica",
     fontSize: 9,
     color: "#111827",
@@ -78,6 +88,13 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     color: "#4b5563",
     lineHeight: 1.3,
+  },
+  contactLink: {
+    color: "#2563eb",
+    textDecoration: "none",
+  },
+  contactSeparator: {
+    color: "#9ca3af",
   },
   section: {
     marginTop: 7,
@@ -113,6 +130,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flex: 1,
     flexWrap: "wrap",
+    paddingRight: 8,
   },
   expTitle: {
     fontSize: 9.2,
@@ -133,13 +151,14 @@ const styles = StyleSheet.create({
     fontSize: 8.2,
     fontFamily: "Helvetica-Bold",
     color: "#4b5563",
-    marginLeft: 8,
+    flexShrink: 0,
+    textAlign: "right",
   },
   expLocation: {
     fontSize: 7.8,
     fontFamily: "Helvetica-Oblique",
     color: "#6b7280",
-    marginBottom: 2,
+    marginBottom: 2.5,
   },
   bulletRow: {
     flexDirection: "row",
@@ -157,25 +176,6 @@ const styles = StyleSheet.create({
     color: "#374151",
     lineHeight: 1.3,
   },
-  projectItem: {
-    marginBottom: 5,
-  },
-  projectHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    marginBottom: 1.5,
-  },
-  projectTitle: {
-    fontSize: 9,
-    fontFamily: "Helvetica-Bold",
-    color: "#111827",
-  },
-  projectTech: {
-    fontSize: 8,
-    fontFamily: "Helvetica-Oblique",
-    color: "#4b5563",
-  },
   skillsText: {
     fontSize: 8.5,
     color: "#374151",
@@ -191,10 +191,32 @@ const styles = StyleSheet.create({
     fontSize: 8.8,
     fontFamily: "Helvetica-Bold",
     color: "#111827",
+    flex: 1,
+    paddingRight: 8,
   },
   eduDate: {
     fontSize: 8.2,
     color: "#4b5563",
+    flexShrink: 0,
+    textAlign: "right",
+  },
+  projectItem: {
+    marginBottom: 5.5,
+  },
+  projectHeader: {
+    marginBottom: 2,
+  },
+  projectTitle: {
+    fontSize: 9,
+    fontFamily: "Helvetica-Bold",
+    color: "#111827",
+    marginBottom: 1,
+  },
+  projectTech: {
+    fontSize: 7.8,
+    fontFamily: "Helvetica-Oblique",
+    color: "#4b5563",
+    lineHeight: 1.25,
   },
 });
 
@@ -232,7 +254,50 @@ export function CvPdfDocument({
         <View style={styles.header}>
           <Text style={styles.name}>{name}</Text>
           {headline ? <Text style={styles.headline}>{headline}</Text> : null}
-          <Text style={styles.contactLine}>{contactParts.join("  |  ")}</Text>
+          <Text style={styles.contactLine}>
+            {location}
+            {email ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link src={`mailto:${email}`} style={styles.contactLink}>
+                  {email}
+                </Link>
+              </>
+            ) : null}
+            {website ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={website.startsWith("http") ? website : `https://${website}`}
+                  style={styles.contactLink}
+                >
+                  {website.replace(/^https?:\/\/(www\.)?/, "")}
+                </Link>
+              </>
+            ) : null}
+            {linkedin ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`}
+                  style={styles.contactLink}
+                >
+                  {linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}
+                </Link>
+              </>
+            ) : null}
+            {github ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={github.startsWith("http") ? github : `https://${github}`}
+                  style={styles.contactLink}
+                >
+                  {github.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}
+                </Link>
+              </>
+            ) : null}
+          </Text>
         </View>
 
         {/* Professional Summary */}
@@ -247,29 +312,40 @@ export function CvPdfDocument({
         {experiences.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Work Experience</Text>
-            {experiences.map((exp, idx) => (
-              <View key={idx} style={styles.experienceItem} wrap={false}>
-                <View style={styles.expHeader}>
-                  <View style={styles.expTitleContainer}>
-                    <Text style={styles.expTitle}>{exp.title}</Text>
-                    <Text style={styles.expSeparator}>—</Text>
-                    <Text style={styles.expCompany}>{exp.organization}</Text>
+            {experiences.map((exp, idx) => {
+              const metaText = formatExperienceMeta({
+                location: exp.location,
+                employmentType: exp.employmentType,
+                locationType: exp.locationType,
+              });
+
+              return (
+                <View key={idx} style={styles.experienceItem} wrap={false}>
+                  <View style={styles.expHeader}>
+                    <View style={styles.expTitleContainer}>
+                      <Text style={styles.expTitle}>{exp.title}</Text>
+                      <Text style={styles.expSeparator}>—</Text>
+                      <Text style={styles.expCompany}>{exp.organization}</Text>
+                    </View>
+                    <Text style={styles.expDate}>{exp.period}</Text>
                   </View>
-                  <Text style={styles.expDate}>{exp.period}</Text>
+
+                  {metaText ? (
+                    <Text style={styles.expLocation}>{metaText}</Text>
+                  ) : null}
+
+                  {exp.bullets.map((bullet, bIdx) => {
+                    const cleanBullet = bullet.replace(/^[-•*]\s*/, "").trim();
+                    return (
+                      <View key={bIdx} style={styles.bulletRow}>
+                        <Text style={styles.bulletDot}>•</Text>
+                        <Text style={styles.bulletText}>{cleanBullet}</Text>
+                      </View>
+                    );
+                  })}
                 </View>
-
-                {exp.location ? (
-                  <Text style={styles.expLocation}>{exp.location}</Text>
-                ) : null}
-
-                {exp.bullets.map((bullet, bIdx) => (
-                  <View key={bIdx} style={styles.bulletRow}>
-                    <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>{bullet}</Text>
-                  </View>
-                ))}
-              </View>
-            ))}
+              );
+            })}
           </View>
         ) : null}
 
@@ -277,22 +353,43 @@ export function CvPdfDocument({
         {projects.length > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Key Technical Projects</Text>
-            {projects.map((proj, idx) => (
-              <View key={idx} style={styles.projectItem} wrap={false}>
-                <View style={styles.projectHeader}>
-                  <Text style={styles.projectTitle}>{proj.title}</Text>
-                  {proj.technologies && proj.technologies.length > 0 ? (
-                    <Text style={styles.projectTech}>
-                      {proj.technologies.join(" • ")}
-                    </Text>
-                  ) : null}
+            {projects.map((proj, idx) => {
+              const projBullets =
+                proj.bullets && proj.bullets.length > 0
+                  ? proj.bullets
+                  : proj.description
+                    ? proj.description
+                        .split("\n")
+                        .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
+                        .filter(Boolean)
+                    : [];
+
+              return (
+                <View key={idx} style={styles.projectItem} wrap={false}>
+                  <View style={styles.projectHeader}>
+                    <Text style={styles.projectTitle}>{proj.title}</Text>
+                    {proj.technologies && proj.technologies.length > 0 ? (
+                      <Text style={styles.projectTech}>
+                        {proj.technologies.join(" • ")}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {projBullets.length > 0 ? (
+                    projBullets.map((bullet, bIdx) => (
+                      <View key={bIdx} style={styles.bulletRow}>
+                        <Text style={styles.bulletDot}>•</Text>
+                        <Text style={styles.bulletText}>{bullet}</Text>
+                      </View>
+                    ))
+                  ) : (
+                    <View style={styles.bulletRow}>
+                      <Text style={styles.bulletDot}>•</Text>
+                      <Text style={styles.bulletText}>{proj.description}</Text>
+                    </View>
+                  )}
                 </View>
-                <View style={styles.bulletRow}>
-                  <Text style={styles.bulletDot}>•</Text>
-                  <Text style={styles.bulletText}>{proj.description}</Text>
-                </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         ) : null}
 
@@ -304,10 +401,10 @@ export function CvPdfDocument({
           </View>
         ) : null}
 
-        {/* Education */}
+        {/* Education & Certifications */}
         {education.length > 0 ? (
           <View style={styles.section} wrap={false}>
-            <Text style={styles.sectionTitle}>Education</Text>
+            <Text style={styles.sectionTitle}>Education & Certifications</Text>
             {education.map((edu, idx) => (
               <View key={idx} style={styles.eduItem}>
                 <Text style={styles.eduTitle}>

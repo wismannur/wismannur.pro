@@ -49,6 +49,7 @@ export interface TailoredProjectHighlight {
   title: string;
   technologies: string[];
   description: string;
+  bullets?: string[];
   relevanceRationale?: string;
 }
 
@@ -62,6 +63,7 @@ export interface AtsAnalysis {
   summaryFeedback: string;
   tailoredProjects?: TailoredProjectHighlight[];
   secondBrainInsightsCount?: number;
+  tailoredSkills?: string[];
 }
 
 export interface SecondBrainKnowledgeSnippet {

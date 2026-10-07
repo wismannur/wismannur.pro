@@ -66,15 +66,22 @@ const toProfile = (row: typeof users.$inferSelect): UserProfile => ({
 export async function getAuthorProfile(): Promise<UserProfile | null> {
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const db = getDb();
-  const rows = adminEmail
+  let rows = adminEmail
     ? await db.select().from(users).where(eq(users.email, adminEmail)).limit(1)
-    : await db.select().from(users).limit(1);
+    : [];
+  if (rows.length === 0) {
+    rows = await db.select().from(users).limit(1);
+  }
   return rows[0] ? toProfile(rows[0]) : null;
 }
 
 export async function getProfile(): Promise<UserProfile | null> {
   const uid = await requireAdminUid();
-  const [row] = await getDb().select().from(users).where(eq(users.uid, uid)).limit(1);
+  const db = getDb();
+  let [row] = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
+  if (!row) {
+    [row] = await db.select().from(users).limit(1);
+  }
   return row ? toProfile(row) : null;
 }
 
@@ -87,7 +94,17 @@ export async function updateProfile(data: UserProfileUpdate): Promise<void> {
   // Cast: with `strictNullChecks` off (legacy tsconfig), Zod's inferred object
   // type degrades to all-optional; the schema itself guarantees this shape.
   const clean = parsed.data as UserProfileUpdate;
-  await getDb()
+  const db = getDb();
+  let targetUid = uid;
+  const [existing] = await db.select().from(users).where(eq(users.uid, uid)).limit(1);
+  if (!existing) {
+    const [fallback] = await db.select().from(users).limit(1);
+    if (fallback) {
+      targetUid = fallback.uid;
+    }
+  }
+
+  await db
     .update(users)
     .set({
       displayName: clean.displayName,
@@ -98,7 +115,7 @@ export async function updateProfile(data: UserProfileUpdate): Promise<void> {
       // these; the public footer/contact use site_settings.social instead).
       ...(clean.social ? { social: clean.social } : {}),
     })
-    .where(eq(users.uid, uid));
+    .where(eq(users.uid, targetUid));
 }
 
 // Uploads the cropped avatar to Vercel Blob and persists the URL. A random

@@ -191,6 +191,8 @@ export const resumeEntries = pgTable("resume_entries", {
   title: text("title").notNull(),
   organization: text("organization").notNull(),
   location: text("location"),
+  employmentType: text("employment_type"),
+  locationType: text("location_type"),
   startDate: date("start_date").notNull(),
   endDate: date("end_date"),
   isCurrent: boolean("is_current").notNull().default(false),

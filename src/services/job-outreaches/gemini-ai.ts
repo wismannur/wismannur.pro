@@ -5,7 +5,7 @@ import type { AiOutreachDraftParams, AiOutreachDraftResult } from "./types";
 
 const { users, siteSettings, skills, projects, resumeEntries, aiKnowledgeItems } = schema;
 
-const DEFAULT_MODEL = getGeminiModel("gemini-2.5-flash");
+const DEFAULT_MODEL = getGeminiModel();
 
 function cleanJsonText(rawText: string): string {
   let clean = rawText.trim();

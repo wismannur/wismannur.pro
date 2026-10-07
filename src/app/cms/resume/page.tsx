@@ -53,7 +53,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatResumePeriod } from "@/lib/resume";
+import { formatResumePeriod, formatEmploymentType, formatLocationType } from "@/lib/resume";
 import { formatDate } from "@/lib/utils";
 import { resumeService, type ResumeEntry, type ResumeKind } from "@/services";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
@@ -219,12 +219,24 @@ export default function CmsResumePage() {
         <div className="flex flex-col gap-1 py-1">
           <div className="font-semibold text-slate-100">{entry.title}</div>
           <div className="text-xs text-slate-400">{entry.organization}</div>
-          {entry.location && (
-            <div className="text-[11px] text-slate-500 mt-0.5 flex items-center">
-              <MapPin className="w-3 h-3 mr-1 text-indigo-400 shrink-0" />
-              {entry.location}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+            {entry.location && (
+              <span className="text-[11px] text-slate-500 flex items-center">
+                <MapPin className="w-3 h-3 mr-1 text-indigo-400 shrink-0" />
+                {entry.location}
+              </span>
+            )}
+            {entry.employmentType && (
+              <Badge className="bg-indigo-500/10 text-indigo-300 border-indigo-500/20 text-[10px] px-1.5 py-0">
+                {formatEmploymentType(entry.employmentType)}
+              </Badge>
+            )}
+            {entry.locationType && (
+              <Badge className="bg-emerald-500/10 text-emerald-300 border-emerald-500/20 text-[10px] px-1.5 py-0">
+                {formatLocationType(entry.locationType)}
+              </Badge>
+            )}
+          </div>
         </div>
       ),
       className: "w-[320px]",
