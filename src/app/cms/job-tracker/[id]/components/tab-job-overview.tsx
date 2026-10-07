@@ -149,6 +149,86 @@ export function TabJobOverview({
     window.addEventListener("touchmove", handleTouchMove, { passive: true });
     window.addEventListener("touchend", handleTouchEnd);
   };
+
+  // Resizable state & handlers for Key Requirements
+  const [reqsHeight, setReqsHeight] = useState<number>(120);
+  const isDraggingReqsRef = useRef(false);
+  const dragReqsStartYRef = useRef(0);
+  const startReqsHeightRef = useRef(120);
+
+  const [rawRequirements, setRawRequirements] = useState<string | null>(null);
+  const [prevId, setPrevId] = useState(application.id);
+
+  if (application.id !== prevId) {
+    setPrevId(application.id);
+    setRawRequirements(null);
+  }
+
+  const displayRequirements =
+    rawRequirements !== null
+      ? rawRequirements
+      : (formData.requirements ?? application.requirements ?? []).join("\n");
+
+  const handleRequirementsChange = (text: string) => {
+    setRawRequirements(text);
+    const parsed = text
+      .split("\n")
+      .map((r) => r.trim())
+      .filter(Boolean);
+    onFormChange({
+      ...formData,
+      requirements: parsed,
+    });
+  };
+
+  const handleMouseDownReqsResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingReqsRef.current = true;
+    dragReqsStartYRef.current = e.clientY;
+    startReqsHeightRef.current = reqsHeight;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDraggingReqsRef.current) return;
+      const deltaY = moveEvent.clientY - dragReqsStartYRef.current;
+      const maxHeight = Math.min(800, Math.floor(window.innerHeight * 0.85));
+      const newHeight = Math.min(Math.max(startReqsHeightRef.current + deltaY, 80), maxHeight);
+      setReqsHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      isDraggingReqsRef.current = false;
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleTouchStartReqsResize = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    isDraggingReqsRef.current = true;
+    dragReqsStartYRef.current = e.touches[0].clientY;
+    startReqsHeightRef.current = reqsHeight;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!isDraggingReqsRef.current || moveEvent.touches.length !== 1) return;
+      const deltaY = moveEvent.touches[0].clientY - dragReqsStartYRef.current;
+      const maxHeight = Math.min(800, Math.floor(window.innerHeight * 0.85));
+      const newHeight = Math.min(Math.max(startReqsHeightRef.current + deltaY, 80), maxHeight);
+      setReqsHeight(newHeight);
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingReqsRef.current = false;
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchend", handleTouchEnd);
+  };
+
   return (
     <div className="space-y-6">
       {/* Company Intelligence & Reputation Dossier */}
@@ -387,6 +467,64 @@ export function TabJobOverview({
               onTouchStart={handleTouchStartJobDescResize}
               className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
               title="Drag handle to resize job description"
+            >
+              <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="requirements" className="text-xs font-semibold text-slate-300">
+                Key Requirements / Tech Stack (1 per line)
+              </Label>
+              <span className="text-[10px] text-muted-foreground font-mono">
+                ({(formData.requirements ?? application.requirements ?? []).length} items)
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-500 hidden sm:flex items-center gap-1 font-mono">
+                <GripHorizontal className="h-3 w-3 opacity-60" /> Drag to resize
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (reqsHeight > 160) {
+                    setReqsHeight(120);
+                  } else {
+                    setReqsHeight(260);
+                  }
+                }}
+                className="h-6 w-6 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                title={reqsHeight > 160 ? "Perkecil input" : "Perbesar input"}
+              >
+                {reqsHeight > 160 ? (
+                  <Minimize2 className="h-3 w-3" />
+                ) : (
+                  <Maximize2 className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="relative flex flex-col rounded-xl border border-white/[0.08] bg-[#131726] overflow-hidden focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all shadow-inner">
+            <Textarea
+              id="requirements"
+              placeholder="e.g.&#10;5+ years experience in React & Next.js&#10;Strong proficiency in TypeScript and Tailwind CSS&#10;Experience with PostgreSQL and Docker"
+              value={displayRequirements}
+              onChange={(e) => handleRequirementsChange(e.target.value)}
+              style={{ height: `${reqsHeight}px` }}
+              className="w-full text-xs font-mono resize-none rounded-none border-0 bg-transparent text-slate-200 leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0 px-3.5 py-2.5 overflow-y-auto scrollbar-thin"
+            />
+            {/* Bottom Drag Handle Bar to Resize */}
+            <div
+              onMouseDown={handleMouseDownReqsResize}
+              onTouchStart={handleTouchStartReqsResize}
+              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+              title="Drag handle to resize key requirements"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
             </div>
