@@ -17,13 +17,14 @@ import {
   Minimize2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { jobTrackerService } from "@/services";
+import { jobTrackerService, jobOutreachService } from "@/services";
 import type {
   InboundReachout,
   InboundReachoutReplyDraft,
@@ -36,6 +37,7 @@ interface TabInboundReachoutProps {
 }
 
 export function TabInboundReachout({ application, onUpdate }: TabInboundReachoutProps) {
+  const queryClient = useQueryClient();
   const reachout: InboundReachout = application.inboundReachout || {};
 
   const [messageRaw, setMessageRaw] = useState(reachout.messageRaw || "");
@@ -164,7 +166,38 @@ export function TabInboundReachout({ application, onUpdate }: TabInboundReachout
         inboundReachout: updatedReachout,
       });
 
-      toast.success("Marked reply as sent! Saved to activity history.");
+      // Sync sent InMail reply directly to Job Outreaches CRM
+      try {
+        await jobOutreachService.create(
+          {
+            jobApplicationId: application.id,
+            companyName: application.companyName,
+            companyWebsite: application.companyWebsite,
+            jobTitle: application.jobTitle,
+            contactName: recruiterName || application.contactName || "Recruiter",
+            contactRole: recruiterRole || "Recruiter",
+            contactEmail:
+              application.contactEmail ||
+              `${(recruiterName || "recruiter").toLowerCase().replace(/\s+/g, ".")}@inmail.linkedin`,
+            contactLinkedin: application.jobUrl?.includes("linkedin") ? application.jobUrl : undefined,
+            outreachType: "follow_up",
+            status: "replied",
+            subject: `Re: Inbound Reachout — ${application.jobTitle} at ${application.companyName}`,
+            body: draftContent,
+            notes: `Replied via LinkedIn InMail / Direct Message.\n\nOriginal Inbound Message:\n${messageRaw}`,
+            sentAt: new Date(),
+          },
+          false
+        );
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["jobOutreachesForApp", application.id] }),
+          queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] }),
+        ]);
+      } catch (syncErr) {
+        console.warn("[Inbound Reachout] Outreach CRM sync error:", syncErr);
+      }
+
+      toast.success("Marked reply as sent! Synced with Outreach CRM.");
     } catch (err) {
       console.error(err);
       toast.error("Failed to mark as sent.");
