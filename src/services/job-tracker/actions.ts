@@ -153,6 +153,41 @@ export async function createApplication(data: NewJobApplication): Promise<string
   await assertAdmin();
 
   const db = getDb();
+
+  // Deduplication check: check if application already exists by jobUrl
+  if (data.jobUrl && data.jobUrl.trim()) {
+    const [existingByUrl] = await db
+      .select({ id: jobApplications.id })
+      .from(jobApplications)
+      .where(eq(jobApplications.jobUrl, data.jobUrl.trim()))
+      .limit(1);
+
+    if (existingByUrl) {
+      return existingByUrl.id;
+    }
+  }
+
+  // Deduplication check: normalized companyName and jobTitle
+  const compNorm = data.companyName.trim().toLowerCase();
+  const titleNorm = data.jobTitle.trim().toLowerCase();
+  const allApps = await db
+    .select({
+      id: jobApplications.id,
+      companyName: jobApplications.companyName,
+      jobTitle: jobApplications.jobTitle,
+    })
+    .from(jobApplications);
+
+  const existingByName = allApps.find(
+    (a) =>
+      a.companyName.trim().toLowerCase() === compNorm &&
+      a.jobTitle.trim().toLowerCase() === titleNorm
+  );
+
+  if (existingByName) {
+    return existingByName.id;
+  }
+
   const [{ id }] = await db
     .insert(jobApplications)
     .values({

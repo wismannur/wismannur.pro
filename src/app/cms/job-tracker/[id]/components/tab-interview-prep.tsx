@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowUpRight,
+  Award,
   Bot,
   BrainCircuit,
   Calendar,
   CalendarPlus,
+  Code2,
   Copy,
   Download,
   ExternalLink,
@@ -19,6 +23,7 @@ import {
   Video,
   Zap,
 } from "lucide-react";
+import { getSessionsByJobApplication } from "@/services/frontend-mastery";
 import {
   Accordion,
   AccordionContent,
@@ -91,6 +96,11 @@ export function TabInterviewPrep({
   const [isFollowUpOpen, setIsFollowUpOpen] = useState(false);
   const [activeMockInterview, setActiveMockInterview] = useState<JobInterview | null>(null);
 
+  const { data: linkedDrills = [] } = useQuery({
+    queryKey: ["frontendMasteryDrillsForApp", application.id],
+    queryFn: () => getSessionsByJobApplication(application.id),
+  });
+
   const [newInterviewForm, setNewInterviewForm] = useState<NewJobInterview>({
     applicationId: application.id,
     stageType: "hr_screening",
@@ -137,7 +147,9 @@ export function TabInterviewPrep({
             <Link
               href={`/cms/frontend-mastery?tab=mock-generator&company=${encodeURIComponent(
                 application.companyName
-              )}&role=${encodeURIComponent(application.jobTitle)}`}
+              )}&role=${encodeURIComponent(application.jobTitle)}&jobAppId=${encodeURIComponent(
+                application.id
+              )}`}
             >
               <BrainCircuit className="w-3.5 h-3.5 text-indigo-400" />
               Practice in Mock Arena
@@ -450,6 +462,108 @@ export function TabInterviewPrep({
             );
           })}
         </div>
+      )}
+
+      {/* Linked Frontend Mastery Drills & Technical Assessment Dossier */}
+      {linkedDrills.length > 0 && (
+        <Card className="bg-[#0C0E18]/80 backdrop-blur-md border border-purple-500/20 shadow-2xl overflow-hidden mt-6">
+          <CardHeader className="bg-[#131726]/50 pb-3 border-b border-white/[0.06] px-6 pt-5">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/25 text-purple-400">
+                  <Code2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>Frontend Mastery Drills & Mock Loop History</span>
+                    <Badge variant="outline" className="text-[10px] bg-purple-500/15 text-purple-300 border-purple-500/30">
+                      {linkedDrills.length} Completed
+                    </Badge>
+                  </CardTitle>
+                  <p className="text-[11px] text-gray-400">
+                    Live technical interview simulations and coding challenges practiced specifically for {application.companyName}.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="text-xs h-7 gap-1 border-purple-500/30 text-purple-300 hover:bg-purple-500/15"
+              >
+                <Link
+                  href={`/cms/frontend-mastery?tab=mock-generator&company=${encodeURIComponent(
+                    application.companyName
+                  )}&role=${encodeURIComponent(application.jobTitle)}&jobAppId=${encodeURIComponent(
+                    application.id
+                  )}`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New Drill</span>
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-4 space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {linkedDrills.map((drill) => (
+                <div
+                  key={drill.id}
+                  className="rounded-xl border border-white/[0.08] bg-[#131726] p-3.5 space-y-2 hover:border-purple-500/40 transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between gap-1">
+                      <Badge variant="outline" className="text-[10px] uppercase font-mono bg-white/[0.04] text-gray-300 border-white/[0.08]">
+                        {drill.pillar}
+                      </Badge>
+                      {drill.score !== null && drill.score !== undefined ? (
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-bold ${
+                            drill.score >= 80
+                              ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                              : drill.score >= 60
+                              ? "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                              : "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                          }`}
+                        >
+                          {drill.score}% Score
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-300 border-amber-500/20">
+                          In Progress
+                        </Badge>
+                      )}
+                    </div>
+
+                    <h5 className="font-bold text-xs text-white line-clamp-1">
+                      {drill.topicTitle}
+                    </h5>
+
+                    {drill.evaluationResult && (
+                      <p className="text-[11px] text-gray-400 line-clamp-2">
+                        {drill.evaluationResult.summary}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-gray-400">
+                    <span className="font-mono">Level: {drill.difficulty}</span>
+                    <Link
+                      href={`/cms/frontend-mastery?tab=history`}
+                      className="inline-flex items-center gap-1 text-purple-300 hover:text-purple-200 font-semibold"
+                    >
+                      <span>Review in Arena</span>
+                      <ArrowUpRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Modal Dialog: Parse Recruiter Invite */}

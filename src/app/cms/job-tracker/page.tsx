@@ -55,6 +55,7 @@ import { KanbanBoard } from "./components/kanban-board";
 import { ApplicationTable } from "./components/application-table";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { WeeklyGoalTracker } from "./components/weekly-goal-tracker";
+import { CareerHubNav } from "@/components/cms/career-hub-nav";
 
 export default function JobTrackerPage() {
   const router = useRouter();
@@ -205,6 +206,9 @@ export default function JobTrackerPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
+      {/* Career Hub Unified Navigation Bar */}
+      <CareerHubNav />
+
       {/* Electric Obsidian Command Center Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0C0E18] via-[#090A10] to-[#08090C] p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
         {/* Ambient radial glow orb */}

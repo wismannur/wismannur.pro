@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
-import { atsDirectService, jobDiscoveryService } from "@/services";
+import { atsDirectService, jobDiscoveryService, jobTrackerService } from "@/services";
 import type { DiscoveredJob } from "@/services/job-discovery/types";
 import type { AtsPlatform } from "@/services/job-discovery/ats-direct/types";
 import { AddCompanyDialog } from "./add-company-dialog";
@@ -135,6 +135,7 @@ export function DirectAtsFeed({ onJobImported }: DirectAtsFeedProps) {
   const [importedJobMap, setImportedJobMap] = useState<Record<string, string>>({});
 
   // 1. Fetch Companies list
+  // 1. Fetch Companies list
   const {
     data: companies = [],
     refetch: refetchCompanies,
@@ -142,6 +143,21 @@ export function DirectAtsFeed({ onJobImported }: DirectAtsFeedProps) {
     queryKey: ["direct-ats-companies"],
     queryFn: () => atsDirectService.getCompanies(),
   });
+
+  // 1b. Fetch Existing Job Applications to accurately sync "Added to Tracker" badge
+  const { data: existingApplications = [] } = useQuery({
+    queryKey: ["jobApplications"],
+    queryFn: () => jobTrackerService.getAll(),
+  });
+
+  const isAlreadyTracked = useMemo(() => {
+    const set = new Set<string>();
+    for (const app of existingApplications) {
+      if (app.jobUrl) set.add(app.jobUrl.trim().toLowerCase());
+      set.add(`${app.companyName.trim().toLowerCase()}:::${app.jobTitle.trim().toLowerCase()}`);
+    }
+    return set;
+  }, [existingApplications]);
 
   const [shouldForceRefresh, setShouldForceRefresh] = useState(false);
 
@@ -402,7 +418,10 @@ export function DirectAtsFeed({ onJobImported }: DirectAtsFeedProps) {
           <div className="grid grid-cols-1 gap-3">
             {jobs.map((job) => {
               const platformBadge = getPlatformBadge(job.source);
-              const isImported = Boolean(importedJobMap[job.id]);
+              const isImported =
+                Boolean(importedJobMap[job.id]) ||
+                Boolean(job.jobUrl && isAlreadyTracked.has(job.jobUrl.trim().toLowerCase())) ||
+                isAlreadyTracked.has(`${job.companyName.trim().toLowerCase()}:::${job.title.trim().toLowerCase()}`);
               const isReasonsExpanded = expandedReasonsId === job.id;
               const isWorldwide = job.geoRegion === "worldwide" || job.geoRegion === "apac";
               const time = formatRelativeTime(job.publishedAt);

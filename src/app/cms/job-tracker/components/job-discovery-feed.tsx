@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
-import { jobDiscoveryService } from "@/services";
+import { jobDiscoveryService, jobTrackerService } from "@/services";
 import type { DiscoveredJob } from "@/services/job-discovery/types";
 
 interface JobDiscoveryFeedProps {
@@ -253,6 +253,20 @@ export function JobDiscoveryFeed({ onJobImported }: JobDiscoveryFeedProps) {
       }),
     placeholderData: keepPreviousData,
   });
+
+  const { data: existingApplications = [] } = useQuery({
+    queryKey: ["jobApplications"],
+    queryFn: () => jobTrackerService.getAll(),
+  });
+
+  const isAlreadyTracked = useMemo(() => {
+    const set = new Set<string>();
+    for (const app of existingApplications) {
+      if (app.jobUrl) set.add(app.jobUrl.trim().toLowerCase());
+      set.add(`${app.companyName.trim().toLowerCase()}:::${app.jobTitle.trim().toLowerCase()}`);
+    }
+    return set;
+  }, [existingApplications]);
 
   const displayedJobs = useMemo(() => {
     if (selectedPlatforms.length === 0) return jobs;
@@ -496,7 +510,10 @@ export function JobDiscoveryFeed({ onJobImported }: JobDiscoveryFeedProps) {
         /* Jobs List / Cards Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {displayedJobs.map((job) => {
-            const isImported = Boolean(importedJobMap[job.id]);
+            const isImported =
+              Boolean(importedJobMap[job.id]) ||
+              Boolean(job.jobUrl && isAlreadyTracked.has(job.jobUrl.trim().toLowerCase())) ||
+              isAlreadyTracked.has(`${job.companyName.trim().toLowerCase()}:::${job.title.trim().toLowerCase()}`);
             const createdAppId = importedJobMap[job.id];
             const isImporting = importingId === job.id;
             const timeInfo = formatRelativeTime(job.publishedAt);
@@ -820,7 +837,9 @@ export function JobDiscoveryFeed({ onJobImported }: JobDiscoveryFeedProps) {
                   <Button variant="outline" size="sm" onClick={() => setPreviewJob(null)} className="text-xs h-8">
                     Close
                   </Button>
-                  {!importedJobMap[previewJob.id] && (
+                  {!importedJobMap[previewJob.id] &&
+                    !(previewJob.jobUrl && isAlreadyTracked.has(previewJob.jobUrl.trim().toLowerCase())) &&
+                    !isAlreadyTracked.has(`${previewJob.companyName.trim().toLowerCase()}:::${previewJob.title.trim().toLowerCase()}`) && (
                     <Button
                       size="sm"
                       onClick={() => {

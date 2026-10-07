@@ -13,12 +13,16 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { DirectAtsFeed } from "./components/direct-ats-feed";
 import { JobDiscoveryFeed } from "../job-tracker/components/job-discovery-feed";
+import { CareerHubNav } from "@/components/cms/career-hub-nav";
 
 export default function JobHunterPage() {
   const [activeTab, setActiveTab] = useState<"ats" | "global">("ats");
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Career Hub Unified Navigation Bar */}
+      <CareerHubNav />
+
       {/* Top Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/[0.08] pb-5">
         <div className="space-y-1">

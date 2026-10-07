@@ -29,6 +29,7 @@ import { TabCurriculum } from "./components/tab-curriculum";
 import { TabArena } from "./components/tab-arena";
 import { TabMockGenerator } from "./components/tab-mock-generator";
 import { TabHistory } from "./components/tab-history";
+import { CareerHubNav } from "@/components/cms/career-hub-nav";
 
 export default function CmsFrontendMasteryPage() {
   const queryClient = useQueryClient();
@@ -36,6 +37,7 @@ export default function CmsFrontendMasteryPage() {
   const paramTab = searchParams.get("tab");
   const targetCompany = searchParams.get("company") || undefined;
   const targetRole = searchParams.get("role") || undefined;
+  const jobAppId = searchParams.get("jobAppId") || undefined;
 
   const initialTab =
     paramTab === "mock" || paramTab === "mock-generator" || Boolean(targetCompany)
@@ -87,7 +89,7 @@ export default function CmsFrontendMasteryPage() {
     try {
       setStartingTopicId(topicId);
       setIsLoadingSession(true);
-      const session = await startOrGetChallengeSession(topicId, difficulty);
+      const session = await startOrGetChallengeSession(topicId, difficulty, jobAppId);
       setCurrentSession(session);
       setActiveTab("arena");
       await queryClient.invalidateQueries({ queryKey: ["frontend-mastery-overview"] });
@@ -148,7 +150,12 @@ export default function CmsFrontendMasteryPage() {
   ) => {
     try {
       setIsGeneratingMock(true);
-      const mockSession = await createCustomMockInterview(pillar, difficulty, customScenario);
+      const mockSession = await createCustomMockInterview(
+        pillar,
+        difficulty,
+        customScenario,
+        jobAppId
+      );
       setCurrentSession(mockSession);
       setActiveTab("arena");
       await queryClient.invalidateQueries({ queryKey: ["frontend-mastery-overview"] });
@@ -169,6 +176,9 @@ export default function CmsFrontendMasteryPage() {
 
   return (
     <div className="space-y-6">
+      {/* Career Hub Unified Navigation Bar */}
+      <CareerHubNav />
+
       {/* Top Stats Banner */}
       <StatsHeader
         stats={
