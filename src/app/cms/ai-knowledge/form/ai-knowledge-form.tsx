@@ -24,7 +24,6 @@ import {
   Flame,
   PenTool,
   TrendingUp,
-  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
