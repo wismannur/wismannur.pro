@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpRight,
-  Award,
   Bot,
   BrainCircuit,
   Calendar,
@@ -693,13 +693,16 @@ export function TabInterviewPrep({
               <Input
                 id="intDate"
                 type="datetime-local"
-                value={new Date(newInterviewForm.scheduledAt).toISOString().slice(0, 16)}
-                onChange={(e) =>
-                  setNewInterviewForm({
-                    ...newInterviewForm,
-                    scheduledAt: new Date(e.target.value),
-                  })
-                }
+                value={format(new Date(newInterviewForm.scheduledAt), "yyyy-MM-dd'T'HH:mm")}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && !isNaN(new Date(val).getTime())) {
+                    setNewInterviewForm({
+                      ...newInterviewForm,
+                      scheduledAt: new Date(val),
+                    });
+                  }
+                }}
                 className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white font-mono"
               />
             </div>
