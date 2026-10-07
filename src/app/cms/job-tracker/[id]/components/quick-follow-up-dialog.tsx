@@ -256,10 +256,16 @@ Wisman Nur`,
     const params = new URLSearchParams({
       jobAppId: application.id,
       company: application.companyName,
+      role: application.jobTitle,
       title: application.jobTitle,
+      contactName: contactName,
       recipientName: contactName,
+      contactEmail: contactEmail,
       recipientEmail: contactEmail,
       subject: subject,
+      body: body,
+      message: body,
+      type: "follow_up",
     });
     onOpenChange(false);
     router.push(`/cms/job-outreaches/new?${params.toString()}`);
