@@ -24,7 +24,7 @@ export const RESEND_EMAIL_DOMAIN =
   "wismannur.pro";
 
 const ADMIN_EMAIL =
-  process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAIL || "wismannur.pro@gmail.com";
+  process.env.ADMIN_NOTIFICATION_EMAIL || "wismannur.pro@gmail.com";
 
 const SENDER_NOTIFICATIONS =
   process.env.RESEND_FROM_NOTIFICATIONS || `Wisman Nur <notifications@${RESEND_EMAIL_DOMAIN}>`;

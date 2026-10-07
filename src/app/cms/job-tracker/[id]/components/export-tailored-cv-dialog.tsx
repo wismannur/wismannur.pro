@@ -37,7 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { resumeService, skillsService, userService } from "@/services";
+import { resumeService, siteSettingsService, skillsService, userService } from "@/services";
 import { formatResumePeriod, formatExperienceMeta } from "@/lib/resume";
 import { rankSkillsForJobApplication, type RankedSkillItem } from "@/lib/tailored-skills";
 import type { JobApplication, TailoredBullet, TailoredProjectHighlight } from "@/services/job-tracker/types";
@@ -353,14 +353,21 @@ export function ExportTailoredCvDialog({
     enabled: open,
   });
 
+  const { data: siteSettings } = useQuery({
+    queryKey: ["siteSettings"],
+    queryFn: () => siteSettingsService.get(),
+    enabled: open,
+  });
+
   const printRef = useRef<HTMLDivElement>(null);
 
-  const candidateName = userData?.displayName || "Wisman Nur";
-  const candidateEmail = userData?.email || "wismannur.pro@gmail.com";
-  const candidateLocation = userData?.location || "Bandung, West Java, Indonesia";
-  const candidateWebsite = userData?.website || "https://wismannur.pro";
-  const candidateGithub = userData?.social?.github || "https://github.com/wismannur";
-  const candidateLinkedin = userData?.social?.linkedin || "https://linkedin.com/in/wismannur";
+  const candidateName = userData?.displayName || siteSettings?.siteName || "Wisman Nur";
+  // The professional candidate contact email for tailored CV is decoupled from CMS admin login credentials
+  const candidateEmail = siteSettings?.publicEmail || "hi@wismannur.pro";
+  const candidateLocation = userData?.location || siteSettings?.location || "Bandung, West Java, Indonesia";
+  const candidateWebsite = userData?.website || "https://www.wismannur.pro";
+  const candidateGithub = userData?.social?.github || siteSettings?.social?.github || "https://github.com/wismannur";
+  const candidateLinkedin = userData?.social?.linkedin || siteSettings?.social?.linkedin || "https://linkedin.com/in/wismannur";
 
 
   const splitDescriptionToBullets = (description?: string): string[] => {
@@ -508,7 +515,7 @@ export function ExportTailoredCvDialog({
     }
 
     if (includeEducation && resumeData?.education && resumeData.education.length > 0) {
-      lines.push(`## Education`);
+      lines.push(`## Education & Certifications`);
       resumeData.education.forEach((edu) => {
         const period = formatResumePeriod(edu);
         lines.push(`- **${edu.title}**, ${edu.organization} ${period ? `(${period})` : ""}`);
@@ -781,7 +788,7 @@ export function ExportTailoredCvDialog({
     if (includeEducation && resumeData?.education && resumeData.education.length > 0) {
       educationHtml = `
         <div class="section-block">
-          <div class="section-title">Education</div>
+          <div class="section-title">Education & Certifications</div>
           ${resumeData.education
             .map(
               (edu) => `
@@ -1100,7 +1107,7 @@ export function ExportTailoredCvDialog({
                 onCheckedChange={(c) => setIncludeEducation(Boolean(c))}
                 className="border-white/[0.2]"
               />
-              <span>Education</span>
+              <span>Education & Certifications</span>
             </label>
           </div>
         </DialogHeader>
@@ -1336,7 +1343,7 @@ export function ExportTailoredCvDialog({
                   {includeEducation && resumeData?.education && resumeData.education.length > 0 && (
                     <div className="space-y-1">
                       <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
-                        Education
+                        Education & Certifications
                       </div>
                       <div className="space-y-1.5 pt-1">
                         {resumeData.education.map((edu) => (

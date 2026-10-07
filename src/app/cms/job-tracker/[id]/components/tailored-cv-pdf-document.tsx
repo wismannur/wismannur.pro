@@ -441,10 +441,10 @@ export function TailoredCvPdfDocument({
           </View>
         ) : null}
 
-        {/* Education */}
+        {/* Education & Certifications */}
         {includeEducation && education.length > 0 ? (
           <View style={styles.section} wrap={false}>
-            <Text style={styles.sectionTitle}>Education</Text>
+            <Text style={styles.sectionTitle}>Education & Certifications</Text>
             {education.map((edu, idx) => (
               <View key={idx} style={styles.eduItem}>
                 <Text style={styles.eduTitle}>
