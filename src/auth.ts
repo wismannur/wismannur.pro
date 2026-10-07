@@ -32,11 +32,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         if (email !== adminEmail) return null;
 
-        const [profile] = await getDb()
+        const db = getDb();
+        let [profile] = await db
           .select()
           .from(schema.users)
           .where(eq(schema.users.email, adminEmail))
           .limit(1);
+
+        // Self-healing: if the admin row in database has a different email (e.g. after changing ADMIN_EMAIL),
+        // fetch the existing primary admin row and auto-sync its email to adminEmail.
+        if (!profile) {
+          const [existingUser] = await db.select().from(schema.users).limit(1);
+          if (existingUser) {
+            await db
+              .update(schema.users)
+              .set({ email: adminEmail })
+              .where(eq(schema.users.uid, existingUser.uid));
+            profile = { ...existingUser, email: adminEmail };
+          }
+        }
 
         // Priority: 1. DB password_hash, 2. ADMIN_PASSWORD_HASH_B64 env fallback
         let targetPasswordHash = profile?.passwordHash;
@@ -57,9 +71,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!ok) return null;
 
         return {
-          id: profile?.uid ?? "admin",
+          id: profile?.uid ?? "mock-admin",
           email: adminEmail,
-          name: profile?.displayName ?? "Admin",
+          name: profile?.displayName ?? "Wisman Nur",
           image: profile?.photoURL ?? null,
         };
       },
