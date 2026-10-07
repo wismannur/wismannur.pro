@@ -42,6 +42,7 @@ export interface FrontendMasterySession {
   score?: number | null;
   status: "in_progress" | "completed";
   timeSpentSeconds: number;
+  jobApplicationId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

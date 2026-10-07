@@ -341,7 +341,9 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
             <Link
               href={`/cms/frontend-mastery?tab=mock-generator&company=${encodeURIComponent(
                 currentApp.companyName
-              )}&role=${encodeURIComponent(currentApp.jobTitle)}`}
+              )}&role=${encodeURIComponent(currentApp.jobTitle)}&jobAppId=${encodeURIComponent(
+                currentApp.id
+              )}`}
             >
               <BrainCircuit className="w-3.5 h-3.5 text-purple-400" />
               <span>Practice Mock Arena</span>

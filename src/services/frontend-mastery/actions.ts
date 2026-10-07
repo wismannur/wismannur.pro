@@ -88,7 +88,8 @@ export async function getFrontendMasteryOverview() {
  */
 export async function startOrGetChallengeSession(
   topicId: string,
-  difficulty: FrontendDifficulty = "senior"
+  difficulty: FrontendDifficulty = "senior",
+  jobApplicationId?: string
 ): Promise<FrontendMasterySession> {
   await assertAdmin();
   const db = getDb();
@@ -126,6 +127,7 @@ export async function startOrGetChallengeSession(
       starterCode: challenge.starterCode || topic.starterCode || null,
       hints: challenge.hints,
       status: "in_progress",
+      jobApplicationId: jobApplicationId || null,
     })
     .returning();
 
@@ -292,7 +294,8 @@ export async function getChallengeSession(
 export async function createCustomMockInterview(
   pillar: FrontendPillar,
   difficulty: FrontendDifficulty,
-  customScenario: string
+  customScenario: string,
+  jobApplicationId?: string
 ): Promise<FrontendMasterySession> {
   await assertAdmin();
   const db = getDb();
@@ -321,9 +324,28 @@ export async function createCustomMockInterview(
       starterCode: challenge.starterCode || null,
       hints: challenge.hints,
       status: "in_progress",
+      jobApplicationId: jobApplicationId || null,
     })
     .returning();
 
   revalidatePath("/cms/frontend-mastery");
   return newSession as unknown as FrontendMasterySession;
+}
+
+/**
+ * Retrieves all frontend mastery sessions linked to a specific job application.
+ */
+export async function getSessionsByJobApplication(
+  jobApplicationId: string
+): Promise<FrontendMasterySession[]> {
+  await assertAdmin();
+  const db = getDb();
+
+  const rows = await db
+    .select()
+    .from(frontendMasterySessions)
+    .where(eq(frontendMasterySessions.jobApplicationId, jobApplicationId))
+    .orderBy(desc(frontendMasterySessions.createdAt));
+
+  return rows as unknown as FrontendMasterySession[];
 }
