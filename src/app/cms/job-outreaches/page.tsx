@@ -62,6 +62,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { cn } from "@/lib/utils";
 import { jobOutreachService, type OutreachStatus, type OutreachType } from "@/services";
+import { CareerHubNav } from "@/components/cms/career-hub-nav";
 
 const STATUS_CONFIG: Record<
   OutreachStatus,
@@ -206,6 +207,9 @@ export default function JobOutreachesPage() {
 
   return (
     <div className="space-y-6 pb-14 text-slate-100">
+      {/* Career Hub Unified Navigation Bar */}
+      <CareerHubNav />
+
       {/* Glow Backdrop */}
       <div className="relative">
         <div className="absolute -top-10 left-1/4 h-56 w-96 rounded-full bg-indigo-500/10 blur-[100px] pointer-events-none" />
