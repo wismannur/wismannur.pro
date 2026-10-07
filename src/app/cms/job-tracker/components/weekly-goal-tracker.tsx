@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Target,
@@ -9,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { userService } from "@/services";
 import type { JobApplication } from "@/services/job-tracker/types";
 
 interface WeeklyGoalTrackerProps {
@@ -19,7 +21,14 @@ interface WeeklyGoalTrackerProps {
 const STORAGE_KEY = "career_hub_weekly_target";
 
 export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTrackerProps) {
-  const [targetApplications, setTargetApplications] = useState(() => {
+  const queryClient = useQueryClient();
+
+  const { data: userSettings } = useQuery({
+    queryKey: ["userSettings"],
+    queryFn: () => userService.getSettings(),
+  });
+
+  const [targetApplications, setTargetApplications] = useState<number>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -30,9 +39,23 @@ export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTra
     return 5;
   });
 
-  const handleSetTarget = (newTarget: number) => {
+  useEffect(() => {
+    if (userSettings?.careerWeeklyTarget && userSettings.careerWeeklyTarget > 0) {
+      setTargetApplications(userSettings.careerWeeklyTarget);
+    }
+  }, [userSettings?.careerWeeklyTarget]);
+
+  const handleSetTarget = async (newTarget: number) => {
     setTargetApplications(newTarget);
-    localStorage.setItem(STORAGE_KEY, newTarget.toString());
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, newTarget.toString());
+    }
+    try {
+      await userService.updateSettings({ careerWeeklyTarget: newTarget });
+      await queryClient.invalidateQueries({ queryKey: ["userSettings"] });
+    } catch {
+      // Fallback already saved to local state and localStorage
+    }
   };
 
   // Calculate applications submitted in the current calendar week (Monday-Sunday)
