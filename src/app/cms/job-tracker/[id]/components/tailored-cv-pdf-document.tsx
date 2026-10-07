@@ -5,6 +5,7 @@ import {
   Text,
   View,
   StyleSheet,
+  Link,
 } from "@react-pdf/renderer";
 
 import { formatExperienceMeta } from "@/lib/resume";
@@ -41,6 +42,8 @@ export interface TailoredCvPdfProps {
   candidateEmail: string;
   candidateLocation: string;
   candidateWebsite: string;
+  candidateGithub?: string;
+  candidateLinkedin?: string;
   targetRole: string;
   targetCompany: string;
   summary?: string;
@@ -97,6 +100,13 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     color: "#4b5563",
     lineHeight: 1.3,
+  },
+  contactLink: {
+    color: "#2563eb",
+    textDecoration: "none",
+  },
+  contactSeparator: {
+    color: "#9ca3af",
   },
   section: {
     marginTop: 7,
@@ -227,6 +237,8 @@ export function TailoredCvPdfDocument({
   candidateEmail,
   candidateLocation,
   candidateWebsite,
+  candidateGithub,
+  candidateLinkedin,
   targetRole,
   targetCompany,
   summary,
@@ -260,7 +272,48 @@ export function TailoredCvPdfDocument({
             <Text style={styles.targetRole}>{displayHeadline}</Text>
           ) : null}
           <Text style={styles.contactLine}>
-            {candidateLocation} | {candidateEmail} | {candidateWebsite}
+            {candidateLocation}
+            {candidateEmail ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link src={`mailto:${candidateEmail}`} style={styles.contactLink}>
+                  {candidateEmail}
+                </Link>
+              </>
+            ) : null}
+            {candidateWebsite ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={candidateWebsite.startsWith("http") ? candidateWebsite : `https://${candidateWebsite}`}
+                  style={styles.contactLink}
+                >
+                  {candidateWebsite.replace(/^https?:\/\/(www\.)?/, "")}
+                </Link>
+              </>
+            ) : null}
+            {candidateLinkedin ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={candidateLinkedin.startsWith("http") ? candidateLinkedin : `https://${candidateLinkedin}`}
+                  style={styles.contactLink}
+                >
+                  {candidateLinkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}
+                </Link>
+              </>
+            ) : null}
+            {candidateGithub ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={candidateGithub.startsWith("http") ? candidateGithub : `https://${candidateGithub}`}
+                  style={styles.contactLink}
+                >
+                  {candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}
+                </Link>
+              </>
+            ) : null}
           </Text>
         </View>
 
@@ -298,12 +351,15 @@ export function TailoredCvPdfDocument({
                     <Text style={styles.expLocation}>{metaText}</Text>
                   ) : null}
 
-                  {exp.bullets.map((bullet, bIdx) => (
-                    <View key={bIdx} style={styles.bulletRow}>
-                      <Text style={styles.bulletDot}>•</Text>
-                      <Text style={styles.bulletText}>{bullet}</Text>
-                    </View>
-                  ))}
+                  {exp.bullets.map((bullet, bIdx) => {
+                    const cleanBullet = bullet.replace(/^[-•*]\s*/, "").trim();
+                    return (
+                      <View key={bIdx} style={styles.bulletRow}>
+                        <Text style={styles.bulletDot}>•</Text>
+                        <Text style={styles.bulletText}>{cleanBullet}</Text>
+                      </View>
+                    );
+                  })}
                 </View>
               );
             })}
@@ -316,15 +372,18 @@ export function TailoredCvPdfDocument({
                     Additional Targeted Accomplishments
                   </Text>
                 </View>
-                {unmatchedBullets.map((b, bIdx) => (
-                  <View key={bIdx} style={styles.bulletRow}>
-                    <Text style={styles.bulletDot}>•</Text>
-                    <Text style={styles.bulletText}>
-                      {b.roleContext ? `[${b.roleContext}] ` : ""}
-                      {b.tailored}
-                    </Text>
-                  </View>
-                ))}
+                {unmatchedBullets.map((b, bIdx) => {
+                  const cleanBullet = b.tailored.replace(/^[-•*]\s*/, "").trim();
+                  return (
+                    <View key={bIdx} style={styles.bulletRow}>
+                      <Text style={styles.bulletDot}>•</Text>
+                      <Text style={styles.bulletText}>
+                        {b.roleContext ? `[${b.roleContext}] ` : ""}
+                        {cleanBullet}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             ) : null}
           </View>

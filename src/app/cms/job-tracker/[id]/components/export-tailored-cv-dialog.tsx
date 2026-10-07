@@ -356,16 +356,18 @@ export function ExportTailoredCvDialog({
   const printRef = useRef<HTMLDivElement>(null);
 
   const candidateName = userData?.displayName || "Wisman Nur";
-  const candidateEmail = userData?.email || "contact@wismannur.pro";
-  const candidateLocation = userData?.location || "Jakarta, Indonesia";
-  const candidateWebsite = "https://wismannur.pro";
+  const candidateEmail = userData?.email || "wismannur.pro@gmail.com";
+  const candidateLocation = userData?.location || "Bandung, West Java, Indonesia";
+  const candidateWebsite = userData?.website || "https://wismannur.pro";
+  const candidateGithub = userData?.social?.github || "https://github.com/wismannur";
+  const candidateLinkedin = userData?.social?.linkedin || "https://linkedin.com/in/wismannur";
 
 
   const splitDescriptionToBullets = (description?: string): string[] => {
     if (!description) return [];
     const rawItems = description.includes("\n") ? description.split("\n") : description.split(". ");
     return rawItems
-      .map((item) => item.trim())
+      .map((item) => item.trim().replace(/^[-•*]\s*/, ""))
       .filter(Boolean)
       .map((item) => (item.endsWith(".") || item.includes(":") ? item : `${item}.`));
   };
@@ -416,7 +418,14 @@ export function ExportTailoredCvDialog({
     if (includeHeadline && headlineText) {
       lines.push(`**${headlineText}**`);
     }
-    lines.push(`${candidateLocation} • ${candidateEmail} • [Portfolio](${candidateWebsite})`);
+    const contactParts = [
+      candidateLocation,
+      `[${candidateEmail}](mailto:${candidateEmail})`,
+      candidateWebsite ? `[${candidateWebsite.replace(/^https?:\/\/(www\.)?/, "")}](${candidateWebsite})` : "",
+      candidateLinkedin ? `[${candidateLinkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}](${candidateLinkedin})` : "",
+      candidateGithub ? `[${candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}](${candidateGithub})` : "",
+    ].filter(Boolean);
+    lines.push(contactParts.join(" | "));
     lines.push("");
 
     if (includeTailoredSummary && activeSummary) {
@@ -440,14 +449,14 @@ export function ExportTailoredCvDialog({
 
         if (tailored.length > 0) {
           tailored.forEach((bullet) => {
-            lines.push(`- ${bullet.tailored}`);
+            lines.push(`- ${bullet.tailored.replace(/^[-•*]\s*/, "")}`);
           });
         } else {
           const fallbackBullets = splitDescriptionToBullets(exp.description);
           if (fallbackBullets.length > 0) {
-            fallbackBullets.forEach((b) => lines.push(`- ${b}`));
+            fallbackBullets.forEach((b) => lines.push(`- ${b.replace(/^[-•*]\s*/, "")}`));
           } else if (exp.description) {
-            lines.push(exp.description);
+            lines.push(exp.description.replace(/^[-•*]\s*/, ""));
           }
         }
         lines.push("");
@@ -463,7 +472,7 @@ export function ExportTailoredCvDialog({
           lines.push(`### Additional Targeted Accomplishments`);
           unmatched.forEach((b) => {
             const prefix = b.roleContext ? `**[${b.roleContext}]** ` : "";
-            lines.push(`- ${prefix}${b.tailored}`);
+            lines.push(`- ${prefix}${b.tailored.replace(/^[-•*]\s*/, "")}`);
           });
           lines.push("");
         }
@@ -563,11 +572,11 @@ export function ExportTailoredCvDialog({
           const originalBullets = splitDescriptionToBullets(exp.description);
           const bullets =
             tailored.length > 0
-              ? tailored.map((b) => b.tailored)
+              ? tailored.map((b) => b.tailored.replace(/^[-•*]\s*/, ""))
               : originalBullets.length > 0
-              ? originalBullets
+              ? originalBullets.map((b) => b.replace(/^[-•*]\s*/, ""))
               : exp.description
-              ? [exp.description]
+              ? [exp.description.replace(/^[-•*]\s*/, "")]
               : [];
 
           return {
@@ -585,7 +594,7 @@ export function ExportTailoredCvDialog({
         includeTailoredBullets && resumeData?.experiences
           ? getUnmatchedTailoredBullets(resumeData.experiences, activeBullets).map((b) => ({
               roleContext: b.roleContext,
-              tailored: b.tailored,
+              tailored: b.tailored.replace(/^[-•*]\s*/, ""),
             }))
           : [];
 
@@ -626,6 +635,8 @@ export function ExportTailoredCvDialog({
           candidateEmail={candidateEmail}
           candidateLocation={candidateLocation}
           candidateWebsite={candidateWebsite}
+          candidateGithub={candidateGithub}
+          candidateLinkedin={candidateLinkedin}
           targetRole={application.jobTitle}
           targetCompany={application.companyName}
           targetRoleHeadline={headlineText}
@@ -681,11 +692,11 @@ export function ExportTailoredCvDialog({
 
           let bulletsHtml = "";
           if (tailored.length > 0) {
-            bulletsHtml = `<ul>${tailored.map((b) => `<li>${b.tailored}</li>`).join("")}</ul>`;
+            bulletsHtml = `<ul>${tailored.map((b) => `<li>${b.tailored.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>`;
           } else if (originalBullets.length > 0) {
-            bulletsHtml = `<ul>${originalBullets.map((b) => `<li>${b}</li>`).join("")}</ul>`;
+            bulletsHtml = `<ul>${originalBullets.map((b) => `<li>${b.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>`;
           } else if (exp.description) {
-            bulletsHtml = `<p class="summary-text">${exp.description}</p>`;
+            bulletsHtml = `<p class="summary-text">${exp.description.replace(/^[-•*]\s*/, "")}</p>`;
           }
 
           const meta = formatExperienceMeta(exp);
@@ -693,7 +704,7 @@ export function ExportTailoredCvDialog({
             <div class="experience-item">
               <div class="exp-header">
                 <div>
-                  <span class="exp-title">${exp.title}</span> — 
+                  <span class="exp-title">${exp.title}</span> —
                   <span class="exp-company">${exp.organization}</span>
                 </div>
                 <div class="exp-date">${period}</div>
@@ -716,7 +727,7 @@ export function ExportTailoredCvDialog({
               <div class="exp-header">
                 <span class="exp-title">Additional Targeted Accomplishments</span>
               </div>
-              <ul>${unmatched.map((b) => `<li>${b.roleContext ? `<strong>[${b.roleContext}]</strong> ` : ""}${b.tailored}</li>`).join("")}</ul>
+              <ul>${unmatched.map((b) => `<li>${b.roleContext ? `<strong>[${b.roleContext}]</strong> ` : ""}${b.tailored.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>
             </div>
           `;
         }
@@ -919,7 +930,13 @@ export function ExportTailoredCvDialog({
             <h1>${candidateName}</h1>
             ${includeHeadline && headlineText ? `<div class="target-role">${headlineText}</div>` : ""}
             <div class="contact-line">
-              ${candidateLocation} | ${candidateEmail} | ${candidateWebsite}
+              ${[
+                candidateLocation,
+                `<a href="mailto:${candidateEmail}">${candidateEmail}</a>`,
+                candidateWebsite ? `<a href="${candidateWebsite}" target="_blank">${candidateWebsite.replace(/^https?:\/\/(www\.)?/, "")}</a>` : "",
+                candidateLinkedin ? `<a href="${candidateLinkedin}" target="_blank">${candidateLinkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}</a>` : "",
+                candidateGithub ? `<a href="${candidateGithub}" target="_blank">${candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}</a>` : "",
+              ].filter(Boolean).join(" | ")}
             </div>
           </div>
 
@@ -1126,8 +1143,36 @@ export function ExportTailoredCvDialog({
                         {headlineText}
                       </div>
                     )}
-                    <div className="text-[11px] text-muted-foreground border-b pb-2 border-white/[0.1]">
-                      {candidateLocation} | {candidateEmail} | {candidateWebsite}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground border-b pb-2 border-white/[0.1]">
+                      <span>{candidateLocation}</span>
+                      <span>|</span>
+                      <a href={`mailto:${candidateEmail}`} className="hover:text-blue-400 transition-colors">
+                        {candidateEmail}
+                      </a>
+                      {candidateWebsite && (
+                        <>
+                          <span>|</span>
+                          <a href={candidateWebsite} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">
+                            {candidateWebsite.replace(/^https?:\/\/(www\.)?/, "")}
+                          </a>
+                        </>
+                      )}
+                      {candidateLinkedin && (
+                        <>
+                          <span>|</span>
+                          <a href={candidateLinkedin} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">
+                            {candidateLinkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}
+                          </a>
+                        </>
+                      )}
+                      {candidateGithub && (
+                        <>
+                          <span>|</span>
+                          <a href={candidateGithub} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">
+                            {candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}
+                          </a>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -1181,7 +1226,7 @@ export function ExportTailoredCvDialog({
                                 <ul className="list-disc list-inside space-y-1 pt-0.5 text-xs text-slate-300">
                                   {tailored.map((b, bIdx) => (
                                     <li key={bIdx} className="leading-relaxed">
-                                      <span>{b.tailored}</span>
+                                      <span>{b.tailored.replace(/^[-•*]\s*/, "")}</span>
                                     </li>
                                   ))}
                                 </ul>
@@ -1189,13 +1234,13 @@ export function ExportTailoredCvDialog({
                                 <ul className="list-disc list-inside space-y-1 pt-0.5 text-xs text-slate-300">
                                   {originalBullets.map((b, bIdx) => (
                                     <li key={bIdx} className="leading-relaxed">
-                                      <span>{b}</span>
+                                      <span>{b.replace(/^[-•*]\s*/, "")}</span>
                                     </li>
                                   ))}
                                 </ul>
                               ) : exp.description ? (
                                 <p className="text-slate-400 leading-relaxed text-[11px]">
-                                  {exp.description}
+                                  {exp.description.replace(/^[-•*]\s*/, "")}
                                 </p>
                               ) : null}
                             </div>
@@ -1222,7 +1267,7 @@ export function ExportTailoredCvDialog({
                                         [{b.roleContext}]{" "}
                                       </span>
                                     )}
-                                    <span>{b.tailored}</span>
+                                    <span>{b.tailored.replace(/^[-•*]\s*/, "")}</span>
                                   </li>
                                 ))}
                               </ul>
@@ -1253,7 +1298,7 @@ export function ExportTailoredCvDialog({
 
                           return (
                             <div key={idx} className="space-y-1 text-xs">
-                              <div className="flex justify-between items-baseline font-bold text-slate-200">
+                              <div className="flex flex-col gap-y-1 items-baseline font-bold text-slate-200">
                                 <span>{proj.title}</span>
                                 {proj.technologies && proj.technologies.length > 0 && (
                                   <span className="text-[11px] font-normal text-muted-foreground italic font-mono">

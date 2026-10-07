@@ -199,18 +199,42 @@ CRITICAL ANTI-HALLUCINATION & AUTHENTICITY GUARDRAILS:
 4. DO NOT invent employers, job titles, degrees, or certifications the candidate never held.
 5. For the XYZ Formula ("Accomplished [X] as measured by [Y], by doing [Z]"), synthesize real engineering scope, tech stack, and impact documented in their Master Profile and Second Brain.
 
+CRITICAL ANTI-HYPERBOLE & DEFENSIBLE METRICS (VERIFY-FIRST CULTURE):
+- DO NOT make absolute, unverifiable perfection claims that read like marketing fluff. Companies that emphasize "verify" heavily scrutinize extreme claims during interviews:
+  * NEVER claim absolute metrics like "0% hallucinated state mutations", "zero visual deviation", "100% bug-free", or unbacked percentages like "70% velocity" without documented baseline story points.
+  * Instead, soften and frame claims with credible, defensible engineering substance:
+    - Replace "70% velocity" with "substantially accelerated sprint delivery turnaround" or "accelerated feature velocity and unblocked cross-functional delivery".
+    - Replace "zero visual deviation" with "implemented high-fidelity responsive interfaces matching Figma specifications and design tokens".
+    - Replace "0% hallucinated state mutations" with "enforced deterministic tool execution and prevented invalid state mutations via strict Zod runtime schemas".
+- The tone must be crisp, authoritative, technically rigorous, and grounded in observable engineering practices.
+
+CAREER BREAK / PROFESSIONAL DEVELOPMENT GUIDELINES:
+- When tailoring or referencing "Professional Development (Career Break)":
+  * Focus exclusively on shipped systems, self-directed R&D, flagship architecture (wismannur.pro, Cloudizero), and independent technical exploration.
+  * NEVER frame job hunting, interviews, or hiring processes as an achievement (e.g. NEVER mention "technical interview pipelines across Spain, the US, and Australia", which reviewers perceive as prolonged unsuccessful job search).
+  * Avoid over-dense buzzword stacking. Keep bullets concise, readable, and focused on working software deliverables. Maximum 2 to 3 crisp bullets.
+
+ROLE RECENCY & BULLET ALLOCATION BUDGET:
+- Calibrate the depth and number of tailored bullets strictly according to role recency and duration:
+  * Recent / Lead / Flagship roles (last 3-4 years, e.g. Kick Avenue, Rumah Siap Kerja): 3 to 4 high-impact bullets.
+  * Mid-level roles (3-6 years ago, e.g. Prudential / BIT): 2 to 3 bullets.
+  * Older early-career roles (>6 years ago) or short contracts (<1 year, e.g. Blenderbox 2018): STRICTLY MAX 1 to 2 concise bullets. A 6-month contract from 2018 must never have 4 bullets.
+  * Professional Development / Career Break: MAX 2 to 3 concise, output-focused bullets.
+
+RAW BULLET FORMATTING:
+- Every bullet string (in "tailored", "bullets", etc.) MUST be clean text starting directly with a capitalized action verb. NEVER prepend bullets with bullet markers (NO "-", "•", "*", or numbering).
+
 IN-PLACE EXPERIENCE MAPPING:
 - Generate tailored bullet points mapped directly to the candidate's actual work experiences via "experienceId" and "roleContext" (e.g. "<title> at <organization>").
 - Each tailored bullet point must serve as an in-place improvement for that specific role, re-framing real past accomplishments and infusing relevant architectural and problem-solving depth from the Second Brain to align directly with the target job's tech stack and priorities.
-- Provide 2 to 4 high-impact bullets per relevant experience.
 
 Tasks:
 1. ATS Score (0 to 100) based on role suitability, technology stack alignment, and engineering seniority level.
 2. Match strengths (key areas where the candidate strongly matches).
 3. Missing keywords / skills gaps that the job requires but are absent or weak in the candidate's profile.
 4. Actionable recommendations for the application.
-5. Tailored Professional Summary highlighting the most relevant accomplishments and architectural leadership for this specific role.
-6. Tailored Experience Bullet Points using the XYZ Formula, mapped to each relevant work experience.
+5. Tailored Professional Summary highlighting the most relevant accomplishments and architectural leadership for this specific role (avoiding absolute marketing claims like "70% velocity" or "zero visual deviation").
+6. Tailored Experience Bullet Points using the XYZ Formula, mapped to each relevant work experience adhering strictly to the bullet allocation budget.
 7. High-impact, concise Cover Letter / Cold outreach message addressed to the hiring team.
 8. Relevant Independent Projects (Key Technical Projects):
 - CRITICAL SENIOR-STAFF ATS RULE (NO EMPLOYER DUPLICATION): In executive/senior-staff CVs, the "Key Technical Projects" section MUST ONLY highlight independent engineering platforms, open-source architectures, or personal flagship systems (e.g., "wismannur.pro — Autonomous AI Fullstack Platform & Digital Twin").
