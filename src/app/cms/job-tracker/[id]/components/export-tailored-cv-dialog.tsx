@@ -17,6 +17,10 @@ import {
   Trash2,
   Save,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
+  RotateCcw,
+  Cpu,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,6 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { resumeService, skillsService, userService } from "@/services";
 import { formatResumePeriod, formatExperienceMeta } from "@/lib/resume";
+import { rankSkillsForJobApplication, type RankedSkillItem } from "@/lib/tailored-skills";
 import type { JobApplication, TailoredBullet, TailoredProjectHighlight } from "@/services/job-tracker/types";
 
 export const DEFAULT_FLAGSHIP_PROJECT: TailoredProjectHighlight = {
@@ -124,6 +129,12 @@ export function ExportTailoredCvDialog({
   const [activeSummary, setActiveSummary] = useState(application.tailoredSummary || "");
   const [activeBullets, setActiveBullets] = useState<TailoredBullet[]>(application.tailoredBulletPoints || []);
   const [customProjects, setCustomProjects] = useState<TailoredProjectHighlight[] | null>(null);
+  const [customSkills, setCustomSkills] = useState<string[] | null>(
+    application.atsAnalysis?.tailoredSkills && application.atsAnalysis.tailoredSkills.length > 0
+      ? application.atsAnalysis.tailoredSkills
+      : null
+  );
+  const [newSkillInput, setNewSkillInput] = useState("");
   const [isSavingDialog, setIsSavingDialog] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
@@ -157,6 +168,7 @@ export function ExportTailoredCvDialog({
           ? {
               ...application.atsAnalysis,
               tailoredProjects: activeProjects,
+              tailoredSkills: activeSkills,
             }
           : undefined,
       });
@@ -276,6 +288,64 @@ export function ExportTailoredCvDialog({
     queryFn: () => skillsService.getPublished(),
     enabled: open,
   });
+
+  const rankedSkillsInfo = useMemo(() => {
+    if (!skillsData || skillsData.length === 0) return [];
+    return rankSkillsForJobApplication(skillsData, application);
+  }, [skillsData, application]);
+
+  const rankedSkillsMap = useMemo(() => {
+    const map = new Map<string, RankedSkillItem>();
+    rankedSkillsInfo.forEach((item) => {
+      map.set(item.name.toLowerCase().trim(), item);
+    });
+    return map;
+  }, [rankedSkillsInfo]);
+
+  const activeSkills =
+    customSkills !== null
+      ? customSkills
+      : rankedSkillsInfo.length > 0
+        ? rankedSkillsInfo.map((s) => s.name)
+        : skillsData.map((s) => s.name);
+
+  const matchedSkillNamesSet = useMemo(() => {
+    return new Set(
+      rankedSkillsInfo.filter((s) => s.isMatched).map((s) => s.name.toLowerCase().trim())
+    );
+  }, [rankedSkillsInfo]);
+
+  const handleMoveSkill = (index: number, direction: "left" | "right") => {
+    const targetIndex = direction === "left" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= activeSkills.length) return;
+    const next = [...activeSkills];
+    const temp = next[index];
+    next[index] = next[targetIndex];
+    next[targetIndex] = temp;
+    setCustomSkills(next);
+  };
+
+  const handleRemoveSkill = (index: number) => {
+    setCustomSkills(activeSkills.filter((_, i) => i !== index));
+  };
+
+  const handleAddCustomSkill = () => {
+    const trimmed = newSkillInput.trim();
+    if (!trimmed) return;
+    if (activeSkills.some((s) => s.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error(`"${trimmed}" is already included in skills.`);
+      return;
+    }
+    setCustomSkills([...activeSkills, trimmed]);
+    setNewSkillInput("");
+    toast.success(`Added "${trimmed}" to Core Skills`);
+  };
+
+  const handleResetSkillsToJd = () => {
+    const resetList = rankSkillsForJobApplication(skillsData, application).map((s) => s.name);
+    setCustomSkills(resetList);
+    toast.info("Core Skills re-sorted by target Job Description relevance!");
+  };
 
   const { data: userData } = useQuery({
     queryKey: ["userProfile"],
@@ -421,9 +491,9 @@ export function ExportTailoredCvDialog({
       });
     }
 
-    if (includeSkills && skillsData.length > 0) {
+    if (includeSkills && activeSkills.length > 0) {
       lines.push(`## Core Skills & Technologies`);
-      const skillNames = skillsData.map((s) => s.name).join(" • ");
+      const skillNames = activeSkills.join(" • ");
       lines.push(skillNames);
       lines.push("");
     }
@@ -455,7 +525,7 @@ export function ExportTailoredCvDialog({
     includeSkills,
     includeEducation,
     resumeData,
-    skillsData,
+    activeSkills,
   ]);
 
   const handleCopyMarkdown = () => {
@@ -527,7 +597,7 @@ export function ExportTailoredCvDialog({
           description: edu.description,
         })) || [];
 
-      const pdfSkills = skillsData?.map((s) => s.name) || [];
+      const pdfSkills = includeSkills && activeSkills.length > 0 ? activeSkills : [];
 
       const pdfProjects =
         includeProjects && activeProjects.length > 0
@@ -687,11 +757,11 @@ export function ExportTailoredCvDialog({
     }
 
     let skillsHtml = "";
-    if (includeSkills && skillsData.length > 0) {
+    if (includeSkills && activeSkills.length > 0) {
       skillsHtml = `
         <div class="section-block">
           <div class="section-title">Core Skills & Technologies</div>
-          <div class="skills-list">${skillsData.map((s) => s.name).join(" • ")}</div>
+          <div class="skills-list">${activeSkills.join(" • ")}</div>
         </div>
       `;
     }
@@ -1206,13 +1276,13 @@ export function ExportTailoredCvDialog({
                   )}
 
                   {/* Skills */}
-                  {includeSkills && skillsData.length > 0 && (
+                  {includeSkills && activeSkills.length > 0 && (
                     <div className="space-y-1">
                       <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
                         Core Skills & Technologies
                       </div>
                       <p className="text-xs text-slate-300 pt-1 leading-relaxed">
-                        {skillsData.map((s) => s.name).join(" • ")}
+                        {activeSkills.join(" • ")}
                       </p>
                     </div>
                   )}
@@ -1475,6 +1545,140 @@ export function ExportTailoredCvDialog({
                         </div>
                       );
                     })}
+                  </div>
+                </div>
+
+                {/* Core Skills & Technologies Editor */}
+                <div className="space-y-3 pt-3 border-t border-white/[0.08]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                        <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Core Skills & Technologies (Tailored by JD Tech Stack)</span>
+                      </label>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Automatically prioritized by job description keyword alignment. Reorder or customize specifically for this application.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleResetSkillsToJd}
+                        className="text-xs h-7 gap-1 border-white/[0.1] bg-white/[0.02] text-gray-300 hover:text-white hover:bg-white/[0.06]"
+                        title="Re-sort skills based on Job Description & Requirements"
+                      >
+                        <RotateCcw className="w-3 h-3 text-amber-400" />
+                        <span>Re-sort by JD</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Add skill and metrics bar */}
+                  <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
+                    <div className="flex-1 flex items-center gap-1.5">
+                      <Input
+                        value={newSkillInput}
+                        onChange={(e) => setNewSkillInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddCustomSkill();
+                          }
+                        }}
+                        placeholder="Add skill (e.g. Apache Kafka, Turborepo)..."
+                        className="h-7 text-xs bg-[#0C0E18] border-white/[0.1] text-white flex-1 placeholder:text-gray-500"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleAddCustomSkill}
+                        disabled={!newSkillInput.trim()}
+                        className="h-7 text-xs px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white gap-1 shrink-0"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Add</span>
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground self-center px-1">
+                      <span className="flex items-center gap-1 text-emerald-400 font-medium">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        {activeSkills.filter((s) => matchedSkillNamesSet.has(s.toLowerCase().trim())).length} Matched JD
+                      </span>
+                      <span>•</span>
+                      <span>{activeSkills.length} Total</span>
+                    </div>
+                  </div>
+
+                  {/* Skills Chip List with reordering */}
+                  <div className="p-3 bg-[#0C0E18] rounded-xl border border-white/[0.08] flex flex-wrap gap-1.5 max-h-56 overflow-y-auto">
+                    {activeSkills.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic py-2">
+                        No skills selected. Click &quot;Re-sort by JD&quot; or add custom skills above.
+                      </p>
+                    ) : (
+                      activeSkills.map((skillName, idx) => {
+                        const isMatched = matchedSkillNamesSet.has(skillName.toLowerCase().trim());
+                        const rankInfo = rankedSkillsMap.get(skillName.toLowerCase().trim());
+                        const reasonLabel = rankInfo?.matchReasons?.length
+                          ? rankInfo.matchReasons.join(", ")
+                          : isMatched
+                            ? "Matched in JD"
+                            : "Supporting Skill";
+
+                        return (
+                          <div
+                            key={`${skillName}-${idx}`}
+                            className={`group flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs transition-colors ${
+                              isMatched
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
+                                : "bg-white/[0.03] border-white/[0.08] text-slate-300 hover:border-white/[0.18]"
+                            }`}
+                          >
+                            <span className="font-medium">{skillName}</span>
+                            {isMatched && (
+                              <span
+                                className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono ml-0.5"
+                                title={reasonLabel}
+                              >
+                                Match
+                              </span>
+                            )}
+                            <div className="flex items-center gap-0.5 ml-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => handleMoveSkill(idx, "left")}
+                                className="p-0.5 hover:text-white text-slate-400 disabled:opacity-20 disabled:hover:text-slate-400"
+                                title="Move earlier in CV"
+                              >
+                                <ChevronLeft className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === activeSkills.length - 1}
+                                onClick={() => handleMoveSkill(idx, "right")}
+                                className="p-0.5 hover:text-white text-slate-400 disabled:opacity-20 disabled:hover:text-slate-400"
+                                title="Move later in CV"
+                              >
+                                <ChevronRight className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSkill(idx)}
+                                className="p-0.5 hover:text-rose-400 text-slate-400 ml-0.5"
+                                title="Remove skill from tailored export"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>
