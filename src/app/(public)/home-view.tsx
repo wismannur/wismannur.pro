@@ -4,6 +4,7 @@ import React from "react";
 import type { HomeCopy } from "@/services/page-copy/types";
 import type { ServiceItem } from "@/services/service-catalog/types";
 import type { SiteSettings } from "@/services/site-settings/types";
+import type { Project, Blog } from "@/services";
 import { HeroV2 } from "@/components/home-v2/hero-v2";
 import { CredibilityStrip } from "@/components/home-v2/credibility-strip";
 import { ExpertiseBentoV2 } from "@/components/home-v2/expertise-bento-v2";
@@ -16,11 +17,20 @@ import { CtaV2 } from "@/components/home-v2/cta-v2";
 type HomeViewProps = {
   copy: HomeCopy | null;
   services: ServiceItem[];
+  projects?: Project[];
+  blogs?: Blog[];
   enableBlog?: boolean;
   settings?: SiteSettings;
 };
 
-export function HomeView({ copy, services, enableBlog = true, settings }: HomeViewProps) {
+export function HomeView({
+  copy,
+  services,
+  projects = [],
+  blogs = [],
+  enableBlog = true,
+  settings,
+}: HomeViewProps) {
   return (
     <div className="flex flex-col gap-16 md:gap-24 pb-16">
       {/* 1. Hero Section with Centered Showcase & Interactive Console */}
@@ -34,6 +44,7 @@ export function HomeView({ copy, services, enableBlog = true, settings }: HomeVi
 
       {/* 4. Selected Works & Case Studies (Auto-hidden if 0 projects in DB) */}
       <FeaturedProjectsV2
+        projects={projects}
         title={copy?.sections.projects.title}
         subtitle={copy?.sections.projects.subtitle}
         description={copy?.sections.projects.description}
@@ -53,6 +64,7 @@ export function HomeView({ copy, services, enableBlog = true, settings }: HomeVi
       {/* 7. Technical Insights & Architecture Blog */}
       {enableBlog && (
         <LatestInsightsV2
+          blogs={blogs}
           title={copy?.sections.blog.title}
           subtitle={copy?.sections.blog.subtitle}
           description={copy?.sections.blog.description}

@@ -530,6 +530,8 @@ export function ExportTailoredCvDialog({
     candidateEmail,
     candidateLocation,
     candidateWebsite,
+    candidateGithub,
+    candidateLinkedin,
     activeSummary,
     activeBullets,
     activeProjects,

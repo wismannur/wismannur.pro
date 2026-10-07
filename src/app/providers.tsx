@@ -8,7 +8,6 @@ import { useState } from "react";
 import ScrollToTopAuto from "@/components/layout/scroll-to-top-auto";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/auth-context";
 import { LoadingProvider, useLoading } from "@/contexts/loading-context";
@@ -37,7 +36,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <LoadingProvider>
             <TooltipProvider>
-              <Toaster />
               <Sonner />
               <LoadingWrapper>{children}</LoadingWrapper>
               <ScrollToTopAuto />

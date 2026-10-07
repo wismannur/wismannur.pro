@@ -28,9 +28,11 @@ export function FooterV2({ settings }: { settings: SiteSettings }) {
 
   const exploreLinks = [
     { to: "/", label: "Home" },
-    { to: "/about", label: "About & Resume" },
+    { to: "/projects", label: "Selected Works" },
     { to: "/services", label: "Solutions & Retainers" },
+    { to: "/about", label: "About & Resume" },
     ...(settings.enableBlog ? [{ to: "/blog", label: "Technical Notes" }] : []),
+    { to: "/hire-me", label: "Hire Me & Fast-Track" },
     { to: "/contact", label: "Direct Contact" },
   ];
 
@@ -128,7 +130,7 @@ export function FooterV2({ settings }: { settings: SiteSettings }) {
               {/* Location */}
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.07] text-xs text-gray-300">
                 <MapPin size={12} className="text-primary" />
-                <span>{settings.location || "Jakarta, ID"}</span>
+                <span>{settings.location || "Bandung, ID"}</span>
                 <span className="text-gray-600">•</span>
                 <Clock size={12} className="text-primary/80" />
                 <span>{settings.timezoneLabel || "WIB (UTC+7)"}</span>
@@ -225,12 +227,12 @@ export function FooterV2({ settings }: { settings: SiteSettings }) {
                 <span>Stack & Specs</span>
               </h3>
               <ul className="space-y-1.5 text-xs text-gray-400">
-                <li>Next.js 16 & Nuxt 4 (SSR/Nitro)</li>
-                <li>React 19 & Vue 3 Composition</li>
-                <li>TypeScript Strict Typings</li>
-                <li>Gemini 3.8 Flash & MCP Agents</li>
-                <li>Neon Serverless PostgreSQL</li>
-                <li>Tailwind CSS & Modern Motion</li>
+                <li>Next.js 16 (App Router & SSR)</li>
+                <li>React 19 & TypeScript Strict</li>
+                <li>Drizzle ORM & Neon Postgres</li>
+                <li>Gemini 3.8 Flash & Agentic AI</li>
+                <li>Tailwind CSS & Framer Motion</li>
+                <li>Resend & Edge Webhooks</li>
               </ul>
             </div>
           </div>

@@ -23,9 +23,9 @@ import {
   GraduationCap,
   HelpCircle,
   Home,
+  Inbox,
   Kanban,
   LayoutDashboard,
-  Languages,
   ListOrdered,
   LogOut,
   MessageSquare,
@@ -207,7 +207,7 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
         },
         {
           label: "Service Requests",
-          icon: <Wrench className="h-4 w-4" />,
+          icon: <Inbox className="h-4 w-4" />,
           path: "/cms/services",
         },
         {
