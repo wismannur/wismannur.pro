@@ -5,6 +5,7 @@ import {
   Text,
   View,
   StyleSheet,
+  Link,
 } from "@react-pdf/renderer";
 
 import { formatExperienceMeta } from "@/lib/resume";
@@ -87,6 +88,13 @@ const styles = StyleSheet.create({
     fontSize: 8.5,
     color: "#4b5563",
     lineHeight: 1.3,
+  },
+  contactLink: {
+    color: "#2563eb",
+    textDecoration: "none",
+  },
+  contactSeparator: {
+    color: "#9ca3af",
   },
   section: {
     marginTop: 7,
@@ -246,7 +254,50 @@ export function CvPdfDocument({
         <View style={styles.header}>
           <Text style={styles.name}>{name}</Text>
           {headline ? <Text style={styles.headline}>{headline}</Text> : null}
-          <Text style={styles.contactLine}>{contactParts.join("  |  ")}</Text>
+          <Text style={styles.contactLine}>
+            {location}
+            {email ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link src={`mailto:${email}`} style={styles.contactLink}>
+                  {email}
+                </Link>
+              </>
+            ) : null}
+            {website ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={website.startsWith("http") ? website : `https://${website}`}
+                  style={styles.contactLink}
+                >
+                  {website.replace(/^https?:\/\/(www\.)?/, "")}
+                </Link>
+              </>
+            ) : null}
+            {linkedin ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={linkedin.startsWith("http") ? linkedin : `https://${linkedin}`}
+                  style={styles.contactLink}
+                >
+                  {linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}
+                </Link>
+              </>
+            ) : null}
+            {github ? (
+              <>
+                <Text style={styles.contactSeparator}> | </Text>
+                <Link
+                  src={github.startsWith("http") ? github : `https://${github}`}
+                  style={styles.contactLink}
+                >
+                  {github.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}
+                </Link>
+              </>
+            ) : null}
+          </Text>
         </View>
 
         {/* Professional Summary */}
@@ -283,12 +334,15 @@ export function CvPdfDocument({
                     <Text style={styles.expLocation}>{metaText}</Text>
                   ) : null}
 
-                  {exp.bullets.map((bullet, bIdx) => (
-                    <View key={bIdx} style={styles.bulletRow}>
-                      <Text style={styles.bulletDot}>•</Text>
-                      <Text style={styles.bulletText}>{bullet}</Text>
-                    </View>
-                  ))}
+                  {exp.bullets.map((bullet, bIdx) => {
+                    const cleanBullet = bullet.replace(/^[-•*]\s*/, "").trim();
+                    return (
+                      <View key={bIdx} style={styles.bulletRow}>
+                        <Text style={styles.bulletDot}>•</Text>
+                        <Text style={styles.bulletText}>{cleanBullet}</Text>
+                      </View>
+                    );
+                  })}
                 </View>
               );
             })}
