@@ -280,7 +280,36 @@ export function TabJobOverview({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="jobUrl" className="text-xs font-semibold text-slate-300">
+              Job Vacancy URL
+            </Label>
+            <Input
+              id="jobUrl"
+              type="url"
+              placeholder="https://..."
+              value={formData.jobUrl ?? application.jobUrl ?? ""}
+              onChange={(e) => onFormChange({ ...formData, jobUrl: e.target.value })}
+              className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white placeholder:text-muted-foreground/60 h-9"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="companyWebsite" className="text-xs font-semibold text-slate-300">
+              Company Website
+            </Label>
+            <Input
+              id="companyWebsite"
+              type="url"
+              placeholder="https://..."
+              value={formData.companyWebsite ?? application.companyWebsite ?? ""}
+              onChange={(e) => onFormChange({ ...formData, companyWebsite: e.target.value })}
+              className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white placeholder:text-muted-foreground/60 h-9"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="platform" className="text-xs font-semibold text-slate-300">
               Platform Source
@@ -371,9 +400,22 @@ export function TabJobOverview({
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="location" className="text-xs font-semibold text-slate-300">
+              Location
+            </Label>
+            <Input
+              id="location"
+              placeholder="e.g. Jakarta / Remote"
+              value={formData.location ?? application.location ?? ""}
+              onChange={(e) => onFormChange({ ...formData, location: e.target.value })}
+              className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white placeholder:text-muted-foreground/60 h-9"
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="salaryMin" className="text-xs font-semibold text-slate-300">
               Min Salary Range
@@ -418,6 +460,26 @@ export function TabJobOverview({
               onChange={(e) => onFormChange({ ...formData, salaryCurrency: e.target.value })}
               className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white placeholder:text-muted-foreground/60 h-9 font-mono uppercase"
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="salaryPeriod" className="text-xs font-semibold text-slate-300">
+              Pay Period
+            </Label>
+            <Select
+              value={formData.salaryPeriod ?? application.salaryPeriod ?? "monthly"}
+              onValueChange={(v) =>
+                onFormChange({ ...formData, salaryPeriod: v as "yearly" | "monthly" | "hourly" })
+              }
+            >
+              <SelectTrigger className="text-xs h-9 bg-[#131726] border-white/[0.08] text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0C0E18] border-white/[0.12] text-slate-200">
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="yearly">Yearly / Annual</SelectItem>
+                <SelectItem value="hourly">Hourly</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -580,6 +642,52 @@ export function TabJobOverview({
               title="Drag handle to resize application notes"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2 border-t border-white/[0.04] space-y-3">
+          <h4 className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
+            Recruiter & Contact Details
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="contactName" className="text-xs text-slate-400">
+                Contact Name
+              </Label>
+              <Input
+                id="contactName"
+                placeholder="e.g. Sarah Jenkins (HR Lead)"
+                value={formData.contactName ?? application.contactName ?? ""}
+                onChange={(e) => onFormChange({ ...formData, contactName: e.target.value })}
+                className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white placeholder:text-muted-foreground/60 h-9"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="contactEmail" className="text-xs text-slate-400">
+                Contact Email
+              </Label>
+              <Input
+                id="contactEmail"
+                type="email"
+                placeholder="e.g. recruiter@company.com"
+                value={formData.contactEmail ?? application.contactEmail ?? ""}
+                onChange={(e) => onFormChange({ ...formData, contactEmail: e.target.value })}
+                className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white placeholder:text-muted-foreground/60 h-9"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="contactPhone" className="text-xs text-slate-400">
+                Contact Phone / WhatsApp
+              </Label>
+              <Input
+                id="contactPhone"
+                placeholder="e.g. +62 812..."
+                value={formData.contactPhone ?? application.contactPhone ?? ""}
+                onChange={(e) => onFormChange({ ...formData, contactPhone: e.target.value })}
+                className="text-xs bg-[#131726] border-white/[0.08] focus:border-indigo-500/50 text-white placeholder:text-muted-foreground/60 h-9"
+              />
             </div>
           </div>
         </div>

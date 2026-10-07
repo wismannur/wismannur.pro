@@ -289,12 +289,16 @@ function NewJobTrackerForm() {
         .map((r) => r.trim())
         .filter(Boolean);
 
-      const newId = await jobTrackerService.create({
+      const { id: newId, isDuplicate } = await jobTrackerService.create({
         ...formData,
         requirements: reqs.length > 0 ? reqs : formData.requirements,
       });
 
-      toast.success("Job application saved to tracker!");
+      if (isDuplicate) {
+        toast.info("Aplikasi serupa sudah ada di tracker. Mengalihkan ke data yang sudah tersimpan...");
+      } else {
+        toast.success("Job application saved to tracker!");
+      }
 
       if (openTailorAfterSave) {
         router.push(`/cms/job-tracker/${newId}?tab=tailor`);

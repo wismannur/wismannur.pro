@@ -108,6 +108,7 @@ export function KanbanBoard({
 }: KanbanBoardProps) {
   const [dragOverColId, setDragOverColId] = useState<string | null>(null);
   const [archiveTargetApp, setArchiveTargetApp] = useState<JobApplication | null>(null);
+  const [interviewTargetApp, setInterviewTargetApp] = useState<JobApplication | null>(null);
   const { containerRef, isDragging, events } = useDragToScroll<HTMLDivElement>();
 
   const groupedApps = useMemo(() => {
@@ -171,7 +172,8 @@ export function KanbanBoard({
                   }
                   if (col.id === "interviews") {
                     const target = applications.find((a) => a.id === applicationId);
-                    if (target && ["interview_hr", "interview_tech", "interview_user"].includes(target.status)) {
+                    if (target) {
+                      setInterviewTargetApp(target);
                       return;
                     }
                   }
@@ -346,6 +348,88 @@ export function KanbanBoard({
               <span>Withdrawn 🛑</span>
             </div>
             <span className="text-[10px] text-gray-400">Withdrew application</span>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Interview Sub-Stage Selection Dialog */}
+    <Dialog
+      open={Boolean(interviewTargetApp)}
+      onOpenChange={(open) => !open && setInterviewTargetApp(null)}
+    >
+      <DialogContent className="max-w-md bg-[#0C0E18] border border-white/[0.12] text-foreground p-5">
+        <DialogHeader>
+          <DialogTitle className="text-base font-bold text-white flex items-center gap-2">
+            <Users className="w-5 h-5 text-purple-400" />
+            <span>Select Interview Round</span>
+          </DialogTitle>
+          <DialogDescription className="text-xs text-gray-400">
+            Choose the specific interview stage for{" "}
+            <strong className="text-white">{interviewTargetApp?.jobTitle}</strong> at{" "}
+            <strong className="text-white">{interviewTargetApp?.companyName}</strong>.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid grid-cols-1 gap-2.5 pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (interviewTargetApp) {
+                onStatusChange(interviewTargetApp.id, "interview_hr");
+                setInterviewTargetApp(null);
+              }
+            }}
+            className="h-auto py-3 px-3.5 flex flex-col items-start gap-1 text-left bg-purple-500/10 border-purple-500/30 hover:bg-purple-500/20 text-purple-300"
+          >
+            <div className="flex items-center gap-1.5 font-bold text-xs text-purple-400">
+              <Users className="w-4 h-4" />
+              <span>HR / Initial Screening Round</span>
+            </div>
+            <span className="text-[10px] text-gray-400">
+              Recruiter chat, culture alignment, background verification
+            </span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (interviewTargetApp) {
+                onStatusChange(interviewTargetApp.id, "interview_tech");
+                setInterviewTargetApp(null);
+              }
+            }}
+            className="h-auto py-3 px-3.5 flex flex-col items-start gap-1 text-left bg-indigo-500/10 border-indigo-500/30 hover:bg-indigo-500/20 text-indigo-300"
+          >
+            <div className="flex items-center gap-1.5 font-bold text-xs text-indigo-400">
+              <Users className="w-4 h-4" />
+              <span>Technical Interview / Live Coding</span>
+            </div>
+            <span className="text-[10px] text-gray-400">
+              Algorithms, frontend architecture, system design, take-home review
+            </span>
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              if (interviewTargetApp) {
+                onStatusChange(interviewTargetApp.id, "interview_user");
+                setInterviewTargetApp(null);
+              }
+            }}
+            className="h-auto py-3 px-3.5 flex flex-col items-start gap-1 text-left bg-blue-500/10 border-blue-500/30 hover:bg-blue-500/20 text-blue-300"
+          >
+            <div className="flex items-center gap-1.5 font-bold text-xs text-blue-400">
+              <Users className="w-4 h-4" />
+              <span>User / VP / Leadership Interview</span>
+            </div>
+            <span className="text-[10px] text-gray-400">
+              Engineering Director, VP/CTO, cross-functional stakeholder round
+            </span>
           </Button>
         </div>
       </DialogContent>

@@ -664,10 +664,13 @@ ${params.recruiterMessage}
 """
 
 Candidate Profile Context:
-- Senior Engineer with 7+ years in tech
-- 4+ years of specialized Nuxt 4 / Nuxt 3, Vue, TypeScript, and high-scale E-Commerce Storefront experience (currently Senior Frontend at Kick Avenue)
-- Experienced in AI-native engineering (acting as architect & validator with tools like Claude Code, Cursor, Antigravity)
-- Leadership & technical ownership: ready to help shape technical foundations for new engineering hubs
+${
+  params.candidateHighlights && params.candidateHighlights.length > 0
+    ? params.candidateHighlights.map((h) => `- ${h}`).join("\n")
+    : `- Senior Engineer with comprehensive fullstack experience
+- Proven track record in high-performance web systems, distributed architectures, and AI-native workflows
+- Ready for high-impact technical leadership and delivery`
+}
 
 Tasks:
 1. Key Insights: 2-3 bullet points analyzing the recruiter's message (e.g. what they care about most, why they reached out, subtle hints about the team or culture).

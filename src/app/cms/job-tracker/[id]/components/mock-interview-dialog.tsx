@@ -13,6 +13,8 @@ import {
   Loader2,
   Award,
   Lightbulb,
+  Save,
+  BookmarkCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -54,6 +56,28 @@ export function MockInterviewDialog({
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<MockInterviewAnswerEvaluation | null>(null);
   const [completedScores, setCompletedScores] = useState<Record<number, number>>({});
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+  const [savedQuestionIndices, setSavedQuestionIndices] = useState<Record<number, boolean>>({});
+
+  const handleSaveToNotes = async () => {
+    if (!evaluation) return;
+    setIsSavingNotes(true);
+    try {
+      const existingNotes = interview.notes ? `${interview.notes}\n\n---\n\n` : "";
+      const rehearsalSummary = `### Mock Rehearsal (${new Date().toLocaleDateString()}): ${currentQuestion.question}\n- **Score:** ${evaluation.score}/10 (${evaluation.verdict})\n- **Your Answer:**\n${userAnswer}\n- **Strengths:** ${evaluation.strengths.join("; ")}\n- **Refinement Areas:** ${evaluation.improvements.join("; ")}${evaluation.refinedAnswer ? `\n- **Exemplary Answer:**\n"${evaluation.refinedAnswer}"` : ""}`;
+
+      await jobTrackerService.updateInterview(interview.id, {
+        notes: existingNotes + rehearsalSummary,
+      });
+      setSavedQuestionIndices((prev) => ({ ...prev, [currentIndex]: true }));
+      toast.success("Rehearsal feedback saved to interview notes!");
+    } catch (err: unknown) {
+      console.error("Save rehearsal notes error:", err);
+      toast.error("Failed to save rehearsal to interview notes.");
+    } finally {
+      setIsSavingNotes(false);
+    }
+  };
 
   const currentQuestion = questions[currentIndex] || {
     question: `Why do you want to join ${application.companyName} as a ${application.jobTitle}?`,
@@ -263,10 +287,34 @@ export function MockInterviewDialog({
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="text-xs text-muted-foreground">Hiring Bar</span>
-                  <div className="text-xs font-bold text-white">
-                    {evaluation.score >= 7 ? "✅ Passing Standard" : "⚠️ Needs Refinement"}
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleSaveToNotes}
+                    disabled={isSavingNotes || Boolean(savedQuestionIndices[currentIndex])}
+                    className="text-xs gap-1.5 bg-[#0C0E18] border-white/[0.12] text-slate-200 hover:bg-white/[0.08]"
+                  >
+                    {isSavingNotes ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...
+                      </>
+                    ) : savedQuestionIndices[currentIndex] ? (
+                      <>
+                        <BookmarkCheck className="w-3.5 h-3.5 text-emerald-400" /> Saved to Notes
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5 text-indigo-400" /> Save to Notes
+                      </>
+                    )}
+                  </Button>
+                  <div className="text-right">
+                    <span className="text-xs text-muted-foreground">Hiring Bar</span>
+                    <div className="text-xs font-bold text-white">
+                      {evaluation.score >= 7 ? "✅ Passing Standard" : "⚠️ Needs Refinement"}
+                    </div>
                   </div>
                 </div>
               </div>
