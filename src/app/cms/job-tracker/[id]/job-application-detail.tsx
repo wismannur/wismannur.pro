@@ -388,6 +388,7 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
                 <CompanyTimezoneWidget
                   timezone={currentApp.companyIntelligence?.timezone}
                   location={currentApp.location}
+                  salaryCurrency={currentApp.salaryCurrency}
                 />
               </div>
             </div>
