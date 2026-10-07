@@ -13,24 +13,23 @@ interface FeaturedProjectsV2Props {
   title?: string;
   subtitle?: string;
   description?: string;
+  projects?: Project[];
 }
 
 export function FeaturedProjectsV2({
   title = "Selected Works & Production Case Studies",
   subtitle = "Proven Execution",
   description = "Real-world web architectures, AI workflows, and mobile platforms delivered with high reliability and measurable business impact.",
+  projects: initialProjects,
 }: FeaturedProjectsV2Props) {
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ["latestProjects-v2"],
     queryFn: () => projectService.getLatest(4),
+    initialData: initialProjects && initialProjects.length > 0 ? initialProjects : undefined,
   });
 
   // If no projects exist in the database, gracefully hide the entire section
   if (!isLoading && projects.length === 0) {
-    return null;
-  }
-
-  if (isLoading) {
     return null;
   }
 

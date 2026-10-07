@@ -13,16 +13,19 @@ interface LatestInsightsV2Props {
   title?: string;
   subtitle?: string;
   description?: string;
+  blogs?: Blog[];
 }
 
 export function LatestInsightsV2({
   title = "Technical Writing & Architecture Teardowns",
   subtitle = "Engineering Blog",
   description = "In-depth insights on Next.js 16 internals, autonomous agent systems, PostgreSQL performance tuning, and scalable frontend design.",
+  blogs: initialBlogs,
 }: LatestInsightsV2Props) {
   const { data: blogs = [], isLoading } = useQuery({
     queryKey: ["latestBlogs-v2"],
     queryFn: () => blogService.getLatest(3),
+    initialData: initialBlogs && initialBlogs.length > 0 ? initialBlogs : undefined,
   });
 
   return (
