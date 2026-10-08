@@ -75,6 +75,67 @@ function NewJobTrackerForm() {
   const [rawContent, setRawContent] = useState("");
   const [jobUrl, setJobUrl] = useState(queryUrl);
 
+  // Resize states & handlers for Smart AI Importer Job Description textarea
+  const [rawContentHeight, setRawContentHeight] = useState<number>(220);
+  const isDraggingRawContentRef = useRef(false);
+  const dragStartYRawContentRef = useRef(0);
+  const startHeightRawContentRef = useRef(220);
+
+  const handleMouseDownRawContentResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingRawContentRef.current = true;
+    dragStartYRawContentRef.current = e.clientY;
+    startHeightRawContentRef.current = rawContentHeight;
+    document.body.style.cursor = "row-resize";
+    document.body.style.userSelect = "none";
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDraggingRawContentRef.current) return;
+      const deltaY = moveEvent.clientY - dragStartYRawContentRef.current;
+      const maxHeight = Math.max(700, Math.floor(window.innerHeight * 0.8));
+      const newHeight = Math.min(Math.max(startHeightRawContentRef.current + deltaY, 120), maxHeight);
+      setRawContentHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      isDraggingRawContentRef.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleTouchStartRawContentResize = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch) return;
+    isDraggingRawContentRef.current = true;
+    dragStartYRawContentRef.current = touch.clientY;
+    startHeightRawContentRef.current = rawContentHeight;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!isDraggingRawContentRef.current) return;
+      const currentTouch = moveEvent.touches[0];
+      if (!currentTouch) return;
+      const deltaY = currentTouch.clientY - dragStartYRawContentRef.current;
+      const maxHeight = Math.max(700, Math.floor(window.innerHeight * 0.8));
+      const newHeight = Math.min(Math.max(startHeightRawContentRef.current + deltaY, 120), maxHeight);
+      setRawContentHeight(newHeight);
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingRawContentRef.current = false;
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    window.addEventListener("touchmove", handleTouchMove);
+    window.addEventListener("touchend", handleTouchEnd);
+  };
+
   // Form state
   const [formData, setFormData] = useState<NewJobApplication>({
     companyName: queryCompany,
@@ -459,37 +520,72 @@ function NewJobTrackerForm() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="rawContent" className="text-xs font-semibold text-gray-300">
-                  Job Description Text / Vacancy Content
-                </Label>
-                <Textarea
-                  id="rawContent"
-                  placeholder="Paste the full job description text, requirements, responsibilities, and company details here (or paste bookmarklet output)..."
-                  rows={10}
-                  value={rawContent}
-                  onChange={(e) => {
-                    const text = e.target.value;
-                    setRawContent(text);
-                    if (
-                      text.trim().startsWith("{") &&
-                      text.includes('"url"') &&
-                      text.includes('"content"')
-                    ) {
-                      try {
-                        const parsed = JSON.parse(text);
-                        if (parsed.url && !jobUrl) setJobUrl(parsed.url);
-                        if (parsed.content) {
-                          setRawContent(parsed.content);
-                          toast.success("Bookmarklet JSON detected! Autofilled URL and content.");
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="rawContent" className="text-xs font-semibold text-gray-300">
+                    Job Description Text / Vacancy Content
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 hidden sm:flex items-center gap-1 font-mono">
+                      <GripHorizontal className="h-3 w-3 opacity-60" /> Drag to resize
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setRawContentHeight((prev) => (prev > 260 ? 220 : 450));
+                      }}
+                      className="h-6 w-6 rounded-md text-gray-400 hover:text-white hover:bg-white/[0.06]"
+                      title={rawContentHeight > 260 ? "Collapse height" : "Expand height"}
+                    >
+                      {rawContentHeight > 260 ? (
+                        <Minimize2 className="h-3 w-3" />
+                      ) : (
+                        <Maximize2 className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="relative flex flex-col rounded-xl border border-white/[0.08] bg-[#131726] overflow-hidden focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/30 transition-all shadow-inner">
+                  <Textarea
+                    id="rawContent"
+                    style={{ height: `${rawContentHeight}px` }}
+                    placeholder="Paste the full job description text, requirements, responsibilities, and company details here (or paste bookmarklet output)..."
+                    value={rawContent}
+                    onChange={(e) => {
+                      const text = e.target.value;
+                      setRawContent(text);
+                      if (
+                        text.trim().startsWith("{") &&
+                        text.includes('"url"') &&
+                        text.includes('"content"')
+                      ) {
+                        try {
+                          const parsed = JSON.parse(text);
+                          if (parsed.url && !jobUrl) setJobUrl(parsed.url);
+                          if (parsed.content) {
+                            setRawContent(parsed.content);
+                            toast.success("Bookmarklet JSON detected! Autofilled URL and content.");
+                          }
+                        } catch {
+                          // Keep original text if parse fails
                         }
-                      } catch {
-                        // Keep original text if parse fails
                       }
-                    }
-                  }}
-                  className="resize-none text-xs font-mono bg-[#131726] border-white/[0.08] text-gray-200 rounded-xl custom-scrollbar"
-                />
+                    }}
+                    className="w-full text-xs font-mono resize-none rounded-none border-0 bg-transparent text-gray-200 leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0 px-3.5 py-2.5 overflow-y-auto custom-scrollbar"
+                  />
+                  {/* Bottom Drag Handle Bar to Resize Inside Field */}
+                  <div
+                    onMouseDown={handleMouseDownRawContentResize}
+                    onTouchStart={handleTouchStartRawContentResize}
+                    className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                    title="Drag handle to resize job description"
+                  >
+                    <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 transition-all duration-200" />
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
