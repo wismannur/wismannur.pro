@@ -44,7 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { checkIsStagnant } from "@/lib/job-tracker";
+import { checkIsStagnant, isApplicationInActiveInterview } from "@/lib/job-tracker";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import { jobTrackerService } from "@/services";
 import type {
@@ -55,6 +55,7 @@ import { KanbanBoard } from "./components/kanban-board";
 import { ApplicationTable } from "./components/application-table";
 import { AnalyticsDashboard } from "./components/analytics-dashboard";
 import { WeeklyGoalTracker } from "./components/weekly-goal-tracker";
+import { CareerHubNav } from "@/components/cms/career-hub-nav";
 
 export default function JobTrackerPage() {
   const router = useRouter();
@@ -185,9 +186,7 @@ export default function JobTrackerPage() {
     const active = applications.filter((a) =>
       ["applied", "screening", "interview_hr", "interview_tech", "interview_user", "offering"].includes(a.status)
     ).length;
-    const interviews = applications.filter((a) =>
-      ["interview_hr", "interview_tech", "interview_user"].includes(a.status) || (a.interviews?.length ?? 0) > 0
-    ).length;
+    const interviews = applications.filter(isApplicationInActiveInterview).length;
     const offers = applications.filter((a) => a.status === "offering" || a.status === "accepted").length;
     const atsScores = applications.filter((a) => typeof a.atsScore === "number").map((a) => a.atsScore as number);
     const avgAts = atsScores.length > 0 ? Math.round(atsScores.reduce((acc, curr) => acc + curr, 0) / atsScores.length) : null;
@@ -205,6 +204,9 @@ export default function JobTrackerPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
+      {/* Career Hub Unified Navigation Bar */}
+      <CareerHubNav />
+
       {/* Electric Obsidian Command Center Hero Banner */}
       <div className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0C0E18] via-[#090A10] to-[#08090C] p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
         {/* Ambient radial glow orb */}

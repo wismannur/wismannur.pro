@@ -15,9 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     `Curriculum Vitae and Professional Experience of ${name}. Full Stack & Frontend Engineer.`;
 
   return {
-    title: {
-      absolute: "cv-resume-wismannur.pro",
-    },
+    title: `Curriculum Vitae | ${name}`,
     description,
     openGraph: {
       title: `CV / Resume | ${name}`,

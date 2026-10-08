@@ -46,6 +46,7 @@ const settingsUpdateSchema = z.object({
   language: z.string().trim().min(1).max(20).optional(),
   timezone: z.string().trim().min(1).max(50).optional(),
   dateFormat: z.enum(["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"]).optional(),
+  careerWeeklyTarget: z.number().int().min(1).max(100).optional(),
 });
 
 const AVATAR_TYPES = ["image/jpeg", "image/png"];
@@ -170,6 +171,7 @@ const toSettings = (row: typeof userSettings.$inferSelect): UserSettings => ({
   language: row.language,
   timezone: row.timezone,
   dateFormat: row.dateFormat,
+  careerWeeklyTarget: row.careerWeeklyTarget ?? 5,
   updatedAt: row.updatedAt,
 });
 

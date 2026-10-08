@@ -7,7 +7,6 @@ import {
   BookOpen,
   Brain,
   Check,
-  CheckCircle2,
   Clock,
   Copy,
   FileText,

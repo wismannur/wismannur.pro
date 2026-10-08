@@ -7,7 +7,6 @@ import {
   Brain,
   Briefcase,
   Check,
-  CheckCircle2,
   Clock,
   Code,
   Copy,

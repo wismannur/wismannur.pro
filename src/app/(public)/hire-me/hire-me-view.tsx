@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -17,9 +18,11 @@ import {
   HelpCircle,
   Layers,
   MapPin,
+  Quote,
   ServerCog,
   ShieldCheck,
   Sparkles,
+  Star,
   Zap,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -54,7 +57,7 @@ import { RecaptchaDisclaimer } from "@/components/common/recaptcha-disclaimer";
 import { CtaV2 } from "@/components/home-v2/cta-v2";
 import { SubmissionSuccessModal } from "@/components/common/submission-success-modal";
 import { getReCaptchaToken } from "@/services/recaptcha";
-import { hireRequestService } from "@/services";
+import { hireRequestService, type Testimonial } from "@/services";
 import type { AvailabilitySlot } from "@/services/availability/types";
 import type { Faq } from "@/services/faqs/types";
 import type { HireMeCopy } from "@/services/page-copy/types";
@@ -208,10 +211,17 @@ type HireMeViewProps = {
   copy: HireMeCopy | null;
   faqs: Faq[];
   availabilitySlots: AvailabilitySlot[];
+  testimonials?: Testimonial[];
   settings?: SiteSettings;
 };
 
-export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeViewProps) {
+export function HireMeView({
+  copy,
+  faqs,
+  availabilitySlots,
+  testimonials = [],
+  settings,
+}: HireMeViewProps) {
   const [openFaqId, setOpenFaqId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
@@ -662,6 +672,87 @@ export function HireMeView({ copy, faqs, availabilitySlots, settings }: HireMeVi
           </div>
         </div>
       </section>
+
+      {/* 4.5 Client Testimonials & Endorsements (Renders only when at least 1 published exists) */}
+      {testimonials && testimonials.length > 0 && (
+        <section className="relative overflow-hidden py-4">
+          <div className="container px-4 max-w-6xl mx-auto">
+            <SectionHeader
+              subtitle={copy?.testimonialsSection?.subtitle || "CLIENT & PEER ENDORSEMENTS"}
+              title={copy?.testimonialsSection?.title || "Proven Results & **Client Testimonials**."}
+              description={
+                copy?.testimonialsSection?.description ||
+                "What founders, engineering leaders, and project partners say about executing critical technical initiatives together."
+              }
+              className="text-center mb-12 md:mb-16"
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {testimonials.map((item) => (
+                <SpotlightCard
+                  key={item.id}
+                  className="p-6 sm:p-7 rounded-3xl bg-[#0C0E18]/85 border border-white/[0.08] hover:border-primary/40 transition-all duration-300 flex flex-col justify-between shadow-xl backdrop-blur-xl relative"
+                >
+                  <div className="space-y-4">
+                    {/* Stars & Quote Icon */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star
+                            key={i}
+                            size={14}
+                            className={cn(
+                              i < (item.rating || 5)
+                                ? "fill-amber-400 text-amber-400"
+                                : "text-white/20"
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <Quote size={20} className="text-primary/40" />
+                    </div>
+
+                    {/* Quote text */}
+                    <p className="text-xs sm:text-sm text-gray-300 leading-relaxed italic">
+                      &ldquo;{item.quote}&rdquo;
+                    </p>
+                  </div>
+
+                  {/* Author Meta */}
+                  <div className="pt-5 mt-5 border-t border-white/[0.08] flex items-center gap-3">
+                    {item.avatarUrl ? (
+                      <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/[0.12] bg-[#121524] flex-shrink-0">
+                        <Image
+                          src={item.avatarUrl}
+                          alt={item.authorName}
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#121524] border border-white/[0.12] flex items-center justify-center text-xs font-bold text-primary">
+                        {item.authorName
+                          .split(" ")
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h5 className="text-sm font-bold text-white tracking-tight">
+                        {item.authorName}
+                      </h5>
+                      <p className="text-xs text-primary/90 font-medium">{item.authorRole}</p>
+                    </div>
+                  </div>
+                </SpotlightCard>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 5. Direct Opportunity Intake Form */}
       <section id="hire-me-form" className="relative overflow-hidden py-4 scroll-mt-24">

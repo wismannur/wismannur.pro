@@ -41,6 +41,7 @@ export interface UserSettings {
   language: string;
   timezone: string;
   dateFormat: string;
+  careerWeeklyTarget: number;
   updatedAt: Date;
 }
 

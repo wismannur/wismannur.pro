@@ -234,14 +234,6 @@ export function CvPdfDocument({
   skills = [],
   education = [],
 }: CvPdfProps) {
-  const contactParts = [
-    location,
-    email,
-    website ? website.replace(/^https?:\/\//, "") : "",
-    linkedin ? linkedin.replace(/^https?:\/\/(www\.)?/, "") : "",
-    github ? github.replace(/^https?:\/\//, "") : "",
-  ].filter(Boolean);
-
   return (
     <Document
       title={`CV - ${name}`}

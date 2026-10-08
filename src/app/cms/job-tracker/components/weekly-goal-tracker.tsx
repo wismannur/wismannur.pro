@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Plus,
   Target,
@@ -9,6 +10,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { getStartOfIsoWeek, isApplicationInActiveInterview } from "@/lib/job-tracker";
+import { userService } from "@/services";
 import type { JobApplication } from "@/services/job-tracker/types";
 
 interface WeeklyGoalTrackerProps {
@@ -19,7 +22,14 @@ interface WeeklyGoalTrackerProps {
 const STORAGE_KEY = "career_hub_weekly_target";
 
 export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTrackerProps) {
-  const [targetApplications, setTargetApplications] = useState(() => {
+  const queryClient = useQueryClient();
+
+  const { data: userSettings } = useQuery({
+    queryKey: ["userSettings"],
+    queryFn: () => userService.getSettings(),
+  });
+
+  const [localTarget, setLocalTarget] = useState<number | null>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -27,33 +37,39 @@ export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTra
         if (!isNaN(parsed) && parsed > 0) return parsed;
       }
     }
-    return 5;
+    return null;
   });
 
-  const handleSetTarget = (newTarget: number) => {
-    setTargetApplications(newTarget);
-    localStorage.setItem(STORAGE_KEY, newTarget.toString());
+  const targetApplications =
+    userSettings?.careerWeeklyTarget && userSettings.careerWeeklyTarget > 0
+      ? userSettings.careerWeeklyTarget
+      : (localTarget ?? 5);
+
+  const handleSetTarget = async (newTarget: number) => {
+    setLocalTarget(newTarget);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY, newTarget.toString());
+    }
+    try {
+      await userService.updateSettings({ careerWeeklyTarget: newTarget });
+      await queryClient.invalidateQueries({ queryKey: ["userSettings"] });
+    } catch {
+      // Fallback already saved to local state and localStorage
+    }
   };
 
   // Calculate applications submitted in the current calendar week (Monday-Sunday)
   const currentWeekStats = useMemo(() => {
     const now = new Date();
-    const dayOfWeek = now.getDay(); // 0 is Sunday, 1 is Monday...
-    const distanceToMonday = (dayOfWeek + 6) % 7;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() - distanceToMonday);
-    monday.setHours(0, 0, 0, 0);
+    const monday = getStartOfIsoWeek(now);
 
     const thisWeekApps = applications.filter((app) => {
+      if (app.status === "wishlist") return false;
       const date = app.appliedAt ? new Date(app.appliedAt) : new Date(app.createdAt);
       return date >= monday;
     });
 
-    const inInterview = applications.filter((app) =>
-      ["screening", "interview_hr", "interview_tech", "interview_user", "offering"].includes(
-        app.status
-      )
-    ).length;
+    const inInterview = applications.filter(isApplicationInActiveInterview).length;
 
     const submittedCount = thisWeekApps.length;
     const progressPercent = Math.min(100, Math.round((submittedCount / targetApplications) * 100));

@@ -61,17 +61,19 @@ export default function NewOutreachPage() {
   const hasAutoFilledRef = useRef(false);
 
   const queryCompany = searchParams.get("company") || "";
-  const queryRole = searchParams.get("role") || "";
+  const queryRole = searchParams.get("role") || searchParams.get("title") || "";
   const querySubject = searchParams.get("subject") || "";
-  const queryMessage = searchParams.get("message") || "";
+  const queryMessage = searchParams.get("message") || searchParams.get("body") || "";
+  const queryContactName = searchParams.get("contactName") || searchParams.get("recipientName") || "";
+  const queryContactEmail = searchParams.get("contactEmail") || searchParams.get("recipientEmail") || "";
   const queryType = (searchParams.get("type") as OutreachType) || (searchParams.get("purpose") === "follow_up" || searchParams.get("purpose") === "rejection_closure" ? "follow_up" : "cold_pitch");
 
   const [companyName, setCompanyName] = useState(queryCompany);
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [jobTitle, setJobTitle] = useState(queryRole);
-  const [contactName, setContactName] = useState("");
+  const [contactName, setContactName] = useState(queryContactName);
   const [contactRole, setContactRole] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
+  const [contactEmail, setContactEmail] = useState(queryContactEmail);
   const [contactLinkedin, setContactLinkedin] = useState("");
   const [outreachType, setOutreachType] = useState<OutreachType>(queryType);
   const [selectedJobAppId, setSelectedJobAppId] = useState<string>(prefilledJobAppId);

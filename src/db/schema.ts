@@ -285,6 +285,7 @@ export const userSettings = pgTable("user_settings", {
   language: text("language").notNull().default("en"),
   timezone: text("timezone").notNull().default("Asia/Jakarta"),
   dateFormat: text("date_format").notNull().default("DD/MM/YYYY"),
+  careerWeeklyTarget: integer("career_weekly_target").notNull().default(5),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow()
@@ -931,6 +932,9 @@ export const frontendMasterySessions = pgTable(
     score: integer("score"),
     status: text("status").notNull().default("in_progress"),
     timeSpentSeconds: integer("time_spent_seconds").notNull().default(0),
+    jobApplicationId: text("job_application_id").references(() => jobApplications.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -941,6 +945,7 @@ export const frontendMasterySessions = pgTable(
     index("frontend_mastery_sessions_topic_id_idx").on(table.topicId),
     index("frontend_mastery_sessions_pillar_idx").on(table.pillar),
     index("frontend_mastery_sessions_status_idx").on(table.status),
+    index("frontend_mastery_sessions_job_app_id_idx").on(table.jobApplicationId),
     index("frontend_mastery_sessions_created_at_idx").on(table.createdAt),
   ]
 );

@@ -290,6 +290,23 @@ export async function createJobOutreach(
         resendId = sendRes.id;
       } catch (err) {
         console.error("[Job Outreach] Failed to send email on create:", err);
+        await db
+          .update(jobOutreaches)
+          .set({
+            status: "draft",
+            sentAt: null,
+            followUpDueDate: null,
+            notes:
+              (inserted.notes ? `${inserted.notes}\n\n` : "") +
+              `⚠️ Delivery Error (${new Date().toLocaleDateString()}): ${(err as Error).message}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(jobOutreaches.id, inserted.id));
+
+        revalidateOutreachPaths(inserted.id);
+        throw new Error(
+          `Failed to deliver email via Resend: ${(err as Error).message}. Outreach was saved as draft.`
+        );
       }
     }
 
@@ -569,6 +586,10 @@ export async function convertOutreachToJobApplication(
   });
 
   revalidateOutreachPaths(outreachId);
+  revalidatePath("/cms/job-tracker");
+  if (result.applicationId) {
+    revalidatePath(`/cms/job-tracker/${result.applicationId}`);
+  }
   return result;
 }
 
