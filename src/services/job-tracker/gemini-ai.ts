@@ -60,7 +60,7 @@ export async function parseJobPostingWithGemini(rawContent: string): Promise<Par
     }
   }
 
-  const prompt = `You are an expert tech recruiter and ATS parsing assistant.
+  const prompt = `You are an expert tech recruiter, ATS parsing assistant, and technical job analyst.
 Extract and structure the following job posting details into clean JSON.
 If a field is not explicitly mentioned, provide a reasonable inference or leave it undefined.
 
@@ -68,6 +68,50 @@ Raw Job Content / URL Text:
 """
 ${contentToParse.slice(0, 15000)}
 """
+
+FIELD-SPECIFIC INSTRUCTIONS:
+
+## jobDescriptionRaw — Structured Markdown Job Summary
+Produce a **rich, well-structured Markdown document** (NOT a short paragraph).
+Include the following sections using ## headings where the source data supports them:
+
+### Required sections (always include):
+- **## Role Overview** — 2-3 sentences positioning what this role is, the seniority level, and core mission.
+- **## Key Responsibilities** — Bullet list of primary duties and deliverables. Use **bold** for critical action items. Preserve specifics (e.g. "own the checkout flow" not "work on frontend").
+
+### Conditional sections (include when data is available):
+- **## Team & Reporting Structure** — Team size, who the role reports to, cross-functional relationships, org context.
+- **## Product & Impact Context** — What the product/platform does, user scale, business metrics, growth stage (e.g. "Series B fintech serving 2M+ users").
+- **## Tech Stack & Architecture** — Specific technologies, infrastructure, and engineering practices mentioned (e.g. CI/CD, microservices, monorepo).
+- **## Culture & Work Environment** — Engineering culture signals, methodologies (Agile/Scrum), remote work policies, collaboration tools.
+- **## Benefits & Perks** — Compensation highlights, equity/RSU, health benefits, learning budget, equipment allowance.
+- **## Growth & Career Path** — Promotion opportunities, mentorship, conference budget, internal mobility.
+
+Rules:
+- Use **bold** for critical keywords (technologies, product names, team names, metrics).
+- Preserve specific numbers and metrics from the original posting (user counts, revenue, team sizes, performance targets).
+- Do NOT water down specific statements into generic corporate language.
+- Aim for 200-500 words of substantive content, not a 2-sentence summary.
+- If the source is sparse, extract maximum signal from what's available rather than padding with generic filler.
+
+## requirements — Categorized & Normalized Requirement Items
+Produce an array of **clean, categorized, normalized, deduplicated** requirement strings.
+
+Format each item as: [CATEGORY] Concise requirement phrase
+Available categories:
+- [TECH] — Programming languages, frameworks, libraries, tools, cloud platforms (e.g. "[TECH] React / Next.js", "[TECH] AWS (EC2, S3, Lambda)")
+- [EXP] — Years of experience or seniority expectations (e.g. "[EXP] 5+ years in frontend engineering")
+- [DOMAIN] — Industry or domain knowledge (e.g. "[DOMAIN] E-commerce or marketplace platform experience")
+- [SOFT] — Leadership, communication, collaboration skills (e.g. "[SOFT] Cross-functional stakeholder management")
+- [NICE] — Nice-to-have / bonus / preferred qualifications (e.g. "[NICE] Experience with GraphQL")
+
+Rules:
+- Normalize tech names: "ReactJS" / "React.js" → "React", "Golang" → "Go", "NodeJS" → "Node.js", "Postgres" → "PostgreSQL".
+- Deduplicate: never list the same technology or concept twice.
+- Order: Must-have [TECH] first, then [EXP], [DOMAIN], [SOFT], then [NICE] items last.
+- Target 8-15 items. Skip obvious generic fillers (e.g. "good communication skills", "team player") unless explicitly emphasized as critical.
+- Each item must be a concise phrase (3-10 words), NOT a full sentence.
+- If the posting distinguishes "Required" vs "Nice to have" / "Bonus", respect that classification with [NICE] for the latter.
 
 Return a JSON object conforming strictly to this format:
 {
@@ -81,8 +125,8 @@ Return a JSON object conforming strictly to this format:
   "salaryMax": number | null,
   "salaryCurrency": "string (default 'IDR')",
   "salaryPeriod": "monthly" | "yearly" | "hourly",
-  "jobDescriptionRaw": "string (concise formatted markdown summary of the job description)",
-  "requirements": ["array of requirement bullet points"],
+  "jobDescriptionRaw": "string (structured Markdown following the section guidelines above)",
+  "requirements": ["string (categorized items following the [CATEGORY] format above)"],
   "contactName": "string or null",
   "contactEmail": "string or null",
   "companyWebsite": "string or null"
