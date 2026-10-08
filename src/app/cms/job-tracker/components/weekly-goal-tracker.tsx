@@ -157,15 +157,6 @@ export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTra
               <span><strong className="text-emerald-400">{currentWeekStats.inInterview}</strong> in Interview / Offer</span>
             </div>
           </div>
-
-          <Button
-            size="sm"
-            onClick={onAddJobClick}
-            className="gap-1.5 text-xs h-9 px-4 rounded-xl bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Log Opportunity</span>
-          </Button>
         </div>
       </div>
     </div>

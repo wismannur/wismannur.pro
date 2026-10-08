@@ -135,6 +135,91 @@ Executive Guidelines:
         }`;
 }
 
+function parseAiErrorMessage(err: unknown): string {
+  if (!err) return "Terjadi kendala pada layanan AI.";
+  const rawMessage = err instanceof Error ? err.message : String(err);
+  try {
+    const parsed = JSON.parse(rawMessage);
+    if (parsed.error?.message) {
+      if (parsed.error.code === 429 || parsed.error.status === "RESOURCE_EXHAUSTED") {
+        return "Beban kuota AI model sedang padat sesaat (429 Rate Limit / Quota Exceeded).";
+      }
+      return parsed.error.message;
+    }
+  } catch {
+    // not JSON
+  }
+  if (rawMessage.includes("429") || rawMessage.includes("RESOURCE_EXHAUSTED")) {
+    return "Beban kuota AI model sedang padat sesaat (429 Rate Limit / Quota Exceeded).";
+  }
+  return rawMessage;
+}
+
+function buildToolExecutionFallbackMessage(
+  toolCalls: ToolCallInfo[],
+  toolResults: ToolResultInfo[],
+  failureReason?: string
+): string {
+  const successList: string[] = [];
+  const failedList: string[] = [];
+
+  for (const r of toolResults) {
+    const resultObj = (r.result || {}) as Record<string, unknown>;
+    const isSuccess = resultObj.success !== false && !resultObj.error;
+    const readableName = r.name.replace(/_/g, " ");
+
+    if (isSuccess) {
+      const msg = typeof resultObj.message === "string" ? resultObj.message : undefined;
+      successList.push(msg ? `✓ ${msg}` : `✓ Operasi \`${readableName}\` berhasil dijalankan.`);
+    } else {
+      const err = typeof resultObj.error === "string" ? resultObj.error : "Terjadi kesalahan";
+      failedList.push(`✗ Operasi \`${readableName}\` gagal: ${err}`);
+    }
+  }
+
+  let text = "Operasi data telah selesai diproses di sistem:\n\n";
+  if (successList.length > 0) {
+    text += "### Operasi Berhasil:\n" + successList.map((s) => `- ${s}`).join("\n") + "\n\n";
+  }
+  if (failedList.length > 0) {
+    text += "### Perhatian:\n" + failedList.map((s) => `- ${s}`).join("\n") + "\n\n";
+  }
+  if (failureReason) {
+    text += `> [!NOTE]\n> *Catatan: Penulisan ringkasan naratif AI mengalami kendala (${failureReason}), namun mutasi data di atas telah tersimpan dengan aman.*`;
+  }
+  return text.trim();
+}
+
+async function generateWithRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: unknown) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      const isTransient =
+        msg.includes("429") ||
+        msg.includes("RESOURCE_EXHAUSTED") ||
+        msg.includes("quota") ||
+        msg.includes("503") ||
+        msg.includes("UNAVAILABLE") ||
+        msg.includes("fetch failed");
+
+      if (isTransient && attempt < maxRetries - 1) {
+        const delayMs = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 500, 5000);
+        console.warn(
+          `[CMS Copilot Retry]: Transient AI error (attempt ${attempt + 1}/${maxRetries}). Retrying in ${Math.round(delayMs)}ms...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastError;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // 1. Enforce strict Admin Authentication
@@ -206,16 +291,18 @@ export async function POST(req: NextRequest) {
           const MAX_TOOL_HOPS = 5;
 
           for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
-            const response = await ai.models.generateContent({
-              model: modelName,
-              contents: currentContents as Parameters<typeof ai.models.generateContent>[0]["contents"],
-              config: {
-                systemInstruction,
-                tools: CMS_COPILOT_TOOL_DECLARATIONS,
-                temperature: 0.5,
-                maxOutputTokens: 16384,
-              },
-            });
+            const response = await generateWithRetry(() =>
+              ai.models.generateContent({
+                model: modelName,
+                contents: currentContents as Parameters<typeof ai.models.generateContent>[0]["contents"],
+                config: {
+                  systemInstruction,
+                  tools: CMS_COPILOT_TOOL_DECLARATIONS,
+                  temperature: 0.5,
+                  maxOutputTokens: 16384,
+                },
+              })
+            );
 
             const candidate = response.candidates?.[0];
             if (candidate?.finishReason === "MAX_TOKENS") {
@@ -315,15 +402,17 @@ export async function POST(req: NextRequest) {
 
           // Safety synthesis: if max hops reached and text is still empty, synthesize final text without tools
           if (!fullAssistantText) {
-            const finalSynthesis = await ai.models.generateContent({
-              model: modelName,
-              contents: currentContents as Parameters<typeof ai.models.generateContent>[0]["contents"],
-              config: {
-                systemInstruction,
-                temperature: 0.5,
-                maxOutputTokens: 16384,
-              },
-            });
+            const finalSynthesis = await generateWithRetry(() =>
+              ai.models.generateContent({
+                model: modelName,
+                contents: currentContents as Parameters<typeof ai.models.generateContent>[0]["contents"],
+                config: {
+                  systemInstruction,
+                  temperature: 0.5,
+                  maxOutputTokens: 16384,
+                },
+              })
+            );
 
             if (finalSynthesis.candidates?.[0]?.finishReason === "MAX_TOKENS") {
               console.warn(
@@ -362,11 +451,37 @@ export async function POST(req: NextRequest) {
           }
         } catch (err: unknown) {
           console.error("[CMS Copilot Stream Error]:", err);
-          const errorMessage = err instanceof Error ? err.message : "Stream error";
-          sendEvent({
-            type: "error",
-            content: `Error during copilot processing: ${errorMessage}`,
-          });
+          const cleanErrorMessage = parseAiErrorMessage(err);
+
+          // If tool calls were already executed and succeeded, don't report an outright failure!
+          const hasSuccessfulTools =
+            executedToolResults.length > 0 &&
+            executedToolResults.some(
+              (r) => (r.result as Record<string, unknown> | undefined)?.success !== false
+            );
+
+          if (hasSuccessfulTools && !fullAssistantText) {
+            fullAssistantText = buildToolExecutionFallbackMessage(
+              executedToolCalls,
+              executedToolResults,
+              cleanErrorMessage
+            );
+
+            // Stream the informative fallback text to the client so the UI shows success
+            const chunkSize = 32;
+            for (let i = 0; i < fullAssistantText.length; i += chunkSize) {
+              sendEvent({
+                type: "text",
+                content: fullAssistantText.slice(i, i + chunkSize),
+              });
+            }
+            sendEvent({ type: "done" });
+          } else {
+            sendEvent({
+              type: "error",
+              content: `Error during copilot processing: ${cleanErrorMessage}`,
+            });
+          }
 
           // Preserve conversation turn even if streaming encountered an error or timeout
           if (lastUserText) {
@@ -374,7 +489,7 @@ export async function POST(req: NextRequest) {
               sessionId,
               userMessage: lastUserText,
               assistantMessage:
-                fullAssistantText || `Operasi data terhenti: ${errorMessage}`,
+                fullAssistantText || `Operasi data terhenti: ${cleanErrorMessage}`,
               currentPath,
               toolCalls: executedToolCalls,
               toolResults: executedToolResults,

@@ -59,6 +59,11 @@ export function cleanReplyBody(text: string): string {
       break;
     }
 
+    // Ignore standalone tracking beacon / pixel markdown links e.g. [https://...]
+    if (/^\s*\[https?:\/\/[^\]\s]+\]\s*$/i.test(trimmed)) {
+      continue;
+    }
+
     // Stop at isolated ref/signature artifacts
     if (/^(?:Ref:\s*#?(?:contact|service|hire|outreach)|Sent from my|Kirim dari)/i.test(trimmed)) {
       break;

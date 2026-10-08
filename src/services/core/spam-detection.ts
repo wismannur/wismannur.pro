@@ -26,8 +26,8 @@ export function isGibberish(text: string): boolean {
   const trimmed = text.trim();
   if (!trimmed) return false;
 
-  // If text starts with http:// or https://, allow URLs
-  if (/^https?:\/\/\S+$/i.test(trimmed)) {
+  // If text starts with http:// or https://, allow URLs (including wrapped in brackets)
+  if (/^\[?https?:\/\/\S+\]?$/i.test(trimmed)) {
     return false;
   }
 
@@ -39,22 +39,31 @@ export function isGibberish(text: string): boolean {
   // 2. Analyze individual words
   const words = trimmed.split(/\s+/);
   for (const word of words) {
-    if (/^https?:\/\//i.test(word) || word.includes("@")) {
+    // Strip surrounding brackets, quotes, and punctuation commonly wrapping URLs or terms
+    const cleanWord = word.replace(/^[[(<"'\`]+|[\])>"'\`.,;:!?]+$/g, "");
+
+    if (
+      !cleanWord ||
+      /^https?:\/\//i.test(cleanWord) ||
+      cleanWord.includes("@") ||
+      /[/?=&%#]/.test(cleanWord) || // URL paths, query strings, fragments, encodings
+      /^[a-f0-9-]{32,}$/i.test(cleanWord) // Hashes or UUIDs
+    ) {
       continue;
     }
 
     // Unreasonably long single token
-    if (word.length > 35) {
+    if (cleanWord.length > 35) {
       return true;
     }
 
     // High case-switching entropy in a token (e.g., "WwxhmCFPEMneHnNlUOMox" or "cRbgKiwjHXFUAVFGezJqiZfN")
     // Natural CamelCase words (e.g. "JavaScript", "McDonald", "TypeScript") have 1-2 switches.
-    if (word.length >= 12) {
+    if (cleanWord.length >= 12) {
       let caseSwitches = 0;
-      for (let i = 1; i < word.length; i++) {
-        const prev = word[i - 1];
-        const curr = word[i];
+      for (let i = 1; i < cleanWord.length; i++) {
+        const prev = cleanWord[i - 1];
+        const curr = cleanWord[i];
         const prevUpper = prev >= "A" && prev <= "Z";
         const currUpper = curr >= "A" && curr <= "Z";
         const prevLower = prev >= "a" && prev <= "z";
