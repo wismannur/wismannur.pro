@@ -30,6 +30,7 @@ import {
   Compass,
   RefreshCw,
   Brain,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -132,6 +133,91 @@ function formatSessionPath(path?: string | null): string | null {
   if (!path) return null;
   const clean = path.replace(/^\/cms\/?/, "").replace(/\/+/g, " › ").trim();
   return clean || "dashboard";
+}
+
+function buildMarkdownFromSession(
+  sessionMeta: {
+    id: string;
+    title?: string | null;
+    currentPath?: string | null;
+    createdAt?: string | Date | null;
+    updatedAt?: string | Date | null;
+    messageCount?: number;
+  },
+  msgs: Array<{
+    id?: string;
+    role: "user" | "assistant";
+    content: string;
+    toolCalls?: ToolCallInfo[];
+    createdAt?: string | Date | null;
+  }>
+): { markdown: string; filename: string } {
+  const validMsgs = msgs.filter((m) => m.id !== "copilot-welcome" || msgs.length === 1);
+  const now = new Date();
+  const createdDate = sessionMeta.createdAt ? new Date(sessionMeta.createdAt) : now;
+  const updatedDate = sessionMeta.updatedAt ? new Date(sessionMeta.updatedAt) : now;
+  const sessionTitle = sessionMeta.title || "CMS Copilot Session";
+
+  let md = "---\n";
+  md += `id: "${sessionMeta.id || "temp-session"}"\n`;
+  md += `title: "${sessionTitle.replace(/"/g, '\\"')}"\n`;
+  if (sessionMeta.currentPath) {
+    md += `current_path: "${sessionMeta.currentPath}"\n`;
+  }
+  md += `message_count: ${validMsgs.length}\n`;
+  md += `created_at: "${createdDate.toISOString()}"\n`;
+  md += `updated_at: "${updatedDate.toISOString()}"\n`;
+  md += "---\n\n";
+
+  md += `# ${sessionTitle}\n\n`;
+  md += `> **Ref ID:** \`${sessionMeta.id || "N/A"}\`  \n`;
+  if (sessionMeta.currentPath) {
+    md += `> **Context Route:** \`${sessionMeta.currentPath}\`  \n`;
+  }
+  md += `> **Created At:** ${createdDate.toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })} WIB  \n`;
+  md += `> **Source:** CMS Staff Copilot\n\n`;
+  md += `---\n\n`;
+
+  for (const m of validMsgs) {
+    const isUser = m.role === "user";
+    const headerRole = isUser ? "## 👤 User Prompt" : "## 🤖 Copilot Response";
+    const timeStr = m.createdAt
+      ? new Date(m.createdAt).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })
+      : "";
+
+    md += `${headerRole}${timeStr ? ` *(${timeStr} WIB)*` : ""}\n\n`;
+
+    if (m.toolCalls && Array.isArray(m.toolCalls) && m.toolCalls.length > 0) {
+      const toolNames = m.toolCalls.map((t) => `\`${t.name}\``).join(", ");
+      md += `> ⚡ *Executed Tools:* ${toolNames}\n\n`;
+    }
+
+    md += `${m.content.trim()}\n\n`;
+    md += `---\n\n`;
+  }
+
+  const cleanSlug = sessionTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 45);
+
+  const shortId = sessionMeta.id ? sessionMeta.id.slice(0, 8) : "session";
+  const filename = `${shortId}-${cleanSlug || "notes"}.md`;
+
+  return { markdown: md, filename };
+}
+
+function triggerFileDownload(content: string, filename: string) {
+  const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 interface StreamCallbacks {
@@ -262,6 +348,7 @@ export function CmsCopilotPanel() {
   const [sessionToRename, setSessionToRename] = useState<{ id: string; title: string } | null>(null);
   const [renameTitleInput, setRenameTitleInput] = useState("");
   const [isRenamingSession, setIsRenamingSession] = useState(false);
+  const [isExportingSession, setIsExportingSession] = useState(false);
   const [inputHeight, setInputHeight] = useState<number>(() => {
     if (typeof window === "undefined") return 64;
     try {
@@ -801,6 +888,99 @@ export function CmsCopilotPanel() {
     setTimeout(() => {
       setCopiedSessionId((prev) => (prev === id ? null : prev));
     }, 2000);
+  };
+
+  const handleDownloadActiveSession = () => {
+    const nonWelcome = messages.filter((m) => m.id !== "copilot-welcome");
+    if (nonWelcome.length === 0) {
+      toast.info("Belum ada riwayat percakapan untuk diekspor");
+      return;
+    }
+
+    const active = sessions.find((s) => s.id === currentSessionId);
+    const firstUserMsg = nonWelcome.find((m) => m.role === "user");
+    const sessionMeta = {
+      id: currentSessionId || `session-${Date.now().toString(36)}`,
+      title: active?.title || (firstUserMsg ? firstUserMsg.content.slice(0, 45) : "Percakapan Copilot"),
+      currentPath: active?.currentPath || pathname,
+      createdAt: active?.createdAt || new Date(),
+      updatedAt: active?.updatedAt || new Date(),
+      messageCount: nonWelcome.length,
+    };
+
+    const { markdown, filename } = buildMarkdownFromSession(sessionMeta, messages);
+    triggerFileDownload(markdown, filename);
+    toast.success(`Berhasil mengunduh ${filename}`);
+  };
+
+  const handleDownloadSessionById = async (
+    sess: {
+      id: string;
+      title: string;
+      currentPath?: string | null;
+      createdAt?: Date | string | null;
+      updatedAt?: Date | string | null;
+    },
+    e?: React.MouseEvent
+  ) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+
+    // If current loaded session, export active state directly
+    if (currentSessionId === sess.id && messages.length > 0) {
+      const nonWelcome = messages.filter((m) => m.id !== "copilot-welcome");
+      const { markdown, filename } = buildMarkdownFromSession(
+        {
+          id: sess.id,
+          title: sess.title,
+          currentPath: sess.currentPath,
+          createdAt: sess.createdAt,
+          updatedAt: sess.updatedAt,
+          messageCount: nonWelcome.length,
+        },
+        messages
+      );
+      triggerFileDownload(markdown, filename);
+      toast.success(`Berhasil mengunduh ${filename}`);
+      return;
+    }
+
+    // Otherwise, fetch session messages from database
+    try {
+      setIsExportingSession(true);
+      const messagesRows = await getCmsCopilotSessionMessages(sess.id);
+      if (!messagesRows || messagesRows.length === 0) {
+        toast.error("Tidak ada pesan tersimpan dalam sesi ini");
+        return;
+      }
+
+      const { markdown, filename } = buildMarkdownFromSession(
+        {
+          id: sess.id,
+          title: sess.title,
+          currentPath: sess.currentPath,
+          createdAt: sess.createdAt,
+          updatedAt: sess.updatedAt,
+          messageCount: messagesRows.length,
+        },
+        messagesRows.map((m) => ({
+          id: m.id,
+          role: m.role as "user" | "assistant",
+          content: m.content,
+          toolCalls: (m.toolCalls as ToolCallInfo[]) || undefined,
+          createdAt: m.createdAt,
+        }))
+      );
+      triggerFileDownload(markdown, filename);
+      toast.success(`Berhasil mengunduh ${filename}`);
+    } catch (err) {
+      console.error("Failed to export session:", err);
+      toast.error("Gagal mengekspor sesi ke Markdown");
+    } finally {
+      setIsExportingSession(false);
+    }
   };
 
   const handleNewChat = () => {
@@ -1461,6 +1641,29 @@ export function CmsCopilotPanel() {
                     </TooltipProvider>
                   )}
 
+                  {/* Export / Download Markdown for Active Session */}
+                  {(currentSessionId || messages.filter((m) => m.id !== "copilot-welcome").length > 0) && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleDownloadActiveSession}
+                            disabled={isExportingSession}
+                            className="h-8 w-8 rounded-lg text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10 transition-colors"
+                            title="Ekspor & Unduh Markdown (.md)"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-[#0C0E18] text-white border-white/[0.1] text-xs">
+                          Ekspor & Unduh Markdown (.md)
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+
                   {/* Rename & Delete for Active Session */}
                   {currentSessionId && (
                     <>
@@ -1633,6 +1836,17 @@ export function CmsCopilotPanel() {
                           >
                             <Terminal className="h-3.5 w-3.5 text-indigo-400 shrink-0" />
                             <span>Salin ID Sesi</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={handleDownloadActiveSession}
+                            disabled={isExportingSession || messages.filter((m) => m.id !== "copilot-welcome").length === 0}
+                            className="cursor-pointer gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.08] focus:bg-white/[0.08]"
+                          >
+                            <Download className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-medium text-white">Ekspor Markdown</span>
+                              <span className="text-[10px] text-gray-400">Unduh berkas .md sesi ini</span>
+                            </div>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator className="bg-white/[0.08] my-1" />
                           <DropdownMenuItem
@@ -1832,11 +2046,20 @@ export function CmsCopilotPanel() {
                               )}
                             </div>
 
-                            {/* Integrated Action Buttons (Rename & Delete) */}
+                            {/* Integrated Action Buttons (Download, Rename & Delete) */}
                             <div
                               className="flex items-center gap-0.5 shrink-0 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
                               onClick={(e) => e.stopPropagation()}
                             >
+                              <button
+                                type="button"
+                                onClick={(e) => handleDownloadSessionById(sess, e)}
+                                disabled={isExportingSession}
+                                className="p-1 sm:p-1.5 rounded-lg text-gray-400 hover:text-emerald-300 hover:bg-emerald-500/10 active:bg-emerald-500/20 transition-colors cursor-pointer"
+                                title="Ekspor & Unduh Markdown (.md)"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </button>
                               <button
                                 type="button"
                                 onClick={(e) =>
