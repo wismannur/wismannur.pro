@@ -13,14 +13,7 @@ import {
   Eye,
   Code,
   Edit3,
-  Plus,
-  Trash2,
-  Save,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
-  RotateCcw,
-  Cpu,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -33,74 +26,25 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { resumeService, siteSettingsService, skillsService, userService } from "@/services";
-import { formatResumePeriod, formatExperienceMeta } from "@/lib/resume";
+import { formatResumePeriod } from "@/lib/resume";
 import { rankSkillsForJobApplication, type RankedSkillItem } from "@/lib/tailored-skills";
 import type { JobApplication, TailoredBullet, TailoredProjectHighlight } from "@/services/job-tracker/types";
+import {
+  DEFAULT_FLAGSHIP_PROJECT,
+  initializeTailoredProjects,
+  splitDescriptionToBullets,
+  getTailoredBulletsForExperience,
+  getUnmatchedTailoredBullets,
+} from "./tailored-cv/constants";
+import { generatePrintableCvHtml } from "./tailored-cv/print-html";
+import { TailoredCvPreviewTab } from "./tailored-cv/tailored-cv-preview-tab";
+import { TailoredCvEditTab } from "./tailored-cv/tailored-cv-edit-tab";
+import { TailoredCvMarkdownTab } from "./tailored-cv/tailored-cv-markdown-tab";
 
-export const DEFAULT_FLAGSHIP_PROJECT: TailoredProjectHighlight = {
-  title: "wismannur.pro — Autonomous AI Fullstack Platform & Digital Twin",
-  technologies: [
-    "Next.js 16",
-    "React 19",
-    "TypeScript",
-    "PostgreSQL (Neon)",
-    "Drizzle ORM",
-    "Gemini 2.5 Flash",
-    "Tailwind CSS",
-  ],
-  description:
-    "Autonomous digital twin and engineering operating system featuring AI agentic Copilot, multi-model LLM tool orchestration, and real-time CMS automation.",
-  bullets: [
-    "Architected 33 relational PostgreSQL schemas with Drizzle ORM and Neon serverless driver, implementing strict domain separation, transactions, and automated schema migrations.",
-    "Engineered autonomous AI Staff Copilot engine integrated with Model Context Protocol (MCP) and 110+ deterministic tools, utilizing Gemini 2.5 structured output and Zod runtime validation.",
-    "Optimized frontend performance with Next.js 16 App Router, React 19 Server Components, and zero-CLS streaming layouts, achieving 98+ Lighthouse scores and sub-second LCP.",
-  ],
-  relevanceRationale:
-    "Demonstrates end-to-end Senior Staff system architecture, AI agent tooling, and production-grade fullstack engineering.",
-};
-
-function initializeTailoredProjects(
-  existingProjects?: TailoredProjectHighlight[],
-  employerNames: string[] = []
-): TailoredProjectHighlight[] {
-  const employersLower = employerNames.map((e) => e.toLowerCase().trim()).filter(Boolean);
-
-  const filtered = (existingProjects || []).filter((proj) => {
-    const titleLower = proj.title.toLowerCase();
-    return !employersLower.some((emp) => emp.length > 2 && titleLower.includes(emp));
-  });
-
-  if (filtered.length === 0) {
-    return [DEFAULT_FLAGSHIP_PROJECT];
-  }
-
-  return filtered.map((proj) => {
-    let bullets = proj.bullets;
-    if (!bullets || bullets.length === 0) {
-      if (proj.title.toLowerCase().includes("wismannur.pro")) {
-        bullets = DEFAULT_FLAGSHIP_PROJECT.bullets;
-      } else if (proj.description) {
-        bullets = proj.description.includes("\n")
-          ? proj.description
-              .split("\n")
-              .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
-              .filter(Boolean)
-          : [proj.description];
-      } else {
-        bullets = [];
-      }
-    }
-    return {
-      ...proj,
-      bullets,
-    };
-  });
-}
+export { DEFAULT_FLAGSHIP_PROJECT };
 
 interface ExportTailoredCvDialogProps {
   open: boolean;
@@ -362,60 +306,11 @@ export function ExportTailoredCvDialog({
   const printRef = useRef<HTMLDivElement>(null);
 
   const candidateName = userData?.displayName || siteSettings?.siteName || "Wisman Nur";
-  // The professional candidate contact email for tailored CV is decoupled from CMS admin login credentials
   const candidateEmail = siteSettings?.publicEmail || "hi@wismannur.pro";
   const candidateLocation = userData?.location || siteSettings?.location || "Bandung, West Java, Indonesia";
   const candidateWebsite = userData?.website || "https://www.wismannur.pro";
   const candidateGithub = userData?.social?.github || siteSettings?.social?.github || "https://github.com/wismannur";
   const candidateLinkedin = userData?.social?.linkedin || siteSettings?.social?.linkedin || "https://linkedin.com/in/wismannur";
-
-
-  const splitDescriptionToBullets = (description?: string): string[] => {
-    if (!description) return [];
-    const rawItems = description.includes("\n") ? description.split("\n") : description.split(". ");
-    return rawItems
-      .map((item) => item.trim().replace(/^[-•*]\s*/, ""))
-      .filter(Boolean)
-      .map((item) => (item.endsWith(".") || item.includes(":") ? item : `${item}.`));
-  };
-
-  const getTailoredBulletsForExperience = (
-    exp: { id: string; title: string; organization: string },
-    tailoredBullets?: JobApplication["tailoredBulletPoints"]
-  ) => {
-    if (!tailoredBullets || tailoredBullets.length === 0) return [];
-
-    // 1. Direct ID match
-    const byId = tailoredBullets.filter((b) => b.experienceId && b.experienceId === exp.id);
-    if (byId.length > 0) return byId;
-
-    // 2. Fuzzy match by roleContext vs organization/title
-    const orgLower = exp.organization.toLowerCase();
-    const titleLower = exp.title.toLowerCase();
-
-    return tailoredBullets.filter((b) => {
-      if (!b.roleContext) return false;
-      const ctx = b.roleContext.toLowerCase();
-      return ctx.includes(orgLower) || orgLower.includes(ctx) || ctx.includes(titleLower);
-    });
-  };
-
-  const getUnmatchedTailoredBullets = (
-    experiences: { id: string; title: string; organization: string }[],
-    tailoredBullets?: JobApplication["tailoredBulletPoints"]
-  ) => {
-    if (!tailoredBullets || tailoredBullets.length === 0) return [];
-    return tailoredBullets.filter((b) => {
-      return !experiences.some((exp) => {
-        if (b.experienceId && b.experienceId === exp.id) return true;
-        if (!b.roleContext) return false;
-        const orgLower = exp.organization.toLowerCase();
-        const titleLower = exp.title.toLowerCase();
-        const ctx = b.roleContext.toLowerCase();
-        return ctx.includes(orgLower) || orgLower.includes(ctx) || ctx.includes(titleLower);
-      });
-    });
-  };
 
   // Build markdown representation of tailored CV
   const markdownCv = useMemo(() => {
@@ -447,29 +342,22 @@ export function ExportTailoredCvDialog({
       resumeData.experiences.forEach((exp) => {
         const period = formatResumePeriod(exp);
         lines.push(`### ${exp.title} — ${exp.organization} ${period ? `(${period})` : ""}`);
-        const meta = formatExperienceMeta(exp);
-        if (meta) lines.push(`*${meta}*`);
 
         const tailored = includeTailoredBullets
           ? getTailoredBulletsForExperience(exp, activeBullets)
           : [];
+        const originalBullets = splitDescriptionToBullets(exp.description);
 
         if (tailored.length > 0) {
-          tailored.forEach((bullet) => {
-            lines.push(`- ${bullet.tailored.replace(/^[-•*]\s*/, "")}`);
-          });
-        } else {
-          const fallbackBullets = splitDescriptionToBullets(exp.description);
-          if (fallbackBullets.length > 0) {
-            fallbackBullets.forEach((b) => lines.push(`- ${b.replace(/^[-•*]\s*/, "")}`));
-          } else if (exp.description) {
-            lines.push(exp.description.replace(/^[-•*]\s*/, ""));
-          }
+          tailored.forEach((b) => lines.push(`- ${b.tailored.replace(/^[-•*]\s*/, "")}`));
+        } else if (originalBullets.length > 0) {
+          originalBullets.forEach((b) => lines.push(`- ${b.replace(/^[-•*]\s*/, "")}`));
+        } else if (exp.description) {
+          lines.push(exp.description.replace(/^[-•*]\s*/, ""));
         }
         lines.push("");
       });
 
-      // Include unmatched bullets if any exist
       if (includeTailoredBullets) {
         const unmatched = getUnmatchedTailoredBullets(
           resumeData.experiences,
@@ -478,8 +366,7 @@ export function ExportTailoredCvDialog({
         if (unmatched.length > 0) {
           lines.push(`### Additional Targeted Accomplishments`);
           unmatched.forEach((b) => {
-            const prefix = b.roleContext ? `**[${b.roleContext}]** ` : "";
-            lines.push(`- ${prefix}${b.tailored.replace(/^[-•*]\s*/, "")}`);
+            lines.push(`- ${b.roleContext ? `**[${b.roleContext}]** ` : ""}${b.tailored.replace(/^[-•*]\s*/, "")}`);
           });
           lines.push("");
         }
@@ -489,8 +376,7 @@ export function ExportTailoredCvDialog({
     if (includeProjects && activeProjects.length > 0) {
       lines.push(`## Key Technical Projects`);
       activeProjects.forEach((proj) => {
-        const techStr = proj.technologies?.length ? ` (${proj.technologies.join(", ")})` : "";
-        lines.push(`### ${proj.title}${techStr}`);
+        lines.push(`### ${proj.title}${proj.technologies?.length ? ` (${proj.technologies.join(", ")})` : ""}`);
         const bullets =
           proj.bullets && proj.bullets.length > 0
             ? proj.bullets
@@ -500,17 +386,14 @@ export function ExportTailoredCvDialog({
                   .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
                   .filter(Boolean)
               : [proj.description];
-        bullets.forEach((b) => {
-          lines.push(`- ${b}`);
-        });
+        bullets.forEach((b) => lines.push(`- ${b}`));
         lines.push("");
       });
     }
 
     if (includeSkills && activeSkills.length > 0) {
       lines.push(`## Core Skills & Technologies`);
-      const skillNames = activeSkills.join(" • ");
-      lines.push(skillNames);
+      lines.push(activeSkills.join(" • "));
       lines.push("");
     }
 
@@ -628,12 +511,12 @@ export function ExportTailoredCvDialog({
                         .split("\n")
                         .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
                         .filter(Boolean)
-                    : [];
+                    : [p.description];
               return {
                 title: p.title,
                 technologies: p.technologies,
-                description: p.description || bullets.join(" "),
-                bullets: bullets.length > 0 ? bullets : [p.description],
+                description: p.description || bullets[0] || "",
+                bullets,
               };
             })
           : [];
@@ -644,10 +527,10 @@ export function ExportTailoredCvDialog({
           candidateEmail={candidateEmail}
           candidateLocation={candidateLocation}
           candidateWebsite={candidateWebsite}
-          candidateGithub={candidateGithub}
           candidateLinkedin={candidateLinkedin}
-          targetRole={application.jobTitle}
+          candidateGithub={candidateGithub}
           targetCompany={application.companyName}
+          targetRole={application.jobTitle || headlineText}
           targetRoleHeadline={headlineText}
           summary={activeSummary}
           experiences={pdfExperiences}
@@ -688,301 +571,27 @@ export function ExportTailoredCvDialog({
       return;
     }
 
-    // Generate semantic, high-contrast HTML tailored for ATS and printing
-    let experiencesHtml = "";
-    if (resumeData?.experiences && resumeData.experiences.length > 0) {
-      experiencesHtml = resumeData.experiences
-        .map((exp) => {
-          const period = formatResumePeriod(exp);
-          const tailored = includeTailoredBullets
-            ? getTailoredBulletsForExperience(exp, activeBullets)
-            : [];
-          const originalBullets = splitDescriptionToBullets(exp.description);
-
-          let bulletsHtml = "";
-          if (tailored.length > 0) {
-            bulletsHtml = `<ul>${tailored.map((b) => `<li>${b.tailored.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>`;
-          } else if (originalBullets.length > 0) {
-            bulletsHtml = `<ul>${originalBullets.map((b) => `<li>${b.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>`;
-          } else if (exp.description) {
-            bulletsHtml = `<p class="summary-text">${exp.description.replace(/^[-•*]\s*/, "")}</p>`;
-          }
-
-          const meta = formatExperienceMeta(exp);
-          return `
-            <div class="experience-item">
-              <div class="exp-header">
-                <div>
-                  <span class="exp-title">${exp.title}</span> —
-                  <span class="exp-company">${exp.organization}</span>
-                </div>
-                <div class="exp-date">${period}</div>
-              </div>
-              ${meta ? `<div class="exp-location">${meta}</div>` : ""}
-              ${bulletsHtml}
-            </div>
-          `;
-        })
-        .join("");
-
-      if (includeTailoredBullets) {
-        const unmatched = getUnmatchedTailoredBullets(
-          resumeData.experiences,
-          activeBullets
-        );
-        if (unmatched.length > 0) {
-          experiencesHtml += `
-            <div class="experience-item">
-              <div class="exp-header">
-                <span class="exp-title">Additional Targeted Accomplishments</span>
-              </div>
-              <ul>${unmatched.map((b) => `<li>${b.roleContext ? `<strong>[${b.roleContext}]</strong> ` : ""}${b.tailored.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>
-            </div>
-          `;
-        }
-      }
-    }
-
-    let projectsHtml = "";
-    if (includeProjects && activeProjects.length > 0) {
-      projectsHtml = `
-        <div class="section-block">
-          <div class="section-title">Key Technical Projects</div>
-          ${activeProjects
-            .map((p) => {
-              const bullets =
-                p.bullets && p.bullets.length > 0
-                  ? p.bullets
-                  : p.description
-                    ? p.description
-                        .split("\n")
-                        .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
-                        .filter(Boolean)
-                    : [p.description];
-              return `
-                <div class="experience-item">
-                  <div class="exp-header">
-                    <div>
-                      <span class="exp-title">${p.title}</span>
-                      ${p.technologies?.length ? ` — <span class="exp-company">${p.technologies.join(" • ")}</span>` : ""}
-                    </div>
-                  </div>
-                  <ul>${bullets.map((b) => `<li>${b}</li>`).join("")}</ul>
-                </div>
-              `;
-            })
-            .join("")}
-        </div>
-      `;
-    }
-
-    let skillsHtml = "";
-    if (includeSkills && activeSkills.length > 0) {
-      skillsHtml = `
-        <div class="section-block">
-          <div class="section-title">Core Skills & Technologies</div>
-          <div class="skills-list">${activeSkills.join(" • ")}</div>
-        </div>
-      `;
-    }
-
-    let educationHtml = "";
-    if (includeEducation && resumeData?.education && resumeData.education.length > 0) {
-      educationHtml = `
-        <div class="section-block">
-          <div class="section-title">Education & Certifications</div>
-          ${resumeData.education
-            .map(
-              (edu) => `
-            <div class="education-item">
-              <div><strong>${edu.title}</strong> — ${edu.organization}</div>
-              <div class="exp-date">${formatResumePeriod(edu)}</div>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-      `;
-    }
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Resume - ${candidateName} (${application.companyName})</title>
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 12mm 15mm;
-            }
-            * {
-              box-sizing: border-box;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            body {
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-              color: #111827;
-              background: #fff;
-              line-height: 1.45;
-              font-size: 10pt;
-              margin: 0;
-              padding: 0;
-            }
-            h1 {
-              font-size: 19pt;
-              font-weight: 800;
-              margin: 0 0 6px 0;
-              line-height: 1.15;
-              color: #111827;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            }
-            .target-role {
-              font-size: 10pt;
-              font-weight: 700;
-              color: #2563eb;
-              margin-bottom: 6px;
-              line-height: 1.25;
-            }
-            .contact-line {
-              font-size: 8.5pt;
-              color: #4b5563;
-              margin-bottom: 12px;
-              border-bottom: 1.5px solid #111827;
-              padding-bottom: 7px;
-              line-height: 1.35;
-            }
-            .section-block {
-              margin-bottom: 12px;
-              page-break-inside: auto;
-            }
-            .section-title {
-              font-size: 10.5pt;
-              font-weight: 800;
-              color: #111827;
-              text-transform: uppercase;
-              letter-spacing: 0.75px;
-              border-bottom: 1px solid #d1d5db;
-              padding-bottom: 2px;
-              margin-top: 10px;
-              margin-bottom: 6px;
-            }
-            .summary-text {
-              font-size: 9.5pt;
-              color: #1f2937;
-              text-align: justify;
-              margin-bottom: 6px;
-              line-height: 1.4;
-            }
-            .experience-item {
-              margin-bottom: 8px;
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-            .exp-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: baseline;
-              font-weight: 700;
-              font-size: 9.5pt;
-              color: #111827;
-            }
-            .exp-title {
-              font-weight: 700;
-              color: #111827;
-            }
-            .exp-company {
-              font-weight: 600;
-              color: #374151;
-            }
-            .exp-location {
-              font-size: 8pt;
-              color: #6b7280;
-              font-style: italic;
-              margin-bottom: 2px;
-            }
-            .exp-date {
-              font-size: 8.5pt;
-              font-weight: 600;
-              color: #4b5563;
-            }
-            ul {
-              margin: 2px 0 4px 0;
-              padding-left: 16px;
-            }
-            li {
-              font-size: 9pt;
-              color: #374151;
-              margin-bottom: 2.5px;
-              line-height: 1.35;
-            }
-            .skills-list {
-              font-size: 9pt;
-              color: #374151;
-              line-height: 1.45;
-            }
-            .education-item {
-              display: flex;
-              justify-content: space-between;
-              align-items: baseline;
-              font-size: 9pt;
-              margin-bottom: 4px;
-              page-break-inside: avoid;
-              break-inside: avoid;
-            }
-          </style>
-        </head>
-        <body>
-          <div>
-            <h1>${candidateName}</h1>
-            ${includeHeadline && headlineText ? `<div class="target-role">${headlineText}</div>` : ""}
-            <div class="contact-line">
-              ${[
-                candidateLocation,
-                `<a href="mailto:${candidateEmail}">${candidateEmail}</a>`,
-                candidateWebsite ? `<a href="${candidateWebsite}" target="_blank">${candidateWebsite.replace(/^https?:\/\/(www\.)?/, "")}</a>` : "",
-                candidateLinkedin ? `<a href="${candidateLinkedin}" target="_blank">${candidateLinkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}</a>` : "",
-                candidateGithub ? `<a href="${candidateGithub}" target="_blank">${candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}</a>` : "",
-              ].filter(Boolean).join(" | ")}
-            </div>
-          </div>
-
-          ${
-            includeTailoredSummary && activeSummary
-              ? `
-            <div class="section-block">
-              <div class="section-title">Professional Summary</div>
-              <p class="summary-text">${activeSummary}</p>
-            </div>
-          `
-              : ""
-          }
-
-          ${
-            experiencesHtml
-              ? `
-            <div class="section-block">
-              <div class="section-title">Work Experience</div>
-              ${experiencesHtml}
-            </div>
-          `
-              : ""
-          }
-
-          ${projectsHtml}
-          ${skillsHtml}
-          ${educationHtml}
-
-          <script>
-            window.onload = function() {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `;
+    const html = generatePrintableCvHtml({
+      candidateName,
+      candidateEmail,
+      candidateLocation,
+      candidateWebsite,
+      candidateLinkedin,
+      candidateGithub,
+      application,
+      headlineText,
+      includeHeadline,
+      activeSummary,
+      includeTailoredSummary,
+      activeBullets,
+      includeTailoredBullets,
+      activeProjects,
+      includeProjects,
+      activeSkills,
+      includeSkills,
+      includeEducation,
+      resumeData,
+    });
 
     printWindow.document.open();
     printWindow.document.write(html);
@@ -1116,7 +725,7 @@ export function ExportTailoredCvDialog({
 
         {/* View Switcher */}
         <div className="px-6 pt-3 flex items-center justify-between border-b border-white/[0.08] bg-[#131726]/40">
-          <Tabs value={formatMode} onValueChange={(v) => setFormatMode(v as "preview" | "markdown")} className="w-full">
+          <Tabs value={formatMode} onValueChange={(v) => setFormatMode(v as "preview" | "edit" | "markdown")} className="w-full">
             <div className="flex items-center justify-between">
               <TabsList className="h-8 bg-[#0C0E18] border border-white/[0.08]">
                 <TabsTrigger value="preview" className="text-xs gap-1.5 px-3 data-[state=active]:bg-[#131726] data-[state=active]:text-white">
@@ -1139,612 +748,65 @@ export function ExportTailoredCvDialog({
 
             {/* TAB CONTENT: PREVIEW */}
             <TabsContent value="preview" className="mt-3 mb-0">
-              <div className="p-6 bg-[#08090C] text-slate-100 rounded-xl border border-white/[0.08] shadow-inner overflow-y-auto max-h-[50vh] font-sans">
-                {/* Print area container */}
-                <div ref={printRef} className="space-y-4 max-w-2xl mx-auto">
-                  {/* Header */}
-                  <div>
-                    <h1 className="text-2xl font-extrabold uppercase tracking-tight text-white mb-1.5">
-                      {candidateName}
-                    </h1>
-                    {includeHeadline && headlineText && (
-                      <div className="text-xs font-semibold text-indigo-400 mb-1.5">
-                        {headlineText}
-                      </div>
-                    )}
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground border-b pb-2 border-white/[0.1]">
-                      <span>{candidateLocation}</span>
-                      <span>|</span>
-                      <a href={`mailto:${candidateEmail}`} className="hover:text-blue-400 transition-colors">
-                        {candidateEmail}
-                      </a>
-                      {candidateWebsite && (
-                        <>
-                          <span>|</span>
-                          <a href={candidateWebsite} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">
-                            {candidateWebsite.replace(/^https?:\/\/(www\.)?/, "")}
-                          </a>
-                        </>
-                      )}
-                      {candidateLinkedin && (
-                        <>
-                          <span>|</span>
-                          <a href={candidateLinkedin} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">
-                            {candidateLinkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "linkedin.com/in/")}
-                          </a>
-                        </>
-                      )}
-                      {candidateGithub && (
-                        <>
-                          <span>|</span>
-                          <a href={candidateGithub} target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">
-                            {candidateGithub.replace(/^https?:\/\/(www\.)?github\.com\//, "github.com/")}
-                          </a>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Summary */}
-                  {includeTailoredSummary && activeSummary && (
-                    <div className="space-y-1">
-                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
-                        Professional Summary
-                      </div>
-                      <p className="text-xs leading-relaxed text-slate-300 pt-1">
-                        {activeSummary}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Work Experience with in-place tailoring */}
-                  {resumeData?.experiences && resumeData.experiences.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
-                        Work Experience
-                      </div>
-                      <div className="space-y-4 pt-1">
-                        {resumeData.experiences.map((exp) => {
-                          const period = formatResumePeriod(exp);
-                          const tailored = includeTailoredBullets
-                            ? getTailoredBulletsForExperience(exp, activeBullets)
-                            : [];
-                          const originalBullets = splitDescriptionToBullets(exp.description);
-
-                          return (
-                            <div key={exp.id} className="space-y-1.5 text-xs">
-                              <div className="flex justify-between font-bold text-slate-200">
-                                <span className="flex items-center gap-2">
-                                  <span>{exp.title} — {exp.organization}</span>
-                                  {tailored.length > 0 && (
-                                    <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                                      AI Tailored
-                                    </span>
-                                  )}
-                                </span>
-                                <span className="text-[11px] font-normal text-muted-foreground font-mono">
-                                  {period}
-                                </span>
-                              </div>
-                              {formatExperienceMeta(exp) ? (
-                                <div className="text-[11px] text-muted-foreground italic">
-                                  {formatExperienceMeta(exp)}
-                                </div>
-                              ) : null}
-                              {tailored.length > 0 ? (
-                                <ul className="list-disc list-inside space-y-1 pt-0.5 text-xs text-slate-300">
-                                  {tailored.map((b, bIdx) => (
-                                    <li key={bIdx} className="leading-relaxed">
-                                      <span>{b.tailored.replace(/^[-•*]\s*/, "")}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : originalBullets.length > 0 ? (
-                                <ul className="list-disc list-inside space-y-1 pt-0.5 text-xs text-slate-300">
-                                  {originalBullets.map((b, bIdx) => (
-                                    <li key={bIdx} className="leading-relaxed">
-                                      <span>{b.replace(/^[-•*]\s*/, "")}</span>
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : exp.description ? (
-                                <p className="text-slate-400 leading-relaxed text-[11px]">
-                                  {exp.description.replace(/^[-•*]\s*/, "")}
-                                </p>
-                              ) : null}
-                            </div>
-                          );
-                        })}
-
-                        {/* Unmatched Targeted Bullets if any */}
-                        {includeTailoredBullets && (() => {
-                          const unmatched = getUnmatchedTailoredBullets(
-                            resumeData.experiences,
-                            activeBullets
-                          );
-                          if (unmatched.length === 0) return null;
-                          return (
-                            <div className="pt-2 space-y-1 border-t border-white/[0.05]">
-                              <div className="text-[11px] font-semibold text-indigo-300">
-                                Additional Targeted Accomplishments
-                              </div>
-                              <ul className="list-disc list-inside space-y-1 text-xs text-slate-300">
-                                {unmatched.map((b, idx) => (
-                                  <li key={idx} className="leading-relaxed">
-                                    {b.roleContext && (
-                                      <span className="font-semibold text-indigo-300">
-                                        [{b.roleContext}]{" "}
-                                      </span>
-                                    )}
-                                    <span>{b.tailored.replace(/^[-•*]\s*/, "")}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Key Technical Projects */}
-                  {includeProjects && activeProjects.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
-                        Key Technical Projects
-                      </div>
-                      <div className="space-y-3 pt-1">
-                        {activeProjects.map((proj, idx) => {
-                          const bullets =
-                            proj.bullets && proj.bullets.length > 0
-                              ? proj.bullets
-                              : proj.description
-                                ? proj.description
-                                    .split("\n")
-                                    .map((s) => s.trim().replace(/^[•\-\*]\s*/, ""))
-                                    .filter(Boolean)
-                                : [proj.description];
-
-                          return (
-                            <div key={idx} className="space-y-1 text-xs">
-                              <div className="flex flex-col gap-y-1 items-baseline font-bold text-slate-200">
-                                <span>{proj.title}</span>
-                                {proj.technologies && proj.technologies.length > 0 && (
-                                  <span className="text-[11px] font-normal text-muted-foreground italic font-mono">
-                                    {proj.technologies.join(" • ")}
-                                  </span>
-                                )}
-                              </div>
-                              <ul className="list-disc list-inside space-y-0.5 text-xs text-slate-300">
-                                {bullets.map((b, bIdx) => (
-                                  <li key={bIdx} className="leading-relaxed">
-                                    {b}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Skills */}
-                  {includeSkills && activeSkills.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
-                        Core Skills & Technologies
-                      </div>
-                      <p className="text-xs text-slate-300 pt-1 leading-relaxed">
-                        {activeSkills.join(" • ")}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Education */}
-                  {includeEducation && resumeData?.education && resumeData.education.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-xs font-bold uppercase tracking-wider text-slate-200 border-b pb-0.5 border-white/[0.08]">
-                        Education & Certifications
-                      </div>
-                      <div className="space-y-1.5 pt-1">
-                        {resumeData.education.map((edu) => (
-                          <div key={edu.id} className="text-xs flex justify-between">
-                            <span className="font-semibold text-slate-200">{edu.title} — {edu.organization}</span>
-                            <span className="text-[11px] text-muted-foreground font-mono">
-                              {formatResumePeriod(edu)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <TailoredCvPreviewTab
+                candidateName={candidateName}
+                candidateEmail={candidateEmail}
+                candidateLocation={candidateLocation}
+                candidateWebsite={candidateWebsite}
+                candidateLinkedin={candidateLinkedin}
+                candidateGithub={candidateGithub}
+                includeHeadline={includeHeadline}
+                headlineText={headlineText}
+                includeTailoredSummary={includeTailoredSummary}
+                activeSummary={activeSummary}
+                includeTailoredBullets={includeTailoredBullets}
+                activeBullets={activeBullets}
+                includeProjects={includeProjects}
+                activeProjects={activeProjects}
+                includeSkills={includeSkills}
+                activeSkills={activeSkills}
+                includeEducation={includeEducation}
+                resumeData={resumeData}
+                printRef={printRef}
+              />
             </TabsContent>
 
             {/* TAB CONTENT: EDIT */}
             <TabsContent value="edit" className="mt-3 mb-0">
-              <div className="p-5 bg-[#08090C] rounded-xl border border-white/[0.08] max-h-[50vh] overflow-y-auto space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
-                  <div>
-                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Live Resume Content Editor</span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Edits here immediately update the ATS Document Preview, Markdown, and printed PDF.
-                    </p>
-                  </div>
-                  {onUpdate && (
-                    <Button
-                      size="sm"
-                      disabled={isSavingDialog}
-                      onClick={handleSaveDialogChanges}
-                      className="text-xs h-8 px-3.5 bg-primary text-white font-bold gap-1.5 shadow-md shadow-primary/20 shrink-0"
-                    >
-                      {isSavingDialog ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                      <span>Save to Application</span>
-                    </Button>
-                  )}
-                </div>
-
-                {/* Headline Editor */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Role Title / Headline</span>
-                    </label>
-                    <span className="text-[11px] text-muted-foreground">
-                      Displays below name (or toggle off in toolbar)
-                    </span>
-                  </div>
-                  <Input
-                    value={headlineText}
-                    onChange={(e) => setHeadlineText(e.target.value)}
-                    placeholder="e.g. Frontend Engineer or Senior Frontend Engineer"
-                    className="h-8 text-xs bg-[#0C0E18] border-white/[0.1] text-indigo-300 font-semibold"
-                  />
-                </div>
-
-                {/* Summary Editor */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-primary" />
-                    <span>Professional Summary</span>
-                  </label>
-                  <Textarea
-                    value={activeSummary}
-                    onChange={(e) => setActiveSummary(e.target.value)}
-                    rows={4}
-                    className="bg-[#0C0E18] border-white/[0.1] text-xs text-white resize-y font-sans leading-relaxed"
-                    placeholder="Edit professional summary..."
-                  />
-                </div>
-
-                {/* Bullets Editor */}
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                        <span>In-Place Experience Bullets (XYZ Method)</span>
-                      </label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Customized achievements replacing roles in your work experience
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddDialogBullet}
-                      className="text-xs h-7 gap-1 border-dashed border-white/[0.15] bg-white/[0.02] text-gray-300 hover:text-white"
-                    >
-                      <Plus className="w-3 h-3 text-primary" />
-                      <span>Add Bullet</span>
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {activeBullets.map((bullet, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3.5 rounded-xl border border-white/[0.08] bg-[#0C0E18] space-y-2 text-xs"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <Input
-                            value={bullet.roleContext || ""}
-                            onChange={(e) => handleUpdateDialogBullet(idx, "roleContext", e.target.value)}
-                            placeholder="Target Role / Company (e.g. Senior Software Engineer at Kick Avenue)"
-                            className="h-7 text-xs bg-[#08090C] border-white/[0.1] text-indigo-300 font-semibold"
-                          />
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteDialogBullet(idx)}
-                            className="h-7 w-7 p-0 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 shrink-0"
-                            title="Delete bullet"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                        <Textarea
-                          value={bullet.tailored}
-                          onChange={(e) => handleUpdateDialogBullet(idx, "tailored", e.target.value)}
-                          rows={2}
-                          placeholder="Accomplished [X] as measured by [Y] by doing [Z]..."
-                          className="text-xs bg-[#08090C] border-white/[0.08] text-white resize-y"
-                        />
-                        <Input
-                          value={bullet.rationale || ""}
-                          onChange={(e) => handleUpdateDialogBullet(idx, "rationale", e.target.value)}
-                          placeholder="JD Alignment Rationale (optional)"
-                          className="h-7 text-[11px] bg-[#08090C] border-white/[0.06] text-gray-400 italic"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Projects Editor */}
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                        <Code className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>Key Technical Projects</span>
-                      </label>
-                      <p className="text-[11px] text-muted-foreground">
-                        Showcase independent platforms, architecture, and systems (never duplicate employer companies)
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddDialogProject}
-                      className="text-xs h-7 gap-1 border-dashed border-white/[0.15] bg-white/[0.02] text-gray-300 hover:text-white"
-                    >
-                      <Plus className="w-3 h-3 text-primary" />
-                      <span>Add Project</span>
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {activeProjects.map((proj, idx) => {
-                      const bullets =
-                        proj.bullets && proj.bullets.length > 0
-                          ? proj.bullets
-                          : proj.description
-                            ? [proj.description]
-                            : [""];
-
-                      return (
-                        <div
-                          key={idx}
-                          className="p-3.5 rounded-xl border border-white/[0.08] bg-[#0C0E18] space-y-2.5 text-xs"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <Input
-                              value={proj.title}
-                              onChange={(e) => handleUpdateDialogProject(idx, "title", e.target.value)}
-                              placeholder="Project Title (e.g. wismannur.pro — Autonomous AI Fullstack Platform)"
-                              className="h-7 text-xs bg-[#08090C] border-white/[0.1] text-indigo-300 font-semibold"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteDialogProject(idx)}
-                              className="h-7 w-7 p-0 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 shrink-0"
-                              title="Delete project"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={(proj.technologies || []).join(", ")}
-                            onChange={(e) =>
-                              handleUpdateDialogProject(
-                                idx,
-                                "technologies",
-                                e.target.value.split(",").map((s) => s.trim()).filter(Boolean)
-                              )
-                            }
-                            placeholder="Technologies (comma separated, e.g. Next.js 16, React 19, Neon PostgreSQL)"
-                            className="h-7 text-xs bg-[#08090C] border-white/[0.08] text-amber-300/90 font-mono"
-                          />
-
-                          <div className="space-y-2 pt-1 border-t border-white/[0.05]">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[11px] font-semibold text-slate-300">
-                                Architectural Bullets ({bullets.length})
-                              </span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleAddProjectBullet(idx)}
-                                className="text-[10px] h-6 px-2 text-indigo-300 hover:text-white gap-1"
-                              >
-                                <Plus className="w-2.5 h-2.5" /> Add Bullet
-                              </Button>
-                            </div>
-
-                            <div className="space-y-2">
-                              {bullets.map((bullet, bIdx) => (
-                                <div key={bIdx} className="flex items-start gap-1.5">
-                                  <Textarea
-                                    value={bullet}
-                                    onChange={(e) => handleUpdateProjectBullet(idx, bIdx, e.target.value)}
-                                    rows={2}
-                                    className="text-xs bg-[#08090C] border-white/[0.08] text-white resize-y flex-1"
-                                    placeholder={`Architectural bullet ${bIdx + 1}...`}
-                                  />
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleDeleteProjectBullet(idx, bIdx)}
-                                    className="h-7 w-7 p-0 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 shrink-0"
-                                    title="Delete bullet"
-                                    disabled={bullets.length <= 1}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Core Skills & Technologies Editor */}
-                <div className="space-y-3 pt-3 border-t border-white/[0.08]">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                        <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Core Skills & Technologies (Tailored by JD Tech Stack)</span>
-                      </label>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Automatically prioritized by job description keyword alignment. Reorder or customize specifically for this application.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleResetSkillsToJd}
-                        className="text-xs h-7 gap-1 border-white/[0.1] bg-white/[0.02] text-gray-300 hover:text-white hover:bg-white/[0.06]"
-                        title="Re-sort skills based on Job Description & Requirements"
-                      >
-                        <RotateCcw className="w-3 h-3 text-amber-400" />
-                        <span>Re-sort by JD</span>
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Add skill and metrics bar */}
-                  <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
-                    <div className="flex-1 flex items-center gap-1.5">
-                      <Input
-                        value={newSkillInput}
-                        onChange={(e) => setNewSkillInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            handleAddCustomSkill();
-                          }
-                        }}
-                        placeholder="Add skill (e.g. Apache Kafka, Turborepo)..."
-                        className="h-7 text-xs bg-[#0C0E18] border-white/[0.1] text-white flex-1 placeholder:text-gray-500"
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleAddCustomSkill}
-                        disabled={!newSkillInput.trim()}
-                        className="h-7 text-xs px-2.5 bg-emerald-600 hover:bg-emerald-500 text-white gap-1 shrink-0"
-                      >
-                        <Plus className="w-3 h-3" />
-                        <span>Add</span>
-                      </Button>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground self-center px-1">
-                      <span className="flex items-center gap-1 text-emerald-400 font-medium">
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        {activeSkills.filter((s) => matchedSkillNamesSet.has(s.toLowerCase().trim())).length} Matched JD
-                      </span>
-                      <span>•</span>
-                      <span>{activeSkills.length} Total</span>
-                    </div>
-                  </div>
-
-                  {/* Skills Chip List with reordering */}
-                  <div className="p-3 bg-[#0C0E18] rounded-xl border border-white/[0.08] flex flex-wrap gap-1.5 max-h-56 overflow-y-auto">
-                    {activeSkills.length === 0 ? (
-                      <p className="text-xs text-muted-foreground italic py-2">
-                        No skills selected. Click &quot;Re-sort by JD&quot; or add custom skills above.
-                      </p>
-                    ) : (
-                      activeSkills.map((skillName, idx) => {
-                        const isMatched = matchedSkillNamesSet.has(skillName.toLowerCase().trim());
-                        const rankInfo = rankedSkillsMap.get(skillName.toLowerCase().trim());
-                        const reasonLabel = rankInfo?.matchReasons?.length
-                          ? rankInfo.matchReasons.join(", ")
-                          : isMatched
-                            ? "Matched in JD"
-                            : "Supporting Skill";
-
-                        return (
-                          <div
-                            key={`${skillName}-${idx}`}
-                            className={`group flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs transition-colors ${
-                              isMatched
-                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
-                                : "bg-white/[0.03] border-white/[0.08] text-slate-300 hover:border-white/[0.18]"
-                            }`}
-                          >
-                            <span className="font-medium">{skillName}</span>
-                            {isMatched && (
-                              <span
-                                className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono ml-0.5"
-                                title={reasonLabel}
-                              >
-                                Match
-                              </span>
-                            )}
-                            <div className="flex items-center gap-0.5 ml-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                              <button
-                                type="button"
-                                disabled={idx === 0}
-                                onClick={() => handleMoveSkill(idx, "left")}
-                                className="p-0.5 hover:text-white text-slate-400 disabled:opacity-20 disabled:hover:text-slate-400"
-                                title="Move earlier in CV"
-                              >
-                                <ChevronLeft className="w-3 h-3" />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={idx === activeSkills.length - 1}
-                                onClick={() => handleMoveSkill(idx, "right")}
-                                className="p-0.5 hover:text-white text-slate-400 disabled:opacity-20 disabled:hover:text-slate-400"
-                                title="Move later in CV"
-                              >
-                                <ChevronRight className="w-3 h-3" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveSkill(idx)}
-                                className="p-0.5 hover:text-rose-400 text-slate-400 ml-0.5"
-                                title="Remove skill from tailored export"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              </div>
+              <TailoredCvEditTab
+                hasUpdateHandler={Boolean(onUpdate)}
+                isSavingDialog={isSavingDialog}
+                onSaveDialogChanges={handleSaveDialogChanges}
+                headlineText={headlineText}
+                setHeadlineText={setHeadlineText}
+                activeSummary={activeSummary}
+                setActiveSummary={setActiveSummary}
+                activeBullets={activeBullets}
+                onAddBullet={handleAddDialogBullet}
+                onUpdateBullet={handleUpdateDialogBullet}
+                onDeleteBullet={handleDeleteDialogBullet}
+                activeProjects={activeProjects}
+                onAddProject={handleAddDialogProject}
+                onUpdateProject={handleUpdateDialogProject}
+                onDeleteProject={handleDeleteDialogProject}
+                onAddProjectBullet={handleAddProjectBullet}
+                onUpdateProjectBullet={handleUpdateProjectBullet}
+                onDeleteProjectBullet={handleDeleteProjectBullet}
+                activeSkills={activeSkills}
+                matchedSkillNamesSet={matchedSkillNamesSet}
+                rankedSkillsMap={rankedSkillsMap}
+                newSkillInput={newSkillInput}
+                setNewSkillInput={setNewSkillInput}
+                onAddCustomSkill={handleAddCustomSkill}
+                onResetSkillsToJd={handleResetSkillsToJd}
+                onMoveSkill={handleMoveSkill}
+                onRemoveSkill={handleRemoveSkill}
+              />
             </TabsContent>
 
             {/* TAB CONTENT: MARKDOWN */}
             <TabsContent value="markdown" className="mt-3 mb-0">
-              <div className="p-4 bg-[#08090C] rounded-xl border border-white/[0.08] max-h-[50vh] overflow-y-auto">
-                <pre className="text-xs font-mono text-indigo-300 whitespace-pre-wrap leading-relaxed">
-                  {markdownCv}
-                </pre>
-              </div>
+              <TailoredCvMarkdownTab markdownCv={markdownCv} />
             </TabsContent>
           </Tabs>
         </div>
