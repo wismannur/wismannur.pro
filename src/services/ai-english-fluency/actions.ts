@@ -17,11 +17,98 @@ import {
   revalidateEnglishHubs,
 } from "./helpers";
 
-// Re-export all sub-domain actions so existing consumers don't break
-export * from "./vocab-actions";
-export * from "./audio-actions";
-export * from "./curriculum-actions";
-export * from "./analytics-actions";
+import * as vocabActions from "./vocab-actions";
+import * as audioActions from "./audio-actions";
+import * as curriculumActions from "./curriculum-actions";
+import * as analyticsActions from "./analytics-actions";
+
+// Vocab actions
+export async function getEnglishVocabularies(
+  ...args: Parameters<typeof vocabActions.getEnglishVocabularies>
+) {
+  return vocabActions.getEnglishVocabularies(...args);
+}
+
+export async function toggleVocabMastery(
+  ...args: Parameters<typeof vocabActions.toggleVocabMastery>
+) {
+  return vocabActions.toggleVocabMastery(...args);
+}
+
+export async function deleteVocab(
+  ...args: Parameters<typeof vocabActions.deleteVocab>
+) {
+  return vocabActions.deleteVocab(...args);
+}
+
+export async function generateQuickVocabularies(
+  ...args: Parameters<typeof vocabActions.generateQuickVocabularies>
+) {
+  return vocabActions.generateQuickVocabularies(...args);
+}
+
+export async function saveCustomVocab(
+  ...args: Parameters<typeof vocabActions.saveCustomVocab>
+) {
+  return vocabActions.saveCustomVocab(...args);
+}
+
+export async function regenerateVocabExample(
+  ...args: Parameters<typeof vocabActions.regenerateVocabExample>
+) {
+  return vocabActions.regenerateVocabExample(...args);
+}
+
+// Audio actions
+export async function getNeuralSpeechAudio(
+  ...args: Parameters<typeof audioActions.getNeuralSpeechAudio>
+) {
+  return audioActions.getNeuralSpeechAudio(...args);
+}
+
+export async function transcribeSpokenAudio(
+  ...args: Parameters<typeof audioActions.transcribeSpokenAudio>
+) {
+  return audioActions.transcribeSpokenAudio(...args);
+}
+
+export async function synthesizeDialogueLine(
+  ...args: Parameters<typeof audioActions.synthesizeDialogueLine>
+) {
+  return audioActions.synthesizeDialogueLine(...args);
+}
+
+// Curriculum actions
+export async function getCurriculumTracksWithProgress(
+  ...args: Parameters<typeof curriculumActions.getCurriculumTracksWithProgress>
+) {
+  return curriculumActions.getCurriculumTracksWithProgress(...args);
+}
+
+export async function evaluateCurriculumRolePlay(
+  ...args: Parameters<typeof curriculumActions.evaluateCurriculumRolePlay>
+) {
+  return curriculumActions.evaluateCurriculumRolePlay(...args);
+}
+
+export async function submitCurriculumLessonProgress(
+  ...args: Parameters<typeof curriculumActions.submitCurriculumLessonProgress>
+) {
+  return curriculumActions.submitCurriculumLessonProgress(...args);
+}
+
+export async function generateStaffPushback(
+  ...args: Parameters<typeof curriculumActions.generateStaffPushback>
+) {
+  return curriculumActions.generateStaffPushback(...args);
+}
+
+// Analytics actions
+export async function getEnglishAnalyticsReport(
+  ...args: Parameters<typeof analyticsActions.getEnglishAnalyticsReport>
+) {
+  return analyticsActions.getEnglishAnalyticsReport(...args);
+}
 
 const {
   aiEnglishSessions,

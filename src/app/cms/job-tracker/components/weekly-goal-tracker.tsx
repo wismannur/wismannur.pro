@@ -3,25 +3,23 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Plus,
   Target,
   Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { getStartOfIsoWeek, isApplicationInActiveInterview } from "@/lib/job-tracker";
 import { userService } from "@/services";
 import type { JobApplication } from "@/services/job-tracker/types";
 
 interface WeeklyGoalTrackerProps {
   applications: JobApplication[];
-  onAddJobClick: () => void;
+  onAddJobClick?: () => void;
 }
 
 const STORAGE_KEY = "career_hub_weekly_target";
 
-export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTrackerProps) {
+export function WeeklyGoalTracker({ applications, onAddJobClick: _onAddJobClick }: WeeklyGoalTrackerProps) {
   const queryClient = useQueryClient();
 
   const { data: userSettings } = useQuery({
