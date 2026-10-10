@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -60,6 +60,7 @@ const STAGE_STEPPER: { status: JobApplicationStatus; label: string }[] = [
 ];
 
 export function JobApplicationDetail({ initialId }: { initialId: string }) {
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const defaultTab = searchParams.get("tab") || "tailor";
 
@@ -113,6 +114,8 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
     try {
       await jobTrackerService.updateStatus(application.id, newStatus);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["jobApplications"] });
+      queryClient.invalidateQueries({ queryKey: ["jobTrackerAnalytics"] });
       toast.success(`Status updated to ${JOB_STATUS_CONFIG[newStatus].label}`);
     } catch (error) {
       console.error("Failed to update status:", error);
@@ -133,6 +136,8 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
         notes: updatedNotes,
       });
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["jobApplications"] });
+      queryClient.invalidateQueries({ queryKey: ["jobTrackerAnalytics"] });
       toast.success(
         `Post-mortem saved and status updated to ${JOB_STATUS_CONFIG[targetStatus].label}`
       );
@@ -151,6 +156,8 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
       await jobTrackerService.update(application.id, formData);
       setFormData({});
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["jobApplications"] });
+      queryClient.invalidateQueries({ queryKey: ["jobTrackerAnalytics"] });
       toast.success("Job application updated successfully!");
     } catch (error) {
       console.error("Save error:", error);
@@ -165,6 +172,8 @@ export function JobApplicationDetail({ initialId }: { initialId: string }) {
     try {
       await jobTrackerService.update(application.id, updated);
       refetch();
+      queryClient.invalidateQueries({ queryKey: ["jobApplications"] });
+      queryClient.invalidateQueries({ queryKey: ["jobTrackerAnalytics"] });
     } catch (error) {
       console.error("Failed to update application:", error);
       toast.error("Failed to save changes");

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -76,6 +77,7 @@ const FUNNEL_STEPPER: { status: ProjectProspectStatus; label: string }[] = [
 
 export function ProspectDetail({ initialProspect }: { initialProspect: ProjectProspect }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState<ProjectProspect>(initialProspect);
   const [activeTab, setActiveTab] = useState("audit");
   const [isSaving, setIsSaving] = useState(false);
@@ -118,6 +120,7 @@ export function ProspectDetail({ initialProspect }: { initialProspect: ProjectPr
       });
 
       setFormData(updated);
+      queryClient.invalidateQueries({ queryKey: ["projectProspects"] });
       toast.success("Prospect changes saved!");
     } catch (error) {
       console.error(error);
@@ -131,6 +134,7 @@ export function ProspectDetail({ initialProspect }: { initialProspect: ProjectPr
     try {
       setIsDeleting(true);
       await deleteProspect(formData.id);
+      queryClient.invalidateQueries({ queryKey: ["projectProspects"] });
       toast.success(`${formData.companyName} removed from pipeline.`);
       router.push("/cms/project-tracker");
     } catch (error) {

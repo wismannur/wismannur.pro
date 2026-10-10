@@ -16,6 +16,8 @@ export default function CmsLegalPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cmsSitePages"],
     queryFn: () => sitePagesService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   useRegisterCmsPageContext({

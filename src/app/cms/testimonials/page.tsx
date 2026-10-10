@@ -68,6 +68,8 @@ export default function CmsTestimonialsPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cmsTestimonials"],
     queryFn: () => testimonialsService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const allTestimonials = useMemo(() => data ?? [], [data]);

@@ -238,6 +238,8 @@ export default function ContactDetailPage() {
       // Auto mark as read if new
       if (data.status === "new") {
         await contactService.updateStatus(contactId, "read");
+        data.status = "read";
+        queryClient.invalidateQueries({ queryKey: ["contacts"] });
       }
       return data;
     },

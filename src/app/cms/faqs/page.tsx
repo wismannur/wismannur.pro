@@ -68,6 +68,8 @@ export default function CmsFaqsPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cmsFaqs"],
     queryFn: () => faqsService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const [prevFilters, setPrevFilters] = useState({ searchQuery, filterStatus });
