@@ -117,6 +117,8 @@ export default function ProjectOutreachesPage() {
   } = useQuery({
     queryKey: ["projectProspects"],
     queryFn: () => projectFinderService.getAll(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const outreachProspects = useMemo(() => {

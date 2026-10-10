@@ -74,11 +74,15 @@ export default function JobTrackerPage() {
   } = useQuery({
     queryKey: ["jobApplications"],
     queryFn: () => jobTrackerService.getAll(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const { data: analytics, refetch: refetchAnalytics } = useQuery({
     queryKey: ["jobTrackerAnalytics"],
     queryFn: () => jobTrackerService.getAnalytics(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const handleRefresh = async () => {

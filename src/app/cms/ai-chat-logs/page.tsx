@@ -63,6 +63,8 @@ export default function CmsAiChatLogsPage() {
   } = useQuery({
     queryKey: ["cms-ai-chat-sessions", searchQuery],
     queryFn: () => getAiChatSessions(searchQuery || undefined),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   // Expose live rendered sessions to CMS Copilot

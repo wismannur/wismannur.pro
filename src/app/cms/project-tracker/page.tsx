@@ -85,6 +85,8 @@ export default function ProjectTrackerPage() {
   } = useQuery({
     queryKey: ["projectProspects"],
     queryFn: () => projectFinderService.getAll(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const handleRefresh = async () => {

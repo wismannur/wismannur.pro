@@ -31,6 +31,8 @@ export default function CmsPagesPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cmsPageCopy"],
     queryFn: () => pageCopyService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   // Filter out any obsolete entries not corresponding to active public pages (e.g. legacy offers)
