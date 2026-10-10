@@ -112,6 +112,8 @@ export default function HireRequestDetailPage() {
       if (!data) throw new Error("Hire inquiry not found");
       if (data.status === "new") {
         await hireRequestService.updateStatus(requestId, "reviewed");
+        data.status = "reviewed";
+        queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
       }
       return data;
     },

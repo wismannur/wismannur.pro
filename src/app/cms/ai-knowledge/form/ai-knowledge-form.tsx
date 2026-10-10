@@ -6,6 +6,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Save,
   Loader2,
@@ -169,6 +170,7 @@ type KnowledgeFormValues = z.infer<typeof knowledgeFormSchema>;
 
 export function AiKnowledgeForm() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useParams<{ id?: string }>();
   const id = params?.id;
   const isEditMode = Boolean(id);
@@ -317,6 +319,9 @@ export function AiKnowledgeForm() {
         });
         toast.success("Knowledge item created successfully.");
       }
+
+      queryClient.invalidateQueries({ queryKey: ["cms-ai-knowledge-items"] });
+      queryClient.invalidateQueries({ queryKey: ["aiKnowledgeItems"] });
 
       router.push("/cms/ai-knowledge");
     } catch (error) {

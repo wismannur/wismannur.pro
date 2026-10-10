@@ -310,6 +310,8 @@ export default function ServiceRequestDetailPage() {
       // Auto mark as in-progress if new
       if (data.status === "new") {
         await serviceRequestService.updateStatus(requestId, "in-progress");
+        data.status = "in-progress";
+        queryClient.invalidateQueries({ queryKey: ["serviceRequests"] });
       }
       return data;
     },
