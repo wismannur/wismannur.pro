@@ -1,4 +1,4 @@
-import { API_CONFIG, APP_CONFIG } from "@/constants/app";
+import { API_CONFIG } from "@/constants/app";
 import { QueryClient } from "@tanstack/react-query";
 
 // The only client is the one `Providers` mounts. Never export a module-level
@@ -9,7 +9,8 @@ export function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: APP_CONFIG.STALE_TIME,
+        staleTime: 0,
+        refetchOnMount: "always",
         retry: API_CONFIG.RETRY_ATTEMPTS,
         refetchOnWindowFocus: false,
         refetchOnReconnect: true,
