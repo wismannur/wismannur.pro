@@ -12,6 +12,8 @@ export type Contact = {
   email: string;
   subject: string;
   message: string;
+  rawHtml?: string | null;
+  messageId?: string | null;
   status: "new" | "read" | "replied" | "archived";
   createdAt: Date;
 };

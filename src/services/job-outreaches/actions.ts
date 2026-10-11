@@ -66,6 +66,7 @@ const toJobOutreachMessage = (row: JobOutreachMessageRow): JobOutreachMessage =>
   senderEmail: row.senderEmail,
   message: row.message,
   messageId: row.messageId ?? undefined,
+  rawHtml: row.rawHtml ?? undefined,
   createdAt: row.createdAt,
 });
 
