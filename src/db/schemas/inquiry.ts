@@ -33,6 +33,7 @@ export const contacts = pgTable("contacts", {
   message: text("message").notNull(),
   status: contactStatus("status").notNull().default("new"),
   messageId: text("message_id"),
+  rawHtml: text("raw_html"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -85,6 +86,7 @@ export const inquiryMessages = pgTable("inquiry_messages", {
   senderEmail: text("sender_email").notNull(),
   message: text("message").notNull(),
   messageId: text("message_id"),
+  rawHtml: text("raw_html"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

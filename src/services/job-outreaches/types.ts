@@ -21,6 +21,7 @@ export interface JobOutreachMessage {
   senderName: string;
   senderEmail: string;
   message: string;
+  rawHtml?: string | null;
   messageId?: string;
   createdAt: Date;
 }

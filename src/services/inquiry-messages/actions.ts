@@ -46,6 +46,7 @@ export async function getThreadMessages(inquiryId: string): Promise<InquiryMessa
     senderEmail: row.senderEmail,
     message: row.message,
     messageId: row.messageId ?? undefined,
+    rawHtml: row.rawHtml ?? undefined,
     createdAt: row.createdAt,
   }));
 }
