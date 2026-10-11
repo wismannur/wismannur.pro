@@ -204,6 +204,13 @@
       "when": 1791307000000,
       "tag": "0028_careful_career_hub_links",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791683475393,
+      "tag": "0029_next_the_hood",
+      "breakpoints": true
     }
   ]
 }
