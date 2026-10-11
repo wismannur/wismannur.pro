@@ -163,6 +163,36 @@ export function useHeroConsole() {
     window.addEventListener("mouseup", handleMouseUp);
   };
 
+  const handleTouchStartResizeConsole = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    isDraggingConsoleRef.current = true;
+    dragConsoleStartYRef.current = e.touches[0].clientY;
+    startConsoleHeightRef.current = consoleHeight;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!isDraggingConsoleRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
+      const deltaY = moveEvent.touches[0].clientY - dragConsoleStartYRef.current;
+      const minHeight = 380;
+      const maxHeight = Math.min(900, Math.floor(window.innerHeight * 0.85));
+      const newHeight = Math.min(Math.max(startConsoleHeightRef.current + deltaY, minHeight), maxHeight);
+      setConsoleHeight(newHeight);
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingConsoleRef.current = false;
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
+  };
+
   useEffect(() => {
     if (userConsoleHeight !== null) {
       try {
@@ -198,6 +228,35 @@ export function useHeroConsole() {
 
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const handleTouchStartOnResize = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    isDraggingInputRef.current = true;
+    dragStartYRef.current = e.touches[0].clientY;
+    startHeightRef.current = inputHeight;
+
+    const handleTouchMove = (moveEvent: TouchEvent) => {
+      if (!isDraggingInputRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
+      const deltaY = dragStartYRef.current - moveEvent.touches[0].clientY;
+      const maxHeight = 300;
+      const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 44), maxHeight);
+      setInputHeight(newHeight);
+    };
+
+    const handleTouchEnd = () => {
+      isDraggingInputRef.current = false;
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
+    };
+
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   // Sync with localStorage
@@ -401,7 +460,9 @@ export function useHeroConsole() {
     consoleHeight,
     inputHeight,
     handleMouseDownResizeConsole,
+    handleTouchStartResizeConsole,
     handleMouseDownOnResize,
+    handleTouchStartOnResize,
     handleReset,
     handleSendMessage,
   };
