@@ -71,6 +71,8 @@ import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 import { ScrollToTop } from "./scroll-to-top";
 import { CmsCopilotPanel } from "@/components/cms/copilot/cms-copilot-panel";
+import { CmsNotificationCenter } from "@/components/cms/notifications/cms-notification-center";
+import { useEmailNotifications } from "@/hooks/use-email-notifications";
 
 interface CmsLayoutProps {
   children: React.ReactNode;
@@ -93,6 +95,7 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { counts } = useEmailNotifications();
 
   // Handle window resize for initial responsiveness
   useEffect(() => {
@@ -322,6 +325,21 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 
+  const getBadgeCountForPath = (path: string): number => {
+    switch (path) {
+      case "/cms/contacts":
+        return counts.contacts;
+      case "/cms/services":
+        return counts.serviceRequests;
+      case "/cms/hire-requests":
+        return counts.hireRequests;
+      case "/cms/job-outreaches":
+        return counts.jobOutreaches;
+      default:
+        return 0;
+    }
+  };
+
   const renderNavigationItems = () => {
     return navigationItems.map((group, index) => (
       <div key={group.group} className="px-2">
@@ -334,11 +352,12 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
             <SidebarMenu className="space-y-0.5">
               {group.items.map((item) => {
                 const active = isItemActive(item.path);
+                const badgeCount = getBadgeCountForPath(item.path);
                 return (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       asChild
-                      tooltip={item.label}
+                      tooltip={badgeCount > 0 ? `${item.label} (${badgeCount} new)` : item.label}
                       className={cn(
                         "h-9 px-3 rounded-xl text-xs font-medium transition-all duration-200",
                         active
@@ -346,11 +365,25 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
                           : "text-gray-300 hover:text-white hover:bg-white/[0.06]"
                       )}
                     >
-                      <Link href={item.path} className="flex items-center gap-2.5">
-                        <span className={cn("shrink-0", active ? "text-white" : "text-primary/90")}>
-                          {item.icon}
-                        </span>
-                        <span className="truncate">{item.label}</span>
+                      <Link href={item.path} className="flex items-center justify-between w-full gap-2 min-w-0">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className={cn("shrink-0", active ? "text-white" : "text-primary/90")}>
+                            {item.icon}
+                          </span>
+                          <span className="truncate">{item.label}</span>
+                        </div>
+                        {badgeCount > 0 && (
+                          <span
+                            className={cn(
+                              "shrink-0 flex items-center justify-center text-[10px] font-black h-4.5 min-w-4.5 px-1.5 rounded-full transition-transform",
+                              active
+                                ? "bg-white text-primary shadow-sm"
+                                : "bg-rose-500/20 text-rose-400 border border-rose-500/35 shadow-sm shadow-rose-500/20"
+                            )}
+                          >
+                            {badgeCount > 99 ? "99+" : badgeCount}
+                          </span>
+                        )}
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -435,6 +468,9 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
 
             {/* Right: Actions (Search, Live Site, Profile Dropdown) */}
             <div className="flex items-center gap-2.5">
+              {/* Global Email Notification Center */}
+              <CmsNotificationCenter />
+
               {/* View Live Site Button */}
               <Button
                 variant="outline"

@@ -23,6 +23,7 @@ export { inquiryMessagesService } from "./inquiry-messages";
 export { aiKnowledgeService } from "./ai-knowledge";
 export { jobDiscoveryService, atsDirectService } from "./job-discovery";
 export { projectFinderService } from "./project-finder";
+export { notificationService } from "./notifications";
 
 // Export all domain types
 export * from "./availability/types";
@@ -49,3 +50,4 @@ export * from "./ai-knowledge/types";
 export * from "./job-discovery/types";
 export * from "./project-finder/types";
 export * from "./frontend-mastery/types";
+export * from "./notifications/types";
