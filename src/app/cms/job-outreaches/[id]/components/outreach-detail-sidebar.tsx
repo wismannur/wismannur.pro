@@ -219,19 +219,19 @@ export function OutreachDetailSidebar({
         <CardContent className="p-4 space-y-3 text-xs">
           {isEditingNotes ? (
             <div className="space-y-2.5">
-              <div className="relative flex flex-col">
+              <div className="relative flex flex-col rounded-xl border border-white/[0.08] bg-[#131726] overflow-hidden focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all shadow-inner">
                 <Textarea
                   style={{ height: `${detailNotesHeight}px` }}
                   placeholder="Tulis catatan internal di sini (mis: info referal kenalan, poin negosiasi, catatan interview)..."
                   value={editedNotes}
                   onChange={(e) => setEditedNotes(e.target.value)}
-                  className="font-sans text-xs leading-relaxed bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-500 resize-none focus-visible:ring-indigo-500/30"
+                  className="w-full font-sans text-xs leading-relaxed resize-none rounded-none border-0 bg-transparent text-slate-200 placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2 overflow-y-auto scrollbar-thin"
                   disabled={isSavingNotes}
                 />
                 <div
                   onMouseDown={handleMouseDownResize}
                   onTouchStart={handleTouchStartResize}
-                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center hover:bg-white/[0.04] transition-colors select-none mt-1 z-10"
+                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                   title="Drag down to resize internal notes"
                 >
                   <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-amber-400 group-hover:w-16 transition-all duration-200" />

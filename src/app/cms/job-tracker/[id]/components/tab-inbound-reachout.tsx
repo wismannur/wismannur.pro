@@ -86,6 +86,9 @@ export function TabInboundReachout({ application, onUpdate }: TabInboundReachout
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingMessageRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragMessageStartYRef.current;
       const maxHeight = Math.min(800, Math.floor(window.innerHeight * 0.85));
       const newHeight = Math.min(Math.max(startMessageHeightRef.current + deltaY, 90), maxHeight);
@@ -96,10 +99,12 @@ export function TabInboundReachout({ application, onUpdate }: TabInboundReachout
       isDraggingMessageRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   const drafts: InboundReachoutReplyDraft[] = reachout.replyDrafts || [];
@@ -298,7 +303,7 @@ export function TabInboundReachout({ application, onUpdate }: TabInboundReachout
               <div
                 onMouseDown={handleMouseDownMessageResize}
                 onTouchStart={handleTouchStartMessageResize}
-                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                 title="Drag handle to resize recruiter message"
               >
                 <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
