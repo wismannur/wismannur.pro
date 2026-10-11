@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Copy,
   Eye,
+  FileText,
   GripHorizontal,
   Inbox,
   Loader2,
@@ -30,6 +31,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { EmailHtmlViewer } from "@/components/cms/email-html-viewer";
+import { LinkifiedText } from "@/components/cms/linkified-text";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 
 import {
@@ -75,6 +78,8 @@ export default function ContactDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [viewFormat, setViewFormat] = useState<"html" | "clean">("html");
+  const [expandedMsgHtmlIds, setExpandedMsgHtmlIds] = useState<string[]>([]);
 
   // Resizable Reply Textarea (similar to CMS Staff Copilot)
   const [replyInputHeight, setReplyInputHeight] = useState<number>(140);
@@ -238,6 +243,8 @@ export default function ContactDetailPage() {
       // Auto mark as read if new
       if (data.status === "new") {
         await contactService.updateStatus(contactId, "read");
+        data.status = "read";
+        queryClient.invalidateQueries({ queryKey: ["contacts"] });
       }
       return data;
     },
@@ -367,7 +374,7 @@ export default function ContactDetailPage() {
 
   if (isContactLoading) {
     return (
-      <div className="space-y-6 max-w-6xl pb-12">
+      <div className="space-y-6 max-w-full pb-12">
         <div className="flex items-center gap-3">
           <Skeleton className="h-9 w-36 rounded-xl bg-white/[0.05]" />
         </div>
@@ -412,7 +419,7 @@ export default function ContactDetailPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl pb-12">
+    <div className="space-y-6 max-w-full pb-12">
       {/* Top Bar Navigation & Status Controls */}
       <div className="flex flex-col sm:flex-row justify-between gap-3 items-start sm:items-center">
         <Button
@@ -513,20 +520,64 @@ export default function ContactDetailPage() {
           {/* Original Message Card */}
           <Card className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl shadow-2xl overflow-hidden">
             <CardHeader className="p-5 pb-3 border-b border-white/[0.06]">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
                   <Mail className="w-4 h-4 text-indigo-400" />
                   <span>Contact Message: {contact.subject}</span>
                 </CardTitle>
-                <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-slate-400 border-white/[0.08]">
-                  Original Inquiry
-                </Badge>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {contact.rawHtml ? (
+                    <div className="flex items-center bg-black/40 p-0.5 rounded-lg border border-white/[0.08]">
+                      <button
+                        type="button"
+                        onClick={() => setViewFormat("html")}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all",
+                          viewFormat === "html"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                        )}
+                        title="Tampilkan email dengan full styling HTML & responsive layout"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Original HTML</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setViewFormat("clean")}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all",
+                          viewFormat === "clean"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                        )}
+                        title="Tampilkan teks polos bersih"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>Clean Text</span>
+                      </button>
+                    </div>
+                  ) : null}
+                  <Badge variant="outline" className="text-[10px] font-semibold uppercase tracking-wider bg-white/[0.04] text-slate-400 border-white/[0.08]">
+                    Original Inquiry
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-5">
-              <div className="bg-[#131726]/70 border border-white/[0.06] rounded-xl p-4 text-xs sm:text-sm leading-relaxed text-slate-200 whitespace-pre-wrap break-words font-normal">
-                {contact.message}
-              </div>
+              {viewFormat === "html" && contact.rawHtml ? (
+                <EmailHtmlViewer
+                  html={contact.rawHtml}
+                  subject={contact.subject}
+                  senderName={contact.name}
+                  senderEmail={contact.email}
+                />
+              ) : (
+                <div className="bg-[#131726]/70 border border-white/[0.06] rounded-xl p-4 text-xs sm:text-sm leading-relaxed text-slate-200 font-normal">
+                  <LinkifiedText text={contact.message} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -558,6 +609,8 @@ export default function ContactDetailPage() {
                 <div className="space-y-3">
                   {threadMessages.map((msg: InquiryMessage) => {
                     const isAdmin = msg.senderType === "admin";
+                    const hasMsgHtml = Boolean(msg.rawHtml);
+                    const isViewingHtml = expandedMsgHtmlIds.includes(msg.id);
                     return (
                       <div
                         key={msg.id}
@@ -577,13 +630,44 @@ export default function ContactDetailPage() {
                               ({msg.senderEmail})
                             </span>
                           </div>
-                          <span className="text-[11px] text-slate-500 whitespace-nowrap">
-                            {format(new Date(msg.createdAt), "dd MMM yyyy, HH:mm")} WIB
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {hasMsgHtml && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setExpandedMsgHtmlIds((prev) =>
+                                    prev.includes(msg.id)
+                                      ? prev.filter((id) => id !== msg.id)
+                                      : [...prev, msg.id]
+                                  );
+                                }}
+                                className="h-6 px-2 text-[11px] font-semibold text-indigo-300 hover:text-white hover:bg-indigo-500/20 rounded-md"
+                              >
+                                <Sparkles className="w-3 h-3 mr-1 text-amber-300" />
+                                <span>{isViewingHtml ? "Hide HTML" : "View Original HTML"}</span>
+                              </Button>
+                            )}
+                            <span className="text-[11px] text-slate-500 whitespace-nowrap">
+                              {format(new Date(msg.createdAt), "dd MMM yyyy, HH:mm")} WIB
+                            </span>
+                          </div>
                         </div>
-                        <div className="whitespace-pre-wrap text-slate-200 leading-relaxed text-xs sm:text-sm break-words">
-                          {msg.message}
-                        </div>
+                        {isViewingHtml && msg.rawHtml ? (
+                          <EmailHtmlViewer
+                            html={msg.rawHtml}
+                            subject={contact.subject}
+                            senderName={msg.senderName}
+                            senderEmail={msg.senderEmail}
+                            initialHeight={420}
+                            className="mt-2"
+                          />
+                        ) : (
+                          <div className="text-slate-200 leading-relaxed text-xs sm:text-sm">
+                            <LinkifiedText text={msg.message} />
+                          </div>
+                        )}
                       </div>
                     );
                   })}

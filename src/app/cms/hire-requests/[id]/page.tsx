@@ -48,6 +48,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { LinkifiedText } from "@/components/cms/linkified-text";
 import {
   hireRequestService,
   inquiryMessagesService,
@@ -112,6 +113,8 @@ export default function HireRequestDetailPage() {
       if (!data) throw new Error("Hire inquiry not found");
       if (data.status === "new") {
         await hireRequestService.updateStatus(requestId, "reviewed");
+        data.status = "reviewed";
+        queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
       }
       return data;
     },
@@ -254,7 +257,7 @@ export default function HireRequestDetailPage() {
 
   if (isRequestLoading) {
     return (
-      <div className="space-y-6 max-w-6xl pb-12">
+      <div className="space-y-6 max-w-full pb-12">
         <div className="flex items-center gap-3">
           <Skeleton className="h-9 w-36 rounded-xl bg-white/[0.05]" />
         </div>
@@ -305,7 +308,7 @@ export default function HireRequestDetailPage() {
   const workConfig = WORKPLACE_CONFIG[request.workplaceType] || WORKPLACE_CONFIG.remote;
 
   return (
-    <div className="space-y-6 max-w-6xl pb-12">
+    <div className="space-y-6 max-w-full pb-12">
       {/* Top Bar Navigation */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Button
@@ -424,8 +427,8 @@ export default function HireRequestDetailPage() {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Opportunity Details & Message:
                 </h3>
-                <div className="p-4 rounded-xl bg-[#131726]/70 border border-white/[0.06] text-xs sm:text-sm leading-relaxed whitespace-pre-wrap text-slate-200">
-                  {request.message}
+                <div className="p-4 rounded-xl bg-[#131726]/70 border border-white/[0.06] text-xs sm:text-sm leading-relaxed text-slate-200">
+                  <LinkifiedText text={request.message} />
                 </div>
               </div>
             </CardContent>
@@ -486,8 +489,8 @@ export default function HireRequestDetailPage() {
                           </div>
                           <span className="text-[11px] text-slate-500">{format(new Date(msg.createdAt), "dd MMM, HH:mm")} WIB</span>
                         </div>
-                        <div className="text-slate-200 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">
-                          {msg.message}
+                        <div className="text-slate-200 text-xs sm:text-sm leading-relaxed">
+                          <LinkifiedText text={msg.message} />
                         </div>
                       </div>
                     );

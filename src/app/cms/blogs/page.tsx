@@ -79,6 +79,8 @@ export default function CmsBlogs() {
     queryKey: ["blogs"],
     queryFn: () => blogService.getAllForCms(),
     enabled: !!user,
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   // Apply status filter + search entirely in memory.

@@ -110,6 +110,8 @@ export default function CmsAiKnowledgePage() {
   } = useQuery({
     queryKey: ["cms-ai-knowledge-items", categoryFilter, searchQuery],
     queryFn: () => getAiKnowledgeItems(categoryFilter, searchQuery || undefined),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   // Expose live rendered knowledge items to CMS Copilot

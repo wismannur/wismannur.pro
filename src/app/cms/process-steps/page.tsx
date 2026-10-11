@@ -72,6 +72,8 @@ export default function CmsProcessStepsPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cmsProcessSteps"],
     queryFn: () => processStepsService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const allSteps = useMemo(() => data ?? [], [data]);

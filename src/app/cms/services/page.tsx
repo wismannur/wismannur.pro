@@ -146,6 +146,8 @@ export default function CmsServicesPage() {
         null,
         filterStatus === "all" ? undefined : filterStatus || undefined
       ),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const hasMore = data?.hasMore ?? false;

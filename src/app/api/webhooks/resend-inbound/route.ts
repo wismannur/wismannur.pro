@@ -452,6 +452,7 @@ export async function POST(req: NextRequest) {
           senderEmail,
           message: textContent,
           messageId: inboundMessageId || null,
+          rawHtml: rawHtml || null,
         });
 
         await db
@@ -695,6 +696,7 @@ export async function POST(req: NextRequest) {
           senderEmail,
           message: textContent,
           messageId: inboundMessageId || null,
+          rawHtml: rawHtml || null,
         });
 
         await db
@@ -761,6 +763,7 @@ export async function POST(req: NextRequest) {
           message: textContent,
           status: "new",
           messageId: inboundMessageId || null,
+          rawHtml: rawHtml || null,
         })
         .returning({ id: contacts.id });
 
@@ -804,6 +807,7 @@ export async function POST(req: NextRequest) {
       senderEmail,
       message: textContent,
       messageId: inboundMessageId || null,
+      rawHtml: rawHtml || null,
     });
 
     // 9. Update inquiry status to "new" to highlight it in CMS

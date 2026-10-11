@@ -74,6 +74,8 @@ export default function CmsResumePage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["resumeEntries"],
     queryFn: () => resumeService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const [prevFilters, setPrevFilters] = useState({ activeKind, searchQuery, filterStatus });

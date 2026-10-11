@@ -96,6 +96,8 @@ export default function CmsAvailabilityPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cmsAvailability"],
     queryFn: () => availabilityService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const allSlots = useMemo(() => data ?? [], [data]);

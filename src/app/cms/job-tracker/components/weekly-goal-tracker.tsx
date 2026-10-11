@@ -3,25 +3,23 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Plus,
   Target,
   Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { getStartOfIsoWeek, isApplicationInActiveInterview } from "@/lib/job-tracker";
 import { userService } from "@/services";
 import type { JobApplication } from "@/services/job-tracker/types";
 
 interface WeeklyGoalTrackerProps {
   applications: JobApplication[];
-  onAddJobClick: () => void;
+  onAddJobClick?: () => void;
 }
 
 const STORAGE_KEY = "career_hub_weekly_target";
 
-export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTrackerProps) {
+export function WeeklyGoalTracker({ applications, onAddJobClick: _onAddJobClick }: WeeklyGoalTrackerProps) {
   const queryClient = useQueryClient();
 
   const { data: userSettings } = useQuery({
@@ -157,15 +155,6 @@ export function WeeklyGoalTracker({ applications, onAddJobClick }: WeeklyGoalTra
               <span><strong className="text-emerald-400">{currentWeekStats.inInterview}</strong> in Interview / Offer</span>
             </div>
           </div>
-
-          <Button
-            size="sm"
-            onClick={onAddJobClick}
-            className="gap-1.5 text-xs h-9 px-4 rounded-xl bg-primary text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Log Opportunity</span>
-          </Button>
         </div>
       </div>
     </div>

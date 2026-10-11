@@ -70,6 +70,8 @@ export default function CmsServiceCatalogPage() {
   const { data, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["cmsServiceCatalog"],
     queryFn: () => serviceCatalogService.getAllForCms(),
+    refetchOnMount: "always",
+    staleTime: 0,
   });
 
   const [prevFilters, setPrevFilters] = useState({ searchQuery, filterStatus });
