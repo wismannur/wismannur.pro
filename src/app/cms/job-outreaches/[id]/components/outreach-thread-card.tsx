@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+import { LinkifiedText } from "@/components/cms/linkified-text";
 import type { JobOutreach } from "@/services";
 
 interface OutreachThreadCardProps {
@@ -166,8 +167,8 @@ export function OutreachThreadCard({
                       </span>
                     </div>
 
-                    <div className="text-sm whitespace-pre-wrap leading-relaxed pl-8 text-slate-200 font-sans">
-                      {msg.message}
+                    <div className="text-sm leading-relaxed pl-8 text-slate-200 font-sans">
+                      <LinkifiedText text={msg.message} />
                     </div>
                   </div>
                 );

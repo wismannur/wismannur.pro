@@ -68,6 +68,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { LinkifiedText } from "@/components/cms/linkified-text";
 import {
   serviceRequestService,
   inquiryMessagesService,
@@ -453,7 +454,7 @@ export default function ServiceRequestDetailPage() {
 
   if (isRequestLoading) {
     return (
-      <div className="space-y-6 max-w-6xl pb-12">
+      <div className="space-y-6 max-w-full pb-12">
         <div className="flex items-center gap-3">
           <Skeleton className="h-9 w-36 rounded-xl bg-white/[0.05]" />
         </div>
@@ -512,7 +513,7 @@ export default function ServiceRequestDetailPage() {
   const TimeframeIcon = timeframeConfig.icon;
 
   return (
-    <div className="space-y-6 max-w-6xl pb-12">
+    <div className="space-y-6 max-w-full pb-12">
       {/* Top Bar Navigation & Status Controls */}
       <div className="flex flex-col sm:flex-row justify-between gap-3 items-start sm:items-center">
         <Button
@@ -626,8 +627,8 @@ export default function ServiceRequestDetailPage() {
               </div>
             </CardHeader>
             <CardContent className="p-5">
-              <div className="bg-[#131726]/70 border border-white/[0.06] rounded-xl p-4 text-xs sm:text-sm leading-relaxed text-slate-200 whitespace-pre-wrap break-words font-normal">
-                {request.projectDetails}
+              <div className="bg-[#131726]/70 border border-white/[0.06] rounded-xl p-4 text-xs sm:text-sm leading-relaxed text-slate-200 font-normal">
+                <LinkifiedText text={request.projectDetails} />
               </div>
             </CardContent>
           </Card>
@@ -683,8 +684,8 @@ export default function ServiceRequestDetailPage() {
                             {format(new Date(msg.createdAt), "dd MMM yyyy, HH:mm")} WIB
                           </span>
                         </div>
-                        <div className="whitespace-pre-wrap text-slate-200 leading-relaxed text-xs sm:text-sm break-words">
-                          {msg.message}
+                        <div className="text-slate-200 leading-relaxed text-xs sm:text-sm">
+                          <LinkifiedText text={msg.message} />
                         </div>
                       </div>
                     );
