@@ -187,6 +187,9 @@ export default function ServiceRequestDetailPage() {
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingReplyRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragStartYRef.current;
       const maxHeight = Math.min(600, Math.floor(window.innerHeight * 0.75));
       const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 90), maxHeight);
@@ -197,10 +200,12 @@ export default function ServiceRequestDetailPage() {
       isDraggingReplyRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   // AI Draft Generation States & Handler (Grounded in Chat History & AI Knowledge Hub)
@@ -245,6 +250,9 @@ export default function ServiceRequestDetailPage() {
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingGuidanceRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragGuidanceStartYRef.current;
       const maxHeight = Math.min(320, Math.floor(window.innerHeight * 0.45));
       const newHeight = Math.min(Math.max(startGuidanceHeightRef.current + deltaY, 64), maxHeight);
@@ -255,10 +263,12 @@ export default function ServiceRequestDetailPage() {
       isDraggingGuidanceRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   const handleGenerateAiDraft = async (
@@ -313,6 +323,7 @@ export default function ServiceRequestDetailPage() {
         await serviceRequestService.updateStatus(requestId, "in-progress");
         data.status = "in-progress";
         queryClient.invalidateQueries({ queryKey: ["serviceRequests"] });
+        queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
       }
       return data;
     },
@@ -373,6 +384,7 @@ export default function ServiceRequestDetailPage() {
       toast.success(`Status updated to ${status}`);
       refetchRequest();
       queryClient.invalidateQueries({ queryKey: ["serviceRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
@@ -386,6 +398,7 @@ export default function ServiceRequestDetailPage() {
       await serviceRequestService.delete(request.id);
       toast.success("Service request successfully deleted");
       queryClient.invalidateQueries({ queryKey: ["serviceRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
       router.push("/cms/services");
     } catch (error) {
       console.error("Error deleting service request:", error);
@@ -765,7 +778,7 @@ export default function ServiceRequestDetailPage() {
                   <div
                     onMouseDown={handleMouseDownOnResize}
                     onTouchStart={handleTouchStartOnResize}
-                    className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                    className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                     title="Drag handle to resize text area"
                   >
                     <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
@@ -1103,7 +1116,7 @@ export default function ServiceRequestDetailPage() {
                 <div
                   onMouseDown={handleMouseDownGuidanceResize}
                   onTouchStart={handleTouchStartGuidanceResize}
-                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                   title="Drag handle to resize text area"
                 >
                   <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />

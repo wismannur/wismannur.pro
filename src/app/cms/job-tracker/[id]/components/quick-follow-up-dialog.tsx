@@ -89,6 +89,9 @@ export function QuickFollowUpDialog({
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingBodyRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragBodyStartYRef.current;
       const maxHeight = Math.min(600, Math.floor(window.innerHeight * 0.65));
       const newHeight = Math.min(Math.max(startBodyHeightRef.current + deltaY, 100), maxHeight);
@@ -99,10 +102,12 @@ export function QuickFollowUpDialog({
       isDraggingBodyRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
   const [contactName, setContactName] = useState(application.contactName || "Hiring Team");
   const contactEmail = application.contactEmail || "";
@@ -434,7 +439,7 @@ Wisman Nur`,
               <div
                 onMouseDown={handleMouseDownBodyResize}
                 onTouchStart={handleTouchStartBodyResize}
-                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                 title="Drag handle to resize email area"
               >
                 <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />

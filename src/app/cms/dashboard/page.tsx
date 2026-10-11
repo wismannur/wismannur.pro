@@ -141,18 +141,6 @@ const Dashboard = () => {
                 <span>New Project</span>
               </Link>
             </Button>
-
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="rounded-full gap-1.5 px-4 h-9 border-white/[0.12] bg-white/[0.04] text-gray-300 hover:text-white hover:bg-white/[0.08] transition-all"
-            >
-              <Link href="/" target="_blank">
-                <ArrowUpRight size={14} />
-                <span>Live Site</span>
-              </Link>
-            </Button>
           </div>
         </div>
       </div>

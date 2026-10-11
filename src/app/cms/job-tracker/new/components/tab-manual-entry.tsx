@@ -508,7 +508,7 @@ export function TabManualEntry({
               <div
                 onMouseDown={handleMouseDownReqsResize}
                 onTouchStart={handleTouchStartReqsResize}
-                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                 title="Drag handle to resize key requirements"
               >
                 <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 transition-all duration-200" />
@@ -557,7 +557,7 @@ export function TabManualEntry({
               <div
                 onMouseDown={handleMouseDownNotesResize}
                 onTouchStart={handleTouchStartNotesResize}
-                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                 title="Drag handle to resize strategic notes"
               >
                 <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 transition-all duration-200" />

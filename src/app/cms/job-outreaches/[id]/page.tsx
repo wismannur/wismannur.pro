@@ -98,6 +98,7 @@ export default function JobOutreachDetailPage() {
       queryClient.invalidateQueries({ queryKey: ["jobOutreachDetail", outreachId] });
       queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
       queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
+      queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
     } catch (err) {
       console.error("Status update error:", err);
       toast.error("Failed to update status.");
@@ -206,6 +207,7 @@ export default function JobOutreachDetailPage() {
     toast.success("Outreach successfully deleted.");
     queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
     queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
+    queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
     router.push("/cms/job-outreaches");
   };
 

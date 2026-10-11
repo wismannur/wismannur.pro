@@ -16,7 +16,9 @@ import {
   Loader2,
   Mail,
   MapPin,
+  Maximize2,
   MessageSquare,
+  Minimize2,
   RefreshCw,
   Send,
   Sparkles,
@@ -29,6 +31,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useTextareaResize } from "@/hooks/use-textarea-resize";
 
 import {
   AlertDialog,
@@ -103,6 +106,17 @@ export default function HireRequestDetailPage() {
   const [isCopied, setIsCopied] = useState(false);
 
   const {
+    height: replyInputHeight,
+    setHeight: setReplyInputHeight,
+    handleMouseDownResize,
+    handleTouchStartResize,
+  } = useTextareaResize({
+    initialHeight: 120,
+    minHeight: 80,
+    storageKey: "cms-hire-request-reply-height",
+  });
+
+  const {
     data: request,
     isLoading: isRequestLoading,
     refetch: refetchRequest,
@@ -115,6 +129,7 @@ export default function HireRequestDetailPage() {
         await hireRequestService.updateStatus(requestId, "reviewed");
         data.status = "reviewed";
         queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
+        queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
       }
       return data;
     },
@@ -174,6 +189,7 @@ export default function HireRequestDetailPage() {
       toast.success(`Status updated to ${status}`);
       refetchRequest();
       queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
@@ -187,6 +203,7 @@ export default function HireRequestDetailPage() {
       await hireRequestService.delete(request.id);
       toast.success("Hire inquiry successfully deleted");
       queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
+      queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
       router.push("/cms/hire-requests");
     } catch (error) {
       console.error("Error deleting hire request:", error);
@@ -505,18 +522,54 @@ export default function HireRequestDetailPage() {
                     <Send className="w-3.5 h-3.5 text-indigo-400" />
                     Reply directly via email (to {request.email}):
                   </label>
-                  <span className="text-[11px] text-slate-400">
-                    Recruiter can reply directly via their inbox.
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-slate-400 hidden sm:inline">
+                      Recruiter can reply directly via their inbox.
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        if (replyInputHeight > 160) {
+                          setReplyInputHeight(120);
+                        } else {
+                          const target = Math.min(320, Math.floor(window.innerHeight * 0.45));
+                          setReplyInputHeight(target);
+                        }
+                      }}
+                      className="h-6 w-6 rounded-md text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                      title={replyInputHeight > 160 ? "Perkecil input" : "Perbesar input"}
+                    >
+                      {replyInputHeight > 160 ? (
+                        <Minimize2 className="h-3 w-3" />
+                      ) : (
+                        <Maximize2 className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
 
-                <Textarea
-                  placeholder="Write your email response to the recruiter / company..."
-                  rows={4}
-                  value={replyMessage}
-                  onChange={(e) => setReplyMessage(e.target.value)}
-                  className="rounded-xl bg-[#131726]/80 border-white/[0.08] text-slate-100 placeholder:text-slate-500 resize-none text-xs sm:text-sm leading-relaxed focus-visible:ring-indigo-500/40"
-                />
+                {/* Textarea container with bottom resize drag handle */}
+                <div className="relative flex flex-col rounded-xl border border-white/[0.08] bg-[#131726]/80 overflow-hidden focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all shadow-inner">
+                  <Textarea
+                    placeholder="Write your email response to the recruiter / company..."
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    style={{ height: `${replyInputHeight}px` }}
+                    className="w-full text-xs sm:text-sm leading-relaxed resize-none rounded-none border-0 bg-transparent text-slate-100 placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 px-3.5 py-2.5 overflow-y-auto scrollbar-thin"
+                  />
+
+                  {/* Bottom Drag Handle Bar to Resize */}
+                  <div
+                    onMouseDown={handleMouseDownResize}
+                    onTouchStart={handleTouchStartResize}
+                    className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
+                    title="Drag handle to resize reply area"
+                  >
+                    <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
+                  </div>
+                </div>
 
                 <div className="flex justify-end">
                   <Button

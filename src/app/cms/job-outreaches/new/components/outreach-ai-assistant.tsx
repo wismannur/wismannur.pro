@@ -93,7 +93,7 @@ export function OutreachAiAssistant({
           <div
             onMouseDown={handleMouseDownResize}
             onTouchStart={handleTouchStartResize}
-            className="group w-full h-3.5 cursor-row-resize flex items-center justify-center hover:bg-white/[0.04] transition-colors select-none mt-1 z-10"
+            className="group w-full h-3.5 cursor-row-resize flex items-center justify-center hover:bg-white/[0.04] transition-colors select-none mt-1 z-10 touch-none"
             title="Drag down to resize AI guidance"
           >
             <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
