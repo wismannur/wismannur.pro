@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   Archive,
+  ArrowUpRight,
   CheckCircle,
   CheckCircle2,
   Clock,
@@ -42,6 +43,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -55,6 +57,7 @@ import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import { contactService, type Contact } from "@/services";
 import { CmsPageHeader } from "@/components/cms/cms-page-header";
 import { CmsMetricCards } from "@/components/cms/cms-metric-cards";
+import { CmsCardPagination } from "@/components/cms/cms-card-pagination";
 
 export default function CmsContactsPage() {
   const router = useRouter();
@@ -468,8 +471,230 @@ export default function CmsContactsPage() {
         </div>
       </div>
 
-      {/* Data Table */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
+      {/* Mobile & Tablet Responsive Cards (< lg) */}
+      <div className="space-y-4 lg:hidden">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={`contact-skeleton-${index}`}
+                className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 p-5 space-y-4 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/[0.05]" />
+                    <div className="space-y-1.5">
+                      <div className="w-24 h-4 rounded bg-white/[0.05]" />
+                      <div className="w-32 h-3 rounded bg-white/[0.05]" />
+                    </div>
+                  </div>
+                  <div className="w-16 h-6 rounded-full bg-white/[0.05]" />
+                </div>
+                <div className="space-y-2">
+                  <div className="w-3/4 h-3.5 rounded bg-white/[0.05]" />
+                  <div className="w-full h-12 rounded-xl bg-white/[0.03]" />
+                </div>
+                <div className="pt-2 flex items-center justify-between border-t border-white/[0.04]">
+                  <div className="w-20 h-3 rounded bg-white/[0.05]" />
+                  <div className="w-24 h-8 rounded-lg bg-white/[0.05]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredContacts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredContacts.map((contact) => {
+                const isNew = contact.status === "new";
+                const createdDate = new Date(contact.createdAt);
+
+                return (
+                  <div
+                    key={contact.id}
+                    onClick={() => handleViewContact(contact.id)}
+                    className={cn(
+                      "group relative flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl p-4 sm:p-5 transition-all duration-200 hover:border-indigo-500/40 hover:bg-[#101426]/80 cursor-pointer shadow-lg",
+                      isNew && "border-blue-500/30 bg-blue-950/[0.08] hover:border-blue-500/50"
+                    )}
+                  >
+                    <div>
+                      {/* Top Row: Avatar, Identity & Actions */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0 border border-white/[0.08] bg-[#131726] group-hover:border-indigo-500/40 transition-colors">
+                            <AvatarFallback
+                              className={cn(
+                                "font-semibold text-xs transition-colors",
+                                isNew
+                                  ? "bg-indigo-500/20 text-indigo-300 group-hover:bg-indigo-500/30"
+                                  : "bg-white/[0.04] text-slate-300 group-hover:text-white"
+                              )}
+                            >
+                              {getInitials(contact.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-slate-100 text-sm truncate group-hover:text-indigo-400 transition-colors">
+                                {contact.name}
+                              </span>
+                              {isNew && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/25 shrink-0">
+                                  NEW
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                              <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 px-1 py-0.2 rounded border border-indigo-500/20 shrink-0">
+                                {contact.id}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top Right: Status Badge & Actions Dropdown */}
+                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {getStatusBadge(contact.status)}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-[#0C0E18] border-white/[0.08] text-slate-200">
+                              <DropdownMenuItem
+                                onClick={() => handleViewContact(contact.id)}
+                                className="focus:bg-indigo-500/10 focus:text-indigo-300"
+                              >
+                                <Eye className="h-4 w-4 mr-2 text-indigo-400" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/[0.08]" />
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(contact.id, "read")}
+                                disabled={contact.status === "read"}
+                                className="focus:bg-slate-500/10 focus:text-slate-300"
+                              >
+                                <Eye className="h-4 w-4 mr-2 text-slate-400" />
+                                Mark as Read
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(contact.id, "replied")}
+                                disabled={contact.status === "replied"}
+                                className="focus:bg-emerald-500/10 focus:text-emerald-300"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2 text-emerald-400" />
+                                Mark as Replied
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(contact.id, "archived")}
+                                disabled={contact.status === "archived"}
+                                className="focus:bg-white/[0.06] focus:text-slate-200"
+                              >
+                                <Archive className="h-4 w-4 mr-2 text-slate-400" />
+                                Archive Message
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/[0.08]" />
+                              <DropdownMenuItem
+                                onClick={() => setContactToDelete(contact)}
+                                className="text-rose-400 focus:text-rose-300 focus:bg-rose-500/10"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2 text-rose-400" />
+                                Delete Message
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+
+                      {/* Contact Email Link */}
+                      <div className="mt-2.5">
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`mailto:${contact.email}`, "_self");
+                          }}
+                          className="inline-flex items-center gap-1.5 text-xs text-indigo-300/90 hover:text-indigo-200 hover:underline transition-colors"
+                          title={contact.email}
+                        >
+                          <Mail className="h-3 w-3 shrink-0 text-indigo-400" />
+                          <span className="truncate">{contact.email}</span>
+                        </span>
+                      </div>
+
+                      {/* Subject & Message Preview */}
+                      <div className="mt-3 space-y-1.5">
+                        <div className="font-semibold text-xs text-slate-200 line-clamp-1">
+                          {contact.subject}
+                        </div>
+                        {contact.message && (
+                          <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed bg-white/[0.02] p-2.5 rounded-xl border border-white/[0.04]">
+                            {contact.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card Footer: Date & Quick View Button */}
+                    <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <Clock className="h-3 w-3 text-slate-500 shrink-0" />
+                        <span>
+                          {format(createdDate, "dd MMM yyyy, HH:mm")} WIB
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewContact(contact.id);
+                        }}
+                        className="h-7 px-2.5 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500/10 transition-colors"
+                      >
+                        <span>View</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile/Tablet Card Pagination */}
+            {(currentPage > 1 || hasMore) && (
+              <CmsCardPagination
+                currentPage={currentPage}
+                hasMore={hasMore}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
+        ) : (
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl p-8 text-center">
+            <EmptyState
+              variant="inline"
+              icon={<Inbox className="h-8 w-8 mb-2 text-slate-500" />}
+              title="No contacts found"
+              description={
+                searchQuery
+                  ? "Try adjusting your search query"
+                  : filterStatus && filterStatus !== "all"
+                    ? `No ${filterStatus} messages found`
+                    : "No contact messages yet"
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View (>= lg) */}
+      <div className="hidden lg:block rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
         <DataTable
           columns={columns}
           data={filteredContacts}

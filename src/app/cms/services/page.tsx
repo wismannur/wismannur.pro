@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import {
+  ArrowUpRight,
   Briefcase,
   Building2,
   Calendar,
@@ -55,6 +56,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -67,6 +69,7 @@ import { cn } from "@/lib/utils";
 import { serviceRequestService, type ServiceRequest } from "@/services";
 import { CmsPageHeader } from "@/components/cms/cms-page-header";
 import { CmsMetricCards } from "@/components/cms/cms-metric-cards";
+import { CmsCardPagination } from "@/components/cms/cms-card-pagination";
 
 const SERVICE_TYPE_CONFIG: Record<
   string,
@@ -618,8 +621,274 @@ export default function CmsServicesPage() {
         </div>
       </div>
 
-      {/* Data Table */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
+      {/* Mobile & Tablet Responsive Cards (< lg) */}
+      <div className="space-y-4 lg:hidden">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={`service-skeleton-${index}`}
+                className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 p-5 space-y-4 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/[0.05]" />
+                    <div className="space-y-1.5">
+                      <div className="w-24 h-4 rounded bg-white/[0.05]" />
+                      <div className="w-32 h-3 rounded bg-white/[0.05]" />
+                    </div>
+                  </div>
+                  <div className="w-16 h-6 rounded-full bg-white/[0.05]" />
+                </div>
+                <div className="space-y-2">
+                  <div className="w-2/3 h-5 rounded bg-white/[0.05]" />
+                  <div className="w-full h-12 rounded-xl bg-white/[0.03]" />
+                </div>
+                <div className="pt-2 flex items-center justify-between border-t border-white/[0.04]">
+                  <div className="w-20 h-3 rounded bg-white/[0.05]" />
+                  <div className="w-24 h-8 rounded-lg bg-white/[0.05]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredRequests.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredRequests.map((request) => {
+                const isNew = request.status === "new";
+                const createdDate = new Date(request.createdAt);
+                const serviceConfig = SERVICE_TYPE_CONFIG[request.serviceType] || {
+                  label: request.serviceType,
+                  icon: Briefcase,
+                  className: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+                };
+                const ServiceIcon = serviceConfig.icon;
+                const timeframeConfig = TIMEFRAME_CONFIG[request.timeframe] || {
+                  label: request.timeframe,
+                  icon: Clock,
+                  className: "bg-white/[0.04] text-slate-400 border-white/[0.08]",
+                };
+                const TimeframeIcon = timeframeConfig.icon;
+
+                return (
+                  <div
+                    key={request.id}
+                    onClick={() => handleViewRequest(request.id)}
+                    className={cn(
+                      "group relative flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl p-4 sm:p-5 transition-all duration-200 hover:border-indigo-500/40 hover:bg-[#101426]/80 cursor-pointer shadow-lg",
+                      isNew && "border-blue-500/30 bg-blue-950/[0.08] hover:border-blue-500/50"
+                    )}
+                  >
+                    <div>
+                      {/* Top Row: Avatar, Identity & Actions */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0 border border-white/[0.08] bg-[#131726] group-hover:border-indigo-500/40 transition-colors">
+                            <AvatarFallback
+                              className={cn(
+                                "font-semibold text-xs transition-colors",
+                                isNew
+                                  ? "bg-indigo-500/20 text-indigo-300 group-hover:bg-indigo-500/30"
+                                  : "bg-white/[0.04] text-slate-300 group-hover:text-white"
+                              )}
+                            >
+                              {getInitials(request.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-slate-100 text-sm truncate group-hover:text-indigo-400 transition-colors">
+                                {request.name}
+                              </span>
+                              {isNew && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/25 shrink-0">
+                                  NEW
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                              <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 px-1 py-0.2 rounded border border-indigo-500/20 shrink-0">
+                                {request.id}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top Right: Status Badge & Actions Dropdown */}
+                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {getStatusBadge(request.status)}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-[#0C0E18] border-white/[0.08] text-slate-200">
+                              <DropdownMenuItem
+                                onClick={() => handleViewRequest(request.id)}
+                                className="focus:bg-indigo-500/10 focus:text-indigo-300"
+                              >
+                                <Eye className="h-4 w-4 mr-2 text-indigo-400" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/[0.08]" />
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(request.id, "in-progress")}
+                                disabled={request.status === "in-progress"}
+                                className="focus:bg-purple-500/10 focus:text-purple-300"
+                              >
+                                <Clock className="h-4 w-4 mr-2 text-purple-400" />
+                                Set In Progress
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(request.id, "completed")}
+                                disabled={request.status === "completed"}
+                                className="focus:bg-emerald-500/10 focus:text-emerald-300"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2 text-emerald-400" />
+                                Mark Completed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(request.id, "cancelled")}
+                                disabled={request.status === "cancelled"}
+                                className="focus:bg-rose-500/10 focus:text-rose-300"
+                              >
+                                <XCircle className="h-4 w-4 mr-2 text-rose-400" />
+                                Cancel Request
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/[0.08]" />
+                              <DropdownMenuItem
+                                onClick={() => setRequestToDelete(request)}
+                                className="text-rose-400 focus:text-rose-300 focus:bg-rose-500/10"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2 text-rose-400" />
+                                Delete Request
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+
+                      {/* Company & Email Row */}
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                        {request.company && (
+                          <div className="flex items-center gap-1 text-slate-300 font-medium">
+                            <Building2 className="h-3 w-3 shrink-0 text-indigo-400" />
+                            <span className="truncate max-w-[160px]">{request.company}</span>
+                          </div>
+                        )}
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`mailto:${request.email}`, "_self");
+                          }}
+                          className="hover:text-indigo-300 transition-colors truncate max-w-[180px]"
+                          title={request.email}
+                        >
+                          {request.email}
+                        </span>
+                      </div>
+
+                      {/* Service Type & Key Attributes Strip */}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-xs font-semibold px-2.5 py-0.5 inline-flex items-center gap-1.5 rounded-lg",
+                            serviceConfig.className
+                          )}
+                        >
+                          <ServiceIcon className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{serviceConfig.label}</span>
+                        </Badge>
+
+                        <div className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 whitespace-nowrap">
+                          <DollarSign className="h-3 w-3 shrink-0 -mr-0.5" />
+                          <span className="tabular-nums text-slate-200">{getBudgetLabel(request.budget)}</span>
+                        </div>
+
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[11px] font-medium px-2 py-0.5 inline-flex items-center gap-1 rounded-md whitespace-nowrap",
+                            timeframeConfig.className
+                          )}
+                        >
+                          <TimeframeIcon className="h-2.5 w-2.5 shrink-0" />
+                          <span>{timeframeConfig.label}</span>
+                        </Badge>
+                      </div>
+
+                      {/* Project Details Preview */}
+                      {request.projectDetails && (
+                        <div className="mt-3">
+                          <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed bg-white/[0.02] p-2.5 rounded-xl border border-white/[0.04]">
+                            {request.projectDetails}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Card Footer: Date & Quick View Button */}
+                    <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <Clock className="h-3 w-3 text-slate-500 shrink-0" />
+                        <span>
+                          {format(createdDate, "dd MMM yyyy, HH:mm")} WIB
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewRequest(request.id);
+                        }}
+                        className="h-7 px-2.5 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500/10 transition-colors"
+                      >
+                        <span>View</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile/Tablet Card Pagination */}
+            {(currentPage > 1 || hasMore) && (
+              <CmsCardPagination
+                currentPage={currentPage}
+                hasMore={hasMore}
+                onPageChange={handlePageChange}
+              />
+            )}
+          </>
+        ) : (
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl p-8 text-center">
+            <EmptyState
+              variant="inline"
+              icon={<Inbox className="h-8 w-8 mb-2 text-slate-500" />}
+              title="No service requests found"
+              description={
+                searchQuery
+                  ? "Try adjusting your search query"
+                  : filterStatus && filterStatus !== "all"
+                    ? `No ${filterStatus} service requests found`
+                    : "No service requests submitted yet"
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View (>= lg) */}
+      <div className="hidden lg:block rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
         <DataTable
           columns={columns}
           data={filteredRequests}
