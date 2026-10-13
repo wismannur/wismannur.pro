@@ -12,6 +12,7 @@ export interface JobOutreachAttachment {
   name: string;
   url: string;
   type?: string;
+  size?: number;
 }
 
 export interface JobOutreachMessage {
@@ -22,6 +23,7 @@ export interface JobOutreachMessage {
   senderEmail: string;
   message: string;
   rawHtml?: string | null;
+  attachments?: JobOutreachAttachment[];
   messageId?: string;
   createdAt: Date;
 }

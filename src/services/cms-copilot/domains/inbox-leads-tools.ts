@@ -397,6 +397,7 @@ export async function executeInboxLeadsTool(
             email: c.email,
             subject: c.subject,
             message: c.message,
+            attachments: c.attachments || [],
             status: c.status,
             createdAt: c.createdAt,
           })),

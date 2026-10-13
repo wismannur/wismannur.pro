@@ -1,6 +1,13 @@
 export type MessageSenderType = "admin" | "client";
 export type InquiryType = "contact" | "service_request" | "hire_request";
 
+export interface EmailAttachment {
+  name: string;
+  url: string;
+  type?: string;
+  size?: number;
+}
+
 export interface InquiryMessage {
   id: string;
   inquiryId: string;
@@ -10,6 +17,7 @@ export interface InquiryMessage {
   senderEmail: string;
   message: string;
   rawHtml?: string | null;
+  attachments?: EmailAttachment[];
   messageId?: string;
   createdAt: Date;
 }
@@ -22,6 +30,7 @@ export interface SendAdminReplyInput {
   subject: string;
   message: string;
   originalMessageSnippet?: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface GenerateAiReplyDraftInput {

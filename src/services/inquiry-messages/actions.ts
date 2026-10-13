@@ -1,15 +1,18 @@
 "use server";
 
+import { put } from "@vercel/blob";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb, schema } from "@/db";
+import { toCustomAttachmentUrl } from "@/lib/attachment-url";
 import { getGeminiClient, getGeminiModel } from "@/lib/gemini";
 import { buildKnowledgeContext } from "../ai-chat/knowledge-context";
 import { assertAdmin } from "../core/auth-guard";
 import { ServiceError } from "../core/base-service";
 import { RESEND_EMAIL_DOMAIN, sendAdminReplyToClient } from "../core/resend";
 import type {
+  EmailAttachment,
   GenerateAiReplyDraftInput,
   GenerateAiReplyDraftResult,
   InquiryMessage,
@@ -17,6 +20,13 @@ import type {
 } from "./types";
 
 const { inquiryMessages, contacts, serviceRequests, hireRequests, aiKnowledgeItems } = schema;
+
+const attachmentSchema = z.object({
+  name: z.string().min(1),
+  url: z.string().min(1),
+  type: z.string().optional(),
+  size: z.number().optional(),
+});
 
 const sendReplySchema = z.object({
   inquiryId: z.string().min(1),
@@ -26,7 +36,34 @@ const sendReplySchema = z.object({
   subject: z.string().trim().min(1),
   message: z.string().trim().min(1).max(10000),
   originalMessageSnippet: z.string().optional(),
+  attachments: z.array(attachmentSchema).optional(),
 });
+
+/**
+ * Uploads an attachment file for an inquiry reply to Vercel Blob storage
+ * and returns our branded domain URL.
+ */
+export async function uploadInquiryAttachment(formData: FormData): Promise<EmailAttachment> {
+  await assertAdmin();
+  const file = formData.get("file") as File | null;
+  if (!file || !(file instanceof File)) {
+    throw new Error("No file provided");
+  }
+
+  const safeFilename = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+  const { url } = await put(`inquiry-attachments/${Date.now()}_${safeFilename}`, file, {
+    access: "public",
+    addRandomSuffix: true,
+    contentType: file.type || "application/octet-stream",
+  });
+
+  return {
+    name: file.name,
+    url: toCustomAttachmentUrl(url),
+    type: file.type,
+    size: file.size,
+  };
+}
 
 export async function getThreadMessages(inquiryId: string): Promise<InquiryMessage[]> {
   await assertAdmin();
@@ -47,6 +84,7 @@ export async function getThreadMessages(inquiryId: string): Promise<InquiryMessa
     message: row.message,
     messageId: row.messageId ?? undefined,
     rawHtml: row.rawHtml ?? undefined,
+    attachments: (row.attachments as EmailAttachment[] | null) ?? undefined,
     createdAt: row.createdAt,
   }));
 }
@@ -120,7 +158,11 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
     initialEntityMessage ||
     undefined;
 
-  // 2. Send email to client via Resend with RFC 5322 In-Reply-To and References
+  const validAttachments = (clean.attachments as EmailAttachment[] | undefined)?.filter(
+    (att) => Boolean(att.name && att.url)
+  );
+
+  // 2. Send email to client via Resend with RFC 5322 In-Reply-To, References, and Attachments
   const sendRes = await sendAdminReplyToClient({
     inquiryId: clean.inquiryId,
     toEmail: clean.toEmail,
@@ -128,11 +170,12 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
     subject: clean.subject,
     message: clean.message,
     originalMessageSnippet: originalSnippetToQuote,
+    attachments: validAttachments,
     inReplyToId,
     referencesIds,
   });
 
-  // 3. Insert admin reply to database with messageId
+  // 3. Insert admin reply to database with messageId and attachments
   const [inserted] = await db
     .insert(inquiryMessages)
     .values({
@@ -143,6 +186,7 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
       senderEmail: `hi@${RESEND_EMAIL_DOMAIN}`,
       message: clean.message,
       messageId: sendRes.id || null,
+      attachments: validAttachments && validAttachments.length > 0 ? validAttachments : null,
     })
     .returning();
 
@@ -170,6 +214,7 @@ export async function sendAdminReply(data: SendAdminReplyInput): Promise<Inquiry
     senderEmail: inserted.senderEmail,
     message: inserted.message,
     messageId: inserted.messageId ?? undefined,
+    attachments: (inserted.attachments as EmailAttachment[] | null) ?? undefined,
     createdAt: inserted.createdAt,
   };
 }

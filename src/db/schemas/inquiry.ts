@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { generateEntityId } from "@/lib/id-generator";
 
 export const contactStatus = pgEnum("contact_status", ["new", "read", "replied", "archived"]);
@@ -34,6 +34,7 @@ export const contacts = pgTable("contacts", {
   status: contactStatus("status").notNull().default("new"),
   messageId: text("message_id"),
   rawHtml: text("raw_html"),
+  attachments: jsonb("attachments"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -87,6 +88,7 @@ export const inquiryMessages = pgTable("inquiry_messages", {
   message: text("message").notNull(),
   messageId: text("message_id"),
   rawHtml: text("raw_html"),
+  attachments: jsonb("attachments"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

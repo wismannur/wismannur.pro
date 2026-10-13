@@ -19,14 +19,24 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+import {
+  EmailAttachmentList,
+  EmailAttachmentUploader,
+} from "@/components/cms/email-attachments";
 import { LinkifiedText } from "@/components/cms/linkified-text";
 import { useTextareaResize } from "@/hooks/use-textarea-resize";
-import type { JobOutreach } from "@/services";
+import {
+  jobOutreachService,
+  type JobOutreach,
+  type JobOutreachAttachment,
+} from "@/services";
 
 interface OutreachThreadCardProps {
   outreach: JobOutreach;
   followUpMessage: string;
   setFollowUpMessage: (v: string) => void;
+  followUpAttachments: JobOutreachAttachment[];
+  setFollowUpAttachments: React.Dispatch<React.SetStateAction<JobOutreachAttachment[]>>;
   isSendingFollowUp: boolean;
   isGeneratingAiFollowUp: boolean;
   isSendingDraft: boolean;
@@ -39,6 +49,8 @@ export function OutreachThreadCard({
   outreach,
   followUpMessage,
   setFollowUpMessage,
+  followUpAttachments,
+  setFollowUpAttachments,
   isSendingFollowUp,
   isGeneratingAiFollowUp,
   isSendingDraft,
@@ -135,6 +147,11 @@ export function OutreachThreadCard({
               <div className="text-sm whitespace-pre-wrap leading-relaxed text-slate-200 pl-8 font-sans">
                 {outreach.body}
               </div>
+              <EmailAttachmentList
+                attachments={outreach.attachments}
+                compact
+                className="pl-8 pt-2 border-t border-white/[0.06]"
+              />
             </div>
           ) : (
             <div className="space-y-4">
@@ -184,6 +201,11 @@ export function OutreachThreadCard({
                     <div className="text-sm leading-relaxed pl-8 text-slate-200 font-sans">
                       <LinkifiedText text={msg.message} />
                     </div>
+                    <EmailAttachmentList
+                      attachments={msg.attachments}
+                      compact
+                      className="pl-8 pt-2 border-t border-white/[0.06]"
+                    />
                   </div>
                 );
               })}
@@ -311,6 +333,13 @@ export function OutreachThreadCard({
                 <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
               </div>
             </div>
+
+            <EmailAttachmentUploader
+              attachments={followUpAttachments}
+              onChange={setFollowUpAttachments}
+              onUploadFile={(fd) => jobOutreachService.uploadAttachment(fd)}
+              disabled={isSendingFollowUp}
+            />
 
             <div className="flex items-center justify-between pt-1">
               <span className="text-xs text-slate-400">
