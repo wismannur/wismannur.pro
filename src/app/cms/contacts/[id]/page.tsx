@@ -27,7 +27,7 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -74,9 +74,14 @@ import {
 
 export default function ContactDetailPage() {
   const params = useParams<{ id: string }>();
+  const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const contactId = params.id;
+
+  const isDirectEmail = pathname.includes("/direct-emails");
+  const backHref = isDirectEmail ? "/cms/direct-emails" : "/cms/contacts";
+  const backLabel = isDirectEmail ? "Back to Direct Emails" : "Back to Contact Messages";
 
   const [replyMessage, setReplyMessage] = useState("");
   const [replyAttachments, setReplyAttachments] = useState<EmailAttachment[]>([]);
@@ -261,6 +266,7 @@ export default function ContactDetailPage() {
         await contactService.updateStatus(contactId, "read");
         data.status = "read";
         queryClient.invalidateQueries({ queryKey: ["contacts"] });
+        queryClient.invalidateQueries({ queryKey: ["direct-emails"] });
         queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
       }
       return data;
@@ -324,6 +330,7 @@ export default function ContactDetailPage() {
       toast.success(`Status updated to ${status}`);
       refetchContact();
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["direct-emails"] });
       queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
     } catch (error) {
       console.error("Error updating status:", error);
@@ -338,8 +345,9 @@ export default function ContactDetailPage() {
       await contactService.delete(contact.id);
       toast.success("Contact message successfully deleted");
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["direct-emails"] });
       queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
-      router.push("/cms/contacts");
+      router.push(backHref);
     } catch (error) {
       console.error("Error deleting contact:", error);
       toast.error("Failed to delete contact message");
@@ -433,7 +441,7 @@ export default function ContactDetailPage() {
           variant="outline"
           className="rounded-xl border-white/[0.08] bg-white/[0.04] text-slate-200 hover:text-white hover:bg-white/[0.08]"
         >
-          <Link href="/cms/contacts">Back to List</Link>
+          <Link href={backHref}>Back to List</Link>
         </Button>
       </div>
     );
@@ -449,9 +457,9 @@ export default function ContactDetailPage() {
           size="sm"
           className="gap-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-xl"
         >
-          <Link href="/cms/contacts">
+          <Link href={backHref}>
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Contact Messages</span>
+            <span>{backLabel}</span>
           </Link>
         </Button>
 

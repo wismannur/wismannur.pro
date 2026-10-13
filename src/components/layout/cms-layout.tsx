@@ -29,6 +29,7 @@ import {
   LayoutDashboard,
   ListOrdered,
   LogOut,
+  Mail,
   MessageSquare,
   MessagesSquare,
   PenSquare,
@@ -138,6 +139,11 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
           label: "Master CV Studio",
           icon: <FileCheck2 className="h-4 w-4" />,
           path: "/cms/master-cv",
+        },
+        {
+          label: "Direct Emails",
+          icon: <Mail className="h-4 w-4" />,
+          path: "/cms/direct-emails",
         },
       ],
     },
@@ -335,6 +341,8 @@ export const CmsLayout = ({ children }: CmsLayoutProps) => {
     switch (path) {
       case "/cms/contacts":
         return counts.contacts;
+      case "/cms/direct-emails":
+        return counts.directEmails;
       case "/cms/services":
         return counts.serviceRequests;
       case "/cms/hire-requests":
