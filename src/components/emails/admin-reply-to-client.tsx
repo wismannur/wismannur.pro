@@ -17,6 +17,7 @@ interface AdminReplyToClientProps {
   originalSubject: string;
   originalMessageSnippet?: string;
   inquiryId?: string;
+  attachments?: Array<{ name: string; url: string }>;
 }
 
 export const AdminReplyToClientEmail = ({
@@ -25,6 +26,7 @@ export const AdminReplyToClientEmail = ({
   originalSubject,
   originalMessageSnippet,
   inquiryId,
+  attachments = [],
 }: AdminReplyToClientProps) => {
   const previewSnippet = replyMessage.slice(0, 100);
 
@@ -39,6 +41,21 @@ export const AdminReplyToClientEmail = ({
             <Text style={greeting}>Hi {clientName},</Text>
             <Text style={replyMessageBox}>{replyMessage}</Text>
           </Section>
+
+          {/* Attachments */}
+          {attachments && attachments.length > 0 && (
+            <Section style={attachmentSection}>
+              <Text style={attachmentHeading}>📎 Attached Documents & Files:</Text>
+              {attachments.map((att, idx) => (
+                <Text key={idx} style={attachmentItem}>
+                  •{" "}
+                  <Link href={att.url} style={attachmentLink}>
+                    {att.name}
+                  </Link>
+                </Text>
+              ))}
+            </Section>
+          )}
 
           {/* Quoted Previous Thread */}
           {originalMessageSnippet && (
@@ -199,4 +216,31 @@ const refFooterText: React.CSSProperties = {
   fontSize: "11px",
   fontFamily: "monospace",
   margin: "8px 0 0",
+};
+
+const attachmentSection: React.CSSProperties = {
+  backgroundColor: "#131726",
+  border: "1px solid #22283E",
+  borderRadius: "10px",
+  padding: "14px 18px",
+  margin: "0 0 24px",
+};
+
+const attachmentHeading: React.CSSProperties = {
+  color: "#E2E8F0",
+  fontSize: "12px",
+  fontWeight: "700",
+  margin: "0 0 8px",
+};
+
+const attachmentItem: React.CSSProperties = {
+  color: "#94A3B8",
+  fontSize: "13px",
+  margin: "0 0 4px",
+};
+
+const attachmentLink: React.CSSProperties = {
+  color: "#818CF8",
+  textDecoration: "underline",
+  fontWeight: "600",
 };

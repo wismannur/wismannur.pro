@@ -21,6 +21,7 @@ export interface AdminDirectEmailAlertProps {
   subject: string;
   message: string;
   toAddress?: string;
+  attachments?: Array<{ name: string; url: string; size?: number; type?: string }>;
   receivedAt?: string;
 }
 
@@ -31,6 +32,7 @@ export const AdminDirectEmailAlertEmail = ({
   subject,
   message,
   toAddress = PUBLIC_SUPPORT_EMAIL,
+  attachments = [],
   receivedAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
 }: AdminDirectEmailAlertProps) => {
   const previewText = `[Direct Email Alert] ${subject} from ${clientName}`;
@@ -80,6 +82,22 @@ export const AdminDirectEmailAlertEmail = ({
 
             <Text style={label}>Message Body</Text>
             <Text style={messageBox}>{message}</Text>
+
+            {attachments && attachments.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Text style={label}>📎 Attached Files ({attachments.length})</Text>
+                {attachments.map((att, idx) => (
+                  <Text key={idx} style={attachmentItemStyle}>
+                    •{" "}
+                    <Link href={att.url} style={linkStyle}>
+                      {att.name}
+                    </Link>
+                    {att.size ? ` (${Math.max(1, Math.round(att.size / 1024))} KB)` : ""}
+                  </Text>
+                ))}
+              </>
+            )}
           </Section>
 
           {/* Actions & Footer */}
@@ -225,4 +243,10 @@ const linkStyle: React.CSSProperties = {
   color: "#818CF8",
   textDecoration: "none",
   fontWeight: "600",
+};
+
+const attachmentItemStyle: React.CSSProperties = {
+  color: "#CBD5E1",
+  fontSize: "13px",
+  margin: "4px 0",
 };

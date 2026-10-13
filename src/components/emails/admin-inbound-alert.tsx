@@ -19,6 +19,7 @@ interface AdminInboundAlertProps {
   clientEmail: string;
   subject: string;
   message: string;
+  attachments?: Array<{ name: string; url: string; size?: number; type?: string }>;
   receivedAt?: string;
 }
 
@@ -29,6 +30,7 @@ export const AdminInboundAlertEmail = ({
   clientEmail,
   subject,
   message,
+  attachments = [],
   receivedAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" }),
 }: AdminInboundAlertProps) => {
   const previewText = `[Inbound Reply] ${clientName} replied: ${subject}`;
@@ -80,6 +82,22 @@ export const AdminInboundAlertEmail = ({
 
             <Text style={label}>Client Reply Message</Text>
             <Text style={messageBox}>{message}</Text>
+
+            {attachments && attachments.length > 0 && (
+              <>
+                <Hr style={divider} />
+                <Text style={label}>📎 Attached Files ({attachments.length})</Text>
+                {attachments.map((att, idx) => (
+                  <Text key={idx} style={attachmentItemStyle}>
+                    •{" "}
+                    <Link href={att.url} style={linkStyle}>
+                      {att.name}
+                    </Link>
+                    {att.size ? ` (${Math.max(1, Math.round(att.size / 1024))} KB)` : ""}
+                  </Text>
+                ))}
+              </>
+            )}
           </Section>
 
           {/* Actions & Footer */}
@@ -224,4 +242,10 @@ const linkStyle: React.CSSProperties = {
   color: "#818CF8",
   textDecoration: "none",
   fontWeight: "600",
+};
+
+const attachmentItemStyle: React.CSSProperties = {
+  color: "#CBD5E1",
+  fontSize: "13px",
+  margin: "4px 0",
 };
