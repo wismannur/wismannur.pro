@@ -41,6 +41,31 @@ function useBreakpoint(breakpoint: keyof BreakpointConfig) {
   return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
+export function useMediaQuery(query: string) {
+  const subscribe = React.useCallback(
+    (callback: () => void) => {
+      if (typeof window === "undefined") return () => {};
+      const mql = window.matchMedia(query);
+      mql.addEventListener("change", callback);
+      return () => mql.removeEventListener("change", callback);
+    },
+    [query]
+  );
+
+  const getSnapshot = React.useCallback(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia(query).matches;
+  }, [query]);
+
+  const getServerSnapshot = React.useCallback(() => false, []);
+
+  return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
 export function useIsMobile() {
   return !useBreakpoint("md");
+}
+
+export function useIsCompactMobile() {
+  return useMediaQuery("(max-width: 425px)");
 }

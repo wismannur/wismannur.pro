@@ -24,6 +24,7 @@ export function useEmailNotifications() {
     onSuccess: (_, entityType) => {
       queryClient.invalidateQueries({ queryKey: NOTIFICATION_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["direct-emails"] });
       queryClient.invalidateQueries({ queryKey: ["serviceRequests"] });
       queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
       queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
@@ -40,6 +41,7 @@ export function useEmailNotifications() {
 
   const counts = query.data?.counts ?? {
     contacts: 0,
+    directEmails: 0,
     serviceRequests: 0,
     hireRequests: 0,
     jobOutreaches: 0,
