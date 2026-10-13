@@ -1,6 +1,6 @@
 "use server";
 
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull, or } from "drizzle-orm";
 import { z } from "zod";
 
 import { getDb, schema } from "@/db";
@@ -32,11 +32,27 @@ const contactFormSchema = z.object({
   honeypot: z.string().optional(),
 });
 
-export async function getContacts(page = 1, _startAfterDoc: unknown = null, status?: string) {
+export async function getContacts(
+  page = 1,
+  _startAfterDoc: unknown = null,
+  status?: string,
+  source: "form" | "direct_email" | "all" = "form"
+) {
   await assertAdmin();
   const db = getDb();
-  const where =
-    status && status !== "all" ? eq(contacts.status, status as Contact["status"]) : undefined;
+  const conditions = [];
+
+  if (status && status !== "all") {
+    conditions.push(eq(contacts.status, status as Contact["status"]));
+  }
+
+  if (source === "form") {
+    conditions.push(or(eq(contacts.source, "form"), isNull(contacts.source)));
+  } else if (source === "direct_email") {
+    conditions.push(eq(contacts.source, "direct_email"));
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
   const [rows, [{ count }]] = await Promise.all([
     db
       .select()
@@ -52,6 +68,14 @@ export async function getContacts(page = 1, _startAfterDoc: unknown = null, stat
     attachments: (row.attachments as Contact["attachments"]) ?? null,
   }));
   return { contacts: mappedRows, lastVisible: null, hasMore: page * PAGE_SIZE < count };
+}
+
+export async function getDirectEmails(
+  page = 1,
+  _startAfterDoc: unknown = null,
+  status?: string
+) {
+  return getContacts(page, _startAfterDoc, status, "direct_email");
 }
 
 export async function getById(id: string): Promise<Contact | null> {
@@ -102,7 +126,7 @@ export async function submit(formData: ContactForm, recaptchaToken?: string): Pr
 
   const [{ id }] = await getDb()
     .insert(contacts)
-    .values({ ...contactData, status: "new" })
+    .values({ ...contactData, status: "new", source: "form" })
     .returning({ id: contacts.id });
   const { clientEmailId } = await sendContactEmails({ ...contactData, id });
   if (clientEmailId) {
