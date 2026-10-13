@@ -1,3 +1,5 @@
+import type { EmailAttachment } from "../inquiry-messages/types";
+
 export interface ContactForm {
   name: string;
   email: string;
@@ -13,6 +15,7 @@ export type Contact = {
   subject: string;
   message: string;
   rawHtml?: string | null;
+  attachments?: EmailAttachment[] | null;
   messageId?: string | null;
   status: "new" | "read" | "replied" | "archived";
   createdAt: Date;
