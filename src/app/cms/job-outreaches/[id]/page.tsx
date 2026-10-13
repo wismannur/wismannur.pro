@@ -14,7 +14,12 @@ import { toast } from "sonner";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { jobOutreachService, jobTrackerService, type OutreachStatus } from "@/services";
+import {
+  jobOutreachService,
+  jobTrackerService,
+  type JobOutreachAttachment,
+  type OutreachStatus,
+} from "@/services";
 import {
   OutreachDetailHeader,
   STATUS_CONFIG,
@@ -29,6 +34,7 @@ export default function JobOutreachDetailPage() {
   const outreachId = params.id;
 
   const [followUpMessage, setFollowUpMessage] = useState("");
+  const [followUpAttachments, setFollowUpAttachments] = useState<JobOutreachAttachment[]>([]);
   const [isSendingFollowUp, setIsSendingFollowUp] = useState(false);
   const [isGeneratingAiFollowUp, setIsGeneratingAiFollowUp] = useState(false);
   const [isSendingDraft, setIsSendingDraft] = useState(false);
@@ -132,9 +138,15 @@ export default function JobOutreachDetailPage() {
     if (!outreach || !followUpMessage.trim()) return;
     setIsSendingFollowUp(true);
     try {
-      await jobOutreachService.sendFollowUp(outreach.id, followUpMessage.trim());
+      await jobOutreachService.sendFollowUp(
+        outreach.id,
+        followUpMessage.trim(),
+        undefined,
+        followUpAttachments
+      );
       toast.success(`Follow-up successfully sent to ${outreach.contactEmail}!`);
       setFollowUpMessage("");
+      setFollowUpAttachments([]);
       refetch();
       queryClient.invalidateQueries({ queryKey: ["jobOutreaches"] });
       queryClient.invalidateQueries({ queryKey: ["jobOutreachesAnalytics"] });
@@ -276,6 +288,8 @@ export default function JobOutreachDetailPage() {
             outreach={outreach}
             followUpMessage={followUpMessage}
             setFollowUpMessage={setFollowUpMessage}
+            followUpAttachments={followUpAttachments}
+            setFollowUpAttachments={setFollowUpAttachments}
             isSendingFollowUp={isSendingFollowUp}
             isGeneratingAiFollowUp={isGeneratingAiFollowUp}
             isSendingDraft={isSendingDraft}

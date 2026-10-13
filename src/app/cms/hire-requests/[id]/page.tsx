@@ -51,10 +51,15 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import {
+  EmailAttachmentList,
+  EmailAttachmentUploader,
+} from "@/components/cms/email-attachments";
 import { LinkifiedText } from "@/components/cms/linkified-text";
 import {
   hireRequestService,
   inquiryMessagesService,
+  type EmailAttachment,
   type HireRequestStatus,
   type InquiryMessage,
 } from "@/services";
@@ -100,6 +105,7 @@ export default function HireRequestDetailPage() {
   const requestId = params.id;
 
   const [replyMessage, setReplyMessage] = useState("");
+  const [replyAttachments, setReplyAttachments] = useState<EmailAttachment[]>([]);
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -166,10 +172,12 @@ export default function HireRequestDetailPage() {
         subject: `Response: ${request.roleTitle} @ ${request.company}`,
         message: replyMessage.trim(),
         originalMessageSnippet: request.message,
+        attachments: replyAttachments,
       });
 
       toast.success("Email reply successfully sent to recruiter!");
       setReplyMessage("");
+      setReplyAttachments([]);
       refetchThread();
       refetchRequest();
       queryClient.invalidateQueries({ queryKey: ["hireRequests"] });
@@ -509,6 +517,11 @@ export default function HireRequestDetailPage() {
                         <div className="text-slate-200 text-xs sm:text-sm leading-relaxed">
                           <LinkifiedText text={msg.message} />
                         </div>
+                        <EmailAttachmentList
+                          attachments={msg.attachments}
+                          compact
+                          className="mt-3 pt-2.5 border-t border-white/[0.06]"
+                        />
                       </div>
                     );
                   })}
@@ -570,6 +583,13 @@ export default function HireRequestDetailPage() {
                     <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
                   </div>
                 </div>
+
+                <EmailAttachmentUploader
+                  attachments={replyAttachments}
+                  onChange={setReplyAttachments}
+                  onUploadFile={(fd) => inquiryMessagesService.uploadAttachment(fd)}
+                  disabled={isSendingReply}
+                />
 
                 <div className="flex justify-end">
                   <Button
