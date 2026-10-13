@@ -238,6 +238,7 @@ export const jobOutreachMessages = pgTable(
     message: text("message").notNull(),
     messageId: text("message_id"),
     rawHtml: text("raw_html"),
+    attachments: jsonb("attachments"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

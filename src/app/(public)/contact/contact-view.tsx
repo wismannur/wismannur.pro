@@ -113,6 +113,9 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingMessageRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragStartYRef.current;
       const maxHeight = Math.min(650, Math.floor(window.innerHeight * 0.75));
       const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 100), maxHeight);
@@ -123,10 +126,12 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
       isDraggingMessageRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   const email = settings.publicEmail || "wismannur@gmail.com";
@@ -522,7 +527,7 @@ export const ContactView = ({ copy, settings }: ContactViewProps) => {
                                 <div
                                   onMouseDown={handleMouseDownOnResize}
                                   onTouchStart={handleTouchStartOnResize}
-                                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] active:bg-primary/20 transition-colors select-none border-t border-white/[0.06]"
+                                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] active:bg-primary/20 transition-colors select-none border-t border-white/[0.06] touch-none"
                                   title="Drag handle to resize"
                                 >
                                   <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 transition-all duration-200" />

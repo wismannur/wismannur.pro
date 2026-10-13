@@ -80,6 +80,9 @@ export function TabJobOverview({
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingJobDescRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragJobDescStartYRef.current;
       const maxHeight = Math.min(800, Math.floor(window.innerHeight * 0.85));
       const newHeight = Math.min(Math.max(startJobDescHeightRef.current + deltaY, 100), maxHeight);
@@ -90,10 +93,12 @@ export function TabJobOverview({
       isDraggingJobDescRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   // Resizable state & handlers for Personal Application Notes & Context
@@ -134,6 +139,9 @@ export function TabJobOverview({
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingNotesRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragNotesStartYRef.current;
       const maxHeight = Math.min(600, Math.floor(window.innerHeight * 0.75));
       const newHeight = Math.min(Math.max(startNotesHeightRef.current + deltaY, 70), maxHeight);
@@ -144,10 +152,12 @@ export function TabJobOverview({
       isDraggingNotesRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   // Resizable state & handlers for Key Requirements
@@ -213,6 +223,9 @@ export function TabJobOverview({
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingReqsRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragReqsStartYRef.current;
       const maxHeight = Math.min(800, Math.floor(window.innerHeight * 0.85));
       const newHeight = Math.min(Math.max(startReqsHeightRef.current + deltaY, 80), maxHeight);
@@ -223,10 +236,12 @@ export function TabJobOverview({
       isDraggingReqsRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   return (
@@ -527,7 +542,7 @@ export function TabJobOverview({
             <div
               onMouseDown={handleMouseDownJobDescResize}
               onTouchStart={handleTouchStartJobDescResize}
-              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
               title="Drag handle to resize job description"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
@@ -585,7 +600,7 @@ export function TabJobOverview({
             <div
               onMouseDown={handleMouseDownReqsResize}
               onTouchStart={handleTouchStartReqsResize}
-              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
               title="Drag handle to resize key requirements"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
@@ -638,7 +653,7 @@ export function TabJobOverview({
             <div
               onMouseDown={handleMouseDownNotesResize}
               onTouchStart={handleTouchStartNotesResize}
-              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+              className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
               title="Drag handle to resize application notes"
             >
               <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />

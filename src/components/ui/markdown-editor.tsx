@@ -197,10 +197,13 @@ export function MarkdownEditor({
     startHeightRef.current = editorHeight;
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
-      if (!isDraggingHeightRef.current) return;
-      const currentTouch = moveEvent.touches[0];
-      if (!currentTouch) return;
-      const deltaY = currentTouch.clientY - dragStartYHeightRef.current;
+      if (!isDraggingHeightRef.current || moveEvent.touches.length !== 1) return;
+      const touch = moveEvent.touches[0];
+      if (!touch) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
+      const deltaY = touch.clientY - dragStartYHeightRef.current;
       const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 260), 900);
       setEditorHeight(newHeight);
     };
@@ -209,10 +212,12 @@ export function MarkdownEditor({
       isDraggingHeightRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   const handleCopyMarkdown = useCallback(() => {
@@ -463,7 +468,7 @@ export function MarkdownEditor({
         <div
           onMouseDown={handleHeightMouseDown}
           onTouchStart={handleHeightTouchStart}
-          className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] shrink-0"
+          className="group w-full h-3.5 cursor-row-resize touch-none flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] shrink-0"
           title="Drag handle to resize editor height"
         >
           <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-primary group-hover:w-16 transition-all duration-200" />

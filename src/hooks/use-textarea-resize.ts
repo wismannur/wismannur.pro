@@ -80,6 +80,9 @@ export function useTextareaResize({
         if (!isDraggingRef.current) return;
         const currentTouch = moveEvent.touches[0];
         if (!currentTouch) return;
+        if (moveEvent.cancelable) {
+          moveEvent.preventDefault();
+        }
         const deltaY = currentTouch.clientY - dragStartYRef.current;
         const computedMax = maxHeight ?? Math.max(500, Math.floor(window.innerHeight * 0.7));
         const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, minHeight), computedMax);
@@ -90,6 +93,7 @@ export function useTextareaResize({
         isDraggingRef.current = false;
         window.removeEventListener("touchmove", handleTouchMove);
         window.removeEventListener("touchend", handleTouchEnd);
+        window.removeEventListener("touchcancel", handleTouchEnd);
         if (storageKey) {
           setHeight((finalH) => {
             try {
@@ -100,8 +104,9 @@ export function useTextareaResize({
         }
       };
 
-      window.addEventListener("touchmove", handleTouchMove, { passive: true });
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
       window.addEventListener("touchend", handleTouchEnd);
+      window.addEventListener("touchcancel", handleTouchEnd);
     },
     [height, maxHeight, minHeight, storageKey]
   );

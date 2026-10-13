@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { del, put } from "@vercel/blob";
 import { eq } from "drizzle-orm";
@@ -117,6 +118,10 @@ export async function updateProfile(data: UserProfileUpdate): Promise<void> {
       ...(clean.social ? { social: clean.social } : {}),
     })
     .where(eq(users.uid, targetUid));
+
+  revalidatePath("/cv");
+  revalidatePath("/about");
+  revalidatePath("/");
 }
 
 // Uploads the cropped avatar to Vercel Blob and persists the URL. A random

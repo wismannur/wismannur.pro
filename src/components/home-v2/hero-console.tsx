@@ -22,7 +22,9 @@ export function HeroConsole() {
     consoleHeight,
     inputHeight,
     handleMouseDownResizeConsole,
+    handleTouchStartResizeConsole,
     handleMouseDownOnResize,
+    handleTouchStartOnResize,
     handleReset,
     handleSendMessage,
   } = useHeroConsole();
@@ -53,6 +55,7 @@ export function HeroConsole() {
             onReset={handleReset}
             onSendMessage={handleSendMessage}
             onMouseDownOnResize={handleMouseDownOnResize}
+            onTouchStartOnResize={handleTouchStartOnResize}
             scrollRef={scrollRef}
             inputRef={inputRef}
           />
@@ -77,7 +80,8 @@ export function HeroConsole() {
       {/* Bottom Resize Handle */}
       <div
         onMouseDown={handleMouseDownResizeConsole}
-        className="w-full h-3.5 cursor-row-resize flex items-center justify-center bg-[#090A0F]/90 hover:bg-white/[0.04] transition-colors border-t border-white/[0.06] group/resize select-none"
+        onTouchStart={handleTouchStartResizeConsole}
+        className="w-full h-3.5 cursor-row-resize touch-none flex items-center justify-center bg-[#090A0F]/90 hover:bg-white/[0.04] transition-colors border-t border-white/[0.06] group/resize select-none"
         title="Drag down to resize terminal height"
       >
         <div className="w-12 h-1 rounded-full bg-white/20 group-hover/resize:bg-primary transition-colors" />

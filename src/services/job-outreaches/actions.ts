@@ -47,6 +47,7 @@ export async function uploadOutreachAttachment(formData: FormData): Promise<JobO
     name: file.name,
     url: toCustomAttachmentUrl(url),
     type: file.type,
+    size: file.size,
   };
 }
 
@@ -67,6 +68,7 @@ const toJobOutreachMessage = (row: JobOutreachMessageRow): JobOutreachMessage =>
   message: row.message,
   messageId: row.messageId ?? undefined,
   rawHtml: row.rawHtml ?? undefined,
+  attachments: (row.attachments as JobOutreachAttachment[] | null) ?? undefined,
   createdAt: row.createdAt,
 });
 
@@ -318,6 +320,7 @@ export async function createJobOutreach(
       senderEmail: `hi@${RESEND_EMAIL_DOMAIN}`,
       message: inserted.body,
       messageId: resendId || null,
+      attachments: data.attachments && data.attachments.length > 0 ? data.attachments : null,
       createdAt: isSending ? now : inserted.createdAt,
     });
 
@@ -438,7 +441,8 @@ export async function sendOutreachEmail(id: string): Promise<JobOutreach> {
 export async function sendFollowUpMessage(
   outreachId: string,
   followUpText: string,
-  subject?: string
+  subject?: string,
+  attachments?: JobOutreachAttachment[]
 ): Promise<JobOutreachMessage> {
   await assertAdmin();
   const db = getDb();
@@ -481,11 +485,12 @@ export async function sendFollowUpMessage(
     companyName: outreach.companyName,
     jobTitle: outreach.jobTitle,
     isFollowUp: true,
+    attachments: attachments && attachments.length > 0 ? attachments : undefined,
     inReplyToId,
     referencesIds,
   });
 
-  // 3. Insert message into thread with messageId
+  // 3. Insert message into thread with messageId and attachments
   const [newMessage] = await db
     .insert(jobOutreachMessages)
     .values({
@@ -495,6 +500,7 @@ export async function sendFollowUpMessage(
       senderEmail: `hi@${RESEND_EMAIL_DOMAIN}`,
       message: followUpText.trim(),
       messageId: sendRes.id || null,
+      attachments: attachments && attachments.length > 0 ? attachments : null,
     })
     .returning();
 

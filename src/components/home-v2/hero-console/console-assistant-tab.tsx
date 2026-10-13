@@ -26,6 +26,7 @@ interface ConsoleAssistantTabProps {
   onReset: () => void;
   onSendMessage: (text: string) => void;
   onMouseDownOnResize: (e: React.MouseEvent) => void;
+  onTouchStartOnResize?: (e: React.TouchEvent) => void;
   scrollRef: React.RefObject<HTMLDivElement | null>;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }
@@ -103,6 +104,7 @@ export function ConsoleAssistantTab({
   onReset,
   onSendMessage,
   onMouseDownOnResize,
+  onTouchStartOnResize,
   scrollRef,
   inputRef,
 }: ConsoleAssistantTabProps) {
@@ -237,7 +239,8 @@ export function ConsoleAssistantTab({
         {/* Resize Bar */}
         <div
           onMouseDown={onMouseDownOnResize}
-          className="h-2 w-full flex items-center justify-center cursor-row-resize hover:bg-white/[0.03] transition-colors -mt-1 mb-1 rounded group/drag select-none"
+          onTouchStart={onTouchStartOnResize}
+          className="h-2 w-full flex items-center justify-center cursor-row-resize touch-none hover:bg-white/[0.03] transition-colors -mt-1 mb-1 rounded group/drag select-none"
           title="Drag up/down to resize input box"
         >
           <GripHorizontal

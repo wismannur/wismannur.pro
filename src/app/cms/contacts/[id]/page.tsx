@@ -31,6 +31,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
+import {
+  EmailAttachmentList,
+  EmailAttachmentUploader,
+} from "@/components/cms/email-attachments";
 import { EmailHtmlViewer } from "@/components/cms/email-html-viewer";
 import { LinkifiedText } from "@/components/cms/linkified-text";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
@@ -64,6 +68,7 @@ import { cn } from "@/lib/utils";
 import {
   contactService,
   inquiryMessagesService,
+  type EmailAttachment,
   type InquiryMessage,
 } from "@/services";
 
@@ -74,6 +79,7 @@ export default function ContactDetailPage() {
   const contactId = params.id;
 
   const [replyMessage, setReplyMessage] = useState("");
+  const [replyAttachments, setReplyAttachments] = useState<EmailAttachment[]>([]);
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -119,6 +125,9 @@ export default function ContactDetailPage() {
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingReplyRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragStartYRef.current;
       const maxHeight = Math.min(600, Math.floor(window.innerHeight * 0.75));
       const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 90), maxHeight);
@@ -129,10 +138,12 @@ export default function ContactDetailPage() {
       isDraggingReplyRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   // AI Draft Generation States & Handler (Grounded in Chat History & AI Knowledge Hub)
@@ -177,6 +188,9 @@ export default function ContactDetailPage() {
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingGuidanceRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragGuidanceStartYRef.current;
       const maxHeight = Math.min(320, Math.floor(window.innerHeight * 0.45));
       const newHeight = Math.min(Math.max(startGuidanceHeightRef.current + deltaY, 64), maxHeight);
@@ -187,10 +201,12 @@ export default function ContactDetailPage() {
       isDraggingGuidanceRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   const handleGenerateAiDraft = async (
@@ -245,6 +261,7 @@ export default function ContactDetailPage() {
         await contactService.updateStatus(contactId, "read");
         data.status = "read";
         queryClient.invalidateQueries({ queryKey: ["contacts"] });
+        queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
       }
       return data;
     },
@@ -282,10 +299,12 @@ export default function ContactDetailPage() {
         subject: contact.subject,
         message: replyMessage.trim(),
         originalMessageSnippet: contact.message,
+        attachments: replyAttachments.length > 0 ? replyAttachments : undefined,
       });
 
       toast.success("Email reply successfully sent to client!");
       setReplyMessage("");
+      setReplyAttachments([]);
       refetchThread();
       refetchContact();
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
@@ -305,6 +324,7 @@ export default function ContactDetailPage() {
       toast.success(`Status updated to ${status}`);
       refetchContact();
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
@@ -318,6 +338,7 @@ export default function ContactDetailPage() {
       await contactService.delete(contact.id);
       toast.success("Contact message successfully deleted");
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["email-notifications-unread"] });
       router.push("/cms/contacts");
     } catch (error) {
       console.error("Error deleting contact:", error);
@@ -578,6 +599,10 @@ export default function ContactDetailPage() {
                   <LinkifiedText text={contact.message} />
                 </div>
               )}
+              <EmailAttachmentList
+                attachments={contact.attachments}
+                className="mt-4 pt-3 border-t border-white/[0.06]"
+              />
             </CardContent>
           </Card>
 
@@ -668,6 +693,11 @@ export default function ContactDetailPage() {
                             <LinkifiedText text={msg.message} />
                           </div>
                         )}
+                        <EmailAttachmentList
+                          attachments={msg.attachments}
+                          compact
+                          className="mt-3 pt-2.5 border-t border-white/[0.06]"
+                        />
                       </div>
                     );
                   })}
@@ -746,12 +776,19 @@ export default function ContactDetailPage() {
                   <div
                     onMouseDown={handleMouseDownOnResize}
                     onTouchStart={handleTouchStartOnResize}
-                    className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                    className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                     title="Drag handle to resize text area"
                   >
                     <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
                   </div>
                 </div>
+
+                <EmailAttachmentUploader
+                  attachments={replyAttachments}
+                  onChange={setReplyAttachments}
+                  onUploadFile={(fd) => inquiryMessagesService.uploadAttachment(fd)}
+                  disabled={isSendingReply}
+                />
 
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
@@ -1024,7 +1061,7 @@ export default function ContactDetailPage() {
                 <div
                   onMouseDown={handleMouseDownGuidanceResize}
                   onTouchStart={handleTouchStartGuidanceResize}
-                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04]"
+                  className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
                   title="Drag handle to resize text area"
                 >
                   <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />

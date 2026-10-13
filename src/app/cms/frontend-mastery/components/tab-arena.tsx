@@ -316,6 +316,9 @@ function ArenaInner({
 
     const handleTouchMove = (moveEvent: TouchEvent) => {
       if (!isDraggingEditorRef.current || moveEvent.touches.length !== 1) return;
+      if (moveEvent.cancelable) {
+        moveEvent.preventDefault();
+      }
       const deltaY = moveEvent.touches[0].clientY - dragStartYRef.current;
       const maxHeight = Math.min(1100, Math.floor(window.innerHeight * 0.85));
       const newHeight = Math.min(Math.max(startHeightRef.current + deltaY, 260), maxHeight);
@@ -326,10 +329,12 @@ function ArenaInner({
       isDraggingEditorRef.current = false;
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", handleTouchEnd);
     };
 
-    window.addEventListener("touchmove", handleTouchMove, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", handleTouchEnd);
   };
 
   const handleEditorBeforeMount = (monaco: Monaco) => {
@@ -708,7 +713,7 @@ function ArenaInner({
               <div
                 onMouseDown={handleMouseDownOnResize}
                 onTouchStart={handleTouchStartOnResize}
-                className="group flex h-4 w-full cursor-row-resize items-center justify-center border-t border-[#22283E] bg-[#08090C] transition-colors select-none hover:bg-white/[0.04] active:bg-indigo-500/20"
+                className="group flex h-4 w-full cursor-row-resize items-center justify-center border-t border-[#22283E] bg-[#08090C] transition-colors select-none hover:bg-white/[0.04] active:bg-indigo-500/20 touch-none"
                 title="Drag handle to resize editor height"
               >
                 <div className="h-1 w-12 rounded-full bg-white/20 transition-all duration-200 group-hover:w-20 group-hover:bg-indigo-400" />

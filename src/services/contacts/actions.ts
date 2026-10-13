@@ -47,13 +47,21 @@ export async function getContacts(page = 1, _startAfterDoc: unknown = null, stat
       .offset((page - 1) * PAGE_SIZE),
     db.select({ count: countRows }).from(contacts).where(where),
   ]);
-  return { contacts: rows, lastVisible: null, hasMore: page * PAGE_SIZE < count };
+  const mappedRows: Contact[] = rows.map((row) => ({
+    ...row,
+    attachments: (row.attachments as Contact["attachments"]) ?? null,
+  }));
+  return { contacts: mappedRows, lastVisible: null, hasMore: page * PAGE_SIZE < count };
 }
 
 export async function getById(id: string): Promise<Contact | null> {
   await assertAdmin();
   const [row] = await getDb().select().from(contacts).where(eq(contacts.id, id)).limit(1);
-  return row ?? null;
+  if (!row) return null;
+  return {
+    ...row,
+    attachments: (row.attachments as Contact["attachments"]) ?? null,
+  };
 }
 
 export async function updateStatus(id: string, status: Contact["status"]): Promise<void> {

@@ -52,10 +52,12 @@ export default async function proxy(request: NextRequest) {
   const secureCookie = forwardedProto
     ? forwardedProto === "https"
     : request.nextUrl.protocol === "https:";
+  const cookieName = `${secureCookie ? "__Secure-" : ""}authjs.wismannur.session-token`;
   const token = await getToken({
     req: request,
     secret: process.env.AUTH_SECRET,
     secureCookie,
+    cookieName,
   });
 
   if (pathname.startsWith("/cms") && !token) {

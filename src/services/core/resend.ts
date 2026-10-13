@@ -73,6 +73,7 @@ export interface AdminReplyPayload {
   subject: string;
   message: string;
   originalMessageSnippet?: string;
+  attachments?: Array<{ name: string; url: string }>;
   inReplyToId?: string | null;
   referencesIds?: (string | null | undefined)[];
 }
@@ -85,6 +86,7 @@ interface InboundAlertPayload {
   subject: string;
   message: string;
   toAddress?: string;
+  attachments?: Array<{ name: string; url: string; size?: number; type?: string }>;
   isNewConversation?: boolean;
 }
 
@@ -384,6 +386,19 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
       formattedSubject = `Re: ${formattedSubject}`;
     }
 
+    const resendAttachments =
+      payload.attachments && payload.attachments.length > 0
+        ? payload.attachments.map((att) => ({
+            filename: att.name,
+            path: toDirectBlobUrl(att.url),
+          }))
+        : undefined;
+
+    const emailTemplateAttachments = payload.attachments?.map((att) => ({
+      ...att,
+      url: toCustomAttachmentUrl(att.url),
+    }));
+
     const headers = buildThreadingHeaders({
       entityRefId: payload.inquiryId,
       inReplyToId: payload.inReplyToId,
@@ -397,6 +412,7 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
         ? `${payload.inquiryId}@${RESEND_EMAIL_DOMAIN}`
         : `hi@${RESEND_EMAIL_DOMAIN}`,
       subject: formattedSubject,
+      attachments: resendAttachments,
       headers,
       react: AdminReplyToClientEmail({
         clientName: payload.toName,
@@ -404,6 +420,7 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
         originalSubject: payload.subject,
         originalMessageSnippet: payload.originalMessageSnippet,
         inquiryId: payload.inquiryId,
+        attachments: emailTemplateAttachments,
       }),
     });
 
@@ -434,6 +451,11 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
       ? `[New Direct Email] ${payload.clientName}: ${payload.subject}`
       : `[Inbound Reply] ${payload.clientName} replied: ${payload.subject}`;
 
+    const formattedAttachments = payload.attachments?.map((att) => ({
+      ...att,
+      url: toCustomAttachmentUrl(att.url),
+    }));
+
     const alertReact = payload.isNewConversation
       ? AdminDirectEmailAlertEmail({
           inquiryId: payload.inquiryId,
@@ -442,6 +464,7 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
           subject: payload.subject,
           message: payload.message,
           toAddress: payload.toAddress,
+          attachments: formattedAttachments,
         })
       : AdminInboundAlertEmail({
           inquiryId: payload.inquiryId,
@@ -450,6 +473,7 @@ export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Pro
           clientEmail: payload.clientEmail,
           subject: payload.subject,
           message: payload.message,
+          attachments: formattedAttachments,
         });
 
     await resend.emails.send({

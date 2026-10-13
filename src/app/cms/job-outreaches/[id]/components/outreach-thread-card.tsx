@@ -7,6 +7,8 @@ import {
   Send,
   Loader2,
   Sparkles,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -17,13 +19,24 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { PUBLIC_SUPPORT_EMAIL } from "@/lib/site-url";
+import {
+  EmailAttachmentList,
+  EmailAttachmentUploader,
+} from "@/components/cms/email-attachments";
 import { LinkifiedText } from "@/components/cms/linkified-text";
-import type { JobOutreach } from "@/services";
+import { useTextareaResize } from "@/hooks/use-textarea-resize";
+import {
+  jobOutreachService,
+  type JobOutreach,
+  type JobOutreachAttachment,
+} from "@/services";
 
 interface OutreachThreadCardProps {
   outreach: JobOutreach;
   followUpMessage: string;
   setFollowUpMessage: (v: string) => void;
+  followUpAttachments: JobOutreachAttachment[];
+  setFollowUpAttachments: React.Dispatch<React.SetStateAction<JobOutreachAttachment[]>>;
   isSendingFollowUp: boolean;
   isGeneratingAiFollowUp: boolean;
   isSendingDraft: boolean;
@@ -36,6 +49,8 @@ export function OutreachThreadCard({
   outreach,
   followUpMessage,
   setFollowUpMessage,
+  followUpAttachments,
+  setFollowUpAttachments,
   isSendingFollowUp,
   isGeneratingAiFollowUp,
   isSendingDraft,
@@ -43,6 +58,17 @@ export function OutreachThreadCard({
   onGenerateAiFollowUp,
   onSendFollowUp,
 }: OutreachThreadCardProps) {
+  const {
+    height: followUpHeight,
+    setHeight: setFollowUpHeight,
+    handleMouseDownResize,
+    handleTouchStartResize,
+  } = useTextareaResize({
+    initialHeight: 130,
+    minHeight: 80,
+    storageKey: "cms-job-outreach-followup-height",
+  });
+
   return (
     <div className="space-y-6">
       {/* Draft Banner if status is draft */}
@@ -121,6 +147,11 @@ export function OutreachThreadCard({
               <div className="text-sm whitespace-pre-wrap leading-relaxed text-slate-200 pl-8 font-sans">
                 {outreach.body}
               </div>
+              <EmailAttachmentList
+                attachments={outreach.attachments}
+                compact
+                className="pl-8 pt-2 border-t border-white/[0.06]"
+              />
             </div>
           ) : (
             <div className="space-y-4">
@@ -170,6 +201,11 @@ export function OutreachThreadCard({
                     <div className="text-sm leading-relaxed pl-8 text-slate-200 font-sans">
                       <LinkifiedText text={msg.message} />
                     </div>
+                    <EmailAttachmentList
+                      attachments={msg.attachments}
+                      compact
+                      className="pl-8 pt-2 border-t border-white/[0.06]"
+                    />
                   </div>
                 );
               })}
@@ -185,24 +221,47 @@ export function OutreachThreadCard({
                 <Send className="h-4 w-4 text-indigo-400" />
                 Send Follow-up / Reply
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onGenerateAiFollowUp}
-                disabled={isGeneratingAiFollowUp || isSendingFollowUp}
-                className="h-8 gap-1.5 text-xs rounded-lg border-indigo-500/30 text-indigo-300 bg-[#131726] hover:bg-indigo-500/20 hover:text-white"
-              >
-                {isGeneratingAiFollowUp ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Drafting...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5" /> AI Follow-up Draft
-                  </>
-                )}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    if (followUpHeight > 180) {
+                      setFollowUpHeight(130);
+                    } else {
+                      const target = Math.min(320, Math.floor(window.innerHeight * 0.45));
+                      setFollowUpHeight(target);
+                    }
+                  }}
+                  className="h-8 w-8 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                  title={followUpHeight > 180 ? "Perkecil input" : "Perbesar input"}
+                >
+                  {followUpHeight > 180 ? (
+                    <Minimize2 className="h-3.5 w-3.5" />
+                  ) : (
+                    <Maximize2 className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onGenerateAiFollowUp}
+                  disabled={isGeneratingAiFollowUp || isSendingFollowUp}
+                  className="h-8 gap-1.5 text-xs rounded-lg border-indigo-500/30 text-indigo-300 bg-[#131726] hover:bg-indigo-500/20 hover:text-white"
+                >
+                  {isGeneratingAiFollowUp ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Drafting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5" /> AI Follow-up Draft
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
 
             {/* Follow-up Playbook Presets */}
@@ -254,12 +313,32 @@ export function OutreachThreadCard({
               </Button>
             </div>
 
-            <Textarea
-              rows={5}
-              placeholder={`Write a reply or follow-up message for ${outreach.contactName}...`}
-              value={followUpMessage}
-              onChange={(e) => setFollowUpMessage(e.target.value)}
-              className="text-sm leading-relaxed bg-[#131726] border-white/[0.08] text-slate-200 placeholder:text-slate-400 focus-visible:ring-indigo-500/30"
+            {/* Textarea container with bottom resize drag handle */}
+            <div className="relative flex flex-col rounded-xl border border-white/[0.08] bg-[#131726] overflow-hidden focus-within:border-indigo-500/50 focus-within:ring-1 focus-within:ring-indigo-500/30 transition-all shadow-inner">
+              <Textarea
+                placeholder={`Write a reply or follow-up message for ${outreach.contactName}...`}
+                value={followUpMessage}
+                onChange={(e) => setFollowUpMessage(e.target.value)}
+                style={{ height: `${followUpHeight}px` }}
+                className="w-full text-sm leading-relaxed font-sans resize-none rounded-none border-0 bg-transparent text-slate-200 placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 px-3.5 py-2.5 overflow-y-auto scrollbar-thin"
+              />
+
+              {/* Bottom Drag Handle Bar to Resize */}
+              <div
+                onMouseDown={handleMouseDownResize}
+                onTouchStart={handleTouchStartResize}
+                className="group w-full h-3.5 cursor-row-resize flex items-center justify-center bg-white/[0.02] hover:bg-white/[0.06] transition-colors select-none border-t border-white/[0.04] touch-none"
+                title="Drag handle to resize follow-up message"
+              >
+                <div className="w-10 h-1 rounded-full bg-white/20 group-hover:bg-indigo-400 group-hover:w-16 transition-all duration-200" />
+              </div>
+            </div>
+
+            <EmailAttachmentUploader
+              attachments={followUpAttachments}
+              onChange={setFollowUpAttachments}
+              onUploadFile={(fd) => jobOutreachService.uploadAttachment(fd)}
+              disabled={isSendingFollowUp}
             />
 
             <div className="flex items-center justify-between pt-1">

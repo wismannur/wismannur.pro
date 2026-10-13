@@ -5,6 +5,7 @@ import type React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
+  ArrowUpRight,
   Building2,
   CheckCircle2,
   Clock,
@@ -46,6 +47,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -59,6 +61,7 @@ import { useRegisterCmsPageContext } from "@/lib/cms-page-context";
 import { hireRequestService, type HireRequest, type HireRequestStatus } from "@/services";
 import { CmsPageHeader } from "@/components/cms/cms-page-header";
 import { CmsMetricCards } from "@/components/cms/cms-metric-cards";
+import { CmsCardPagination } from "@/components/cms/cms-card-pagination";
 
 const EMPLOYMENT_CONFIG: Record<string, { label: string; className: string }> = {
   full_time: {
@@ -527,8 +530,286 @@ export default function CmsHireRequestsPage() {
         </div>
       </div>
 
-      {/* DataTable */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
+      {/* Mobile & Tablet Responsive Cards (< lg) */}
+      <div className="space-y-4 lg:hidden">
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={`hire-skeleton-${index}`}
+                className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 p-5 space-y-4 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white/[0.05]" />
+                    <div className="space-y-1.5">
+                      <div className="w-24 h-4 rounded bg-white/[0.05]" />
+                      <div className="w-32 h-3 rounded bg-white/[0.05]" />
+                    </div>
+                  </div>
+                  <div className="w-16 h-6 rounded-full bg-white/[0.05]" />
+                </div>
+                <div className="space-y-2">
+                  <div className="w-2/3 h-5 rounded bg-white/[0.05]" />
+                  <div className="w-full h-12 rounded-xl bg-white/[0.03]" />
+                </div>
+                <div className="pt-2 flex items-center justify-between border-t border-white/[0.04]">
+                  <div className="w-20 h-3 rounded bg-white/[0.05]" />
+                  <div className="w-24 h-8 rounded-lg bg-white/[0.05]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredRequests.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredRequests.map((row) => {
+                const isNew = row.status === "new";
+                const createdDate = new Date(row.createdAt);
+                const empConfig = EMPLOYMENT_CONFIG[row.employmentType] || EMPLOYMENT_CONFIG.full_time;
+                const workConfig = WORKPLACE_CONFIG[row.workplaceType] || WORKPLACE_CONFIG.remote;
+
+                return (
+                  <div
+                    key={row.id}
+                    onClick={() => handleViewRequest(row.id)}
+                    className={cn(
+                      "group relative flex flex-col justify-between rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl p-4 sm:p-5 transition-all duration-200 hover:border-indigo-500/40 hover:bg-[#101426]/80 cursor-pointer shadow-lg",
+                      isNew && "border-blue-500/30 bg-blue-950/[0.08] hover:border-blue-500/50"
+                    )}
+                  >
+                    <div>
+                      {/* Top Row: Avatar, Identity & Actions */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Avatar className="h-10 w-10 shrink-0 border border-white/[0.08] bg-[#131726] group-hover:border-indigo-500/40 transition-colors">
+                            <AvatarFallback
+                              className={cn(
+                                "font-semibold text-xs transition-colors",
+                                isNew
+                                  ? "bg-indigo-500/20 text-indigo-300 group-hover:bg-indigo-500/30"
+                                  : "bg-white/[0.04] text-slate-300 group-hover:text-white"
+                              )}
+                            >
+                              {getInitials(row.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-slate-100 text-sm truncate group-hover:text-indigo-400 transition-colors">
+                                {row.name}
+                              </span>
+                              {isNew && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/25 shrink-0">
+                                  NEW
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
+                              <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 px-1 py-0.2 rounded border border-indigo-500/20 shrink-0">
+                                {row.id}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top Right: Status Badge & Actions Dropdown */}
+                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                          {getStatusBadge(row.status)}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/[0.08] rounded-lg"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 bg-[#0C0E18] border-white/[0.08] text-slate-200">
+                              <DropdownMenuItem
+                                onClick={() => handleViewRequest(row.id)}
+                                className="focus:bg-indigo-500/10 focus:text-indigo-300"
+                              >
+                                <Eye className="h-4 w-4 mr-2 text-indigo-400" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/[0.08]" />
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(row.id, "new")}
+                                className="focus:bg-blue-500/10 focus:text-blue-300"
+                              >
+                                <Sparkles className="w-4 h-4 mr-2 text-blue-400" />
+                                Mark as New
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(row.id, "reviewed")}
+                                className="focus:bg-amber-500/10 focus:text-amber-300"
+                              >
+                                <Clock className="w-4 h-4 mr-2 text-amber-400" />
+                                Mark as Reviewed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(row.id, "interviewing")}
+                                className="focus:bg-purple-500/10 focus:text-purple-300"
+                              >
+                                <Users className="w-4 h-4 mr-2 text-purple-400" />
+                                Mark as Interviewing
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(row.id, "offered")}
+                                className="focus:bg-emerald-500/10 focus:text-emerald-300"
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-400" />
+                                Mark as Offered
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleUpdateStatus(row.id, "rejected")}
+                                className="focus:bg-rose-500/10 focus:text-rose-300"
+                              >
+                                <XCircle className="w-4 h-4 mr-2 text-rose-400" />
+                                Mark as Declined
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="bg-white/[0.08]" />
+                              <DropdownMenuItem
+                                className="text-rose-400 focus:text-rose-300 focus:bg-rose-500/10"
+                                onClick={() => setRequestToDelete(row)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2 text-rose-400" />
+                                Delete Inquiry
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+
+                      {/* Recruiter Email Link */}
+                      <div className="mt-2 text-xs text-slate-400">
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(`mailto:${row.email}`, "_self");
+                          }}
+                          className="hover:text-indigo-300 transition-colors truncate max-w-[220px]"
+                          title={row.email}
+                        >
+                          {row.email}
+                        </span>
+                      </div>
+
+                      {/* Company & Role Section */}
+                      <div className="mt-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1.5">
+                        <div className="flex items-center gap-1.5 font-semibold text-xs text-slate-200">
+                          <Building2 className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                          <span className="truncate">{row.company}</span>
+                        </div>
+                        <div className="text-sm font-semibold text-slate-100 truncate">
+                          {row.roleTitle}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 items-center pt-0.5">
+                          <span
+                            className={cn(
+                              "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border",
+                              empConfig.className
+                            )}
+                          >
+                            {empConfig.label}
+                          </span>
+                          <span
+                            className={cn(
+                              "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border",
+                              workConfig.label === "Remote"
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                : workConfig.className
+                            )}
+                          >
+                            {workConfig.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Compensation & Location */}
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                        {row.salaryRange ? (
+                          <span className="font-semibold text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                            <DollarSign className="w-3 h-3 shrink-0" />
+                            <span className="text-slate-200">{row.salaryRange}</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-500 italic text-[11px]">Negotiable / Unspecified</span>
+                        )}
+                        {row.location && (
+                          <span className="text-slate-400 flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+                            <span className="truncate max-w-[140px]">{row.location}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Message Preview */}
+                      {row.message && (
+                        <div className="mt-3">
+                          <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed bg-white/[0.02] p-2.5 rounded-xl border border-white/[0.04]">
+                            {row.message}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Card Footer: Date & Quick View Button */}
+                    <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                        <Clock className="h-3 w-3 text-slate-500 shrink-0" />
+                        <span>
+                          {format(createdDate, "dd MMM yyyy, HH:mm")} WIB
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewRequest(row.id);
+                        }}
+                        className="h-7 px-2.5 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg group-hover:bg-indigo-500/10 transition-colors"
+                      >
+                        <span>View</span>
+                        <ArrowUpRight className="h-3.5 w-3.5 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile/Tablet Card Pagination */}
+            {(currentPage > 1 || hasMore) && (
+              <CmsCardPagination
+                currentPage={currentPage}
+                hasMore={hasMore}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            )}
+          </>
+        ) : (
+          <div className="rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl p-8 text-center">
+            <EmptyState
+              variant="inline"
+              icon={<Inbox className="h-8 w-8 mb-2 text-slate-500" />}
+              title="No hire inquiries found"
+              description={
+                searchQuery || filterStatus
+                  ? "Try adjusting your search query or status filter."
+                  : "Recruiter proposals and job opportunities from /hire-me will appear here."
+              }
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View (>= lg) */}
+      <div className="hidden lg:block rounded-2xl border border-white/[0.08] bg-[#0C0E18]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
         <DataTable
           columns={columns}
           data={filteredRequests}

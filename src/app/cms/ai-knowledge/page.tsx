@@ -20,6 +20,7 @@ import {
   Briefcase,
   Compass,
   Cpu,
+  FileCheck2,
   FileQuestion,
   Flame,
   PenTool,
@@ -332,6 +333,18 @@ export default function CmsAiKnowledgePage() {
           >
             <RefreshCw className={cn("h-3.5 w-3.5", isRefetching && "animate-spin")} />
             Refresh
+          </Button>
+
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="rounded-lg gap-1.5 text-xs h-9 border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 hover:text-white"
+          >
+            <Link href="/cms/master-cv?autoAudit=true">
+              <FileCheck2 className="h-3.5 w-3.5 text-indigo-400" />
+              Sync to Master CV
+            </Link>
           </Button>
 
           <Button asChild size="sm" className="rounded-lg gap-1.5 text-xs h-9 shadow-sm">

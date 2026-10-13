@@ -38,6 +38,9 @@ function revalidateProjectPaths(...slugs: Array<string | null | undefined>) {
   for (const slug of new Set(slugs.filter(Boolean))) {
     revalidatePath(`/projects/${slug}`);
   }
+  revalidatePath("/projects");
+  revalidatePath("/cv");
+  revalidatePath("/");
   revalidatePath("/sitemap.xml");
 }
 
@@ -82,7 +85,7 @@ export async function getFeatured(count = 3): Promise<Project[]> {
       .select()
       .from(projects)
       .where(eq(projects.isPublished, true))
-      .orderBy(desc(projects.views))
+      .orderBy(desc(projects.isFeatured), descNullsLast(projects.publishedDate), desc(projects.views))
       .limit(count);
     return rows.map(toProject);
   });

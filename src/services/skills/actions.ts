@@ -14,6 +14,7 @@ const { skills } = schema;
 
 function revalidateSkillPaths() {
   revalidatePath("/about");
+  revalidatePath("/cv");
 }
 
 const displayOrder = [asc(skills.sortOrder), asc(skills.name)];
