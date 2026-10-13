@@ -32,6 +32,7 @@ export const contacts = pgTable("contacts", {
   subject: text("subject").notNull(),
   message: text("message").notNull(),
   status: contactStatus("status").notNull().default("new"),
+  source: text("source").notNull().default("form"),
   messageId: text("message_id"),
   rawHtml: text("raw_html"),
   attachments: jsonb("attachments"),
