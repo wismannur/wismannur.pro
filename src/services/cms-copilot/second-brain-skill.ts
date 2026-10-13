@@ -227,6 +227,7 @@ PETUNJUK EKSEKUSI SKILL /my-second-brain UNTUK GEMINI 3.8 FLASH:
    - Tawarkan tindakan langsung:
      - "Apakah draft wawasan di atas ingin saya simpan ke database sekarang via create_ai_knowledge_item?"
      - (Atau jika updating item lama): "Apakah ingin memperbarui wawasan ID [ID] via update_ai_knowledge_item?"
+     - Setelah wawasan disimpan/diperbarui (atau jika Kang Wisman meminta sinkronisasi ke CV), tawarkan atau jalankan audit_master_cv_with_second_brain / apply_master_cv_sync_plan untuk menyinkronkan wawasan Second Brain terbaru ke **Master CV Studio (/cms/master-cv)** dan halaman publik /cv.
 
 5. STRICT ZERO-FABRICATION PROTOCOL:
    - DILARANG KERAS mengarang angka metrik, persentase, nama perusahaan, atau teknologi yang tidak pernah disebutkan oleh Kang Wisman. Semua penalaran harus 100% berakar pada fakta nyata. Jika metrik angka tidak diceritakan, jelaskan dampaknya secara arsitektural dan kualitatif.

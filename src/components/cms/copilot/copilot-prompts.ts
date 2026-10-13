@@ -20,6 +20,13 @@ export function getContextualPrompts(pathname: string): ContextualPrompt[] {
       { label: "🏷️ 10 Kategori Knowledge", prompt: "Apa saja 10 kategori knowledge yang tersedia di My Second Brain dan bagaimana penggunaannya?" },
     ];
   }
+  if (pathname.includes("/cms/master-cv")) {
+    return [
+      { label: "⚡ AuditCV vs Second Brain", prompt: "/my-second-brain Audit keselarasan Master CV saya saat ini dengan wawasan terbaru di My Second Brain" },
+      { label: "✨ Upgrade Bullet XYZ", prompt: "Poles deskripsi pengalaman kerja terbaru saya untuk Master CV menggunakan formula Google XYZ" },
+      { label: "🚀 Kurasi Project CV", prompt: "Tampilkan 4 portfolio project yang paling berdampak untuk ditampilkan sebagai Featured di /cv" },
+    ];
+  }
 
   // 2. Career Hub
   if (pathname.includes("/cms/job-hunter")) {
