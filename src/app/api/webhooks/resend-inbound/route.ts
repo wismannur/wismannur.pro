@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { put } from "@vercel/blob";
 import { and, desc, eq, gte, or, sql } from "drizzle-orm";
 import { Resend } from "resend";
 import { Webhook } from "svix";
 
 import { getDb, schema } from "@/db";
+import { toCustomAttachmentUrl } from "@/lib/attachment-url";
 import { cleanReplyBody } from "@/lib/email-cleaner";
 import { sendInboundAlertToAdmin } from "@/services/core/resend";
 import { isGibberish, isScamContent } from "@/services/core/spam-detection";
+import type { EmailAttachment } from "@/services/inquiry-messages/types";
 
 const {
   contacts,
@@ -207,6 +210,140 @@ function htmlToPlainText(html: string): string {
     .trim();
 }
 
+const MAX_INBOUND_ATTACHMENT_BYTES = 25 * 1024 * 1024; // 25 MB safety limit per file
+
+/**
+ * Fetches inbound email attachments via Resend Receiving API (`emails.receiving.attachments.list`)
+ * and mirrors each file to Vercel Blob storage so attachment URLs never expire.
+ * Fail-safe: any individual file error is caught and logged without aborting webhook processing.
+ */
+async function extractAndMirrorInboundAttachments(params: {
+  emailId: string;
+  resendClient: Resend | null;
+  fullEmail: Record<string, unknown> | null;
+  webhookData: Record<string, unknown>;
+  rawHtml: string;
+}): Promise<EmailAttachment[]> {
+  const { emailId, resendClient, fullEmail, webhookData, rawHtml } = params;
+  const persisted: EmailAttachment[] = [];
+
+  const embeddedList = Array.isArray(fullEmail?.attachments)
+    ? (fullEmail.attachments as Array<Record<string, unknown>>)
+    : Array.isArray(webhookData.attachments)
+      ? (webhookData.attachments as Array<Record<string, unknown>>)
+      : [];
+
+  let candidateAttachments: Array<{
+    id?: string;
+    filename?: string | null;
+    size?: number;
+    content_type?: string;
+    content_disposition?: string | null;
+    content_id?: string | null;
+    download_url?: string;
+    url?: string;
+  }> = [];
+
+  if (emailId && resendClient && embeddedList.length > 0) {
+    try {
+      const { data: listRes, error } = await resendClient.emails.receiving.attachments.list({
+        emailId,
+      });
+      if (error) {
+        console.error(
+          `[Resend Inbound] Error listing attachments for email ${emailId}:`,
+          error
+        );
+      } else if (listRes?.data && Array.isArray(listRes.data)) {
+        candidateAttachments = listRes.data;
+      }
+    } catch (err) {
+      console.error(
+        `[Resend Inbound] Exception calling resend.emails.receiving.attachments.list for ${emailId}:`,
+        err
+      );
+    }
+  }
+
+  // Fallback to embedded webhook attachment objects if list API wasn't called or returned empty
+  if (candidateAttachments.length === 0 && embeddedList.length > 0) {
+    candidateAttachments = embeddedList as typeof candidateAttachments;
+  }
+
+  for (const att of candidateAttachments) {
+    try {
+      const contentType = String(att.content_type || "application/octet-stream");
+      const size = typeof att.size === "number" ? att.size : undefined;
+      const disposition = String(att.content_disposition || "").toLowerCase();
+
+      // Skip tiny inline CID signature icons (< 10KB) that are already embedded as data: URIs in rawHtml
+      if (
+        disposition === "inline" &&
+        att.content_id &&
+        rawHtml &&
+        contentType.startsWith("image/") &&
+        size !== undefined &&
+        size > 0 &&
+        size < 10240
+      ) {
+        continue;
+      }
+
+      const rawFilename =
+        (typeof att.filename === "string" && att.filename.trim()) ||
+        `attachment-${String(att.id || Date.now()).slice(0, 8)}`;
+      const safeFilename = rawFilename.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const sourceUrl = att.download_url || att.url;
+
+      if (!sourceUrl) {
+        continue;
+      }
+
+      let finalUrl = sourceUrl;
+
+      // Mirror to Vercel Blob if within size limit so the attachment URL never expires
+      if (!size || size <= MAX_INBOUND_ATTACHMENT_BYTES) {
+        try {
+          const fileRes = await fetch(sourceUrl);
+          if (fileRes.ok) {
+            const arrayBuffer = await fileRes.arrayBuffer();
+            const { url: blobUrl } = await put(
+              `inbound-attachments/${Date.now()}_${safeFilename}`,
+              Buffer.from(arrayBuffer),
+              {
+                access: "public",
+                addRandomSuffix: true,
+                contentType,
+              }
+            );
+            finalUrl = toCustomAttachmentUrl(blobUrl);
+          } else {
+            console.warn(
+              `[Resend Inbound] Failed to download attachment "${rawFilename}" (status ${fileRes.status}), using source URL fallback.`
+            );
+          }
+        } catch (mirrorErr) {
+          console.warn(
+            `[Resend Inbound] Failed to mirror attachment "${rawFilename}" to Vercel Blob, using source URL fallback:`,
+            mirrorErr
+          );
+        }
+      }
+
+      persisted.push({
+        name: rawFilename,
+        url: finalUrl,
+        type: contentType,
+        size: size && size > 0 ? size : undefined,
+      });
+    } catch (itemErr) {
+      console.error("[Resend Inbound] Error processing individual inbound attachment:", itemErr);
+    }
+  }
+
+  return persisted;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const rawPayload = await req.text();
@@ -350,6 +487,21 @@ export async function POST(req: NextRequest) {
     }
 
     const db = getDb();
+    let cachedInboundAttachments: EmailAttachment[] | null = null;
+    const resolveInboundAttachments = async (): Promise<EmailAttachment[]> => {
+      if (cachedInboundAttachments !== null) {
+        return cachedInboundAttachments;
+      }
+      cachedInboundAttachments = await extractAndMirrorInboundAttachments({
+        emailId,
+        resendClient,
+        fullEmail,
+        webhookData: data,
+        rawHtml,
+      });
+      return cachedInboundAttachments;
+    };
+
     const toInfo = extractIdFromToAddress(rawTo);
     const emailHeaders = (fullEmail?.headers || {}) as Record<string, unknown>;
     const headerRefId =
@@ -445,6 +597,8 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ success: true, duplicate: true });
         }
 
+        const inboundAttachments = await resolveInboundAttachments();
+
         await db.insert(jobOutreachMessages).values({
           outreachId: outreachRow.id,
           senderType: "client",
@@ -453,6 +607,7 @@ export async function POST(req: NextRequest) {
           message: textContent,
           messageId: inboundMessageId || null,
           rawHtml: rawHtml || null,
+          attachments: inboundAttachments.length > 0 ? inboundAttachments : null,
         });
 
         await db
@@ -471,6 +626,7 @@ export async function POST(req: NextRequest) {
           clientEmail: senderEmail,
           subject: outreachRow.subject,
           message: textContent,
+          attachments: inboundAttachments.length > 0 ? inboundAttachments : undefined,
           isNewConversation: false,
         });
 
@@ -689,6 +845,8 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ success: true, duplicate: true });
         }
 
+        const inboundAttachments = await resolveInboundAttachments();
+
         await db.insert(jobOutreachMessages).values({
           outreachId: outreachRow.id,
           senderType: "client",
@@ -697,6 +855,7 @@ export async function POST(req: NextRequest) {
           message: textContent,
           messageId: inboundMessageId || null,
           rawHtml: rawHtml || null,
+          attachments: inboundAttachments.length > 0 ? inboundAttachments : null,
         });
 
         await db
@@ -715,6 +874,7 @@ export async function POST(req: NextRequest) {
           clientEmail: senderEmail,
           subject: outreachRow.subject,
           message: textContent,
+          attachments: inboundAttachments.length > 0 ? inboundAttachments : undefined,
           isNewConversation: false,
         });
 
@@ -754,6 +914,8 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      const inboundAttachments = await resolveInboundAttachments();
+
       const [newContact] = await db
         .insert(contacts)
         .values({
@@ -764,6 +926,7 @@ export async function POST(req: NextRequest) {
           status: "new",
           messageId: inboundMessageId || null,
           rawHtml: rawHtml || null,
+          attachments: inboundAttachments.length > 0 ? inboundAttachments : null,
         })
         .returning({ id: contacts.id });
 
@@ -798,6 +961,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, duplicate: true });
     }
 
+    const inboundAttachments = await resolveInboundAttachments();
+
     // 8. Insert inbound message into inquiryMessages thread
     await db.insert(inquiryMessages).values({
       inquiryId: targetInquiryId,
@@ -808,6 +973,7 @@ export async function POST(req: NextRequest) {
       message: textContent,
       messageId: inboundMessageId || null,
       rawHtml: rawHtml || null,
+      attachments: inboundAttachments.length > 0 ? inboundAttachments : null,
     });
 
     // 9. Update inquiry status to "new" to highlight it in CMS
@@ -849,6 +1015,7 @@ export async function POST(req: NextRequest) {
       subject: targetSubject,
       message: textContent,
       toAddress: recipientTo || `hi@${currentEnvDomain}`,
+      attachments: inboundAttachments.length > 0 ? inboundAttachments : undefined,
       isNewConversation: isNewInquiry,
     });
 
