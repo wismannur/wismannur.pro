@@ -520,6 +520,8 @@ DISCORD_WEBHOOK_CONTACTS="https://discord.com/api/webhooks/..."
 # DISCORD_WEBHOOK_HIRE="https://discord.com/api/webhooks/..."
 # DISCORD_WEBHOOK_SERVICES="https://discord.com/api/webhooks/..."
 # DISCORD_WEBHOOK_INBOUND="https://discord.com/api/webhooks/..."
+# DISCORD_WEBHOOK_JOB_OUTREACHS="https://discord.com/api/webhooks/..."
+# DISCORD_WEBHOOK_PROJECT_OUTREACH="https://discord.com/api/webhooks/..."
 
 # =============================================================================
 # 7. CAPTCHA, STORAGE & TELEMETRY

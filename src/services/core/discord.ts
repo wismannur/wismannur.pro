@@ -2,7 +2,13 @@ import "server-only";
 
 import { SITE_URL } from "@/lib/site-url";
 
-export type DiscordChannelType = "contacts" | "hire" | "services" | "inbound";
+export type DiscordChannelType =
+  | "contacts"
+  | "hire"
+  | "services"
+  | "inbound"
+  | "job_outreach"
+  | "project_outreach";
 
 interface DiscordEmbedField {
   name: string;
@@ -65,6 +71,20 @@ export function getDiscordWebhookUrl(channel: DiscordChannelType): string | null
       return process.env.DISCORD_WEBHOOK_SERVICES?.trim() || fallbackUrl;
     case "inbound":
       return process.env.DISCORD_WEBHOOK_INBOUND?.trim() || fallbackUrl;
+    case "job_outreach":
+      return (
+        process.env.DISCORD_WEBHOOK_JOB_OUTREACHS?.trim() ||
+        process.env.DISCORD_WEBHOOK_JOB_OUTREACH?.trim() ||
+        process.env.DISCORD_WEBHOOK_OUTREACH?.trim() ||
+        process.env.DISCORD_WEBHOOK_INBOUND?.trim() ||
+        fallbackUrl
+      );
+    case "project_outreach":
+      return (
+        process.env.DISCORD_WEBHOOK_PROJECT_OUTREACHES?.trim() ||
+        process.env.DISCORD_WEBHOOK_PROJECT_OUTREACH?.trim() ||
+        fallbackUrl
+      );
     default:
       return fallbackUrl;
   }
@@ -116,10 +136,12 @@ export async function sendDiscordWebhook(
  * Color palettes for Discord embeds (hex converted to integer)
  */
 const EMBED_COLORS = {
-  contacts: 0x6366f1, // Indigo
-  hire: 0x10b981,     // Emerald Green
-  services: 0xf59e0b, // Amber
-  inbound: 0x0ea5e9,  // Sky Blue
+  contacts: 0x6366f1,        // Indigo
+  hire: 0x10b981,            // Emerald Green
+  services: 0xf59e0b,        // Amber
+  inbound: 0x0ea5e9,         // Sky Blue
+  job_outreach: 0xa855f7,    // Purple
+  project_outreach: 0xec4899,// Rose / Fuchsia
 } as const;
 
 export interface ContactNotificationPayload {
@@ -416,19 +438,25 @@ export async function sendDiscordInboundNotification(
     },
   ];
 
+  const isOutreach = payload.inquiryType === "job_outreach";
+
   const embed: DiscordEmbed = {
     title: payload.isNewConversation
       ? "📩 New Direct Inbound Email"
-      : "💬 Inbound Email Reply Received",
+      : isOutreach
+        ? "💼 Recruiter Reply Received (Job Outreach)"
+        : "💬 Inbound Email Reply Received",
     url: cmsLink,
-    color: EMBED_COLORS.inbound,
-    description: `Incoming transmission addressed to Wisman Nur inbox.`,
+    color: isOutreach ? EMBED_COLORS.job_outreach : EMBED_COLORS.inbound,
+    description: isOutreach
+      ? `A recruiter or company contact has replied to a Job Outreach thread.`
+      : `Incoming transmission addressed to Wisman Nur inbox.`,
     fields,
     footer: {
-      text: "wismannur.pro • Inbound Webhook",
+      text: isOutreach ? "wismannur.pro • Job Outreaches" : "wismannur.pro • Inbound Webhook",
     },
     timestamp: new Date().toISOString(),
   };
 
-  return sendDiscordWebhook("inbound", { embeds: [embed] });
+  return sendDiscordWebhook(isOutreach ? "job_outreach" : "inbound", { embeds: [embed] });
 }
