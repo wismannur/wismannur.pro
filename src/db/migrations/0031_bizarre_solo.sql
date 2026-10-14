@@ -1,1 +1,0 @@
-ALTER TABLE "contacts" ADD COLUMN "source" text DEFAULT 'form' NOT NULL;

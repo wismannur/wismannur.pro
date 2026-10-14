@@ -1,9 +1,7 @@
-import { eq } from "drizzle-orm";
 import type { MetadataRoute } from "next";
 
-import { getDb, schema } from "@/db";
 import { SITE_URL as BASE_URL } from "@/lib/site-url";
-import { siteSettingsService } from "@/services";
+import { blogService, projectService, siteSettingsService } from "@/services";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -30,30 +28,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: path === "" ? 1 : 0.7,
   }));
 
-  const db = getDb();
   const [blogRows, projectRows] = await Promise.all([
-    enableBlog
-      ? db
-          .select({ slug: schema.blogs.slug, updatedAt: schema.blogs.updatedAt })
-          .from(schema.blogs)
-          .where(eq(schema.blogs.isPublished, true))
-      : Promise.resolve([]),
-    db
-      .select({ slug: schema.projects.slug, updatedAt: schema.projects.updatedAt })
-      .from(schema.projects)
-      .where(eq(schema.projects.isPublished, true)),
+    enableBlog ? blogService.getAll() : Promise.resolve([]),
+    projectService.getAll(),
   ]);
 
   const blogRoutes: MetadataRoute.Sitemap = blogRows.map((b) => ({
     url: `${BASE_URL}/blog/${b.slug}`,
-    lastModified: b.updatedAt,
+    lastModified: b.updatedAt ? new Date(b.updatedAt) : now,
     changeFrequency: "monthly",
     priority: 0.6,
   }));
 
   const projectRoutes: MetadataRoute.Sitemap = projectRows.map((p) => ({
     url: `${BASE_URL}/projects/${p.slug}`,
-    lastModified: p.updatedAt,
+    lastModified: p.updatedAt ? new Date(p.updatedAt) : now,
     changeFrequency: "monthly",
     priority: 0.6,
   }));

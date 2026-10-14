@@ -13,7 +13,7 @@ import {
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "@/services/ai-chat/types";
+import type { ChatMessage } from "@wismannur/cms-contracts";
 
 interface ConsoleAssistantTabProps {
   messages: ChatMessage[];

@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { Menu, Search, Sparkles, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { openCommandPalette } from "@/components/common/command-palette";
-import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
 interface NavbarV2Props {
@@ -22,7 +21,6 @@ export function NavbarV2({ enableBlog = true, isChatOpen = false }: NavbarV2Prop
   const [isScrolled, setIsScrolled] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
   const [internalChatOpen, setInternalChatOpen] = useState(false);
-  const { user } = useAuth();
 
   // Listen for public-chat-open event as reliable fallback
   useEffect(() => {
@@ -173,33 +171,20 @@ export function NavbarV2({ enableBlog = true, isChatOpen = false }: NavbarV2Prop
           </Button>
 
           {/* Primary CTA */}
-          {user ? (
-            <Button
-              asChild
-              size="sm"
-              className="rounded-full px-4 h-8 text-xs font-semibold shadow-md"
+          <Button
+            asChild
+            size="sm"
+            className="rounded-full px-4 h-8 text-xs font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all group"
+          >
+            <Link
+              href="/hire-me"
+              data-umami-event="navbar-v2-hire-me-click"
+              className="inline-flex items-center gap-1.5"
             >
-              <Link href="/cms/dashboard" data-umami-event="navbar-v2-dashboard-click">
-                <User size={13} className="mr-1" />
-                <span>Dashboard</span>
-              </Link>
-            </Button>
-          ) : (
-            <Button
-              asChild
-              size="sm"
-              className="rounded-full px-4 h-8 text-xs font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all group"
-            >
-              <Link
-                href="/hire-me"
-                data-umami-event="navbar-v2-hire-me-click"
-                className="inline-flex items-center gap-1.5"
-              >
-                <Sparkles size={12} className="animate-pulse" />
-                <span>Hire Me</span>
-              </Link>
-            </Button>
-          )}
+              <Sparkles size={12} className="animate-pulse" />
+              <span>Hire Me</span>
+            </Link>
+          </Button>
         </div>
 
         {/* Mobile Hamburger & Actions */}
@@ -261,37 +246,20 @@ export function NavbarV2({ enableBlog = true, isChatOpen = false }: NavbarV2Prop
             })}
 
             <div className="pt-4 w-full max-w-xs">
-              {user ? (
-                <Button
-                  asChild
-                  size="lg"
-                  className="rounded-full w-full py-5 text-sm font-bold shadow-xl shadow-primary/30"
+              <Button
+                asChild
+                size="lg"
+                className="rounded-full w-full py-5 text-sm font-bold shadow-xl shadow-primary/30"
+              >
+                <Link
+                  href="/hire-me"
+                  onClick={() => setIsOpen(false)}
+                  data-umami-event="navbar-v2-mobile-hire-click"
                 >
-                  <Link
-                    href="/cms/dashboard"
-                    onClick={() => setIsOpen(false)}
-                    data-umami-event="navbar-v2-mobile-dashboard-click"
-                  >
-                    <User size={16} className="mr-2" />
-                    <span>Dashboard</span>
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  asChild
-                  size="lg"
-                  className="rounded-full w-full py-5 text-sm font-bold shadow-xl shadow-primary/30"
-                >
-                  <Link
-                    href="/hire-me"
-                    onClick={() => setIsOpen(false)}
-                    data-umami-event="navbar-v2-mobile-hire-click"
-                  >
-                    <Sparkles size={16} className="mr-2 animate-pulse" />
-                    <span>Start a Project / Hire Me</span>
-                  </Link>
-                </Button>
-              )}
+                  <Sparkles size={16} className="mr-2 animate-pulse" />
+                  <span>Start a Project / Hire Me</span>
+                </Link>
+              </Button>
             </div>
           </nav>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { ChatMessage } from "@/services/ai-chat/types";
+import type { ChatMessage } from "@wismannur/cms-contracts";
 import {
   ALL_SUGGESTED_PROMPTS,
   getRandomSuggestedPrompts,

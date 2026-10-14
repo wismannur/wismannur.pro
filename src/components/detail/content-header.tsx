@@ -6,7 +6,7 @@ interface ContentHeaderProps {
   title: string;
   tags?: string[];
   technologies?: string[];
-  publishedDate: Date | null;
+  publishedDate: Date | string | null;
   views: number;
   readingTime: number | string;
 }
