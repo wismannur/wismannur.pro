@@ -2,4 +2,4 @@ export type {
   Faq,
   NewFaq,
   UpdateFaq,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";

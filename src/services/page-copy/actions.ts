@@ -8,7 +8,7 @@ import {
   type PageCopyContent,
   type PageCopyMap,
   type PageKey,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";
 
 export async function getPageCopy<K extends PageKey>(page: K): Promise<PageCopyMap[K] | null> {
   try {

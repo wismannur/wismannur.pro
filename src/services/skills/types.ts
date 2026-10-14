@@ -2,4 +2,4 @@ export type {
   Skill,
   NewSkill,
   UpdateSkill,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";

@@ -1,7 +1,7 @@
 "use server";
 
 import { cmsFetch } from "@/lib/cms-client";
-import { CMS_API_ENDPOINTS, CMS_CACHE_TAGS } from "@wismannur/cms-contracts";
+import { CMS_API_ENDPOINTS, CMS_CACHE_TAGS } from "@wismannur.pro/cms-contracts";
 import type { UserProfile } from "./types";
 
 export async function getAuthorProfile(): Promise<UserProfile | null> {

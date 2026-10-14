@@ -2,5 +2,5 @@ export type {
   Project,
   NewProject,
   UpdateProject,
-} from "@wismannur/cms-contracts";
-export type TProjectResponse = import("@wismannur/cms-contracts").Project;
+} from "@wismannur.pro/cms-contracts";
+export type TProjectResponse = import("@wismannur.pro/cms-contracts").Project;

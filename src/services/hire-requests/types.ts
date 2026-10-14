@@ -2,9 +2,9 @@ export type {
   HireRequest,
   HireRequestStatus,
   NewHireRequest,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";
 
-import type { HireRequest, HireRequestStatus, NewHireRequest } from "@wismannur/cms-contracts";
+import type { HireRequest, HireRequestStatus, NewHireRequest } from "@wismannur.pro/cms-contracts";
 
 export type ServiceRequest = HireRequest;
 export type ServiceRequestStatus = HireRequestStatus;

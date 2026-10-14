@@ -3,4 +3,4 @@ export type {
   AvailabilityStatus,
   NewAvailabilitySlot,
   UpdateAvailabilitySlot,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";

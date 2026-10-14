@@ -4,4 +4,4 @@ export type {
   SocialLinks,
   LabeledLink,
   SelectOption,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";

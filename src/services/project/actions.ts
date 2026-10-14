@@ -5,7 +5,7 @@ import {
   CMS_API_ENDPOINTS,
   CMS_CACHE_TAGS,
   type Project,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";
 
 export async function getAll(): Promise<Project[]> {
   try {

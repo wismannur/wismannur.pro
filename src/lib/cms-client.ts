@@ -1,4 +1,4 @@
-import type { ApiResponse } from "@wismannur/cms-contracts";
+import type { ApiResponse } from "@wismannur.pro/cms-contracts";
 
 const getCmsBaseUrl = (): string => {
   if (process.env.CMS_API_URL) {

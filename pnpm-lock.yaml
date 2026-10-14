@@ -83,7 +83,7 @@ importers:
       '@vercel/blob':
         specifier: ^2.6.1
         version: 2.6.1
-      '@wismannur/cms-contracts':
+      '@wismannur.pro/cms-contracts':
         specifier: file:../cms-contracts
         version: file:../cms-contracts
       class-variance-authority:
@@ -1699,7 +1699,7 @@ packages:
     resolution: {integrity: sha512-ufdalm2MWOYksyj8KVpWjoOFPJO6zoYpuyvIggIQ2bB0CFCjTCiTkGXHqAKwG77GVRjOaN3/8S5ITlZpXWmqOw==}
     engines: {node: '>= 20'}
 
-  '@wismannur/cms-contracts@file:../cms-contracts':
+  '@wismannur.pro/cms-contracts@file:../cms-contracts':
     resolution: {directory: ../cms-contracts, type: directory}
 
   abs-svg-path@0.1.1:
@@ -5230,7 +5230,7 @@ snapshots:
       '@vercel/cli-exec': 1.0.0
       jose: 5.10.0
 
-  '@wismannur/cms-contracts@file:../cms-contracts': {}
+  '@wismannur.pro/cms-contracts@file:../cms-contracts': {}
 
   abs-svg-path@0.1.1: {}
 

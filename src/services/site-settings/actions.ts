@@ -1,7 +1,7 @@
 "use server";
 
 import { cmsFetch } from "@/lib/cms-client";
-import { CMS_API_ENDPOINTS, CMS_CACHE_TAGS, type SiteSettings } from "@wismannur/cms-contracts";
+import { CMS_API_ENDPOINTS, CMS_CACHE_TAGS, type SiteSettings } from "@wismannur.pro/cms-contracts";
 import { DEFAULT_SITE_SETTINGS } from "./defaults";
 
 export async function getSiteSettings(): Promise<SiteSettings> {

@@ -2,4 +2,4 @@ export type {
   Testimonial,
   NewTestimonial,
   UpdateTestimonial,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";

@@ -5,4 +5,4 @@ export type {
   ProjectProspectStatus,
   ProspectIndustry,
   ProjectAuditAnalysis,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";

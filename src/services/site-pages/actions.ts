@@ -1,7 +1,7 @@
 "use server";
 
 import { cmsFetch } from "@/lib/cms-client";
-import { CMS_API_ENDPOINTS, CMS_CACHE_TAGS, type SitePage } from "@wismannur/cms-contracts";
+import { CMS_API_ENDPOINTS, CMS_CACHE_TAGS, type SitePage } from "@wismannur.pro/cms-contracts";
 
 export async function getBySlug(slug: string): Promise<SitePage | null> {
   try {

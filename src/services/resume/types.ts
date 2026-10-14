@@ -3,9 +3,9 @@ export type {
   ResumeKind,
   NewResumeEntry,
   UpdateResumeEntry,
-} from "@wismannur/cms-contracts";
+} from "@wismannur.pro/cms-contracts";
 
 export interface ResumeSections {
-  experiences: import("@wismannur/cms-contracts").ResumeEntry[];
-  education: import("@wismannur/cms-contracts").ResumeEntry[];
+  experiences: import("@wismannur.pro/cms-contracts").ResumeEntry[];
+  education: import("@wismannur.pro/cms-contracts").ResumeEntry[];
 }

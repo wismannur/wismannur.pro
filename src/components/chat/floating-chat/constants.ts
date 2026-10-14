@@ -1,4 +1,4 @@
-import type { ChatMessage } from "@wismannur/cms-contracts";
+import type { ChatMessage } from "@wismannur.pro/cms-contracts";
 
 export const ALL_SUGGESTED_PROMPTS = [
   // Tech Stack & Architecture

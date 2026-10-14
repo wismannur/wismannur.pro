@@ -1,6 +1,6 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
-import type { RevalidationPayload } from "@wismannur/cms-contracts";
+import type { RevalidationPayload } from "@wismannur.pro/cms-contracts";
 
 export const dynamic = "force-dynamic";
 
