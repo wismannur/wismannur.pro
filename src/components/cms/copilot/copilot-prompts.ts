@@ -27,6 +27,13 @@ export function getContextualPrompts(pathname: string): ContextualPrompt[] {
       { label: "🚀 Kurasi Project CV", prompt: "Tampilkan 4 portfolio project yang paling berdampak untuk ditampilkan sebagai Featured di /cv" },
     ];
   }
+  if (pathname.includes("/cms/direct-emails")) {
+    return [
+      { label: "📩 Unread Emails", prompt: "Tampilkan email direct/cold inbound yang statusnya masih 'new' dan belum dibaca" },
+      { label: "✉️ Recent Direct Emails", prompt: "Tampilkan 5 direct email terbaru beserta pengirim dan isinya" },
+      { label: "✓ Mark as Read", prompt: "Tandai direct email terbaru sebagai 'read'" },
+    ];
+  }
 
   // 2. Career Hub
   if (pathname.includes("/cms/job-hunter")) {

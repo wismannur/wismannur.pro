@@ -1,6 +1,6 @@
 "use server";
 
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import { assertAdmin } from "../core/auth-guard";
 import type {
@@ -23,13 +23,15 @@ export async function getNotificationSummary(): Promise<NotificationSummaryRespo
     [hireStats],
     [outreachStats],
     recentContacts,
+    recentDirectEmails,
     recentServices,
     recentHires,
     recentOutreaches,
   ] = await Promise.all([
     db
       .select({
-        unread: sql<number>`count(*) filter (where ${contacts.status} = 'new')::int`,
+        unreadContacts: sql<number>`count(*) filter (where ${contacts.status} = 'new' and (${contacts.source} = 'form' or ${contacts.source} is null))::int`,
+        unreadDirectEmails: sql<number>`count(*) filter (where ${contacts.status} = 'new' and ${contacts.source} = 'direct_email')::int`,
       })
       .from(contacts),
     db
@@ -58,7 +60,30 @@ export async function getNotificationSummary(): Promise<NotificationSummaryRespo
         createdAt: contacts.createdAt,
       })
       .from(contacts)
-      .where(eq(contacts.status, "new"))
+      .where(
+        and(
+          eq(contacts.status, "new"),
+          or(eq(contacts.source, "form"), isNull(contacts.source))
+        )
+      )
+      .orderBy(desc(contacts.createdAt))
+      .limit(5),
+
+    db
+      .select({
+        id: contacts.id,
+        name: contacts.name,
+        subject: contacts.subject,
+        message: contacts.message,
+        createdAt: contacts.createdAt,
+      })
+      .from(contacts)
+      .where(
+        and(
+          eq(contacts.status, "new"),
+          eq(contacts.source, "direct_email")
+        )
+      )
       .orderBy(desc(contacts.createdAt))
       .limit(5),
 
@@ -104,14 +129,16 @@ export async function getNotificationSummary(): Promise<NotificationSummaryRespo
       .limit(5),
   ]);
 
-  const contactCount = contactStats?.unread ?? 0;
+  const contactCount = contactStats?.unreadContacts ?? 0;
+  const directEmailCount = contactStats?.unreadDirectEmails ?? 0;
   const serviceCount = serviceStats?.unread ?? 0;
   const hireCount = hireStats?.unread ?? 0;
   const outreachCount = outreachStats?.unread ?? 0;
-  const total = contactCount + serviceCount + hireCount + outreachCount;
+  const total = contactCount + directEmailCount + serviceCount + hireCount + outreachCount;
 
   const counts: UnreadEmailCounts = {
     contacts: contactCount,
+    directEmails: directEmailCount,
     serviceRequests: serviceCount,
     hireRequests: hireCount,
     jobOutreaches: outreachCount,
@@ -127,6 +154,15 @@ export async function getNotificationSummary(): Promise<NotificationSummaryRespo
       snippet: c.message.replace(/<[^>]*>?/gm, "").slice(0, 120),
       createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString(),
       href: `/cms/contacts/${c.id}`,
+    })),
+    ...recentDirectEmails.map((c) => ({
+      id: c.id,
+      type: "direct_email" as const,
+      title: c.name,
+      subtitle: c.subject,
+      snippet: c.message.replace(/<[^>]*>?/gm, "").slice(0, 120),
+      createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : new Date().toISOString(),
+      href: `/cms/direct-emails/${c.id}`,
     })),
     ...recentServices.map((s) => ({
       id: s.id,
@@ -180,7 +216,29 @@ export async function markAllNotificationsAsRead(
 
   if (!entityType || entityType === "contact") {
     updates.push(
-      db.update(contacts).set({ status: "read" }).where(eq(contacts.status, "new"))
+      db
+        .update(contacts)
+        .set({ status: "read" })
+        .where(
+          and(
+            eq(contacts.status, "new"),
+            or(eq(contacts.source, "form"), isNull(contacts.source))
+          )
+        )
+    );
+  }
+
+  if (!entityType || entityType === "direct_email") {
+    updates.push(
+      db
+        .update(contacts)
+        .set({ status: "read" })
+        .where(
+          and(
+            eq(contacts.status, "new"),
+            eq(contacts.source, "direct_email")
+          )
+        )
     );
   }
 

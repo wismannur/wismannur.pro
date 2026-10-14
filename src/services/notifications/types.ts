@@ -1,11 +1,13 @@
 export type NotificationEntityType =
   | "contact"
+  | "direct_email"
   | "service_request"
   | "hire_request"
   | "job_outreach";
 
 export interface UnreadEmailCounts {
   contacts: number;
+  directEmails: number;
   serviceRequests: number;
   hireRequests: number;
   jobOutreaches: number;

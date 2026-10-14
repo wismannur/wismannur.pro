@@ -4,6 +4,7 @@ import * as actions from "./actions";
 // lives in server actions backed by Drizzle/Neon (see ./actions.ts).
 export const contactService = {
   getContacts: actions.getContacts,
+  getDirectEmails: actions.getDirectEmails,
   getById: actions.getById,
   updateStatus: actions.updateStatus,
   submit: actions.submit,

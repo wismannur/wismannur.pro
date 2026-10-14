@@ -18,5 +18,6 @@ export type Contact = {
   attachments?: EmailAttachment[] | null;
   messageId?: string | null;
   status: "new" | "read" | "replied" | "archived";
+  source?: "form" | "direct_email" | string | null;
   createdAt: Date;
 };

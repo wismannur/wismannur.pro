@@ -924,6 +924,7 @@ export async function POST(req: NextRequest) {
           subject: cleanSubject,
           message: textContent,
           status: "new",
+          source: "direct_email",
           messageId: inboundMessageId || null,
           rawHtml: rawHtml || null,
           attachments: inboundAttachments.length > 0 ? inboundAttachments : null,

@@ -1,17 +1,18 @@
 import "server-only";
 
 import { Resend } from "resend";
-import AdminContactNotificationEmail from "@/components/emails/admin-contact-notification";
-import AdminDirectEmailAlertEmail from "@/components/emails/admin-direct-email-alert";
-import AdminHireRequestNotificationEmail from "@/components/emails/admin-hire-request-notification";
-import AdminInboundAlertEmail from "@/components/emails/admin-inbound-alert";
 import AdminReplyToClientEmail from "@/components/emails/admin-reply-to-client";
-import AdminServiceRequestNotificationEmail from "@/components/emails/admin-service-request-notification";
 import ClientContactAutoReplyEmail from "@/components/emails/client-contact-auto-reply";
 import ClientHireRequestAutoReplyEmail from "@/components/emails/client-hire-request-auto-reply";
 import ClientServiceRequestAutoReplyEmail from "@/components/emails/client-service-request-auto-reply";
 import JobOutreachEmail from "@/components/emails/job-outreach-email";
 import { toCustomAttachmentUrl, toDirectBlobUrl } from "@/lib/attachment-url";
+import {
+  sendDiscordContactNotification,
+  sendDiscordHireNotification,
+  sendDiscordInboundNotification,
+  sendDiscordServiceNotification,
+} from "./discord";
 
 function getResendClient(): Resend | null {
   const resendApiKey = process.env.RESEND_API_KEY?.trim();
@@ -23,11 +24,6 @@ export const RESEND_EMAIL_DOMAIN =
   process.env.NEXT_PUBLIC_RESEND_EMAIL_DOMAIN?.trim() ||
   "wismannur.pro";
 
-const ADMIN_EMAIL =
-  process.env.ADMIN_NOTIFICATION_EMAIL || "wismannur.pro@gmail.com";
-
-const SENDER_NOTIFICATIONS =
-  process.env.RESEND_FROM_NOTIFICATIONS || `Wisman Nur <notifications@${RESEND_EMAIL_DOMAIN}>`;
 
 const SENDER_HI =
   process.env.RESEND_FROM_HI ||
@@ -154,42 +150,29 @@ function buildThreadingHeaders(params: {
 }
 
 /**
- * Sends both Admin notification and Client auto-reply for contact inquiries.
- * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
+ * Sends Admin notification via Discord and Client auto-reply via Resend for contact inquiries.
+ * Fail-safe: Any delivery error is caught and logged, never bubbling up to crash the form submission.
  */
 export async function sendContactEmails(
   payload: ContactEmailPayload
 ): Promise<{ clientEmailId?: string; adminEmailId?: string }> {
+  // 1. Dispatch Discord notification to Admin asynchronously (fail-safe)
+  const discordPromise = sendDiscordContactNotification(payload);
+
   const resend = getResendClient();
   if (!resend) {
-    console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
+    console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping client auto-reply.");
+    await discordPromise;
     return {};
   }
 
   try {
-    const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
     const dynamicReplyTo = payload.id
       ? `${payload.id}@${RESEND_EMAIL_DOMAIN}`
       : `hi@${RESEND_EMAIL_DOMAIN}`;
 
-    const [adminRes, clientRes] = await Promise.allSettled([
-      // 1. Notification to Admin
-      resend.emails.send({
-        from: SENDER_NOTIFICATIONS,
-        to: ADMIN_EMAIL,
-        replyTo: payload.email,
-        subject: `[Contact Form] ${payload.subject} - ${payload.name}`,
-        headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
-        react: AdminContactNotificationEmail({
-          name: payload.name,
-          email: payload.email,
-          subject: payload.subject,
-          message: payload.message,
-          sentAt,
-        }),
-      }),
-
-      // 2. Auto-reply confirmation to Client
+    // 2. Concurrently execute Client auto-reply and Discord notification
+    const [clientRes] = await Promise.allSettled([
       resend.emails.send({
         from: SENDER_HI,
         to: payload.email,
@@ -203,64 +186,45 @@ export async function sendContactEmails(
           refId: payload.id,
         }),
       }),
+      discordPromise,
     ]);
 
-    const adminEmailId =
-      adminRes.status === "fulfilled" && adminRes.value.data?.id
-        ? adminRes.value.data.id
-        : undefined;
     const clientEmailId =
       clientRes.status === "fulfilled" && clientRes.value.data?.id
         ? clientRes.value.data.id
         : undefined;
 
-    return { adminEmailId, clientEmailId };
+    return { clientEmailId };
   } catch (error) {
-    console.error("Failed to send contact emails via Resend:", error);
+    console.error("Failed to send contact emails:", error);
     return {};
   }
 }
 
 /**
- * Sends both Admin notification and Client auto-reply for Hire-Me service requests.
- * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
+ * Sends Admin notification via Discord and Client auto-reply via Resend for Hire-Me service requests.
+ * Fail-safe: Any delivery error is caught and logged, never bubbling up to crash the form submission.
  */
 export async function sendServiceRequestEmails(
   payload: ServiceRequestEmailPayload
 ): Promise<{ clientEmailId?: string; adminEmailId?: string }> {
+  // 1. Dispatch Discord notification to Admin asynchronously (fail-safe)
+  const discordPromise = sendDiscordServiceNotification(payload);
+
   const resend = getResendClient();
   if (!resend) {
-    console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
+    console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping client auto-reply.");
+    await discordPromise;
     return {};
   }
 
   try {
-    const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
     const dynamicReplyTo = payload.id
       ? `${payload.id}@${RESEND_EMAIL_DOMAIN}`
       : `hi@${RESEND_EMAIL_DOMAIN}`;
 
-    const [adminRes, clientRes] = await Promise.allSettled([
-      // 1. Notification to Admin
-      resend.emails.send({
-        from: SENDER_NOTIFICATIONS,
-        to: ADMIN_EMAIL,
-        replyTo: payload.email,
-        subject: `[Hire Me Request] ${payload.serviceType} - ${payload.name}${payload.company ? ` (${payload.company})` : ""}`,
-        headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
-        react: AdminServiceRequestNotificationEmail({
-          name: payload.name,
-          email: payload.email,
-          company: payload.company,
-          serviceType: payload.serviceType,
-          budget: payload.budget,
-          timeframe: payload.timeframe,
-          projectDetails: payload.projectDetails,
-          sentAt,
-        }),
-      }),
-
-      // 2. Auto-reply confirmation to Client
+    // 2. Concurrently execute Client auto-reply and Discord notification
+    const [clientRes] = await Promise.allSettled([
       resend.emails.send({
         from: SENDER_HI,
         to: payload.email,
@@ -276,66 +240,45 @@ export async function sendServiceRequestEmails(
           refId: payload.id,
         }),
       }),
+      discordPromise,
     ]);
 
-    const adminEmailId =
-      adminRes.status === "fulfilled" && adminRes.value.data?.id
-        ? adminRes.value.data.id
-        : undefined;
     const clientEmailId =
       clientRes.status === "fulfilled" && clientRes.value.data?.id
         ? clientRes.value.data.id
         : undefined;
 
-    return { adminEmailId, clientEmailId };
+    return { clientEmailId };
   } catch (error) {
-    console.error("Failed to send service request emails via Resend:", error);
+    console.error("Failed to send service request emails:", error);
     return {};
   }
 }
 
 /**
- * Sends both Admin notification and Client auto-reply for Hire-Me career/job inquiries.
- * Fail-safe: Any Resend error is caught and logged, never bubbling up to crash the form submission.
+ * Sends Admin notification via Discord and Client auto-reply via Resend for Hire-Me career/job inquiries.
+ * Fail-safe: Any delivery error is caught and logged, never bubbling up to crash the form submission.
  */
 export async function sendHireRequestEmails(
   payload: HireRequestEmailPayload
 ): Promise<{ clientEmailId?: string; adminEmailId?: string }> {
+  // 1. Dispatch Discord notification to Admin asynchronously (fail-safe)
+  const discordPromise = sendDiscordHireNotification(payload);
+
   const resend = getResendClient();
   if (!resend) {
-    console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping email delivery.");
+    console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping client auto-reply.");
+    await discordPromise;
     return {};
   }
 
   try {
-    const sentAt = new Date().toLocaleString("id-ID", { timeZone: "Asia/Jakarta" });
     const dynamicReplyTo = payload.id
       ? `${payload.id}@${RESEND_EMAIL_DOMAIN}`
       : `hi@${RESEND_EMAIL_DOMAIN}`;
 
-    const [adminRes, clientRes] = await Promise.allSettled([
-      // 1. Notification to Admin
-      resend.emails.send({
-        from: SENDER_NOTIFICATIONS,
-        to: ADMIN_EMAIL,
-        replyTo: payload.email,
-        subject: `[Hire Inquiry] ${payload.roleTitle} @ ${payload.company} - ${payload.name}`,
-        headers: payload.id ? { "X-Entity-Ref-ID": payload.id } : undefined,
-        react: AdminHireRequestNotificationEmail({
-          name: payload.name,
-          email: payload.email,
-          company: payload.company,
-          roleTitle: payload.roleTitle,
-          employmentType: payload.employmentType,
-          workplaceType: payload.workplaceType,
-          location: payload.location,
-          salaryRange: payload.salaryRange,
-          message: payload.message,
-          sentAt,
-        }),
-      }),
-
-      // 2. Auto-reply confirmation to Recruiter / Client
+    // 2. Concurrently execute Client auto-reply and Discord notification
+    const [clientRes] = await Promise.allSettled([
       resend.emails.send({
         from: SENDER_HI,
         to: payload.email,
@@ -352,20 +295,17 @@ export async function sendHireRequestEmails(
           refId: payload.id,
         }),
       }),
+      discordPromise,
     ]);
 
-    const adminEmailId =
-      adminRes.status === "fulfilled" && adminRes.value.data?.id
-        ? adminRes.value.data.id
-        : undefined;
     const clientEmailId =
       clientRes.status === "fulfilled" && clientRes.value.data?.id
         ? clientRes.value.data.id
         : undefined;
 
-    return { adminEmailId, clientEmailId };
+    return { clientEmailId };
   } catch (error) {
-    console.error("Failed to send hire request emails via Resend:", error);
+    console.error("Failed to send hire request emails:", error);
     return {};
   }
 }
@@ -437,54 +377,21 @@ export async function sendAdminReplyToClient(payload: AdminReplyPayload): Promis
 }
 
 /**
- * Sends an alert to Admin when a Client or Recruiter sends an inbound email or reply.
+ * Sends an alert to Admin via Discord when a Client or Recruiter sends an inbound email or reply.
  */
 export async function sendInboundAlertToAdmin(payload: InboundAlertPayload): Promise<void> {
-  const resend = getResendClient();
-  if (!resend) {
-    console.warn("Resend is not configured: RESEND_API_KEY is missing. Skipping inbound alert.");
-    return;
-  }
-
   try {
-    const alertSubject = payload.isNewConversation
-      ? `[New Direct Email] ${payload.clientName}: ${payload.subject}`
-      : `[Inbound Reply] ${payload.clientName} replied: ${payload.subject}`;
-
-    const formattedAttachments = payload.attachments?.map((att) => ({
-      ...att,
-      url: toCustomAttachmentUrl(att.url),
-    }));
-
-    const alertReact = payload.isNewConversation
-      ? AdminDirectEmailAlertEmail({
-          inquiryId: payload.inquiryId,
-          clientName: payload.clientName,
-          clientEmail: payload.clientEmail,
-          subject: payload.subject,
-          message: payload.message,
-          toAddress: payload.toAddress,
-          attachments: formattedAttachments,
-        })
-      : AdminInboundAlertEmail({
-          inquiryId: payload.inquiryId,
-          inquiryType: payload.inquiryType,
-          clientName: payload.clientName,
-          clientEmail: payload.clientEmail,
-          subject: payload.subject,
-          message: payload.message,
-          attachments: formattedAttachments,
-        });
-
-    await resend.emails.send({
-      from: SENDER_NOTIFICATIONS,
-      to: ADMIN_EMAIL,
-      replyTo: payload.clientEmail,
-      subject: alertSubject,
-      react: alertReact,
+    await sendDiscordInboundNotification({
+      inquiryId: payload.inquiryId,
+      inquiryType: payload.inquiryType,
+      clientName: payload.clientName,
+      clientEmail: payload.clientEmail,
+      subject: payload.subject,
+      message: payload.message,
+      isNewConversation: payload.isNewConversation,
     });
   } catch (error) {
-    console.error("Failed to send inbound alert email via Resend:", error);
+    console.error("Failed to send inbound alert to Discord:", error);
   }
 }
 
