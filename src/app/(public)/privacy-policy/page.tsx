@@ -24,7 +24,7 @@ export default async function PrivacyPolicyPage() {
   return (
     <SitePageView
       title={page.title}
-      lastUpdatedLabel={page.updatedAt.toLocaleDateString("en-US", {
+      lastUpdatedLabel={new Date(page.updatedAt).toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",

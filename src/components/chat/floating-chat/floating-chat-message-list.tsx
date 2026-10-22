@@ -11,8 +11,8 @@ import {
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ChatMessage } from "@/services/ai-chat/types";
-import { CopilotMarkdown } from "@/components/cms/copilot/copilot-markdown";
+import type { ChatMessage } from "@wismannur.pro/cms-contracts";
+import { CopilotMarkdown } from "./copilot-markdown";
 
 interface FloatingChatMessageListProps {
   messages: ChatMessage[];

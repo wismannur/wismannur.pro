@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { eq } from "drizzle-orm";
-
-import { getDb, schema } from "@/db";
 import { getCachedSiteSettings } from "@/lib/site-metadata";
 import { blogService, siteSettingsService } from "@/services";
 import { BlogDetailView } from "./blog-detail-view";
@@ -15,11 +12,8 @@ export async function generateStaticParams() {
   if (!settings.enableBlog) {
     return [];
   }
-  const rows = await getDb()
-    .select({ slug: schema.blogs.slug })
-    .from(schema.blogs)
-    .where(eq(schema.blogs.isPublished, true));
-  return rows;
+  const blogs = await blogService.getAll();
+  return blogs.map((b) => ({ slug: b.slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -52,5 +46,7 @@ export default async function BlogDetailPage({ params }: Params) {
 
   const blog = await blogService.getBySlug(slug);
   if (!blog) notFound();
+
   return <BlogDetailView slug={slug} />;
 }
+

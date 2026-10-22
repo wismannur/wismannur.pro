@@ -1,55 +1,11 @@
-export type ResumeKind = "experience" | "education";
+export type {
+  ResumeEntry,
+  ResumeKind,
+  NewResumeEntry,
+  UpdateResumeEntry,
+} from "@wismannur.pro/cms-contracts";
 
-// One shape for both /about lists — `kind` picks the labels ("Frontend
-// Engineer" at "Rumah Siap Kerja" vs "Responsive Web Design" at
-// "Freecodecamp.org"). Dates are ISO day strings ("2021-05-01") straight from
-// the `date` columns, so no timezone shifting happens on the way to the UI.
-export interface ResumeEntry {
-  id: string;
-  kind: ResumeKind;
-  title: string;
-  organization: string;
-  location?: string;
-  employmentType?: string;
-  locationType?: string;
-  startDate: string;
-  endDate?: string;
-  isCurrent: boolean;
-  description: string;
-  sortOrder: number;
-  isPublished: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type NewResumeEntry = Omit<ResumeEntry, "id" | "createdAt" | "updatedAt">;
-export type UpdateResumeEntry = Partial<NewResumeEntry>;
-
-export type ResumeSections = {
-  experiences: ResumeEntry[];
-  education: ResumeEntry[];
-};
-
-export interface PolishResumeParams {
-  title: string;
-  organization: string;
-  location?: string;
-  employmentType?: string;
-  locationType?: string;
-  currentDescription?: string;
-  period?: string;
-}
-
-export interface PolishResumeResult {
-  polishedDescription: string;
-  highlights: string[];
-  matchedSecondBrainTopics: string[];
-}
-
-export interface SyncToSecondBrainParams {
-  title: string;
-  organization: string;
-  description: string;
-  category?: string;
-  tags?: string[];
+export interface ResumeSections {
+  experiences: import("@wismannur.pro/cms-contracts").ResumeEntry[];
+  education: import("@wismannur.pro/cms-contracts").ResumeEntry[];
 }

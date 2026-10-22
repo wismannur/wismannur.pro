@@ -7,3 +7,4 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - react-hook-form@7.79.0
   - baseline-browser-mapping@2.10.37
+  - '@wismannur.pro/cms-contracts@0.1.0'

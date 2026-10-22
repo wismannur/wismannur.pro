@@ -1,27 +1,12 @@
-export type HireRequestStatus =
-  | "new"
-  | "reviewed"
-  | "interviewing"
-  | "offered"
-  | "rejected"
-  | "archived";
+export type {
+  HireRequest,
+  HireRequestStatus,
+  NewHireRequest,
+} from "@wismannur.pro/cms-contracts";
 
-export interface HireRequest {
-  id: string;
-  name: string;
-  email: string;
-  company: string;
-  roleTitle: string;
-  employmentType: string;
-  workplaceType: string;
-  location?: string;
-  salaryRange?: string;
-  message: string;
-  status: HireRequestStatus;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import type { HireRequest, HireRequestStatus, NewHireRequest } from "@wismannur.pro/cms-contracts";
 
-export type NewHireRequest = Omit<HireRequest, "id" | "status" | "createdAt" | "updatedAt"> & {
-  honeypot?: string;
-};
+export type ServiceRequest = HireRequest;
+export type ServiceRequestStatus = HireRequestStatus;
+export type NewServiceRequest = NewHireRequest;
+export type UpdateServiceRequest = Partial<NewHireRequest>;

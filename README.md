@@ -510,12 +510,21 @@ RESEND_API_KEY="re_..."
 RESEND_EMAIL_DOMAIN="wismannur.pro"
 NEXT_PUBLIC_RESEND_EMAIL_DOMAIN="wismannur.pro"
 RESEND_WEBHOOK_SECRET="whsec_..."
-ADMIN_NOTIFICATION_EMAIL="admin@example.com"
-RESEND_FROM_NOTIFICATIONS="Wisman Nur <notifications@wismannur.pro>"
 RESEND_FROM_HI="Wisman Nur <hi@wismannur.pro>"
 
 # =============================================================================
-# 6. CAPTCHA, STORAGE & TELEMETRY
+# 6. DISCORD NOTIFICATIONS (ADMIN ALERTS)
+# =============================================================================
+DISCORD_WEBHOOK_CONTACTS="https://discord.com/api/webhooks/..."
+# Optional dedicated channel webhooks (falls back to DISCORD_WEBHOOK_CONTACTS if empty):
+# DISCORD_WEBHOOK_HIRE="https://discord.com/api/webhooks/..."
+# DISCORD_WEBHOOK_SERVICES="https://discord.com/api/webhooks/..."
+# DISCORD_WEBHOOK_INBOUND="https://discord.com/api/webhooks/..."
+# DISCORD_WEBHOOK_JOB_OUTREACHS="https://discord.com/api/webhooks/..."
+# DISCORD_WEBHOOK_PROJECT_OUTREACH="https://discord.com/api/webhooks/..."
+
+# =============================================================================
+# 7. CAPTCHA, STORAGE & TELEMETRY
 # =============================================================================
 NEXT_PUBLIC_RECAPTCHA_SITE_KEY="..."
 RECAPTCHA_SECRET_KEY="..."

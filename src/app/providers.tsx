@@ -9,7 +9,6 @@ import ScrollToTopAuto from "@/components/layout/scroll-to-top-auto";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/auth-context";
 import { LoadingProvider, useLoading } from "@/contexts/loading-context";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { makeQueryClient } from "@/lib/query-client";
@@ -33,15 +32,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <AuthProvider>
-          <LoadingProvider>
-            <TooltipProvider>
-              <Sonner />
-              <LoadingWrapper>{children}</LoadingWrapper>
-              <ScrollToTopAuto />
-            </TooltipProvider>
-          </LoadingProvider>
-        </AuthProvider>
+        <LoadingProvider>
+          <TooltipProvider>
+            <Sonner />
+            <LoadingWrapper>{children}</LoadingWrapper>
+            <ScrollToTopAuto />
+          </TooltipProvider>
+        </LoadingProvider>
       </ThemeProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

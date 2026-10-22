@@ -1,1 +1,0 @@
-ALTER TABLE "ai_english_vocabularies" ADD COLUMN "examples" jsonb;
